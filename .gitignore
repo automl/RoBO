@@ -1,0 +1,14 @@
+#vi
+*.sw[nop]
+
+#python
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+#Aptana
+.project
+.pydevproject
+
