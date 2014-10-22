@@ -4,6 +4,7 @@
 #python
 __pycache__/
 *.py[cod]
+*.egg-info
 
 # C extensions
 *.so
@@ -12,3 +13,5 @@ __pycache__/
 .project
 .pydevproject
 
+#DIRECT
+DIRresults.txt
