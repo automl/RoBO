@@ -1,19 +1,19 @@
+import os
 import random
-import matplotlib
-matplotlib.use('WX')
+import errno
+import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pylab as pb
-pb.ion()
+#pb.ion()
 import numpy as np
 import GPy
 import DIRECT
 from test_functions import branin as test_f
-dtype_acq_data = [('x', float), ('y', float)]
+here = os.path.abspath(os.path.dirname(__file__))
+
 def acquisition_fkt(x, user_data):
-    
     mean, var, _025pm, _975pm = user_data["gp"].predict(x)#,  full_cov=True)
-    y = mean - 0.2 * np.abs(var)
-    
+    y = mean -  np.sqrt(np.abs(var))
     if "acq_max_y" not in user_data.keys():
         user_data["acq_max_y"] = max(y)
     else:
@@ -39,14 +39,14 @@ def main(samples=10, min_x=-8, max_x=19):
     c2.fill(12)
     c3 = test_f([c1, c2])
     d1 = np.reshape(c1, (obj_samples,1))
-    kernel = GPy.kern.rbf(input_dim=1, variance=20**2, lengthscale=5.)
+    kernel = GPy.kern.rbf(input_dim=1, variance=70**2, lengthscale=5.)
     
     x = random.random() * (max_x - min_x) + min_x
     X[0, 0] = x
     user_data = None 
     # print X[i,0]
     Y[0, 0] = test_f([X[0, 0], 12])
-    fig = plt.figure()
+    
     
     for i in xrange(0, samples):
         
@@ -64,7 +64,7 @@ def main(samples=10, min_x=-8, max_x=19):
             X[i+1, 0] = x
             Y[i+1, 0] = test_f([X[i+1, 0], 12])
             
-        
+        fig = plt.figure()
         ax = fig.add_subplot(111)
         m.plot(ax=ax, plot_limits=[min_x, max_x])
         xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()
@@ -75,11 +75,18 @@ def main(samples=10, min_x=-8, max_x=19):
         ud = {"gp":m, "acq_data":None}
         d2 = acquisition_fkt(d1, ud)[0].reshape((obj_samples,))
         d2 *= -1
-        d2 = (((d2-ud["acq_min_y"])/(float(ud["acq_max_y"]) - float(ud["acq_min_y"])))*50.0 )
-        ax.plot(c1, d2, "y")
-        ax.plot(x,(y-user_data["acq_min_y"] )/(user_data["acq_max_y"]-float(user_data["acq_min_y"] )) *50,"b+")
+        #d2 = (((d2-ud["acq_min_y"])/(float(ud["acq_max_y"]) - float(ud["acq_min_y"])))*50.0 )
+        plt.plot(c1, d2, "y")
+        plt.plot(x,y, "b+")#(y-user_data["acq_min_y"] )/(user_data["acq_max_y"]-float(user_data["acq_min_y"] )) *50,"b+")
          
-        fig.savefig("./save_plot_%s.png"%i, format='png')
-        
+        fig.savefig("%s/tmp/save_plot_%s.png"%(here, i), format='png')
+        fig.clf()
+        plt.close()
 if __name__ == "__main__":
+    
+    try:
+        os.makedirs("%s/tmp/"%here)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
     main()
