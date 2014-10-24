@@ -11,7 +11,7 @@ requires = [
 	'DIRECT'
     ]
 
-setup(name='bayesian_opt',
+setup(name='robo',
       version='0.0',
       description='',
       long_description='',
@@ -28,7 +28,7 @@ setup(name='bayesian_opt',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      test_suite='bayesian_opt',
+      test_suite='robo',
       install_requires=requires,
       entry_points="""\
       """,

@@ -28,7 +28,6 @@ def optimized_acquisition(gp, min_x, max_x):
     user_data={"gp":gp, "acq_data":None}
     x, fmin, ierror = DIRECT.solve(acquisition_fkt, l=[min_x], u=[max_x], maxT=2000, maxf=2000, user_data=user_data)
     return x, -fmin, user_data
-
     
 def main(samples=10, min_x=-8, max_x=19):
     X = np.empty((samples, 1))
@@ -40,16 +39,12 @@ def main(samples=10, min_x=-8, max_x=19):
     c3 = test_f([c1, c2])
     d1 = np.reshape(c1, (obj_samples,1))
     kernel = GPy.kern.rbf(input_dim=1, variance=70**2, lengthscale=5.)
-    
     x = random.random() * (max_x - min_x) + min_x
     X[0, 0] = x
     user_data = None 
     # print X[i,0]
     Y[0, 0] = test_f([X[0, 0], 12])
-    
-    
     for i in xrange(0, samples):
-        
         _X = X[0:i + 1, 0:1]
         _Y = Y[0:i + 1, 0:1]
         m = GPy.models.GPRegression(_X, _Y, kernel)
@@ -57,8 +52,6 @@ def main(samples=10, min_x=-8, max_x=19):
         m.constrain_positive('.*rbf_variance')
         m.constrain_bounded('.*lengthscale', 1., 10.)
         m.constrain_fixed('.*noise', 0.0025)
-        
-        
         if i+1 < samples:
             x, y, user_data = optimized_acquisition(m, min_x, max_x)
             X[i+1, 0] = x
@@ -82,6 +75,7 @@ def main(samples=10, min_x=-8, max_x=19):
         fig.savefig("%s/tmp/save_plot_%s.png"%(here, i), format='png')
         fig.clf()
         plt.close()
+
 if __name__ == "__main__":
     
     try:
