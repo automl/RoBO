@@ -14,14 +14,8 @@ def branin(x):
     return a*f*f+s*(1-t)*np.cos(x1)+s;
 
 def branin2(x):
-    return [branin([x[0], 12])] 
-if __name__ == "__main__":
-    x1 = np.random.uniform(-3.,3.,(20,1))
-    x2 = np.random.uniform(-3.,3.,(20,1))
-    obj_samples=5
-    c1 = np.linspace(-8, 19, num=obj_samples)
-    
-    c2 = np.empty((obj_samples,))
-    c2.fill(12)
-    print(branin([c1,c2]))
+    c2 = np.empty(x[0].shape)
+    c2.fill(12) 
+    return [branin([x[0], c2])]
+ 
     
