@@ -16,11 +16,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 10, callback_fkt=lambda model, acq, i:None):
-    acq = acquisition_fkt(model)
+    
     for i in xrange(maxN):
-        new_x = minimize_fkt(acq, X_lower, X_upper)
+        new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
         new_y = objective_fkt(new_x)
-        callback_fkt(model, acq, objective_fkt, i)
+        callback_fkt(model, acquisition_fkt, objective_fkt, i)
         model.update(new_x, new_y)
 
 
@@ -60,7 +60,7 @@ def main():
     Y[0,:] = objective_fkt(X[0,:])
     model = GPyModel(kernel)
     model.train(X,Y)
-    acquisition_fkt =  pi_fkt
+    acquisition_fkt =  pi_fkt(model)
     bayesian_optimization(objective_fkt, acquisition_fkt, model, DIRECT, X_lower, X_upper, maxN = 10, callback_fkt=_plot_model)
     
     
