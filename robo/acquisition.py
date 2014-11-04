@@ -1,7 +1,7 @@
 from scipy.stats import norm
 import numpy as np
         
-class pi_fkt(object):
+class PI(object):
     def __init__(self, model):
         self.model = model
     def __call__(self, X, Z=None, **kwargs):
@@ -10,14 +10,22 @@ class pi_fkt(object):
         u = 1 - norm.cdf((mean - Y_star) / var)
         return u
 
-
-class ucb_fkt(object):
+class UCB(object):
     def __init__(self, model):
         self.model = model
-        
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
         return -mean + var
+
+class Entropy(object):
+    def __init__(self, model):
+        self.model = model
+    def __call__(self, X, Z=None, **kwargs):
+        raise NotImplementedError
     
-
-
+class EI(object):
+    def __init__(self, model):
+        self.model = model
+    def __call__(self, X, Z=None, **kwargs):
+        raise NotImplementedError
+    

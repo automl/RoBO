@@ -10,8 +10,8 @@ import pylab as pb
 from models import GPyModel 
 import numpy as np
 from test_functions import branin#, branin
-from acquisition import pi_fkt, ucb_fkt
-from minimize import cma
+from acquisition import PI, UCB
+from minimize import cma, DIRECT
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -60,8 +60,8 @@ def main():
     Y[0,:] = objective_fkt(X[0,:])
     model = GPyModel(kernel)
     model.train(X,Y)
-    acquisition_fkt =  pi_fkt(model)
-    bayesian_optimization(objective_fkt, acquisition_fkt, model, cma, X_lower, X_upper, maxN = 10, callback_fkt=_plot_model)
+    acquisition_fkt =  PI(model)
+    bayesian_optimization(objective_fkt, acquisition_fkt, model, DIRECT, X_lower, X_upper, maxN = 10, callback_fkt=_plot_model)
     
     
 
