@@ -10,8 +10,8 @@ def branin(x):
     s = 10;
     t = 1/(8*math.pi);
     f = (x2-b*x1*x1+c*x1-r)
-    #print a*f*f
-    return a*f*f+s*(1-t)*np.cos(x1)+s;
+    y = a*f*f+s*(1-t)*np.cos(x1)+s;
+    return np.array([y])
 
 def branin2(x):
     c2 = np.empty(x[0].shape)

@@ -18,5 +18,10 @@ __pycache__/
 #DIRECT
 DIRresults.txt
 
+<<<<<<< HEAD
 # pycharm
 .idea
+=======
+#CMA
+outcma*.dat
+>>>>>>> 394812f2aff46fa47113503aef60a8ade57200f0
