@@ -17,3 +17,6 @@ __pycache__/
 
 #DIRECT
 DIRresults.txt
+
+#CMA
+outcma*.dat

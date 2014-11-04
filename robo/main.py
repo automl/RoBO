@@ -9,18 +9,18 @@ import pylab as pb
 #pb.ion()
 from models import GPyModel 
 import numpy as np
-from test_functions import branin2, branin
+from test_functions import branin#, branin
 from acquisition import pi_fkt, ucb_fkt
-from minimize import DIRECT
+from minimize import cma
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 10, callback_fkt=lambda model, acq, i:None):
-    
+def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 10, callback_fkt=lambda model, acq, i:True):
     for i in xrange(maxN):
         new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
         new_y = objective_fkt(new_x)
-        callback_fkt(model, acquisition_fkt, objective_fkt, i)
+        if not callback_fkt(model, acquisition_fkt, objective_fkt, i): 
+            break
         model.update(new_x, new_y)
 
 
@@ -35,6 +35,7 @@ def main():
     second_branin_arg.fill(12)
     branin_result = branin([plotting_range, second_branin_arg])
     def _plot_model(model, acquisition_fkt, objective_fkt, i):
+        return True
         fig = plt.figure()
         ax = fig.add_subplot(111)
         model.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
@@ -48,20 +49,19 @@ def main():
         ax.plot(plotting_range, branin_result, 'black')
         fig.savefig("%s/tmp/np_%s.png"%(here, i), format='png')
         fig.clf()
-        plt.close() 
-        
-    kernel = GPy.kern.rbf(input_dim=1, variance=12.3, lengthscale=5.0)
-    X_lower = np.array([-8])
-    X_upper = np.array([19])
-    X = np.empty((1, 1))
+        plt.close()
+    kernel = GPy.kern.rbf(input_dim=2, variance=12.3, lengthscale=5.0)
+    X_lower = np.array([-8,-8])
+    X_upper = np.array([19, 19])
+    X = np.empty((1, 2))
     Y = np.empty((1, 1))
     X[0,:] = [random.random() * (X_upper[0] - X_lower[0]) + X_lower[0]];
-    objective_fkt= branin2
+    objective_fkt= branin
     Y[0,:] = objective_fkt(X[0,:])
     model = GPyModel(kernel)
     model.train(X,Y)
     acquisition_fkt =  pi_fkt(model)
-    bayesian_optimization(objective_fkt, acquisition_fkt, model, DIRECT, X_lower, X_upper, maxN = 10, callback_fkt=_plot_model)
+    bayesian_optimization(objective_fkt, acquisition_fkt, model, cma, X_lower, X_upper, maxN = 10, callback_fkt=_plot_model)
     
     
 

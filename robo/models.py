@@ -19,6 +19,7 @@ class GPyModel(object):
         self.Y_star = np.max(self.Y)
         
     def update(self, X, Y, Z=None):
+        #print self.X, self.Y
         self.X = np.append(self.X, [X], axis=0)
         self.Y = np.append(self.Y, [Y], axis=0)
         if self.Z != None:
@@ -30,9 +31,9 @@ class GPyModel(object):
             self.Y_star = Y
     
     def predict(self, X, Z=None):
+        #print "X", X
         mean, var, _025pm, _975pm = self.m.predict(X)
-        
-        return mean, np.sqrt(var)
+        return mean[:,0], var[:,0]
     
     def load(self, filename):
         pass
