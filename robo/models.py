@@ -1,3 +1,5 @@
+import sys
+import StringIO
 import numpy as np
 import GPy as GPy
 
@@ -13,22 +15,21 @@ class GPyModel(object):
         self.Y = Y
         self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
+        #stdout = sys.stdout
+        #sys.stdout = StringIO.StringIO()
         self.m.constrain_fixed('.*noise', self.noise_variance)
         self.m.optimize()
         self.X_star = self.X[np.argmax(self.Y)]
         self.Y_star = np.max(self.Y)
-        
+        #sys.stdout = stdout
     def update(self, X, Y, Z=None):
         #print self.X, self.Y
-        self.X = np.append(self.X, [X], axis=0)
-        self.Y = np.append(self.Y, [Y], axis=0)
+        X = np.append(self.X, [X], axis=0)
+        Y = np.append(self.Y, [Y], axis=0)
         if self.Z != None:
-            self.Z = Z
-        self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
-        self.m.constrain_fixed('.*noise', self.noise_variance)
-        self.m.optimize()
-        if Y < self.Y_star:
-            self.Y_star = Y
+            Z = np.append(self.Z, [Z], axis=0)
+        self.train(X, Y, Z)
+        
     
     def predict(self, X, Z=None):
         #print "X", X
