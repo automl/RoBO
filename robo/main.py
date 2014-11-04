@@ -12,8 +12,8 @@ import numpy as np
 from test_functions import branin#, branin
 from acquisition import pi_fkt, ucb_fkt
 from minimize import cma
-here = os.path.abspath(os.path.dirname(__file__))
 
+here = os.path.abspath(os.path.dirname(__file__))
 
 def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 10, callback_fkt=lambda model, acq, i:True):
     for i in xrange(maxN):

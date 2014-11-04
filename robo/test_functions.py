@@ -1,7 +1,6 @@
 import math
 import numpy as np
 def branin(x):
-    print "-----",x
     x1 = x[0]
     x2 = x[1]
     a = 1
@@ -11,9 +10,7 @@ def branin(x):
     s = 10;
     t = 1/(8*math.pi);
     f = (x2-b*x1*x1+c*x1-r)
-    #print a*f*f
     y = a*f*f+s*(1-t)*np.cos(x1)+s;
-    print "x =", y
     return np.array([y])
 
 def branin2(x):
