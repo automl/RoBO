@@ -23,9 +23,6 @@ def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X
             break
         model.update(new_x, new_y)
 
-
-
-
 def main():
     obj_samples = 700
     plot_min = -8
@@ -50,12 +47,12 @@ def main():
         fig.savefig("%s/tmp/np_%s.png"%(here, i), format='png')
         fig.clf()
         plt.close()
-    kernel = GPy.kern.rbf(input_dim=2, variance=12.3, lengthscale=5.0)
+    kernel = GPy.kern.rbf(input_dim=2, variance=12.3, lengthscale=5.0, ars=True)
     X_lower = np.array([-8,-8])
     X_upper = np.array([19, 19])
     X = np.empty((1, 2))
     Y = np.empty((1, 1))
-    X[0,:] = [random.random() * (X_upper[0] - X_lower[0]) + X_lower[0]];
+    X[0,:] = [2.6190,    5.4830] #random.random() * (X_upper[0] - X_lower[0]) + X_lower[0]];
     objective_fkt= branin
     Y[0,:] = objective_fkt(X[0,:])
     model = GPyModel(kernel)
@@ -75,5 +72,4 @@ if __name__ == "__main__":
     #from GPy.examples.non_gaussian import student_t_approx
     #student_t_approx(plot=True)
     #plt.show()
-    
     main()

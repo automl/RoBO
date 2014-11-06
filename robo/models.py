@@ -7,7 +7,7 @@ class GPyModel(object):
     """
     GPyModel is just a wrapper around the GPy Lib
     """
-    def __init__(self, kernel, noise_variance = 0.002,*args, **kwargs):
+    def __init__(self, kernel, noise_variance = 0.001,*args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
     def train(self, X, Y,  Z=None):
@@ -17,6 +17,7 @@ class GPyModel(object):
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
         #stdout = sys.stdout
         #sys.stdout = StringIO.StringIO()
+        self.m.unconstrain('.*')
         self.m.constrain_fixed('.*noise', self.noise_variance)
         self.m.optimize()
         self.X_star = self.X[np.argmax(self.Y)]
@@ -33,8 +34,8 @@ class GPyModel(object):
     
     def predict(self, X, Z=None):
         #print "X", X
-        mean, var, _025pm, _975pm = self.m.predict(X)
-        return mean[:,0], var[:,0]
+        mean, var, _025pm, _975pm = self.m.predict(X, which_parts='all', full_cov=True)
+        return mean[:,0], var
     
     def load(self, filename):
         pass

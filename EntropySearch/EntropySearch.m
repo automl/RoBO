@@ -73,7 +73,7 @@ while ~converged && (numiter < in.MaxEval)
         [zb,lmb]   = SampleBeliefLocations(GP,in.xmin,in.xmax,in.Nb,BestGuesses,in.PropFunc);
         
         [Mb,Vb]    = GP_moments(GP,zb);
-
+        
         % belief over the minimum on the sampled set
         [logP,dlogPdM,dlogPdV,ddlogPdMdM] = joint_min(Mb,Vb);        % p(x=xmin)
         
