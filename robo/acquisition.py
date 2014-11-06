@@ -29,6 +29,9 @@ class Entropy(object):
         raise NotImplementedError
     def model_changed(self):
         pass
+    def sample_from_measure(self, x_prev, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
+        if
+        pass
 
     
 class EI(object):

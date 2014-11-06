@@ -18,6 +18,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 10, callback_fkt=lambda model, acq, i:True):
     for i in xrange(maxN):
         acquisition_fkt.model_changed()
+
+        GP = {}
+        GP['x'] = np.empty(2)
+        GP['y'] = np.empty(2)
+
         new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
         new_y = objective_fkt(new_x)
         if not callback_fkt(model, acquisition_fkt, objective_fkt, i): 
