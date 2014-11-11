@@ -22,6 +22,7 @@ class UCB(object):
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
+debug_print = False
 class Entropy(object):
     def __init__(self, model):
         self.model = model
@@ -34,8 +35,8 @@ class Entropy(object):
         var = fac * var
         logP = np.empty(mu.shape)
         #for i ← 1 : m do
-        for i in xrange(mu.shape[0]):
-            self._min_faktor(mu, var, i)
+        #for i in xrange(mu.shape[0]):
+        self._min_faktor(mu, var, 0)
         
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
         """
@@ -61,12 +62,18 @@ class Entropy(object):
         
         M = np.copy(Mu)
         V = np.copy(Sigma)
+        print "M =    ", M
+        print "V =    ", V
         b = False
-        for count in xrange(50):
+        for count in xrange(2):
             diff = 0
             for i in range(D-1):
                 l = i if  i < k else i+1
-                M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, Mu, Sigma, MP[i], P[i], gamma)
+                M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, M, V, MP[i], P[i], gamma)
+                print ".......", i, l, k, d
+                print "M =    ", M
+                
+                #print "V =    ", V
                 if np.isnan(d): 
                     break;
                 diff += np.abs(d)
@@ -75,7 +82,10 @@ class Entropy(object):
             if np.abs(diff) < 0.001:
                 b = True
                 break;
-        
+        print "M =    ", M
+        print "V =    ", V
+        print "P =    ", P
+        print "logS = ", logS 
         if np.isnan(d): 
             logZ  = -np.Infinity;
             dlogZdMu = np.zeros((D,1))
@@ -106,6 +116,7 @@ class Entropy(object):
             dts     = logdet(IRSR);
             logZ    = 0.5 * (rSr - b' * Ab - dts) + Mu' * r + s - 0.5 * mpm;
             if(logZ == inf); keyboard; end"""
+            
             pass
     def _lt_factor(self, s, l, M, V, mp, p, gamma):
         """
@@ -139,34 +150,40 @@ class Entropy(object):
         Equation 21:
         
         """
-        print "*-"*30
-        print M
-        print "*-"*30
-        print V
-        print "*-"*30
-        cVc = (V[l,l] - 2*V[s,l] + V[s,s])/ 2
+        if debug_print:
+            print "*-"*30
+            print M
+            print "*-"*30
+            print V
+            print "*-"*30
+        print V[l,l] , 2*V[l,s] , V[s,s]
+        cVc = (V[l,l] - 2*V[s,l] + V[s,s])/ 2.0
         Vc  = (V[:, l] - V [:, s]) / sq2
         cM =  (M[l] - M[s])/ sq2
         cVnic = np.max([cVc/(1-p * cVc), 0])
         cmni = cM + cVnic * (p * cM - mp)
-        print "cVc = ", cVc
-        print "Vc = ", Vc
-        print "cM = ", cM
-        print "cVnic =",cVnic
-        print "cmni = ",cmni
+        if 1  or debug_print:
+            print "cVc = ", cVc
+            print "Vc = ", Vc
+            print "cM = ", cM
+            print "cVnic =",cVnic
+            print "cmni = ",cmni
         
         z     = cmni / np.sqrt(cVnic);
-        
+        print "..........z........", z
         e,lP,exit_flag = self._log_relative_gauss( z)
-        print "e = ", e
+        if debug_print:
+                print "e = ", e
         if exit_flag == 0:
             alpha = e / np.sqrt(cVnic)
-            print "alpha =", alpha 
+            if debug_print:
+                print "alpha =", alpha 
             #beta  = alpha * (alpha + cmni / cVnic);
             #r     = beta * cVnic / (1 - cVnic * beta);
             beta  = alpha * (alpha * cVnic + cmni)
             r     = beta / (1 - beta)
-            print "r = ", r
+            if debug_print:
+                print "r = ", r
             # new message
             pnew  = r / cVnic
             mpnew = r * ( alpha + cmni / cVnic ) + alpha
@@ -178,25 +195,28 @@ class Entropy(object):
         
             pnew  = p  + dp;
             mpnew = mp + dmp;
-            print "pnew = ", pnew
-            print "mpnew = ", mpnew
+            if debug_print:
+                print "pnew = ", pnew
+            if debug_print:
+                print "mpnew = ", mpnew
             #project out to marginal
-            print "tmp1= ", dp / (1 + dp * cVc) 
-            print "tmp2= ", np.mat(Vc) * np.mat(np.transpose(Vc))
-            Vnew  = V -  dp / (1 + dp * cVc) * (Vc* np.transpose(Vc))
+            Vnew  = V -  dp / (1 + dp * cVc) *np.outer(Vc,Vc)
             #print "[---\n",Vc * np.transpose(Vc),"\n---\n", np.dot(Vc,np.transpose(Vc)),"\n---]"
-            print "Vnew = ", Vnew 
+            if debug_print:
+                print "Vnew = ", Vnew 
             Mnew  = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
+            if debug_print:
+                print "Mnew = ", Mnew
             if np.any(np.isnan(Vnew)): raise Exception("oo")
             #if np.i Vnew)); keyboard; end
             #% if z < -30; keyboard; end
         
             #% normalization constant
             #%logS  = lP - 0.5 * (log(beta) - log(pnew)) + (alpha * alpha) / (2*beta);
-            
             #% there is a problem here, when z is very large
             logS  = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic)) + (alpha * alpha) / (2*beta) * cVnic
-            
+            if debug_print:
+                print "logS = ", logS 
         elif exit_flag == -1:
             d = np.NAN
             Mnew  = 0
@@ -204,6 +224,7 @@ class Entropy(object):
             pnew  = 0;    
             mpnew = 0;
             logS  = -np.Infinity;
+            raise Exception("-----")
         elif exit_flag == 1:
             d     = 0
             # remove message from marginal:
@@ -217,11 +238,10 @@ class Entropy(object):
             d     = max([dmp, dp]); # for convergence measures
         
             # project out to marginal
-            Vnew  = V - dp / (1 + dp * cVc) * (Vc * np.transpose(Vc));
+            Vnew  = V - dp / (1 + dp * cVc) * (np.outer(Vc,Vc))
             Mnew  = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc;
         
             logS  = 0;
-        raise Exception
         return Mnew,Vnew,pnew,mpnew,logS,d
     
     def _log_relative_gauss(self, z):
