@@ -1,4 +1,7 @@
+#encoding=utf8
+
 from scipy.stats import norm
+import scipy
 import numpy as np
         
 class PI(object):
@@ -16,20 +19,222 @@ class UCB(object):
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
         return -mean + var
-
+sq2 = np.sqrt(2)
+l2p = np.log(2) + np.log(np.pi)
+eps = np.finfo(np.float32).eps
 class Entropy(object):
     def __init__(self, model):
         self.model = model
     def __call__(self, X, Z=None, **kwargs):
         raise NotImplementedError
     def _ep_pmin(self, X, Z=None, with_derivatives= False, **kwargs):
+        
         mu, var = self.model.predict(np.array(zb))
+        fac = 42.9076/68.20017903
+        var = fac * var
         logP = np.empty(mu.shape)
+        #for i ← 1 : m do
         for i in xrange(mu.shape[0]):
             self._min_faktor(mu, var, i)
-    def _min_faktor(self, Mu, Sigma, k, gamma = 1):
         
-        pass
+    def _min_faktor(self, Mu, Sigma, k, gamma = 1):
+        """
+        1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
+        2: Initialise messages t  ̃ i with zero precision.
+        3: while q(x) has not converged do
+        4:     for i ← 1 : m do
+        5:        form cavity local q \i (x) by Equation 17 (stably calculated by 51).
+        6:        calculate moments of q \i (x)t i (x) by Equations 21-23.
+        7:        choose t  ̃ i (x) so q \i (x) t  ̃ i (x) matches above moments by Equation 16.
+        8:     end for
+        9:     update μ, Σ with new t  ̃ i (x) (stably using Equations 53 and 58).
+        10:end while
+        11:calculate Z, the total mass of q(x) using Equation 19 (stably using Equation 60).
+        12:return Z, the approximation of F (A).
+        """
+        D = Mu.shape[0]
+        logS = np.empty((D-1,))
+        #mean time first moment
+        MP = np.empty((D-1,))
+        #precision, second moment 
+        P = np.empty((D-1,))
+        
+        M = np.copy(Mu)
+        V = np.copy(Sigma)
+        b = False
+        for count in xrange(50):
+            diff = 0
+            for i in range(D-1):
+                l = i if  i < k else i+1
+                M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, Mu, Sigma, MP[i], P[i], gamma)
+                if np.isnan(d): 
+                    break;
+                diff += np.abs(d)
+            if np.isnan(d): 
+                    break;
+            if np.abs(diff) < 0.001:
+                b = True
+                break;
+        
+        if np.isnan(d): 
+            logZ  = -np.Infinity;
+            dlogZdMu = np.zeros((D,1))
+            dlogZdSigma = np.zeros((0.5*(D*(D+1)),1))
+            dlogZdMudMu = np.zeros((D,D))
+            mvmin = [Mu[k],Sigma[k,k]]
+            dMdMu = np.zeros((1,D))
+            dMdSigma = np.zeros((1,0.5*(D*(D+1))))
+            dVdSigma = np.zeros((1,0.5*(D*(D+1))))
+        else:
+            #evaluate log Z:
+            """"C = eye(D) / sq2 
+            C[k,:] = -1/sq2
+            C[:,k] = []
+            R       = sqrt(P') * C
+            r       = sum(bsxfun(@times,MP',C),2);
+            mpm     = MP.* MP ./ P;
+            mpm(MP==0) = 0;
+            mpm     = sum(mpm);
+            s       = sum(logS);
+            
+            IRSR    = (eye(D-1) + R' * Sigma * R);
+            rSr     = r' * Sigma * r;
+            A       = R * (IRSR \ R');
+            A       = 0.5 * (A' + A); % ensure symmetry.
+            b       = (Mu + Sigma * r);
+            Ab      = A * b;
+            dts     = logdet(IRSR);
+            logZ    = 0.5 * (rSr - b' * Ab - dts) + Mu' * r + s - 0.5 * mpm;
+            if(logZ == inf); keyboard; end"""
+            pass
+    def _lt_factor(self, s, l, M, V, mp, p, gamma):
+        """
+        1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
+        2: Initialise messages t  ̃ i with zero precision.
+        3: while q(x) has not converged do
+        4:     for i ← 1 : m do
+        5:        form cavity local q \i (x) by Equation 17 (stably calculated by 51).
+        6:        calculate moments of q \i (x)t i (x) by Equations 21-23.
+        7:        choose t  ̃ i (x) so q \i (x) t  ̃ i (x) matches above moments by Equation 16.
+        8:     end for
+        9:     update μ, Σ with new t  ̃ i (x) (stably using Equations 53 and 58).
+        10:end while
+        11:calculate Z, the total mass of q(x) using Equation 19 (stably using Equation 60).
+        12:return Z, the approximation of F (A).
+        """
+        """
+        c_i = delta_{il} - delta{is}
+        """
+        """
+        Equation 17:
+        μ_\i = σ_\i^2 (c^T_i*μ          μ̃ _i )
+                      (-----------  -   -----
+                      (c_i^T Σ c_i      σ̃ i^2)
+                      
+        σ_\i^2 = ((c^T_i Σ c_i)^-1 - σ̃ i^-2)^-1
+        
+        Equation 11:
+        q \i = q / t̃ _i = Z \i N(x;u \i, V\i)
+        
+        Equation 21:
+        
+        """
+        print "*-"*30
+        print M
+        print "*-"*30
+        print V
+        print "*-"*30
+        cVc = (V[l,l] - 2*V[s,l] + V[s,s])/ 2
+        Vc  = (V[:, l] - V [:, s]) / sq2
+        cM =  (M[l] - M[s])/ sq2
+        cVnic = np.max([cVc/(1-p * cVc), 0])
+        cmni = cM + cVnic * (p * cM - mp)
+        print "cVc = ", cVc
+        print "Vc = ", Vc
+        print "cM = ", cM
+        print "cVnic =",cVnic
+        print "cmni = ",cmni
+        
+        z     = cmni / np.sqrt(cVnic);
+        
+        e,lP,exit_flag = self._log_relative_gauss( z)
+        print "e = ", e
+        if exit_flag == 0:
+            alpha = e / np.sqrt(cVnic)
+            print "alpha =", alpha 
+            #beta  = alpha * (alpha + cmni / cVnic);
+            #r     = beta * cVnic / (1 - cVnic * beta);
+            beta  = alpha * (alpha * cVnic + cmni)
+            r     = beta / (1 - beta)
+            print "r = ", r
+            # new message
+            pnew  = r / cVnic
+            mpnew = r * ( alpha + cmni / cVnic ) + alpha
+        
+            # update terms
+            dp    = np.max([-p + eps,gamma * (pnew - p)]) # at worst, remove message
+            dmp   = np.max([-mp + eps,gamma * (mpnew- mp)])
+            d     = np.max([dmp,dp]) # for convergence measures
+        
+            pnew  = p  + dp;
+            mpnew = mp + dmp;
+            print "pnew = ", pnew
+            print "mpnew = ", mpnew
+            #project out to marginal
+            print "tmp1= ", dp / (1 + dp * cVc) 
+            print "tmp2= ", np.mat(Vc) * np.mat(np.transpose(Vc))
+            Vnew  = V -  dp / (1 + dp * cVc) * (Vc* np.transpose(Vc))
+            #print "[---\n",Vc * np.transpose(Vc),"\n---\n", np.dot(Vc,np.transpose(Vc)),"\n---]"
+            print "Vnew = ", Vnew 
+            Mnew  = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
+            if np.any(np.isnan(Vnew)): raise Exception("oo")
+            #if np.i Vnew)); keyboard; end
+            #% if z < -30; keyboard; end
+        
+            #% normalization constant
+            #%logS  = lP - 0.5 * (log(beta) - log(pnew)) + (alpha * alpha) / (2*beta);
+            
+            #% there is a problem here, when z is very large
+            logS  = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic)) + (alpha * alpha) / (2*beta) * cVnic
+            
+        elif exit_flag == -1:
+            d = np.NAN
+            Mnew  = 0
+            Vnew  = 0;
+            pnew  = 0;    
+            mpnew = 0;
+            logS  = -np.Infinity;
+        elif exit_flag == 1:
+            d     = 0
+            # remove message from marginal:
+            # new message
+            pnew  = 0 
+            mpnew = 0
+        
+            # update terms
+            dp    = -p # at worst, remove message
+            dmp   = -mp
+            d     = max([dmp, dp]); # for convergence measures
+        
+            # project out to marginal
+            Vnew  = V - dp / (1 + dp * cVc) * (Vc * np.transpose(Vc));
+            Mnew  = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc;
+        
+            logS  = 0;
+        raise Exception
+        return Mnew,Vnew,pnew,mpnew,logS,d
+    
+    def _log_relative_gauss(self, z):
+        if z < -6:
+            return 1, -1.0e12, -1
+        if z > 6:
+            return 0, 0, 1 
+        else:
+            logphi = -0.5 * ( z * z + l2p)
+            logPhi = np.log(.5 * scipy.special.erfc(-z / sq2))
+            e = np.exp(logphi - logPhi)
+            return e, logPhi, 0
+    
 class EI(object):
     def __init__(self, model):
         self.model = model
@@ -48,7 +253,7 @@ def test():
     import GPy
     from models import GPyModel
     from test_functions import branin
-    kernel = GPy.kern.rbf(input_dim=2, variance=6.6013, lengthscale=[5.6619,5.6619], ARD=True)
+    kernel = GPy.kern.rbf(input_dim=2, variance=6.5816*6.5816, lengthscale=[5.9076, 5.9076], ARD=True)
     X_lower = np.array([-8,-8])
     X_upper = np.array([19, 19])
     X = np.empty((1, 2))
@@ -57,7 +262,7 @@ def test():
     objective_fkt= branin
     Y[0,:] = objective_fkt(X[0,:])
     
-    model = GPyModel(kernel)
+    model = GPyModel(kernel,noise_variance=0.044855)
     model.train(X,Y)
     model.m.optimize()
     e = Entropy(model)
