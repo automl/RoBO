@@ -35,8 +35,11 @@ class Entropy(object):
         var = fac * var
         logP = np.empty(mu.shape)
         #for i ← 1 : m do
-        #for i in xrange(mu.shape[0]):
-        self._min_faktor(mu, var, 0)
+        for i in xrange(mu.shape[0]):
+            #logP[k] ) self._min_faktor(mu, var, 0)
+            self._min_faktor(mu, var, i)
+            break;
+            
         
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
         """
@@ -54,26 +57,26 @@ class Entropy(object):
         12:return Z, the approximation of F (A).
         """
         D = Mu.shape[0]
-        logS = np.empty((D-1,))
+        logS = np.zeros((D-1,))
         #mean time first moment
-        MP = np.empty((D-1,))
+        MP = np.zeros((D-1,))
         #precision, second moment 
-        P = np.empty((D-1,))
+        P = np.zeros((D-1,))
         
         M = np.copy(Mu)
         V = np.copy(Sigma)
         print "M =    ", M
         print "V =    ", V
         b = False
-        for count in xrange(2):
+        for count in xrange(50):
             diff = 0
             for i in range(D-1):
                 l = i if  i < k else i+1
+                print "~"*50
+                print "Iteration ", count, ".", i
+                print "~"*50 
                 M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, M, V, MP[i], P[i], gamma)
-                print ".......", i, l, k, d
-                print "M =    ", M
                 
-                #print "V =    ", V
                 if np.isnan(d): 
                     break;
                 diff += np.abs(d)
@@ -97,27 +100,41 @@ class Entropy(object):
             dVdSigma = np.zeros((1,0.5*(D*(D+1))))
         else:
             #evaluate log Z:
-            """"C = eye(D) / sq2 
+            C = np.eye(D) / sq2 
             C[k,:] = -1/sq2
-            C[:,k] = []
-            R       = sqrt(P') * C
-            r       = sum(bsxfun(@times,MP',C),2);
-            mpm     = MP.* MP ./ P;
-            mpm(MP==0) = 0;
+            C = np.delete(C, k, 1)
+            
+            R       = np.sqrt(np.transpose(P)) * C
+            print "R = ", R
+            r       = np.sum(np.transpose(MP) * C, 1)
+            print "r = ", r
+            mpm     = MP * MP / P;
+            """mpm(MP==0) = 0;"""
             mpm     = sum(mpm);
+            
             s       = sum(logS);
             
-            IRSR    = (eye(D-1) + R' * Sigma * R);
-            rSr     = r' * Sigma * r;
-            A       = R * (IRSR \ R');
-            A       = 0.5 * (A' + A); % ensure symmetry.
-            b       = (Mu + Sigma * r);
-            Ab      = A * b;
-            dts     = logdet(IRSR);
-            logZ    = 0.5 * (rSr - b' * Ab - dts) + Mu' * r + s - 0.5 * mpm;
-            if(logZ == inf); keyboard; end"""
+            print "s =", s
+            IRSR    = (np.eye(D-1) + np.dot(np.dot(np.transpose(R) , Sigma), R));
+            print "IRSR = ", IRSR 
+        
+            rSr     = np.dot(np.dot(np.transpose(r), Sigma) , r);
+            print "rSr=" , rSr
             
-            pass
+            #Lu = np.array(Lu)
+            #rhs = np.array(rhs)
+            A =  np.dot(R,np.linalg.solve(IRSR,np.transpose(R))) 
+            
+            A       = 0.5 * (np.transpose(A) + A) # ensure symmetry.
+            b       = (Mu + np.dot(Sigma,r));
+            Ab      = np.dot(A,b);
+            dts     = 2 * np.sum(np.log(np.diagonal(np.linalg.cholesky(IRSR))));
+            print dts
+            #logdet(IRSR);
+            logZ    = 0.5 * (rSr - np.dot(np.transpose(b), Ab) - dts) + np.dot(np.transpose(Mu), r) + s - 0.5 * mpm;
+            print logZ
+            #if(logZ == inf); keyboard; end"""
+            
     def _lt_factor(self, s, l, M, V, mp, p, gamma):
         """
         1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
@@ -150,40 +167,19 @@ class Entropy(object):
         Equation 21:
         
         """
-        if debug_print:
-            print "*-"*30
-            print M
-            print "*-"*30
-            print V
-            print "*-"*30
-        print V[l,l] , 2*V[l,s] , V[s,s]
         cVc = (V[l,l] - 2*V[s,l] + V[s,s])/ 2.0
         Vc  = (V[:, l] - V [:, s]) / sq2
         cM =  (M[l] - M[s])/ sq2
         cVnic = np.max([cVc/(1-p * cVc), 0])
         cmni = cM + cVnic * (p * cM - mp)
-        if 1  or debug_print:
-            print "cVc = ", cVc
-            print "Vc = ", Vc
-            print "cM = ", cM
-            print "cVnic =",cVnic
-            print "cmni = ",cmni
-        
         z     = cmni / np.sqrt(cVnic);
-        print "..........z........", z
         e,lP,exit_flag = self._log_relative_gauss( z)
-        if debug_print:
-                print "e = ", e
         if exit_flag == 0:
             alpha = e / np.sqrt(cVnic)
-            if debug_print:
-                print "alpha =", alpha 
             #beta  = alpha * (alpha + cmni / cVnic);
             #r     = beta * cVnic / (1 - cVnic * beta);
             beta  = alpha * (alpha * cVnic + cmni)
             r     = beta / (1 - beta)
-            if debug_print:
-                print "r = ", r
             # new message
             pnew  = r / cVnic
             mpnew = r * ( alpha + cmni / cVnic ) + alpha
@@ -195,18 +191,11 @@ class Entropy(object):
         
             pnew  = p  + dp;
             mpnew = mp + dmp;
-            if debug_print:
-                print "pnew = ", pnew
-            if debug_print:
-                print "mpnew = ", mpnew
             #project out to marginal
             Vnew  = V -  dp / (1 + dp * cVc) *np.outer(Vc,Vc)
+            
             #print "[---\n",Vc * np.transpose(Vc),"\n---\n", np.dot(Vc,np.transpose(Vc)),"\n---]"
-            if debug_print:
-                print "Vnew = ", Vnew 
             Mnew  = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
-            if debug_print:
-                print "Mnew = ", Mnew
             if np.any(np.isnan(Vnew)): raise Exception("oo")
             #if np.i Vnew)); keyboard; end
             #% if z < -30; keyboard; end
@@ -215,8 +204,7 @@ class Entropy(object):
             #%logS  = lP - 0.5 * (log(beta) - log(pnew)) + (alpha * alpha) / (2*beta);
             #% there is a problem here, when z is very large
             logS  = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic)) + (alpha * alpha) / (2*beta) * cVnic
-            if debug_print:
-                print "logS = ", logS 
+             
         elif exit_flag == -1:
             d = np.NAN
             Mnew  = 0
