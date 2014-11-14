@@ -29,6 +29,7 @@ def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X
 
 
 def main():
+    
     obj_samples = 700
     plot_min = -8
     plot_max = 19
