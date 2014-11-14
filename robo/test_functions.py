@@ -16,6 +16,6 @@ def branin(x):
 def branin2(x):
     c2 = np.empty(x[0].shape)
     c2.fill(12) 
-    return [branin([x[0], c2])]
+    return branin([x[0], c2])
  
     

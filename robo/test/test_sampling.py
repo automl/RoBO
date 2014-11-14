@@ -128,9 +128,9 @@ class SliceShrinkRankTestCase(unittest.TestCase):
         # print str(self.xx)
         # print self.xx.shape
 
-
-
-
 if __name__=="__main__":
     unittest.main()
+
+
+
 

@@ -43,8 +43,6 @@ class Entropy(object):
 
         # There are prior observations, i.e. it's not the first ES iteration
         dim = gp['x'].shape[1]
-        # print '\n' + '*'*30
-        # print str(gp['x'].size)
         EI = lambda x: x
 
         # Calculate the step size for the slice sampler
@@ -60,19 +58,6 @@ class Entropy(object):
         numblock = np.floor(n_representers / 10.)
         restarts = np.zeros((numblock, dim))
 
-        # print "numblock:" + str(numblock)
-        # print "restarts:\n" + str(restarts)
-        #
-        # print '*'*30
-        #
-        # print "left side: "
-        # print str(restarts[0:(np.minimum(numblock, BestGuesses.shape[0])), ])
-        #
-        # print "right side: "
-        # print str(BestGuesses[np.maximum(BestGuesses.shape[0]-numblock+1, 1) - 1:, ])
-        # print str(np.maximum(BestGuesses.shape[0]-numblock+1, 1) - 1)
-
-
         ### I don't really understand what the idea behind the following two assignments is...
         restarts[0:(np.minimum(numblock, BestGuesses.shape[0])), ] = \
             BestGuesses[np.maximum(BestGuesses.shape[0]-numblock+1, 1) - 1:, ]
@@ -86,15 +71,12 @@ class Entropy(object):
 
         xx = restarts[0, ]
         subsample = 20 # why this value?
-        # print str(range(0, subsample * n_representers + 1))
-        # print
         for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing (?)
             # print i,
             if (i % (subsample*10) == 0) & (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), ]
                 # print str(xx)
-            # TODO: implement the Slice_ShrinkRank_nolog function
-            # xx = Slice_ShrinkRank_nolog(xx,EI,d0,true)
+            xx = self.slice_ShrinkRank_nolog(xx,EI,d0)
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
                 # TODO: emb = EI(xx)

@@ -11,7 +11,7 @@ from models import GPyModel
 import numpy as np
 from test_functions import branin2, branin
 from acquisition import PI, UCB, Entropy
-from minimize import cma, DIRECT
+from maximize import cma, DIRECT
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -55,7 +55,7 @@ def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X
         _plot_model(model, acquisition_fkt, objective_fkt, i)
         model.update(new_x, new_y)
 
-
+        
 
 
 def main():
@@ -67,6 +67,7 @@ def main():
     X_upper = np.array([19])
     #initialize the samples
     X = np.empty((1, 1))
+
     Y = np.empty((1, 1))
     #draw a random sample from the objective function in the
     #dimension space 
