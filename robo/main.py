@@ -10,13 +10,15 @@ import pylab as pb
 from models import GPyModel 
 import numpy as np
 from test_functions import branin#, branin
-from acquisition import PI, UCB
+from acquisition import PI, UCB, Entropy
 from minimize import cma, DIRECT
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 10, callback_fkt=lambda model, acq, i:True):
     for i in xrange(maxN):
+        acquisition_fkt.model_changed()
+
         new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
         new_y = objective_fkt(new_x)
         if not callback_fkt(model, acquisition_fkt, objective_fkt, i): 
@@ -57,7 +59,7 @@ def main():
     Y[0,:] = objective_fkt(X[0,:])
     model = GPyModel(kernel)
     model.train(X,Y)
-    acquisition_fkt =  PI(model)
+    acquisition_fkt = Entropy(model)
     bayesian_optimization(objective_fkt, acquisition_fkt, model, DIRECT, X_lower, X_upper, maxN = 10, callback_fkt=_plot_model)
     
     
