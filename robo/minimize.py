@@ -35,4 +35,11 @@ except Exception, e:
     def cma(acquisition_fkt, X_lower, X_upper):
         raise NotImplementedError("cannot find cma library")
 
-
+def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
+    from numpy import linspace, array
+    if not isinstance(X_lower, (int, long, float, complex)):
+        raise RuntimeError("grid search works for 1D only")
+    x = linspace(X_lower, X_upper, resolution)
+    y = array(map(acquisition_fkt, x))
+    x_star = x[y.argmin()]
+    return x_star
