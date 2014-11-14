@@ -2,11 +2,11 @@ import sys
 sys.path.insert(0, '../')
 import unittest
 import numpy as np
-#import GPy
-#from models import GPyModel
+import GPy
+from models import GPyModel
 from acquisition import Entropy
 
-@unittest.skip("empty array, sampling from measure")
+# @unittest.skip("empty array, sampling from measure")
 class EmptySampleTestCase(unittest.TestCase):
     def setUp(self):
         self.x_prev = np.array([])
@@ -120,13 +120,9 @@ class NonEmptySampleTestCase(unittest.TestCase):
         entropy = Entropy(self.model)
         zb, mb = entropy.sample_from_measure(self.GP, self.xmin, self.xmax, 50, self.BestGuesses, 0)
 
+# TODO: test case for the slice shrink rank sampling method
 class SliceShrinkRankTestCase(unittest.TestCase):
-    def setUp(self):
-        self.xx = np.array([[-7.0358, -1.1344]])
 
-    def test(self):
-        # print str(self.xx)
-        # print self.xx.shape
 
 if __name__=="__main__":
     unittest.main()
