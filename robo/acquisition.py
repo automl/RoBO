@@ -91,13 +91,21 @@ class Entropy(object):
         print "logS = ", logS 
         if np.isnan(d): 
             logZ  = -np.Infinity;
+            yield logZ
             dlogZdMu = np.zeros((D,1))
+            yield dlogZdMu
             dlogZdSigma = np.zeros((0.5*(D*(D+1)),1))
+            yield dlogZdSigma
             dlogZdMudMu = np.zeros((D,D))
+            yield dlogZdMudMu
             mvmin = [Mu[k],Sigma[k,k]]
+            yield mvmin
             dMdMu = np.zeros((1,D))
+            yield dMdMu
             dMdSigma = np.zeros((1,0.5*(D*(D+1))))
+            yield dMdSigma
             dVdSigma = np.zeros((1,0.5*(D*(D+1))))
+            yield dVdSigma
         else:
             #evaluate log Z:
             C = np.eye(D) / sq2 
@@ -129,10 +137,16 @@ class Entropy(object):
             b       = (Mu + np.dot(Sigma,r));
             Ab      = np.dot(A,b);
             dts     = 2 * np.sum(np.log(np.diagonal(np.linalg.cholesky(IRSR))));
-            print dts
+            print "dts= ",dts
             #logdet(IRSR);
             logZ    = 0.5 * (rSr - np.dot(np.transpose(b), Ab) - dts) + np.dot(np.transpose(Mu), r) + s - 0.5 * mpm;
-            print logZ
+            print "logZ =", logZ
+            
+            
+            btA = np.dot(np.transpose(b), A)
+            yield logZ
+         
+             
             #if(logZ == inf); keyboard; end"""
             
     def _lt_factor(self, s, l, M, V, mp, p, gamma):
