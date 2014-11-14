@@ -127,7 +127,7 @@ class SliceShrinkRankTestCase(unittest.TestCase):
     def test(self):
         # print str(self.xx)
         # print self.xx.shape
-
+        assert(True)
 
 
 
