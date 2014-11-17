@@ -191,7 +191,7 @@ class LogEI(object):
             # Normal case
             else:
                 b = np.log(sigma) + norm.logpdf(z[i])
-                # log(y+z) is tricky, we distinguish two cases:
+                # log(y+z) is tricky, we distinguish two cases:
                 if eta > mu:
                     # When y>0, z>0, we define a=ln(y), b=ln(z).
                     # Then y+z = exp[ max(a,b) + ln(1 + exp(-|b-a|)) ],
