@@ -24,8 +24,8 @@ class GPyModel(object):
         #sys.stdout = stdout
     def update(self, X, Y, Z=None):
         #print self.X, self.Y
-        X = np.append(self.X, [X], axis=0)
-        Y = np.append(self.Y, [Y], axis=0)
+        X = np.append(self.X, X, axis=0)
+        Y = np.append(self.Y, Y, axis=0)
         if self.Z != None:
             Z = np.append(self.Z, [Z], axis=0)
         self.train(X, Y, Z)

@@ -37,9 +37,9 @@ except Exception, e:
 
 def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     from numpy import linspace, array
-    if not isinstance(X_lower, (int, long, float, complex)):
+    if  X_lower.shape[0] >1 :
         raise RuntimeError("grid search works for 1D only")
-    x = linspace(X_lower, X_upper, resolution)
+    x = linspace(X_lower[0], X_upper[0], resolution).reshape((resolution, 1))
     y = array(map(acquisition_fkt, x))
-    x_star = x[y.argmin()]
+    x_star = x[y.argmax()]
     return x_star

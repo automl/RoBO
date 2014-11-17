@@ -33,7 +33,6 @@ class Entropy(object):
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
     def sample_from_measure(self, gp, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
-
         # If there are no prior observations, do uniform sampling
         if (gp['x'].size == 0):
             dim = xmax.size
