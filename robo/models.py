@@ -19,8 +19,9 @@ class GPyModel(object):
         #sys.stdout = StringIO.StringIO()
         self.m.constrain_fixed('.*noise', self.noise_variance)
         self.m.optimize()
-        self.X_star = self.X[np.argmax(self.Y)]
-        self.Y_star = np.max(self.Y)
+        index_min = np.argmin(self.Y)
+        self.X_star = self.X[index_min]
+        self.Y_star = self.Y[index_min]
         #sys.stdout = stdout
     def update(self, X, Y, Z=None):
         #print self.X, self.Y

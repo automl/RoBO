@@ -10,7 +10,7 @@ import pylab as pb
 from models import GPyModel 
 import numpy as np
 from test_functions import branin2, branin
-from acquisition import PI, UCB, Entropy
+from acquisition import PI, UCB, Entropy, EI
 from maximize import cma, DIRECT, grid_search
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -88,7 +88,7 @@ def main():
     #
     # creating an acquisition function
     #
-    acquisition_fkt = UCB(model)
+    acquisition_fkt = EI(model)
     #
     # start the main loop
     #
