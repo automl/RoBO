@@ -33,7 +33,6 @@ class Entropy(object):
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
     def sample_from_measure(self, gp, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
-
         # If there are no prior observations, do uniform sampling
         if (gp['x'].size == 0):
             dim = xmax.size
@@ -151,12 +150,14 @@ class Entropy(object):
 
 
 class EI(object):
-    def __init__(self, model):
+    def __init__(self, model, par = 0.01):
         self.model = model
-    def __call__(self, x, par = 0.01, Z=None, **kwargs):
+        self.par = par
+    def __call__(self, x, Z=None, **kwargs):
         f_est = self.model.predict(x)
-        z = (f_est[0] - max(f_est[0]) - par) / f_est[1]
-        acqu = (f_est[0] - max(f_est[0]) - par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
+        eta = self.model.getCurrentBest()
+        z = (eta - f_est[0] +self.par) / f_est[1]
+        acqu = (eta - f_est[0] +self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
         return acqu
 
     def model_changed(self):
