@@ -173,7 +173,7 @@ class LogEI(object):
         f_est = self.model.predict(x)
         eta = self.model.getCurrentBest()
         z = (eta - f_est[0] - self.par) / f_est[1]
-        log_ei = np.zeros(f_est[0].size, 1)
+        log_ei = np.zeros((f_est[0].size, 1))
 
         for i in range(0, f_est[0].size):
             mu, sigma = f_est[0][i], f_est[1][i]
@@ -210,3 +210,6 @@ class LogEI(object):
                     else:
                         log_ei[i] = b + np.log(1 - np.exp(a - b))
         return log_ei
+
+    def model_changed(self):
+        pass
