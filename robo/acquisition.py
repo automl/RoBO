@@ -2,12 +2,13 @@ from scipy.stats import norm
 import numpy as np
 
 class PI(object):
-    def __init__(self, model):
+    def __init__(self, model, par=0.001):
         self.model = model
+        self.par = par
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
         Y_star = self.model.getCurrentBest()
-        u = 1 - norm.cdf((mean - Y_star) / var)
+        u = norm.cdf((Y_star - mean - self.par ) / var)
         return u
     def model_changed(self):
         pass
