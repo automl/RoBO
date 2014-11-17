@@ -43,7 +43,6 @@ class Entropy(object):
 
         # There are prior observations, i.e. it's not the first ES iteration
         dim = gp['x'].shape[1]
-        EI = lambda x: x
 
         # Calculate the step size for the slice sampler
         d0 = np.divide(
@@ -76,11 +75,10 @@ class Entropy(object):
             if (i % (subsample*10) == 0) & (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), ]
                 # print str(xx)
-            xx = self.slice_ShrinkRank_nolog(xx,EI,d0)
+            xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0)
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
-                # TODO: emb = EI(xx)
-                emb = 1
+                emb = acquisition_fn(xx)
                 mb[(i / subsample) - 1]  = np.log(emb)
 
         # Return values
@@ -161,7 +159,11 @@ class EI(object):
         acqu = (f_est[0] - max(f_est[0]) - par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
         return acqu
 
-
-
     def model_changed(self):
         pass
+
+class LogEI(object):
+    def __init__(self, model):
+        self.model = model
+    def __call__(self, x, par = 0.01, Z=None, **kwargs):
+        f_est = self.model.predict(x)
