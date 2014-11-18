@@ -1,3 +1,42 @@
+"""
+this module contains different model classes that can be used by the Bayesian
+Optimization
+
+thios model interface is taken from  the `bitbucket wiki <http://https://bitbucket.org/aadfreiburg/robo/wiki/Home>`_
+
+.. class:: Model
+    
+
+    .. method:: Train (X,Z,Y)
+     
+       :params Z:  are the instance features
+    
+    .. method:: marginalize features
+    
+    .. method:: conditionalize features
+    
+    .. method:: predict (X,Z)
+     
+       :returns mean, variance:
+       
+    .. method:: update(X,Z,Y)
+    
+    .. method:: downdate()
+    
+    .. method:: load() 
+    
+    .. method:: save()
+    
+    other wishes:
+    
+        * Training should support approximations
+        * Training should support an interface for optimizing the hyperparameters of the model
+        * interface to compute the information gain
+        * interface to draw sample from the model
+        * validate()
+
+"""
+
 import sys
 import StringIO
 import numpy as np
@@ -7,7 +46,7 @@ class GPyModel(object):
     """
     GPyModel is just a wrapper around the GPy Lib
     """
-    def __init__(self, kernel, noise_variance = 0.001,*args, **kwargs):
+    def __init__(self, kernel, noise_variance = 0.002,*args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
     def train(self, X, Y,  Z=None):
@@ -17,16 +56,16 @@ class GPyModel(object):
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
         #stdout = sys.stdout
         #sys.stdout = StringIO.StringIO()
-        self.m.unconstrain('.*')
         self.m.constrain_fixed('.*noise', self.noise_variance)
         self.m.optimize()
-        self.X_star = self.X[np.argmax(self.Y)]
-        self.Y_star = np.max(self.Y)
+        index_min = np.argmin(self.Y)
+        self.X_star = self.X[index_min]
+        self.Y_star = self.Y[index_min]
         #sys.stdout = stdout
     def update(self, X, Y, Z=None):
         #print self.X, self.Y
-        X = np.append(self.X, [X], axis=0)
-        Y = np.append(self.Y, [Y], axis=0)
+        X = np.append(self.X, X, axis=0)
+        Y = np.append(self.Y, Y, axis=0)
         if self.Z != None:
             Z = np.append(self.Z, [Z], axis=0)
         self.train(X, Y, Z)
@@ -34,8 +73,8 @@ class GPyModel(object):
     
     def predict(self, X, Z=None):
         #print "X", X
-        mean, var, _025pm, _975pm = self.m.predict(X, which_parts='all', full_cov=True)
-        return mean[:,0], var
+        mean, var, _025pm, _975pm = self.m.predict(X)
+        return mean[:,0], var[:,0]
     
     def load(self, filename):
         pass

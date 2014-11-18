@@ -1,26 +1,51 @@
 #encoding=utf8
+"""
+this module contains acquisition functions that have high values
+where the objective function is low.
 
+.. class:: AcquisitionFunction
+
+    An acquisition function is a class that gets instatiated with a model 
+    and optional additional parameters. It then gets called via a maximizer.
+
+    .. method:: __init__(model, **optional_kwargs)
+                
+        :param model: A model should have at least the function getCurrentBest() 
+                      and predict(X, Z)
+
+    .. method:: __call__(X, Z=None)
+               
+        :param X: X values, where to evaluate the acquisition function 
+        :param Z: instance features to evaluate at. Could be None.
+    
+    .. method:: model_changed()
+    
+        this method should be called if the model is updated. The Entropy search needs
+        to update its aproximation about P(x=x_min) 
+"""
 from scipy.stats import norm
 import scipy
 import numpy as np
 
 class PI(object):
-    def __init__(self, model):
+    def __init__(self, model, par=0.001, **kwargs):
         self.model = model
+        self.par = par
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
         Y_star = self.model.getCurrentBest()
-        u = 1 - norm.cdf((mean - Y_star) / var)
+        u = norm.cdf((Y_star - mean - self.par ) / var)
         return u
     def model_changed(self):
         pass
 
 class UCB(object):
-    def __init__(self, model):
+    def __init__(self, model, par=1.0, **kwargs):
         self.model = model
+        self.par = par
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
-        return -mean + var
+        return -mean + self.par * var
     def model_changed(self):
         pass
 
@@ -270,7 +295,6 @@ class Entropy(object):
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
     def sample_from_measure(self, gp, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
-
         # If there are no prior observations, do uniform sampling
         if (gp['x'].size == 0):
             dim = xmax.size
@@ -280,9 +304,6 @@ class Entropy(object):
 
         # There are prior observations, i.e. it's not the first ES iteration
         dim = gp['x'].shape[1]
-        # print '\n' + '*'*30
-        # print str(gp['x'].size)
-        EI = lambda x: x
 
         # Calculate the step size for the slice sampler
         d0 = np.divide(
@@ -297,19 +318,6 @@ class Entropy(object):
         numblock = np.floor(n_representers / 10.)
         restarts = np.zeros((numblock, dim))
 
-        # print "numblock:" + str(numblock)
-        # print "restarts:\n" + str(restarts)
-        #
-        # print '*'*30
-        #
-        # print "left side: "
-        # print str(restarts[0:(np.minimum(numblock, BestGuesses.shape[0])), ])
-        #
-        # print "right side: "
-        # print str(BestGuesses[np.maximum(BestGuesses.shape[0]-numblock+1, 1) - 1:, ])
-        # print str(np.maximum(BestGuesses.shape[0]-numblock+1, 1) - 1)
-
-
         ### I don't really understand what the idea behind the following two assignments is...
         restarts[0:(np.minimum(numblock, BestGuesses.shape[0])), ] = \
             BestGuesses[np.maximum(BestGuesses.shape[0]-numblock+1, 1) - 1:, ]
@@ -323,19 +331,15 @@ class Entropy(object):
 
         xx = restarts[0, ]
         subsample = 20 # why this value?
-        # print str(range(0, subsample * n_representers + 1))
-        # print
         for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing (?)
             # print i,
             if (i % (subsample*10) == 0) & (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), ]
                 # print str(xx)
-            # TODO: implement the Slice_ShrinkRank_nolog function
-            # xx = Slice_ShrinkRank_nolog(xx,EI,d0,true)
+            xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0)
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
-                # TODO: emb = EI(xx)
-                emb = 1
+                emb = acquisition_fn(xx)
                 mb[(i / subsample) - 1]  = np.log(emb)
 
         # Return values
@@ -404,13 +408,65 @@ class Entropy(object):
 
 
 class EI(object):
-    def __init__(self, model):
+    def __init__(self, model, par = 0.01, **kwargs):
         self.model = model
+        self.par = par
+    def __call__(self, x, Z=None, **kwargs):
+        f_est = self.model.predict(x)
+        eta = self.model.getCurrentBest()
+        z = (eta - f_est[0] +self.par) / f_est[1]
+        acqu = (eta - f_est[0] +self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
+        return acqu
+
+    def model_changed(self):
+        pass
+
+
+class LogEI(object):
+    def __init__(self, model, par = 0.01):
+        self.model = model
+        self.par = par
     def __call__(self, x, par = 0.01, Z=None, **kwargs):
         f_est = self.model.predict(x)
-        z = (f_est[0] - max(f_est[0]) - par) / f_est[1]
-        acqu = (f_est[0] - max(f_est[0]) - par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
-        return acqu
+        eta = self.model.getCurrentBest()
+        z = (eta - f_est[0] - self.par) / f_est[1]
+        log_ei = np.zeros((f_est[0].size, 1))
+
+        for i in range(0, f_est[0].size):
+            mu, sigma = f_est[0][i], f_est[1][i]
+            # Degenerate case 1: first term vanishes
+            if abs(eta - mu) == 0:
+                if sigma > 0:
+                    log_ei[i] = np.log(sigma) + norm.logpdf(z[i])
+                else:
+                    log_ei[i] = -float('Inf')
+            # Degenerate case 2: second term vanishes and first term has a special form.
+            elif sigma == 0:
+                if mu < eta:
+                    log_ei[i] = np.log(eta - mu)
+                else:
+                    log_ei[i] = -float('Inf')
+            # Normal case
+            else:
+                b = np.log(sigma) + norm.logpdf(z[i])
+                # log(y+z) is tricky, we distinguish two cases
+                if eta > mu:
+                    # When y>0, z>0, we define a=ln(y), b=ln(z).
+                    # Then y+z = exp[ max(a,b) + ln(1 + exp(-|b-a|)) ],
+                    # and thus log(y+z) = max(a,b) + ln(1 + exp(-|b-a|))
+                    a = np.log(eta - mu) + norm.logcdf(z[i])
+                    log_ei[i] = max(a, b) + np.log(1 + np.exp(-abs(b-a)))
+                else:
+                    # When y<0, z>0, we define a=ln(-y), b=ln(z), and it has to be true that b >= a in order to satisfy y+z>=0.
+                    # Then y+z = exp[ b + ln(exp(b-a) -1) ],
+                    # and thus log(y+z) = a + ln(exp(b-a) -1)
+                    a = np.log(mu - eta) + norm.logcdf(z[i])
+                    if a >= b:
+                        # a>b can only happen due to numerical inaccuracies or approximation errors
+                        log_ei[i] = -float('Inf')
+                    else:
+                        log_ei[i] = b + np.log(1 - np.exp(a - b))
+        return log_ei
 
     def model_changed(self):
         pass    
@@ -423,6 +479,7 @@ class EI(object):
 #Expectation of zb of GP
 
 #logP
+
 def test():
     import GPy
     from models import GPyModel
@@ -433,9 +490,10 @@ def test():
     X = np.empty((1, 2))
     Y = np.empty((1, 1))
     X[0,:] = [2.6190,    5.4830] #random.random() * (X_upper[0] - X_lower[0]) + X_lower[0]];
-    objective_fkt= branin
-    Y[0,:] = objective_fkt(X[0,:])
     
+    objective_fkt= branin
+    
+    Y[0:] = objective_fkt(X)
     model = GPyModel(kernel,noise_variance=0.044855)
     model.train(X,Y)
     model.m.optimize()
@@ -445,221 +503,221 @@ def test():
     #print model.predict(np.array(zb[0:2,:]))
     
 
-
-zb =np.array([[14.3455,    0.4739],
-    [4.7943,   -2.2227],
-    [5.0096,   -3.8949],
-   [-2.5391,    3.5426],
-   [-0.5479,    1.7762],
-   [-2.6867,    4.1843],
-   [-2.4620,   12.2733],
-   [-0.0505,   -3.2885],
-    [2.7611,   -4.8736],
-   [13.9763,    8.7406],
-    [8.5846,   13.7285],
-    [8.8334,   -0.8107],
-    [4.4899,    3.0050],
-   [14.6994,   10.2945],
-   [12.2605,    2.0057],
-   [13.0723,   10.5736],
-    [9.1154,   -0.3920],
-    [3.1969,   13.8373],
-    [5.8514,    5.3512],
-   [10.6769,   10.6335],
-   [13.2543,    0.3430],
-    [8.3957,    8.9913],
-    [4.8477,   14.5783],
-    [7.6631,   14.2574],
-   [-1.1363,   -4.0688],
-   [-2.3865,   -1.8635],
-   [-4.6856,   -2.9748],
-   [13.2557,   -3.2124],
-    [2.3016,   -4.2264],
-    [9.4008,   -3.2105],
-   [-3.8363,   11.6387],
-   [13.4973,    1.3641],
-   [-4.7570,   -3.1846],
-   [14.0831,    5.2030],
-   [14.7648,    7.1242],
-    [1.3154,   -2.1135],
-   [12.2356,    8.6618],
-   [-3.1422,   -0.8687],
-   [10.6497,   10.0474],
-   [-4.5171,   11.1157],
-    [3.3472,   -2.1601],
-    [2.6074,   -0.7084],
-    [7.9226,   -2.9915],
-   [-3.0507,    2.4470],
-   [-1.1147,   12.1506],
-    [6.3822,   -4.8960],
-    [7.2049,   -1.7246],
-    [0.1262,   14.3814],
-    [13.8807,   4.5143],
-    [7.9338,    0.5726],
-])
-
-lmb =np.array([
-    [2.1841],
-    [1.8634],
-    [2.0266],
-    [1.4540],
-    [1.3051],
-    [1.4434],
-    [1.9170],
-    [1.9842],
-    [2.0748],
-    [2.1509],
-    [2.0629],
-    [1.9540],
-    [0.7383],
-    [2.1914],
-    [2.0677],
-    [2.1428],
-    [1.9456],
-    [1.9055],
-    [0.7901],
-    [2.0176],
-    [2.1507],
-    [1.6886],
-    [2.0012],
-    [2.0591],
-    [2.0687],
-    [1.9583],
-    [2.1216],
-    [2.2093],
-    [2.0295],
-    [2.1138],
-    [1.9612],
-    [2.1431],
-    [2.1316],
-    [2.1357],
-    [2.1678],
-    [1.8261],
-    [2.0596],
-    [1.9269],
-    [1.9902],
-    [1.9772],
-    [1.8222],
-    [1.5904],
-    [2.0504],
-    [1.6336],
-    [1.8176],
-    [2.1146],
-    [1.9235],
-    [1.9905],
-    [2.1279],
-    [1.7617],
-])
-"""
-Mb =
-
-    [0.7382]
-    [3.4305]
-    [2.1637]
-    [5.8063]
-    [6.4360]
-    [5.8548]
-    [3.0368]
-    [2.5130]
-    [1.7496]
-    [1.0568]
-    [1.8536]
-    [2.7524]
-    [8.0227]
-    [0.6672]
-    [1.8115]
-    [1.1321]
-    [2.8180]
-    [3.1232]
-    [7.9201]
-    [2.2393]
-    [1.0580]
-    [4.5731]
-    [2.3748]
-    [1.8870]
-    [1.8034]
-    [2.7185]
-    [1.3294]
-    [0.4910]
-    [2.1398]
-    [1.4001]
-    [2.6957]
-    [1.1301]
-    [1.2365]
-    [1.1991]
-    [0.8956]
-    [3.6917]
-    [1.8825]
-    [2.9615]
-    [2.4640]
-    [2.5690]
-    [3.7182]
-    [5.1282]
-    [1.9616]
-    [4.8915]
-    [3.7501]
-    [1.3932]
-    [2.9873]
-    [2.4613]
-    [1.2711]
-    [4.1206]
-
-
-logP =
-
-   [-2.9708]
-   [-5.7440]
-   [-4.8360]
-   [-9.0724]
-   [-8.3878]
-   [-5.6195]
-   [-4.3381]
-   [-5.1012]
-   [-3.1954]
-   [-4.6078]
-   [-3.3173]
-   [-5.5302]
-  [-10.7671]
-   [-2.6518]
-   [-4.3479]
-   [-3.7004]
-   [-4.9394]
-   [-4.5230]
-   [-9.7196]
-   [-4.3727]
-   [-4.4313]
-   [-5.5980]
-   [-3.2950]
-   [-3.2949]
-   [-3.3316]
-   [-5.1482]
-   [-3.7303]
-   [-2.4316]
-   [-4.9547]
-   [-3.5023]
-   [-4.0596]
-   [-4.6006]
-   [-2.5968]
-   [-3.9474]
-   [-3.1956]
-   [-5.8456]
-   [-4.5595]
-   [-4.4042]
-   [-5.2002]
-   [-2.8613]
-   [-6.0557]
-   [-7.2198]
-   [-4.8528]
-   [-4.5403]
-   [-5.6116]
-   [-2.9593]
-   [-5.5145]
-   [-3.0241]
-   [-3.8651]
-   [-5.7802]
-
-"""
-
+if __name__ == "__main__":
+    zb =np.array([[14.3455,    0.4739],
+        [4.7943,   -2.2227],
+        [5.0096,   -3.8949],
+       [-2.5391,    3.5426],
+       [-0.5479,    1.7762],
+       [-2.6867,    4.1843],
+       [-2.4620,   12.2733],
+       [-0.0505,   -3.2885],
+        [2.7611,   -4.8736],
+       [13.9763,    8.7406],
+        [8.5846,   13.7285],
+        [8.8334,   -0.8107],
+        [4.4899,    3.0050],
+       [14.6994,   10.2945],
+       [12.2605,    2.0057],
+       [13.0723,   10.5736],
+        [9.1154,   -0.3920],
+        [3.1969,   13.8373],
+        [5.8514,    5.3512],
+       [10.6769,   10.6335],
+       [13.2543,    0.3430],
+        [8.3957,    8.9913],
+        [4.8477,   14.5783],
+        [7.6631,   14.2574],
+       [-1.1363,   -4.0688],
+       [-2.3865,   -1.8635],
+       [-4.6856,   -2.9748],
+       [13.2557,   -3.2124],
+        [2.3016,   -4.2264],
+        [9.4008,   -3.2105],
+       [-3.8363,   11.6387],
+       [13.4973,    1.3641],
+       [-4.7570,   -3.1846],
+       [14.0831,    5.2030],
+       [14.7648,    7.1242],
+        [1.3154,   -2.1135],
+       [12.2356,    8.6618],
+       [-3.1422,   -0.8687],
+       [10.6497,   10.0474],
+       [-4.5171,   11.1157],
+        [3.3472,   -2.1601],
+        [2.6074,   -0.7084],
+        [7.9226,   -2.9915],
+       [-3.0507,    2.4470],
+       [-1.1147,   12.1506],
+        [6.3822,   -4.8960],
+        [7.2049,   -1.7246],
+        [0.1262,   14.3814],
+        [13.8807,   4.5143],
+        [7.9338,    0.5726],
+    ])
     
-test()
+    lmb =np.array([
+        [2.1841],
+        [1.8634],
+        [2.0266],
+        [1.4540],
+        [1.3051],
+        [1.4434],
+        [1.9170],
+        [1.9842],
+        [2.0748],
+        [2.1509],
+        [2.0629],
+        [1.9540],
+        [0.7383],
+        [2.1914],
+        [2.0677],
+        [2.1428],
+        [1.9456],
+        [1.9055],
+        [0.7901],
+        [2.0176],
+        [2.1507],
+        [1.6886],
+        [2.0012],
+        [2.0591],
+        [2.0687],
+        [1.9583],
+        [2.1216],
+        [2.2093],
+        [2.0295],
+        [2.1138],
+        [1.9612],
+        [2.1431],
+        [2.1316],
+        [2.1357],
+        [2.1678],
+        [1.8261],
+        [2.0596],
+        [1.9269],
+        [1.9902],
+        [1.9772],
+        [1.8222],
+        [1.5904],
+        [2.0504],
+        [1.6336],
+        [1.8176],
+        [2.1146],
+        [1.9235],
+        [1.9905],
+        [2.1279],
+        [1.7617],
+    ])
+    """
+    Mb =
+    
+        [0.7382]
+        [3.4305]
+        [2.1637]
+        [5.8063]
+        [6.4360]
+        [5.8548]
+        [3.0368]
+        [2.5130]
+        [1.7496]
+        [1.0568]
+        [1.8536]
+        [2.7524]
+        [8.0227]
+        [0.6672]
+        [1.8115]
+        [1.1321]
+        [2.8180]
+        [3.1232]
+        [7.9201]
+        [2.2393]
+        [1.0580]
+        [4.5731]
+        [2.3748]
+        [1.8870]
+        [1.8034]
+        [2.7185]
+        [1.3294]
+        [0.4910]
+        [2.1398]
+        [1.4001]
+        [2.6957]
+        [1.1301]
+        [1.2365]
+        [1.1991]
+        [0.8956]
+        [3.6917]
+        [1.8825]
+        [2.9615]
+        [2.4640]
+        [2.5690]
+        [3.7182]
+        [5.1282]
+        [1.9616]
+        [4.8915]
+        [3.7501]
+        [1.3932]
+        [2.9873]
+        [2.4613]
+        [1.2711]
+        [4.1206]
+    
+    
+    logP =
+    
+       [-2.9708]
+       [-5.7440]
+       [-4.8360]
+       [-9.0724]
+       [-8.3878]
+       [-5.6195]
+       [-4.3381]
+       [-5.1012]
+       [-3.1954]
+       [-4.6078]
+       [-3.3173]
+       [-5.5302]
+      [-10.7671]
+       [-2.6518]
+       [-4.3479]
+       [-3.7004]
+       [-4.9394]
+       [-4.5230]
+       [-9.7196]
+       [-4.3727]
+       [-4.4313]
+       [-5.5980]
+       [-3.2950]
+       [-3.2949]
+       [-3.3316]
+       [-5.1482]
+       [-3.7303]
+       [-2.4316]
+       [-4.9547]
+       [-3.5023]
+       [-4.0596]
+       [-4.6006]
+       [-2.5968]
+       [-3.9474]
+       [-3.1956]
+       [-5.8456]
+       [-4.5595]
+       [-4.4042]
+       [-5.2002]
+       [-2.8613]
+       [-6.0557]
+       [-7.2198]
+       [-4.8528]
+       [-4.5403]
+       [-5.6116]
+       [-2.9593]
+       [-5.5145]
+       [-3.0241]
+       [-3.8651]
+       [-5.7802]
+    
+    """
+    
+        
+    test()
 
