@@ -2,7 +2,7 @@
 this module contains acquisition functions that have high values
 where the objective function is low.
 
-.. class:: AcquisitionFunc
+.. class:: AcquisitionFunction
 
     An acquisition function is a class that gets instatiated with a model 
     and optional additional parameters. It then gets called via a maximizer.
@@ -16,6 +16,11 @@ where the objective function is low.
                
         :param X: X values, where to evaluate the acquisition function 
         :param Z: instance features to evaluate at. Could be None.
+    
+    .. method:: model_changed()
+    
+        this method should be called if the model is updated. The Entropy search needs
+        to update its aproximation about P(x=x_min) 
 """
 from scipy.stats import norm
 import numpy as np
