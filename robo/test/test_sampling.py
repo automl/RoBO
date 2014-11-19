@@ -4,9 +4,9 @@ import unittest
 import numpy as np
 import GPy
 from models import GPyModel
-from acquisition import Entropy
+from acquisition import Entropy, PI
 
-# @unittest.skip("empty array, sampling from measure")
+@unittest.skip("empty array, sampling from measure")
 class EmptySampleTestCase(unittest.TestCase):
     def setUp(self):
         self.x_prev = np.array([])
@@ -18,27 +18,6 @@ class EmptySampleTestCase(unittest.TestCase):
         self.model = 'model'
 
         # This is the GP struct from the main loop in the ES algorithm
-
-        # GP              = struct;
-        # GP.covfunc      = in.covfunc;
-        # GP.covfunc_dx   = in.covfunc_dx;
-        # %GP.covfunc_dx   = in.covfunc_dx;
-        # %GP.covfunc_dxdz = in.covfunc_dxdz;
-        # GP.likfunc      = in.likfunc;
-        # GP.hyp          = in.hyp;
-        # GP.res          = 1;
-        # GP.deriv        = in.with_deriv;
-        # GP.poly         = in.poly;
-        # GP.log          = in.log;
-        # %GP.SampleHypers = in.SampleHypers;
-        # %GP.HyperSamples = in.HyperSamples;
-        # %GP.HyperPrior   = in.HyperPrior;
-        #
-        # GP.x            = in.x;
-        # GP.y            = in.y;
-        # %GP.dy           = in.dy;
-        # GP.K            = [];
-        # GP.cK           = [];
 
         self.GP = {}
         self.GP['covfunc'] = lambda x: x
@@ -61,7 +40,7 @@ class EmptySampleTestCase(unittest.TestCase):
         self.assertAlmostEqual(mb[1], -6.59167373)
 
 
-@unittest.skip("non empty array, sampling from measure")
+# @unittest.skip("non empty array, sampling from measure")
 class NonEmptySampleTestCase(unittest.TestCase):
     def setUp(self):
         self.x_prev = np.array([])
@@ -70,30 +49,15 @@ class NonEmptySampleTestCase(unittest.TestCase):
         self.n_representers = 50
         # self.kernel = GPy.kern.rbf(input_dim=2, variance=12.3, lengthscale=5.0)
         # self.model = GPyModel(self.kernel)
-        self.model = 'model'
+
+        self.X = np.random.uniform(-3.,3.,(20,1))
+        self.Y = np.sin(self.X) + np.random.randn(20,1)*0.05
+        self.kernel = GPy.kern.rbf(input_dim=2, variance=12.3, lengthscale=5.0)
+        self.model = GPyModel(self.kernel)
+        self.model.train(self.X, self.Y)
+
 
         # This is the GP struct from the main loop in the ES algorithm
-
-        # GP              = struct;
-        # GP.covfunc      = in.covfunc;
-        # GP.covfunc_dx   = in.covfunc_dx;
-        # %GP.covfunc_dx   = in.covfunc_dx;
-        # %GP.covfunc_dxdz = in.covfunc_dxdz;
-        # GP.likfunc      = in.likfunc;
-        # GP.hyp          = in.hyp;
-        # GP.res          = 1;
-        # GP.deriv        = in.with_deriv;
-        # GP.poly         = in.poly;
-        # GP.log          = in.log;
-        # %GP.SampleHypers = in.SampleHypers;
-        # %GP.HyperSamples = in.HyperSamples;
-        # %GP.HyperPrior   = in.HyperPrior;
-        #
-        # GP.x            = in.x;
-        # GP.y            = in.y;
-        # %GP.dy           = in.dy;
-        # GP.K            = [];
-        # GP.cK           = [];
 
         self.GP = {}
         self.GP['covfunc'] = lambda x: x
@@ -118,10 +82,12 @@ class NonEmptySampleTestCase(unittest.TestCase):
 
     def test(self):
         entropy = Entropy(self.model)
-        zb, mb = entropy.sample_from_measure(self.GP, self.xmin, self.xmax, 50, self.BestGuesses, 0)
+        # create acquisition function for the sampling of representer points:
+        acquisition = PI(self.model)
+        zb, mb = entropy.sample_from_measure(self.GP, self.xmin, self.xmax, 50, self.BestGuesses, acquisition)
 
 # TODO: test case for the slice shrink rank sampling method
-class SliceShrinkRankTestCase(unittest.TestCase):
+# class SliceShrinkRankTestCase(unittest.TestCase):
 
 
 if __name__=="__main__":

@@ -33,6 +33,9 @@ class Entropy(object):
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
     def sample_from_measure(self, gp, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
+        # TODO: does it make sense to use the same GP model for the acquisition function used in the sampling of representer points?
+        acquisition_fn = acquisition_fn(self.model)
+
         # If there are no prior observations, do uniform sampling
         if (gp['x'].size == 0):
             dim = xmax.size
@@ -74,7 +77,7 @@ class Entropy(object):
             if (i % (subsample*10) == 0) & (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), ]
                 # print str(xx)
-            xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0)
+            xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
                 emb = acquisition_fn(xx)
@@ -90,13 +93,13 @@ class Entropy(object):
         else:
             return v
 
-    def slice_shrinkRank_nolog(self, xx, P, s0, transpose):
+    def slice_ShrinkRank_nolog(self, xx, P, s0, transpose):
         # This function is equivalent to the similarly named function in the original ES code
         if transpose:
             xx = xx.transpose()
 
         D = xx.shape[0]
-        f = P(xx.transpose())[0]
+        f = P(xx.transpose())
         logf = np.log(f)
         logy = np.log(np.random.uniform()) + logf
 
