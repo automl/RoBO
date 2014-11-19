@@ -1,23 +1,44 @@
+"""
+this module contains acquisition functions that have high values
+where the objective function is low.
+
+.. class:: AcquisitionFunc
+
+    An acquisition function is a class that gets instatiated with a model 
+    and optional additional parameters. It then gets called via a maximizer.
+
+    .. method:: __init__(model, **optional_kwargs)
+                
+        :param model: A model should have at least the function getCurrentBest() 
+                      and predict(X, Z)
+
+    .. method:: __call__(X, Z=None)
+               
+        :param X: X values, where to evaluate the acquisition function 
+        :param Z: instance features to evaluate at. Could be None.
+"""
 from scipy.stats import norm
 import numpy as np
 
 class PI(object):
-    def __init__(self, model):
+    def __init__(self, model, par=0.001, **kwargs):
         self.model = model
+        self.par = par
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
         Y_star = self.model.getCurrentBest()
-        u = 1 - norm.cdf((mean - Y_star) / var)
+        u = norm.cdf((Y_star - mean - self.par ) / var)
         return u
     def model_changed(self):
         pass
 
 class UCB(object):
-    def __init__(self, model):
+    def __init__(self, model, par=1.0, **kwargs):
         self.model = model
+        self.par = par
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
-        return -mean + var
+        return -mean + self.par * var
     def model_changed(self):
         pass
 
@@ -153,7 +174,7 @@ class Entropy(object):
 
 
 class EI(object):
-    def __init__(self, model, par = 0.01):
+    def __init__(self, model, par = 0.01, **kwargs):
         self.model = model
         self.par = par
     def __call__(self, x, Z=None, **kwargs):
@@ -175,7 +196,7 @@ class LogEI(object):
         f_est = self.model.predict(x)
         eta = self.model.getCurrentBest()
         z = (eta - f_est[0] - self.par) / f_est[1]
-        log_ei = np.zeros(f_est[0].size, 1)
+        log_ei = np.zeros((f_est[0].size, 1))
 
         for i in range(0, f_est[0].size):
             mu, sigma = f_est[0][i], f_est[1][i]
@@ -212,3 +233,6 @@ class LogEI(object):
                     else:
                         log_ei[i] = b + np.log(1 - np.exp(a - b))
         return log_ei
+
+    def model_changed(self):
+        pass

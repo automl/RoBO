@@ -88,7 +88,7 @@ def main():
     #
     # creating an acquisition function
     #
-    acquisition_fkt = EI(model)
+    acquisition_fkt = PI(model, par=15.01)
     #
     # start the main loop
     #
