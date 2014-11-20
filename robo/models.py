@@ -53,15 +53,12 @@ class GPyModel(object):
         self.X = X
         self.Y = Y
         self.Z = Z
-        self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
-        #stdout = sys.stdout
-        #sys.stdout = StringIO.StringIO()
+        self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
         self.m.constrain_fixed('.*noise', self.noise_variance)
         self.m.optimize()
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
-        #sys.stdout = stdout
     def update(self, X, Y, Z=None):
         #print self.X, self.Y
         X = np.append(self.X, X, axis=0)
@@ -71,11 +68,14 @@ class GPyModel(object):
         self.train(X, Y, Z)
         
     
-    def predict(self, X, Z=None):
+    def predict(self, X, Z=None, full_cov=False):
         #print "X", X
-        mean, var, _025pm, _975pm = self.m.predict(X)
-        return mean[:,0], var[:,0]
-    
+        mean, var, _025pm, _975pm = self.m.predict(X, full_cov=full_cov)
+        if not full_cov:
+            return mean[:,0], var[:,0]
+        else:
+            return mean[:,0], var
+        
     def load(self, filename):
         pass
     
