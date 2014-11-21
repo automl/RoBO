@@ -75,7 +75,7 @@ class GPyModel(object):
             return mean[:,0], var[:,0]
         else:
             return mean[:,0], var
-        
+
     def load(self, filename):
         pass
     

@@ -62,14 +62,16 @@ class Entropy(object):
         raise NotImplementedError
     def _ep_pmin(self, X, Z=None, with_derivatives= False, **kwargs):
         
-        mu, var = self.model.predict(np.array(zb))
+        mu, var = self.model.predict(np.array(zb), full_cov=True)
         fac = 42.9076/68.20017903
         var = fac * var
         logP = np.empty(mu.shape)
         #for i ← 1 : m do
+        print "SIGMA = ",var
         for i in xrange(mu.shape[0]):
             #logP[k] ) self._min_faktor(mu, var, 0)
-            self._min_faktor(mu, var, i)
+            a = self._min_faktor(mu, var, i)
+            #a.next()
             break;
             
         
@@ -123,21 +125,21 @@ class Entropy(object):
         print "logS = ", logS 
         if np.isnan(d): 
             logZ  = -np.Infinity;
-            yield logZ
+            #yield logZ
             dlogZdMu = np.zeros((D,1))
-            yield dlogZdMu
+            #yield dlogZdMu
             dlogZdSigma = np.zeros((0.5*(D*(D+1)),1))
-            yield dlogZdSigma
+            #yield dlogZdSigma
             dlogZdMudMu = np.zeros((D,D))
-            yield dlogZdMudMu
+            #yield dlogZdMudMu
             mvmin = [Mu[k],Sigma[k,k]]
-            yield mvmin
+            #yield mvmin
             dMdMu = np.zeros((1,D))
-            yield dMdMu
+            #yield dMdMu
             dMdSigma = np.zeros((1,0.5*(D*(D+1))))
-            yield dMdSigma
+            #yield dMdSigma
             dVdSigma = np.zeros((1,0.5*(D*(D+1))))
-            yield dVdSigma
+            #yield dVdSigma
         else:
             #evaluate log Z:
             C = np.eye(D) / sq2 
@@ -176,11 +178,32 @@ class Entropy(object):
             
             
             btA = np.dot(np.transpose(b), A)
-            yield logZ
-         
-             
-            #if(logZ == inf); keyboard; end"""
+            print "btA",btA
+            #yield logZ
+            dlogZdMu    = r - Ab
+            dlogZdMudMu = -A
+            #print "dlogZdMu= ",dlogZdMu
+            #print "A=", A
+            #print "r=", r
+            #print "2rAb'= ", 2.0*np.outer(r,np.transpose(Ab))
+            #print "r*r'= ",np.outer(r,np.transpose(r)) 
+            #print "btA'*Ab= ", np.outer(np.transpose(btA),np.transpose(Ab))
+            dlogZdSigma = -A - 2*np.outer(r,np.transpose(Ab)) + np.outer(r,np.transpose(r)) + np.outer(np.transpose(btA),np.transpose(Ab));
             
+            print "dlogZdSigma= ", dlogZdSigma
+            _dlogZdSigma = np.zeros_like(dlogZdSigma)
+            #print "diag= ", np.diagonal(dlogZdSigma)
+            np.fill_diagonal(_dlogZdSigma, np.diagonal(dlogZdSigma))
+            print "_dlogZdSigma= ", _dlogZdSigma
+            dlogZdSigma = 0.5*(dlogZdSigma+np.transpose(dlogZdSigma)-_dlogZdSigma)
+            print "dlogZdSigma= ", dlogZdSigma
+            dlogZdSigma = dlogZdSigma[np.triu_indices(D)];
+            #Vorsicht die Reihenfolge ist eine andere
+            print "dlogZdSigma= ", dlogZdSigma
+            
+            print np.triu_indices(D)
+            #if(logZ == inf); keyboard; end"""
+            #0.1072   -0.0018   -0.0035   -0.0010   -0.0003   -0.0011   -0.0043   -0.0025   -0.004
     def _lt_factor(self, s, l, M, V, mp, p, gamma):
         """
         1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
@@ -494,9 +517,11 @@ def test():
     objective_fkt= branin
     
     Y[0:] = objective_fkt(X)
-    model = GPyModel(kernel,noise_variance=0.044855)
+    model = GPyModel(kernel,noise_variance=0.044855*0.044855)
     model.train(X,Y)
     model.m.optimize()
+    #print model.predict(np.array([[0.3, 0.4],[0.2, 0.5]]), full_cov=True)
+    #print kernel.K(np.array([[0.3, 0.4],[9.2, 0.5]]))* 42.9076/68.20017903
     e = Entropy(model)
     e._ep_pmin(zb)
     #print model.m
