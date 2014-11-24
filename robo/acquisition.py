@@ -67,12 +67,55 @@ class Entropy(object):
         var = fac * var
         logP = np.empty(mu.shape)
         #for i ← 1 : m do
-        print "SIGMA = ",var
+        D = mu.shape[0]
+        dlogPdMu    = np.zeros((D,D));
+        dlogPdSigma = np.zeros((D,0.5 * D * (D+1)));
+        dlogPdMudMu= np.zeros((D,D,D));
         for i in xrange(mu.shape[0]):
             #logP[k] ) self._min_faktor(mu, var, 0)
             a = self._min_faktor(mu, var, i)
-            #a.next()
-            break;
+            logP[i] = a.next()
+            dlogPdMu[i,:] = np.transpose(a.next())
+            dlogPdMudMu[i, :, :] = a.next()
+            dlogPdSigma[i,:] = np.transpose(a.next())
+            
+        logP[np.isinf(logP)] = -500;    
+        #re-normalize at the end, to smooth out numerical imbalances:
+        logPold        = logP
+        dlogPdMuold    = dlogPdMu
+        dlogPdSigmaold = dlogPdSigma
+        dlogPdMudMuold = dlogPdMudMu;
+        Z     = np.sum(np.exp(logPold));
+        _maxLogP = np.max(logP)
+        s = _maxLogP + np.log(np.sum(np.exp(logP - _maxLogP)))
+        s = _maxLogP if np.isinf(s) else s
+        
+        logP  = logP - s;
+        
+        # adjust derivatives, too. This is a bit tedious.
+        Zm    = sum(np.rot90((np.exp(logPold)*np.rot90(dlogPdMuold,1)),3)) / Z
+        Zs    = sum(np.rot90((np.exp(logPold)*np.rot90(dlogPdSigmaold,1)),3)) / Z 
+        
+        
+        dlogPdMu    = dlogPdMuold-Zm
+        dlogPdSigma = dlogPdSigmaold - Zs
+    
+        #ff   = dlogPdMuold' * diag(exp(logPold)) * dlogPdMuold ./ Z;    
+        #gg   = etprod('ij',dlogPdMudMuold,'kij',exp(logPold),'k') ./ Z;
+        #ff = np.tensordot(dlogPdMuold,dlogPdMuold)
+        ff = np.einsum('ki,kj->kij', dlogPdMuold, dlogPdMuold)
+        
+        
+        gg   = np.einsum('kij,k->ij',dlogPdMudMuold+ff,np.exp(logPold)) / Z;
+        print "gg= ",gg
+        Zij  = Zm.T * Zm;
+        adds = np.reshape(-gg+Zij,(1,D,D));
+        print adds[:,:49]
+        #dlogPdMudMu = bsxfun(@plus,dlogPdMudMuold,adds);"""
+        #print "logP = ", logP
+        
+        #print "dlogPdMudMu = ", dlogPdMudMu[12,12,:]
+        #print "dlogPdSigma = ", dlogPdSigma
             
         
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
@@ -99,16 +142,11 @@ class Entropy(object):
         
         M = np.copy(Mu)
         V = np.copy(Sigma)
-        print "M =    ", M
-        print "V =    ", V
         b = False
         for count in xrange(50):
             diff = 0
             for i in range(D-1):
                 l = i if  i < k else i+1
-                print "~"*50
-                print "Iteration ", count, ".", i
-                print "~"*50 
                 M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, M, V, MP[i], P[i], gamma)
                 
                 if np.isnan(d): 
@@ -119,27 +157,23 @@ class Entropy(object):
             if np.abs(diff) < 0.001:
                 b = True
                 break;
-        print "M =    ", M
-        print "V =    ", V
-        print "P =    ", P
-        print "logS = ", logS 
         if np.isnan(d): 
             logZ  = -np.Infinity;
-            #yield logZ
+            yield logZ
             dlogZdMu = np.zeros((D,1))
-            #yield dlogZdMu
+            yield dlogZdMu
             dlogZdSigma = np.zeros((0.5*(D*(D+1)),1))
-            #yield dlogZdSigma
+            yield dlogZdSigma
             dlogZdMudMu = np.zeros((D,D))
-            #yield dlogZdMudMu
+            yield dlogZdMudMu
             mvmin = [Mu[k],Sigma[k,k]]
-            #yield mvmin
+            yield mvmin
             dMdMu = np.zeros((1,D))
-            #yield dMdMu
+            yield dMdMu
             dMdSigma = np.zeros((1,0.5*(D*(D+1))))
-            #yield dMdSigma
+            yield dMdSigma
             dVdSigma = np.zeros((1,0.5*(D*(D+1))))
-            #yield dVdSigma
+            yield dVdSigma
         else:
             #evaluate log Z:
             C = np.eye(D) / sq2 
@@ -147,63 +181,34 @@ class Entropy(object):
             C = np.delete(C, k, 1)
             
             R       = np.sqrt(np.transpose(P)) * C
-            print "R = ", R
             r       = np.sum(np.transpose(MP) * C, 1)
-            print "r = ", r
             mpm     = MP * MP / P;
-            """mpm(MP==0) = 0;"""
             mpm     = sum(mpm);
             
             s       = sum(logS);
-            
-            print "s =", s
             IRSR    = (np.eye(D-1) + np.dot(np.dot(np.transpose(R) , Sigma), R));
-            print "IRSR = ", IRSR 
-        
             rSr     = np.dot(np.dot(np.transpose(r), Sigma) , r);
-            print "rSr=" , rSr
-            
-            #Lu = np.array(Lu)
-            #rhs = np.array(rhs)
             A =  np.dot(R,np.linalg.solve(IRSR,np.transpose(R))) 
             
             A       = 0.5 * (np.transpose(A) + A) # ensure symmetry.
             b       = (Mu + np.dot(Sigma,r));
             Ab      = np.dot(A,b);
             dts     = 2 * np.sum(np.log(np.diagonal(np.linalg.cholesky(IRSR))));
-            print "dts= ",dts
-            #logdet(IRSR);
             logZ    = 0.5 * (rSr - np.dot(np.transpose(b), Ab) - dts) + np.dot(np.transpose(Mu), r) + s - 0.5 * mpm;
-            print "logZ =", logZ
-            
-            
+            yield logZ
             btA = np.dot(np.transpose(b), A)
-            print "btA",btA
-            #yield logZ
+            
             dlogZdMu    = r - Ab
+            yield dlogZdMu
             dlogZdMudMu = -A
-            #print "dlogZdMu= ",dlogZdMu
-            #print "A=", A
-            #print "r=", r
-            #print "2rAb'= ", 2.0*np.outer(r,np.transpose(Ab))
-            #print "r*r'= ",np.outer(r,np.transpose(r)) 
-            #print "btA'*Ab= ", np.outer(np.transpose(btA),np.transpose(Ab))
+            yield dlogZdMudMu
             dlogZdSigma = -A - 2*np.outer(r,np.transpose(Ab)) + np.outer(r,np.transpose(r)) + np.outer(np.transpose(btA),np.transpose(Ab));
-            
-            print "dlogZdSigma= ", dlogZdSigma
             _dlogZdSigma = np.zeros_like(dlogZdSigma)
-            #print "diag= ", np.diagonal(dlogZdSigma)
             np.fill_diagonal(_dlogZdSigma, np.diagonal(dlogZdSigma))
-            print "_dlogZdSigma= ", _dlogZdSigma
             dlogZdSigma = 0.5*(dlogZdSigma+np.transpose(dlogZdSigma)-_dlogZdSigma)
-            print "dlogZdSigma= ", dlogZdSigma
-            dlogZdSigma = dlogZdSigma[np.triu_indices(D)];
-            #Vorsicht die Reihenfolge ist eine andere
-            print "dlogZdSigma= ", dlogZdSigma
+            dlogZdSigma = np.rot90(dlogZdSigma, k=2)[np.triu_indices(D)][::-1];
+            yield dlogZdSigma
             
-            print np.triu_indices(D)
-            #if(logZ == inf); keyboard; end"""
-            #0.1072   -0.0018   -0.0035   -0.0010   -0.0003   -0.0011   -0.0043   -0.0025   -0.004
     def _lt_factor(self, s, l, M, V, mp, p, gamma):
         """
         1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
