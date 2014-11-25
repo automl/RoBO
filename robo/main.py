@@ -42,10 +42,7 @@ def _plot_model(model, acquisition_fkt, objective_fkt, i):
     xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()
     ax.set_ylim(min(np.min(branin_result), ylim_min), max(np.max(branin_result), ylim_max))
     c1 = np.reshape(plotting_range, (obj_samples, 1))
-    print c1
-    print "-_-"*30,"\n", acquisition_fkt(c1).shape
     c2 = acquisition_fkt(c1)
-    print c2
     c2 = c2*50 / np.max(c2)
     c2 = np.reshape(c2,(obj_samples,))
     ax.plot(plotting_range,c2, 'r')
@@ -91,7 +88,7 @@ def main():
     #
     # creating an acquisition function
     #
-    acquisition_fkt = PI(model, par=15.01)
+    acquisition_fkt = EI(model, par=0.01)
     #
     # start the main loop
     #
