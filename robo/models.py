@@ -52,6 +52,8 @@ class GPyModel(object):
     def train(self, X, Y,  Z=None):
         self.X = X
         self.Y = Y
+        if X.size == 0 or Y.size == 0:
+            return
         self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
         #stdout = sys.stdout
@@ -61,6 +63,8 @@ class GPyModel(object):
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
+        self.K = self.m.K
+        self.cK = np.linalg.cholesky(self.m.K)
         #sys.stdout = stdout
     def update(self, X, Y, Z=None):
         #print self.X, self.Y

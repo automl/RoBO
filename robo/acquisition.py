@@ -53,14 +53,18 @@ class Entropy(object):
     # This method corresponds to the function SampleBeliefLocations in the original ES code
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
-    def sample_from_measure(self, gp, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
+    def sample_from_measure(self, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
         # TODO: does it make sense to use the same GP model for the acquisition function used in the sampling of representer points?
-        acquisition_fn = acquisition_fn(self.model)
+        # acquisition_fn = acquisition_fn(self.model)
 
         # If there are no prior observations, do uniform sampling
-        if (gp['x'].size == 0):
+        if (self.model.X.size == 0):
             dim = xmax.size
             zb = np.add(np.multiply((xmax - xmin), np.random.uniform(size=(n_representers, dim))), xmin)
+            # This is a rather ugly trick to get around the different ways of filling up an array from a sampled
+            # distribution Matlab and NumPy use (by columns and rows respectively):
+            zb = zb.flatten().reshape((dim, n_representers)).transpose()
+            
             mb = np.dot(-np.log(np.prod(xmax - xmin)), np.ones((n_representers, 1)))
             return zb, mb
 
@@ -91,18 +95,18 @@ class Entropy(object):
                                    size = (np.arange(np.minimum(numblock, BestGuesses.shape[0]) + 1, numblock + 1).size, dim)
                                )))
 
-        xx = restarts[0, ]
+        xx = restarts[0,np.newaxis]
         subsample = 20 # why this value?
         for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing (?)
             # print i,
             if (i % (subsample*10) == 0) & (i / (subsample*10.) < numblock):
-                xx = restarts[i/(subsample*10), ]
+                xx = restarts[i/(subsample*10), np.newaxis]
                 # print str(xx)
             xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
-                emb = acquisition_fn(xx)
-                mb[(i / subsample) - 1]  = np.log(emb)
+                emb, _ = acquisition_fn(xx)
+                mb[(i / subsample) - 1, 0]  = np.log(emb)
 
         # Return values
         return zb, mb
@@ -120,20 +124,24 @@ class Entropy(object):
             xx = xx.transpose()
 
         D = xx.shape[0]
-        f = P(xx.transpose())
+        f, _ = P(xx.transpose())
         logf = np.log(f)
         logy = np.log(np.random.uniform()) + logf
 
         theta = 0.95
 
         k = 0
-        s = s0
+        s = np.array([s0])
+        # print '*'*30
+        # print s.shape
         c = np.zeros((D,0))
         J = np.zeros((0,0))
 
         while True:
             k += 1
-            c = np.append(c, self.projNullSpace(J, xx + s[k-1] * np.random.normal(size=(D,1))))
+            # print '*'*30
+            # print s
+            c = np.append(c, np.array(self.projNullSpace(J, xx + s[k-1] * np.random.normal(size=(D,1)))), axis = 1)
             sx = np.divide(1., np.sum(np.divide(1., s)))
             mx = np.dot(
                 sx,
@@ -145,6 +153,8 @@ class Entropy(object):
                     1))
             xk = xx + self.projNullSpace(J, mx + np.multiply(sx, np.random.normal(size=(D,1))))
 
+            # TODO: add the derivative values (we're not considering them yet)
+            # fk, dfk = P(xk.transpose())
             fk, dfk = P(xk.transpose())
             logfk  = np.log(fk)
             dlogfk = np.divide(dfk, fk)
@@ -154,12 +164,13 @@ class Entropy(object):
                 return xx
             else: # shrink
                 g = self.projNullSpace(J, dlogfk)
-                if J.shape[1] < D - 1 & \
+                if J.shape[1] < D - 1 and \
                    np.dot(g.transpose(), dlogfk) > 0.5 * np.linalg.norm(g) * np.linalg.norm(dlogfk):
                     J = np.append(J, np.divide(g, np.linalg.norm(g)))
                     s[k] = s[k-1]
+                    s = np.append(s, s[k-1])
                 else:
-                    s[k] = np.multiply(theta, s[k-1])
+                    s = np.append(s, np.multiply(theta, s[k-1]))
                     if s[k] < np.spacing(1):
                         print 'bug found: contracted down to zero step size, still not accepted.\n'
                     if transpose:
@@ -177,12 +188,45 @@ class EI(object):
     def __init__(self, model, par = 0.01, **kwargs):
         self.model = model
         self.par = par
+        if len(self.model.X) > 0:
+            # alpha = GP.cK \ (GP.cK' \ GP.y);
+            self.alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
+            # print "alpha: ", self.alpha
     def __call__(self, x, Z=None, **kwargs):
+
+        dim = x.shape[1]
         f_est = self.model.predict(x)
+        # print "f_est: ", f_est
         eta = self.model.getCurrentBest()
-        z = (eta - f_est[0] +self.par) / f_est[1]
-        acqu = (eta - f_est[0] +self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
-        return acqu
+        z = (eta - f_est[0] + self.par) / f_est[1]
+        f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
+
+        # Derivative values:
+        # Derivative of kernel values:
+        dkxX = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X, x)
+        # print "dkxX: ", dkxX
+        dkxx = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X)
+        # print "dkxx: ", dkxx
+
+        # dm = derivative of the gaussian process mean function
+        dmdx = np.dot(dkxX.transpose(), self.alpha)
+        # print "dmdx: ", dmdx
+        # ds = derivative of the gaussian process covariance function
+        dsdx = np.zeros((dim, 1))
+        # print "dim: ", dim
+        # print self.model.K[0,None]
+        # print self.model.K[0,None].shape
+        for i in range(0, dim):
+            dsdx[i] = np.dot(0.5 / f_est[1], dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
+                                                                        np.linalg.solve(self.model.cK,
+                                                                                        np.linalg.solve(self.model.cK.transpose(),
+                                                                                                        self.model.K[0,None].transpose()))))
+
+        # print "dmdx: ", dmdx
+        # print "dsdx: ", dsdx
+        df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
+        # print df
+        return f, df
 
     def model_changed(self):
         pass
@@ -191,7 +235,7 @@ class EI(object):
 class LogEI(object):
     def __init__(self, model, par = 0.01):
         self.model = model
-        self.par = par
+        self.par = par,
     def __call__(self, x, par = 0.01, Z=None, **kwargs):
         f_est = self.model.predict(x)
         eta = self.model.getCurrentBest()
