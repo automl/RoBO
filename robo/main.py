@@ -29,13 +29,10 @@ plotting_range = np.linspace(plot_min, plot_max, num=obj_samples)
 second_branin_arg = np.empty((obj_samples,))
 second_branin_arg.fill(12)
 branin_arg = np.append(np.reshape(plotting_range, (obj_samples, 1)), np.reshape(second_branin_arg, (obj_samples, 1)), axis=1)
-
 branin_result = branin(branin_arg)
-
 branin_result = branin_result.reshape(branin_result.shape[0],)
 
 def _plot_model(model, acquisition_fkt, objective_fkt, i):
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
     model.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
