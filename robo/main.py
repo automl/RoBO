@@ -12,7 +12,7 @@ import numpy as np
 from test_functions import branin2, branin
 from acquisition import PI, UCB, Entropy, EI
 from maximize import cma, DIRECT, grid_search
-
+np.seterr(all='raise')
 here = os.path.abspath(os.path.dirname(__file__))
 
 #
@@ -33,6 +33,7 @@ branin_result = branin(branin_arg)
 branin_result = branin_result.reshape(branin_result.shape[0],)
 
 def _plot_model(model, acquisition_fkt, objective_fkt, i):
+    
     fig = plt.figure()
     ax = fig.add_subplot(111)
     model.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
@@ -49,14 +50,18 @@ def _plot_model(model, acquisition_fkt, objective_fkt, i):
     plt.close()
     
 
-def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 10):
+def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 7):
+    t = [[4.1935], [3.0889], [-1.3770],[11.0469], [-0.9182], [-3.0786], [2.1483]]
     for i in xrange(maxN):
         acquisition_fkt.model_changed()
-
-        new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
+        new_x = np.array([t[i]])
+        print new_x
+        #new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
+        print new_x
+        
         new_y = objective_fkt(new_x)
         _plot_model(model, acquisition_fkt, objective_fkt, i)
-        model.update([new_x], [new_y])
+        model.update(np.array(new_x), np.array(new_y))
 
 def main():
     #
@@ -64,23 +69,25 @@ def main():
     # objective function can be evaluated 
     #
     dims = 1
-    X_lower = np.array([-8])
-    X_upper = np.array([19])
+    X_lower = np.array([-8]);#, -8])
+    X_upper = np.array([19]);#, 19])
     #initialize the samples
     X = np.empty((1, dims))
 
     Y = np.empty((1, 1))
     #draw a random sample from the objective function in the
     #dimension space 
-    X[0,:] = [random.random() * (X_upper[0] - X_lower[0]) + X_lower[0]];
+    for i in range(dims):
+        X[0,i] = 2.6190#random.random() * (X_upper[i] - X_lower[i]) + X_lower[i];
     objective_fkt= branin2
-    Y[0:] = objective_fkt(X[0,:])
+    print np.array([X[0,:]])[:,0]
+    Y[0:] = objective_fkt(np.array([X[0,:]]))
     
     #
     # Building up the model
     #    
-    kernel = GPy.kern.rbf(input_dim=dims, variance=12.3, lengthscale=5.0)
-    model = GPyModel(kernel)
+    kernel = GPy.kern.rbf(input_dim=dims, variance=400.0, lengthscale=5.0)
+    model = GPyModel(kernel, optimize=False)
     model.train(X,Y)
     #
     # creating an acquisition function
@@ -89,7 +96,7 @@ def main():
     #
     # start the main loop
     #
-    bayesian_optimization(objective_fkt, acquisition_fkt, model, grid_search, X_lower, X_upper, maxN = 10)
+    bayesian_optimization(objective_fkt, acquisition_fkt, model, grid_search, X_lower, X_upper, maxN = 4)
     
     
 

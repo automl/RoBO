@@ -67,15 +67,17 @@ class Entropy(object):
         return self.UCB(X, Z, **kwargs)
     
     def model_changed(self):
-        self.zb = np.add(np.multiply((self.X_upper - self.X_lower), np.random.uniform(size=(self.Nb, self.X_lower.shape[0]))), self.X_lower)
+        #self.zb = np.add(np.multiply((self.X_upper - self.X_lower), np.random.uniform(size=(self.Nb, self.X_lower.shape[0]))), self.X_lower)
+        self.zb = np.empty((self.Nb, self.X_lower.shape[0]))
+        for i in range(self.X_lower.shape[0]):
+            self.zb[:,i] = np.linspace(self.X_lower[i], self.X_upper[i], self.Nb, endpoint = False)
         self.mb = np.dot(-np.log(np.prod(self.X_upper - self.X_lower)), np.ones((self.Nb, 1)))
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(self.zb, with_derivatives=True)           
         
     def _joint_min(self, X, Z=None, with_derivatives= False, **kwargs):
         mu, var = self.model.predict(np.array(X), full_cov=True)
-        print "M= ",mu
-        print "V= ",var
         #fac = 42.9076/68.20017903
+        fac = 1.0
         var = fac * var
         logP = np.empty(mu.shape)
         
@@ -87,12 +89,17 @@ class Entropy(object):
         for i in xrange(mu.shape[0]):
             #logP[k] ) self._min_faktor(mu, var, 0)
             a = self._min_faktor(mu, var, i)
-            logP[i] = a.next()
-            if with_derivatives:
-                dlogPdMu[i,:] = a.next().T
-                dlogPdMudMu[i, :, :] = a.next()
-                dlogPdSigma[i,:] = a.next().T
+            try:
+                logP[i] = a.next()
             
+                if with_derivatives:
+                    dlogPdMu[i,:] = a.next().T
+                    dlogPdMudMu[i, :, :] = a.next()
+                    dlogPdSigma[i,:] = a.next().T
+            except Exception, e:
+                print e
+                print var
+                raise
         logP[np.isinf(logP)] = -500;    
         #re-normalize at the end, to smooth out numerical imbalances:
         logPold        = logP
@@ -104,7 +111,6 @@ class Entropy(object):
         logP  = logP - s;
         if not with_derivatives:
             return logP
-        
         
         dlogPdMuold    = dlogPdMu
         dlogPdSigmaold = dlogPdSigma
@@ -155,7 +161,10 @@ class Entropy(object):
             diff = 0
             for i in range(D-1):
                 l = i if  i < k else i+1
-                M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, M, V, MP[i], P[i], gamma)
+                try:
+                    M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, M, V, MP[i], P[i], gamma)
+                except Exception, e:
+                    raise
                 
                 if np.isnan(d): 
                     break;
@@ -190,7 +199,10 @@ class Entropy(object):
             
             R       = np.sqrt(P.T) * C
             r       = np.sum(MP.T * C, 1)
-            mpm     = MP * MP / P;
+            try:
+                mpm     = MP * MP / P;
+            except Exception:
+                print "mpm = ", mpm
             mpm     = sum(mpm);
             
             s       = sum(logS);
@@ -276,7 +288,6 @@ class Entropy(object):
             #project out to marginal
             Vnew  = V -  dp / (1 + dp * cVc) *np.outer(Vc,Vc)
             
-            #print "[---\n",Vc * np.transpose(Vc),"\n---\n", np.dot(Vc,np.transpose(Vc)),"\n---]"
             Mnew  = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
             if np.any(np.isnan(Vnew)): raise Exception("oo")
             #if np.i Vnew)); keyboard; end
@@ -315,7 +326,6 @@ class Entropy(object):
         return Mnew,Vnew,pnew,mpnew,logS,d
     
     def _log_relative_gauss(self, z):
-        print z
         if z < -6:
             return 1, -1.0e12, -1
         if z > 6:
@@ -368,7 +378,7 @@ class Entropy(object):
         xx = restarts[0, ]
         subsample = 20 # why this value?
         for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing (?)
-            # print i,
+            
             if (i % (subsample*10) == 0) & (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), ]
                 # print str(xx)

@@ -46,21 +46,26 @@ class GPyModel(object):
     """
     GPyModel is just a wrapper around the GPy Lib
     """
-    def __init__(self, kernel, noise_variance = 0.002,*args, **kwargs):
+    def __init__(self, kernel, noise_variance = 0.002, optimize=True, *args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
+        self.optimize = optimize
     def train(self, X, Y,  Z=None):
         self.X = X
         self.Y = Y
         self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
         self.m.constrain_fixed('.*noise', self.noise_variance)
-        self.m.optimize()
+        if self.optimize:
+            self.m.optimize_restarts(num_restarts = 10, robust=True)
+        print self.m
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
     def update(self, X, Y, Z=None):
         #print self.X, self.Y
+        print "new X= ",X,"\nold X= ", self.X
+        print "new Y= ",Y,"\nold Y= ", self.Y
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         if self.Z != None:
