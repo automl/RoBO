@@ -69,7 +69,7 @@ class Entropy(object):
             return zb, mb
 
         # There are prior observations, i.e. it's not the first ES iteration
-        dim = gp['x'].shape[1]
+        dim = self.model.X.shape[1]
 
         # Calculate the step size for the slice sampler
         d0 = np.divide(
@@ -99,7 +99,7 @@ class Entropy(object):
         subsample = 20 # why this value?
         for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing (?)
             # print i,
-            if (i % (subsample*10) == 0) & (i / (subsample*10.) < numblock):
+            if (i % (subsample*10) == 0) and (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), np.newaxis]
                 # print str(xx)
             xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
@@ -123,6 +123,8 @@ class Entropy(object):
         if transpose:
             xx = xx.transpose()
 
+        # set random seed
+
         D = xx.shape[0]
         f, _ = P(xx.transpose())
         logf = np.log(f)
@@ -136,12 +138,11 @@ class Entropy(object):
         # print s.shape
         c = np.zeros((D,0))
         J = np.zeros((0,0))
-
         while True:
             k += 1
             # print '*'*30
             # print s
-            c = np.append(c, np.array(self.projNullSpace(J, xx + s[k-1] * np.random.normal(size=(D,1)))), axis = 1)
+            c = np.append(c, np.array(self.projNullSpace(J, xx + s[k-1] * np.random.randn(D,1))), axis = 1)
             sx = np.divide(1., np.sum(np.divide(1., s)))
             mx = np.dot(
                 sx,
@@ -151,7 +152,7 @@ class Entropy(object):
                         np.subtract(c, xx)
                     ),
                     1))
-            xk = xx + self.projNullSpace(J, mx + np.multiply(sx, np.random.normal(size=(D,1))))
+            xk = xx + self.projNullSpace(J, mx.reshape((D, 1)) + np.multiply(sx, np.random.normal(size=(D,1))))
 
             # TODO: add the derivative values (we're not considering them yet)
             # fk, dfk = P(xk.transpose())
@@ -221,11 +222,7 @@ class EI(object):
                                                                         np.linalg.solve(self.model.cK,
                                                                                         np.linalg.solve(self.model.cK.transpose(),
                                                                                                         self.model.K[0,None].transpose()))))
-
-        # print "dmdx: ", dmdx
-        # print "dsdx: ", dsdx
         df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
-        # print df
         return f, df
 
     def model_changed(self):

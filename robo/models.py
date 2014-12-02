@@ -58,8 +58,8 @@ class GPyModel(object):
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
         #stdout = sys.stdout
         #sys.stdout = StringIO.StringIO()
-        self.m.constrain_fixed('.*noise', self.noise_variance)
-        self.m.optimize()
+        # self.m.constrain_fixed('.*noise', self.noise_variance)
+        # self.m.optimize()
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
