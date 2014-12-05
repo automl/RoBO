@@ -12,7 +12,7 @@ import numpy as np
 from test_functions import branin2, branin
 from acquisition import PI, UCB, Entropy, EI
 from maximize import cma, DIRECT, grid_search
-np.seterr(all='raise')
+#np.seterr(all='raise')
 here = os.path.abspath(os.path.dirname(__file__))
 
 #
@@ -50,18 +50,15 @@ def _plot_model(model, acquisition_fkt, objective_fkt, i):
     plt.close()
     
 
-def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN = 7):
-    t = [[4.1935], [3.0889], [-1.3770],[11.0469], [-0.9182], [-3.0786], [2.1483]]
+def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN ):
+   
     for i in xrange(maxN):
         acquisition_fkt.model_changed()
-        new_x = np.array([t[i]])
-        print new_x
-        #new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
-        print new_x
-        
+        new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
         new_y = objective_fkt(new_x)
         _plot_model(model, acquisition_fkt, objective_fkt, i)
         model.update(np.array(new_x), np.array(new_y))
+        print model.m
 
 def main():
     #
@@ -80,23 +77,28 @@ def main():
     for i in range(dims):
         X[0,i] = 2.6190#random.random() * (X_upper[i] - X_lower[i]) + X_lower[i];
     objective_fkt= branin2
-    print np.array([X[0,:]])[:,0]
     Y[0:] = objective_fkt(np.array([X[0,:]]))
     
     #
     # Building up the model
     #    
-    kernel = GPy.kern.rbf(input_dim=dims, variance=400.0, lengthscale=5.0)
-    model = GPyModel(kernel, optimize=False)
+    #old gpy version 
+    try:
+        kernel = GPy.kern.rbf(input_dim=dims, variance=400.0, lengthscale=5.0)
+    #gpy version >=0.6
+    except AttributeError, e:
+        kernel = GPy.kern.RBF(input_dim=dims, variance=400.0, lengthscale=5.0)
+        
+    model = GPyModel(kernel, optimize=True, noise_variance = 0.002)
     model.train(X,Y)
     #
     # creating an acquisition function
     #
-    acquisition_fkt = EI(model, par=0.01)
+    acquisition_fkt = UCB(model, 3.2)
     #
     # start the main loop
     #
-    bayesian_optimization(objective_fkt, acquisition_fkt, model, grid_search, X_lower, X_upper, maxN = 4)
+    bayesian_optimization(objective_fkt, acquisition_fkt, model, grid_search, X_lower, X_upper, maxN = 14)
     
     
 
