@@ -48,8 +48,8 @@ class FirstIterationTest(unittest.TestCase):
         print "zb: ", zb
 
 
-# @unittest.skip("non empty array, sampling from measure")
-class SecondIterationTest(unittest.TestCase):
+@unittest.skip("skipping second iteration, EI\n")
+class SecondIterationTestEI(unittest.TestCase):
     def setUp(self):
 
 
@@ -69,19 +69,79 @@ class SecondIterationTest(unittest.TestCase):
             [-7.9969,    0.4625],
             [-7.1402,   -7.7652]
         ])
-
-        fac = 42.9076/68.20017903
-    # def test(self):
-    #     entropy = Entropy(self.model)
-    #     # create acquisition function for the sampling of representer points:
-    #     acquisition = PI(self.model)
-    #     zb, mb = entropy.sample_from_measure(self.GP, self.xmin, self.xmax, 50, self.BestGuesses, acquisition)
+        # fac = 42.9076/68.20017903
 
     def test(self):
         entropy = Entropy(self.model)
         acquisition_fn = EI(self.model, par = 0)
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
         print "zb: ", zb
+
+# @unittest.skip("second iteration, PI")
+class SecondIterationTestPI(unittest.TestCase):
+    def setUp(self):
+
+
+        self.D = 2 # dimension of input space
+        # self.x_prev = np.array([])
+        self.xmin = np.array([[-8,-8]])
+        self.xmax =  np.array([[19, 19]])
+        self.n_representers = 20
+
+        self.X = np.array([[6.8165, 15.1224]])
+        self.Y = np.array([[213.3935]])
+        self.kernel = GPy.kern.rbf(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
+        self.model = GPyModel(self.kernel)
+        self.model.train(self.X, self.Y)
+
+        self.BestGuesses = np.array([
+            [-7.9969,    0.4625],
+            [-7.1402,   -7.7652]
+        ])
+        # fac = 42.9076/68.20017903
+
+    def test(self):
+        entropy = Entropy(self.model)
+        acquisition_fn = PI(self.model, par = 0)
+        zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
+        print "zb: ", zb
+
+@unittest.skip("test for nullspace projection method")
+class ProjNullSpaceTests(unittest.TestCase):
+    def setUp(self):
+        self.D = 2 # dimension of input space
+        # self.x_prev = np.array([])
+        self.xmin = np.array([[-8,-8]])
+        self.xmax =  np.array([[19, 19]])
+        self.n_representers = 20
+
+        self.X = np.array([[6.8165, 15.1224]])
+        self.Y = np.array([[213.3935]])
+        self.kernel = GPy.kern.rbf(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
+        self.model = GPyModel(self.kernel)
+        self.model.train(self.X, self.Y)
+
+        self.BestGuesses = np.array([
+            [-7.9969,    0.4625],
+            [-7.1402,   -7.7652]
+        ])
+        # fac = 42.9076/68.20017903
+        self.J = np.zeros((0,0))
+        self.v = np.array([[30.7746], [-16.0128]])
+
+        self.JJ = np.array([[0.5135], [-0.8581]])
+        self.vv = np.array([[-1.4660], [9.0956]])
+
+    def test(self):
+        entropy = Entropy(self.model)
+        # print entropy.projNullSpace(self.J, self.v)
+        self.assertEqual(entropy.projNullSpace(self.J, self.v).tolist(),
+                         np.array([[30.7746], [-16.0128]]).tolist())
+        # print entropy.projNullSpace(self.JJ, self.vv)
+        self.assertEqual(entropy.projNullSpace(self.JJ, self.vv).tolist(),
+                         np.array([[2.9283919723599983], [1.7522158685840008]]).tolist())
+
+
 
 @unittest.skip("third iteration")
 class ThirdIterationTest(unittest.TestCase):
@@ -121,14 +181,7 @@ class ThirdIterationTest(unittest.TestCase):
         entropy = Entropy(self.model)
         acquisition_fn = EI(self.model, par = 0)
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
-        print "zb: ", zb
-
-
-
-
-
-# TODO: test case for the slice shrink rank sampling method
-# class SliceShrinkRankTestCase(unittest.TestCase):
+        # print "zb: ", zb
 
 
 if __name__=="__main__":

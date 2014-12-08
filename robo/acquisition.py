@@ -25,10 +25,31 @@ class PI(object):
         self.model = model
         self.par = par
     def __call__(self, X, Z=None, **kwargs):
+        alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
+        dim = X.shape[1]
         mean, var = self.model.predict(X, Z)
         Y_star = self.model.getCurrentBest()
         u = norm.cdf((Y_star - mean - self.par ) / var)
-        return u
+
+        # Derivative values:
+        # Derivative of kernel values:
+        dkxX = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X, X)
+        dkxx = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X)
+
+        # dmdx = derivative of the gaussian process mean function
+        dmdx = np.dot(dkxX.transpose(), alpha)
+        # dsdx = derivative of the gaussian process covariance function
+        dsdx = np.zeros((dim, 1))
+        for i in range(0, dim):
+            dsdx[i] = np.dot(0.5 / var, dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
+                                                                   np.linalg.solve(self.model.cK,
+                                                                                   np.linalg.solve(self.model.cK.transpose(),
+                                                                                                   self.model.K[0,None].transpose()))))
+        # (-phi/s) * (dmdx + dsdx * z)
+        z = (Y_star - mean) / var
+        du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
+
+        return u, du
     def model_changed(self):
         pass
 
@@ -84,7 +105,6 @@ class Entropy(object):
         numblock = np.floor(n_representers / 10.)
         restarts = np.zeros((numblock, dim))
 
-        ### I don't really understand what the idea behind the following two assignments is...
         restarts[0:(np.minimum(numblock, BestGuesses.shape[0])), ] = \
             BestGuesses[np.maximum(BestGuesses.shape[0]-numblock+1, 1) - 1:, ]
 
@@ -96,10 +116,14 @@ class Entropy(object):
                                )))
 
         xx = restarts[0,np.newaxis]
-        subsample = 20 # why this value?
-        for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing (?)
+        subsample = 20
+        for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing
+            # print "outer iteration: %d" % (i+1)
             # print i,
+            # print "value of xx:\n"
+            # print str(xx)
             if (i % (subsample*10) == 0) and (i / (subsample*10.) < numblock):
+                # print "*"*5,"RESTARTING XX","*"*5
                 xx = restarts[i/(subsample*10), np.newaxis]
                 # print str(xx)
             xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
@@ -124,7 +148,7 @@ class Entropy(object):
             xx = xx.transpose()
 
         # set random seed
-
+        # print "entering slice sampler..."
         D = xx.shape[0]
         f, _ = P(xx.transpose())
         logf = np.log(f)
@@ -136,6 +160,9 @@ class Entropy(object):
         s = np.array([s0])
         # print '*'*30
         # print s.shape
+        # print "f0: %f" % f
+        # print "logf: %f" % logf
+        # print "logy: %f" % logy
         c = np.zeros((D,0))
         J = np.zeros((0,0))
         while True:
@@ -160,6 +187,14 @@ class Entropy(object):
             logfk  = np.log(fk)
             dlogfk = np.divide(dfk, fk)
 
+            # print "k: %d" % k
+            # print "xk:\n%s" % str(xk)
+            # print "nullspace projection:\n", str(xk-xx)
+            # print "fk  : %f" % fk
+            # print "logfk  : %f" % logfk
+            # print "dlogfk:\n %s" % str(dlogfk)
+            # print "dfk : %s" % str(dfk)
+            # print "*"*5
             if logfk > logy: # accept these values
                 xx = xk.transpose()
                 return xx
