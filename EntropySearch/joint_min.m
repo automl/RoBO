@@ -3,11 +3,11 @@ function [logP,dlogPdMu,dlogPdSigma,dlogPdMudMu,logPf] = joint_min(Mu,Sigma,sile
 % joint Gaussian, being the smallest of all x, respectively.
 
 % addpath './logsumexp/';
-if ismac
-    addpath '~/Documents/MATLAB/control/code/util/tprod/'
-elseif isunix
-    addpath '~/Documents/MATLAB/tprod'
-end
+%if ismac
+%    addpath '~/Documents/MATLAB/control/code/util/tprod/'
+%elseif isunix
+%    %addpath '~/Documents/MATLAB/tprod'
+%end
 
 if ~exist('silent','var')
   silent = 0;

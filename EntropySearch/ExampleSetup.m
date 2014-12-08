@@ -2,7 +2,7 @@
 
 % in these two lines, you have to add the paths to 
 run H:/Documents/MATLAB/gpml-matlab-v3.1-2010-09-27/startup.m  % gpml toolbox
-addpath H:/min_factor/logsumexp/  % logsumexp package
+addpath /home/joel/development/entreopy_search/logsumexp/  % logsumexp package
 addpath H:/min_factor/tprod/      % tprod package
 
 % set up prior belief

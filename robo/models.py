@@ -46,28 +46,38 @@ class GPyModel(object):
     """
     GPyModel is just a wrapper around the GPy Lib
     """
-    def __init__(self, kernel, noise_variance = 0.002,*args, **kwargs):
+    def __init__(self, kernel, noise_variance = None, optimize=True, *args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
+        self.optimize = optimize
+        
     def train(self, X, Y,  Z=None):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
             return
         self.Z = Z
-        self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)#, likelihood=likelihood)
-        #stdout = sys.stdout
-        #sys.stdout = StringIO.StringIO()
-        # self.m.constrain_fixed('.*noise', self.noise_variance)
-        # self.m.optimize()
+        self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
+        #old gpy 
+        if self.noise_variance is not None:
+            try:
+                self.m.constrain_fixed('.*noise', self.noise_variance)
+            #gpy version >=0.6
+            except:
+                self.m['.*Gaussian_noise.variance'] = self.noise_variance
+                self.m['.*Gaussian_noise.variance'].unconstrain()
+                self.m['.*Gaussian_noise.variance'].fix()
+        if self.optimize:
+            self.m.optimize_restarts(num_restarts = 10, robust=True)
+        
+        print self.m
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
         self.K = self.m.K
         self.cK = np.linalg.cholesky(self.m.K)
-        #sys.stdout = stdout
+
     def update(self, X, Y, Z=None):
-        #print self.X, self.Y
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         if self.Z != None:
@@ -75,11 +85,21 @@ class GPyModel(object):
         self.train(X, Y, Z)
         
     
-    def predict(self, X, Z=None):
-        #print "X", X
-        mean, var, _025pm, _975pm = self.m.predict(X)
-        return mean[:,0], var[:,0]
-    
+    def predict(self, X, Z=None, full_cov=False):
+        #old gpy version 
+        try:
+            mean, var, _025pm, _975pm = self.m.predict(X, full_cov=full_cov)
+            if not full_cov:
+                return mean[:,0], var[:,0]
+            else:
+                return mean[:,0], var
+        #gpy version >=0.6
+        except (ValueError, AssertionError):
+            mean, var = self.m.predict(X, full_cov=full_cov)
+            if not full_cov:
+                return mean[:,0], var[:,0]
+            else:
+                return mean[:,0], var
     def load(self, filename):
         pass
     

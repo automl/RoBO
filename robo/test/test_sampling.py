@@ -184,6 +184,11 @@ class ThirdIterationTest(unittest.TestCase):
         # print "zb: ", zb
 
 
+    def test(self):
+        # print str(self.xx)
+        # print self.xx.shape
+        assert(True)
+
 if __name__=="__main__":
     unittest.main()
 
