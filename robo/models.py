@@ -70,7 +70,7 @@ class GPyModel(object):
         if self.optimize:
             self.m.optimize_restarts(num_restarts = 10, robust=True)
         
-        print self.m
+        # print self.m
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
