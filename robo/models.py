@@ -78,7 +78,7 @@ class GPyModel(object):
         if self.Z != None:
             Z = np.append(self.Z, [Z], axis=0)
         self.train(X, Y, Z)
-        
+        fsfsf
     
     def predict(self, X, Z=None, full_cov=False):
         #old gpy version 

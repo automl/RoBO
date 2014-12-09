@@ -3,6 +3,7 @@
 this module contains acquisition functions that have high values
 where the objective function is low.
 
+
 .. class:: AcquisitionFunction
 
     An acquisition function is a class that gets instatiated with a model 
