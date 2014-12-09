@@ -90,8 +90,8 @@ class SecondIterationTestPI(unittest.TestCase):
 
         self.X = np.array([[6.8165, 15.1224]])
         self.Y = np.array([[213.3935]])
-        self.kernel = GPy.kern.rbf(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
-        self.model = GPyModel(self.kernel)
+        self.kernel = GPy.kern.RBF(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
+        self.model = GPyModel(self.kernel, optimize = False)
         self.model.train(self.X, self.Y)
 
         self.BestGuesses = np.array([
@@ -143,7 +143,7 @@ class ProjNullSpaceTests(unittest.TestCase):
 
 
 
-@unittest.skip("third iteration")
+@unittest.skip("skipping third iteration\n")
 class ThirdIterationTest(unittest.TestCase):
     def setUp(self):
         self.D = 2 # dimension of input space
@@ -170,24 +170,12 @@ class ThirdIterationTest(unittest.TestCase):
             [1.74264535658588, -6.40800531312687]
         ])
 
-
-    # def test(self):
-    #     entropy = Entropy(self.model)
-    #     # create acquisition function for the sampling of representer points:
-    #     acquisition = PI(self.model)
-    #     zb, mb = entropy.sample_from_measure(self.GP, self.xmin, self.xmax, 50, self.BestGuesses, acquisition)
-
     def test(self):
         entropy = Entropy(self.model)
         acquisition_fn = EI(self.model, par = 0)
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
-        # print "zb: ", zb
+        print "zb: ", zb
 
-
-    def test(self):
-        # print str(self.xx)
-        # print self.xx.shape
-        assert(True)
 
 if __name__=="__main__":
     unittest.main()

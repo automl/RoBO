@@ -70,12 +70,12 @@ class GPyModel(object):
         if self.optimize:
             self.m.optimize_restarts(num_restarts = 10, robust=True)
         
-        print self.m
+        #print self.m
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
-        self.K = self.m.K
-        self.cK = np.linalg.cholesky(self.m.K)
+        self.K = self.kernel.K(X, X)
+        self.cK = np.linalg.cholesky(self.K)
 
     def update(self, X, Y, Z=None):
         X = np.append(self.X, X, axis=0)

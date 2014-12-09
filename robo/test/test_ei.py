@@ -13,7 +13,7 @@ class EITestCase1(unittest.TestCase):
         self.x = np.array([[-10, -2]])
         self.xx = np.array([[-90.0358, -1.1344]])
         self.y = np.array([[1, 1]])
-        self.kernel = GPy.kern.rbf(input_dim=2, variance=12.3, lengthscale=5.0)
+        self.kernel = GPy.kern.RBF(input_dim=2, variance=12.3, lengthscale=5.0)
         self.model = GPyModel(self.kernel)
         self.model.train(self.x, self.y)
 
@@ -43,8 +43,8 @@ class EITestCase2(unittest.TestCase):
         #
         # Building up the model
         #
-        self.kernel = GPy.kern.rbf(input_dim=self.dims, variance=12.3, lengthscale=5.0)
-        self.model = GPyModel(self.kernel)
+        self.kernel = GPy.kern.RBF(input_dim=self.dims, variance=12.3, lengthscale=5.0)
+        self.model = GPyModel(self.kernel, optimize = False)
         self.model.train(self.X, self.Y)
 
     def test(self):
