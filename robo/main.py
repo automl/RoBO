@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt;
 import GPy
 import pylab as pb
 #pb.ion()
-from models import GPyModel 
+from robo.models import GPyModel 
 import numpy as np
-from test_functions import branin2, branin
-from acquisition import PI, UCB, Entropy, EI
-from maximize import cma, DIRECT, grid_search
+from robo.test_functions import branin2, branin
+from robo.acquisition import PI, UCB, Entropy, EI
+from robo.maximize import cma, DIRECT, grid_search
 #np.seterr(all='raise')
 here = os.path.abspath(os.path.dirname(__file__))
 

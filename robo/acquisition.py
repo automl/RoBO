@@ -57,9 +57,9 @@ eps = np.finfo(np.float32).eps
 debug_print = False
 
 class Entropy(object):
-    def __init__(self, model, X_lower, X_upper, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, **kwargs):
         self.model = model
-        self.Nb = 10 
+        self.Nb = Nb 
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
         self.UCB = UCB(model)
@@ -72,10 +72,10 @@ class Entropy(object):
         self.zb = np.zeros((self.Nb, self.X_lower.shape[0]))
         for i in range(self.X_lower.shape[0]):
             self.zb[:,i] = np.linspace(self.X_lower[i], self.X_upper[i], self.Nb, endpoint = False)
-        self.mb = np.dot(-np.log(np.prod(self.X_upper - self.X_lower)), np.ones((self.Nb, 1)))
+        self.lmb = np.dot(-np.log(np.prod(self.X_upper - self.X_lower)), np.ones((self.Nb, 1)))
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
-        
-        self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)           
+        self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
+        self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )          
         
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
         
@@ -520,19 +520,4 @@ class LogEI(object):
 
     def model_changed(self):
         pass    
-if __name__ == "__main__":
-    Var= np.array([[  3.87161361e+02,   3.13109917e+02,   1.69058548e+02,   4.72396572e+01,   -4.04833571e-01,   6.72054465e+00,   2.18906542e+01,   2.20972808e+01,    1.29360166e+01,   5.03719525e+00],
-       [3.13109917e+02, 3.23248412e+02, 2.14223648e+02, 7.13191223e+01, -3.97504818e-01, 1.17772024e+01, 4.18066141e+01, 4.41174447e+01, 2.65510341e+01, 1.05254731e+01],
-       [1.69058548e+02, 2.14223648e+02, 1.72063217e+02, 6.71816966e+01, 1.86713858e-01, 1.20431800e+01, 4.83602238e+01, 5.42833203e+01, 3.40629676e+01, 1.39084617e+01],
-       [4.72396572e+01, 7.13191223e+01, 6.71816966e+01, 3.25011845e+01, 9.87398227e-01, 4.72609238e+00, 2.46312918e+01, 3.05316334e+01, 2.05150727e+01, 8.82510182e+00],
-       [-4.04833571e-01, -3.97504818e-01, 1.86713858e-01, 9.87398227e-01, 1.80923222e+00, -7.13587511e-01, -2.20417380e+00, -2.36386527e+00, -1.51086496e+00, -6.43132255e-01],
-       [6.72054465e+00, 1.17772024e+01, 1.20431800e+01, 4.72609238e+00, -7.13587511e-01, 8.36646407e+00, 2.28136296e+01, 2.88246428e+01, 2.15302329e+01, 1.05999706e+01],
-       [2.18906542e+01, 4.18066141e+01, 4.83602238e+01, 2.46312918e+01, -2.20417380e+00, 2.28136296e+01, 9.75746326e+01, 1.46711508e+02, 1.29666502e+02, 7.57110465e+01],
-       [2.20972808e+01, 4.41174447e+01, 5.42833203e+01, 3.05316334e+01, -2.36386527e+00, 2.88246428e+01, 1.46711508e+02, 2.64285998e+02, 2.79585614e+02, 2.00199662e+02],
-       [1.29360166e+01, 2.65510341e+01, 3.40629676e+01, 2.05150727e+01, -1.51086496e+00, 2.15302329e+01, 1.29666502e+02, 2.79585614e+02, 3.68458082e+02, 3.34272268e+02],
-       [5.03719525e+00, 1.05254731e+01, 1.39084617e+01, 8.82510182e+00, -6.43132255e-01, 1.05999706e+01, 7.57110465e+01, 2.00199662e+02, 3.34272268e+02, 3.96936615e+02]])
-    mu= np.array([  -5.49136396, -7.12505187, 4.35396108, 40.52508471, 91.58672473, 123.45181813, 112.56542119, 72.53546694, 33.71330893, 11.42921143])
-    e =  Entropy(None, None, None)
-    
-    
-    a, b, c, d = e._joint_min(mu, Var, with_derivatives = True)
+

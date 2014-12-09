@@ -7,12 +7,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 #CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-	'GPy',
-	'DIRECT'
+	'GPy'
     ]
 
 setup(name='robo',
-      version='0.0',
+      version='0.1',
       description='',
       long_description='',
       classifiers=[
@@ -21,15 +20,16 @@ setup(name='robo',
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
         ],
-      author='joel',
-      author_email='joel@renumi.de',
-      url='http://renumi.de',
+      author='',
+      author_email='',
+      url='',
       keywords='',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
       test_suite='robo',
       install_requires=requires,
-      entry_points="""\
-      """,
+      entry_points=dict(
+      		console_scripts = ['robo_main = robo.main:main']
       )
+	)

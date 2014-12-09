@@ -3,8 +3,8 @@ sys.path.insert(0, '../')
 import unittest
 import numpy as np
 import GPy
-from models import GPyModel
-from acquisition import Entropy
+from robo.models import GPyModel
+from robo.acquisition import Entropy
 
 # @unittest.skip("empty array, sampling from measure")
 class EmptySampleTestCase(unittest.TestCase):
