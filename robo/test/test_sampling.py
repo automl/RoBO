@@ -90,6 +90,7 @@ class SecondIterationTestPI(unittest.TestCase):
 
         self.X = np.array([[6.8165, 15.1224]])
         self.Y = np.array([[213.3935]])
+
         self.kernel = GPy.kern.RBF(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
         self.model = GPyModel(self.kernel, optimize = False)
         self.model.train(self.X, self.Y)
@@ -101,8 +102,8 @@ class SecondIterationTestPI(unittest.TestCase):
         # fac = 42.9076/68.20017903
 
     def test(self):
-        entropy = Entropy(self.model)
-        acquisition_fn = PI(self.model, par = 0)
+        entropy = Entropy(self.model, self.xmin, self.xmax)
+        acquisition_fn = PI(self.model, par = 0, xmin = self.xmin, xmax = self.xmax)
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
         print "zb: ", zb
 

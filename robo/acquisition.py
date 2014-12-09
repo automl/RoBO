@@ -28,10 +28,19 @@ import scipy
 import numpy as np
 
 class PI(object):
-    def __init__(self, model, par=0.001, **kwargs):
+    def __init__(self, model, xmin, xmax, par=0.001, **kwargs):
         self.model = model
         self.par = par
+        self.xmin = xmin
+        self.xmax = xmax
     def __call__(self, X, Z=None, **kwargs):
+        # TODO: add a parameter to condition the derivative being returned
+
+        if (X < self.xmin).any() or (X > self.xmax).any():
+            u = 0
+            du = np.zeros((X.shape[1],1))
+            return u, du
+
         alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
         dim = X.shape[1]
         mean, var = self.model.predict(X, Z)
@@ -515,7 +524,7 @@ class EI(object):
             self.alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
             # print "alpha: ", self.alpha
     def __call__(self, x, Z=None, **kwargs):
-
+        # TODO: add a parameter to condition the derivative being returned
         dim = x.shape[1]
         f_est = self.model.predict(x)
         # print "f_est: ", f_est
