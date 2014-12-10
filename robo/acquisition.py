@@ -34,13 +34,16 @@ class PI(object):
         self.xmin = xmin
         self.xmax = xmax
 
-    def __call__(self, X, Z=None, **kwargs):
+    def __call__(self, X, Z=None, derivative=False, **kwargs):
         # TODO: add a parameter to condition the derivative being returned
 
         if (X < self.xmin).any() or (X > self.xmax).any():
-            u = 0
-            du = np.zeros((X.shape[1],1))
-            return u, du
+            if derivative:
+                u = 0
+                du = np.zeros((X.shape[1],1))
+                return u, du
+            else:
+                return 0
 
         alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
         dim = X.shape[1]
@@ -48,25 +51,28 @@ class PI(object):
         Y_star = self.model.getCurrentBest()
         u = norm.cdf((Y_star - mean - self.par ) / var)
 
-        # Derivative values:
-        # Derivative of kernel values:
-        dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, X)
-        dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
 
-        # dmdx = derivative of the gaussian process mean function
-        dmdx = np.dot(dkxX.transpose(), alpha)
-        # dsdx = derivative of the gaussian process covariance function
-        dsdx = np.zeros((dim, 1))
-        for i in range(0, dim):
-            dsdx[i] = np.dot(0.5 / var, dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                   np.linalg.solve(self.model.cK,
-                                                                                   np.linalg.solve(self.model.cK.transpose(),
-                                                                                                   self.model.K[0,None].transpose()))))
-        # (-phi/s) * (dmdx + dsdx * z)
-        z = (Y_star - mean) / var
-        du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
+        if derivative:
+            # Derivative values:
+            # Derivative of kernel values:
+            dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, X)
+            dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
 
-        return u, du
+            # dmdx = derivative of the gaussian process mean function
+            dmdx = np.dot(dkxX.transpose(), alpha)
+            # dsdx = derivative of the gaussian process covariance function
+            dsdx = np.zeros((dim, 1))
+            for i in range(0, dim):
+                dsdx[i] = np.dot(0.5 / var, dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
+                                                                       np.linalg.solve(self.model.cK,
+                                                                                       np.linalg.solve(self.model.cK.transpose(),
+                                                                                                       self.model.K[0,None].transpose()))))
+            # (-phi/s) * (dmdx + dsdx * z)
+            z = (Y_star - mean) / var
+            du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
+            return u, du
+        else:
+            return u
 
     def model_changed(self):
         pass
@@ -430,7 +436,7 @@ class Entropy(object):
             xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
-                emb, _ = acquisition_fn(xx)
+                emb = acquisition_fn(xx)
                 mb[(i / subsample) - 1, 0]  = np.log(emb)
 
         # Return values
@@ -452,7 +458,7 @@ class Entropy(object):
         # set random seed
         # print "entering slice sampler..."
         D = xx.shape[0]
-        f, _ = P(xx.transpose())
+        f = P(xx.transpose())
         logf = np.log(f)
         logy = np.log(np.random.uniform()) + logf
 
@@ -531,13 +537,15 @@ class EI(object):
             self.alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
             # print "alpha: ", self.alpha
 
-    def __call__(self, x, Z=None, **kwargs):
-        # TODO: add a parameter to condition the derivative being returned
+    def __call__(self, x, Z=None, derivative=False, **kwargs):
 
         if (x < self.xmin).any() or (x > self.xmax).any():
-            f = 0
-            df = np.zeros((x.shape[1],1))
-            return f, df
+            if derivative:
+                f = 0
+                df = np.zeros((x.shape[1],1))
+                return f, df
+            else:
+                return 0
 
         dim = x.shape[1]
         f_est = self.model.predict(x)
@@ -546,28 +554,30 @@ class EI(object):
         z = (eta - f_est[0] + self.par) / f_est[1]
         f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
 
-        # Derivative of kernel values:
-        dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
-        # print "dkxX: ", dkxX
-        dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-        # print "dkxx: ", dkxx
+        if derivative:
+            # Derivative of kernel values:
+            dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
+            # print "dkxX: ", dkxX
+            dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
+            # print "dkxx: ", dkxx
 
-        # dm = derivative of the gaussian process mean function
-        dmdx = np.dot(dkxX.transpose(), self.alpha)
-        # print "dmdx: ", dmdx
-        # ds = derivative of the gaussian process covariance function
-        dsdx = np.zeros((dim, 1))
-        # print "dim: ", dim
-        # print self.model.K[0,None]
-        # print self.model.K[0,None].shape
-        for i in range(0, dim):
-            dsdx[i] = np.dot(0.5 / f_est[1], dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                        np.linalg.solve(self.model.cK,
-                                                                                        np.linalg.solve(self.model.cK.transpose(),
-                                                                                                        self.model.K[0,None].transpose()))))
-        df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
-
-        return f, df
+            # dm = derivative of the gaussian process mean function
+            dmdx = np.dot(dkxX.transpose(), self.alpha)
+            # print "dmdx: ", dmdx
+            # ds = derivative of the gaussian process covariance function
+            dsdx = np.zeros((dim, 1))
+            # print "dim: ", dim
+            # print self.model.K[0,None]
+            # print self.model.K[0,None].shape
+            for i in range(0, dim):
+                dsdx[i] = np.dot(0.5 / f_est[1], dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
+                                                                            np.linalg.solve(self.model.cK,
+                                                                                            np.linalg.solve(self.model.cK.transpose(),
+                                                                                                            self.model.K[0,None].transpose()))))
+            df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
+            return f, df
+        else:
+            return f
 
 
     def model_changed(self):
@@ -636,5 +646,5 @@ if __name__ == "__main__":
     mu= np.array([  -5.49136396, -7.12505187, 4.35396108, 40.52508471, 91.58672473, 123.45181813, 112.56542119, 72.53546694, 33.71330893, 11.42921143])
     e =  Entropy(None, None, None)
     
-    
+
     a, b, c, d = e._joint_min(mu, Var, with_derivatives = True)

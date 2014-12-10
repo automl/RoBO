@@ -139,13 +139,10 @@ class ProjNullSpaceTests(unittest.TestCase):
 
     def test(self):
         entropy = Entropy(self.model)
-        # print entropy.projNullSpace(self.J, self.v)
         self.assertEqual(entropy.projNullSpace(self.J, self.v).tolist(),
                          np.array([[30.7746], [-16.0128]]).tolist())
-        # print entropy.projNullSpace(self.JJ, self.vv)
         self.assertEqual(entropy.projNullSpace(self.JJ, self.vv).tolist(),
                          np.array([[2.9283919723599983], [1.7522158685840008]]).tolist())
-
 
 
 if __name__=="__main__":
