@@ -36,7 +36,7 @@ class FirstIterationTest(unittest.TestCase):
         # Building up the model
         #
         kernel = GPy.kern.rbf(input_dim=self.D, variance=12.3, lengthscale=5.0)
-        self.model = GPyModel(kernel)
+        self.model = GPyModel(kernel, optimize = False)
         self.model.train(X,Y)
 
         self.BestGuesses = np.zeros((0, self.D))
@@ -48,10 +48,12 @@ class FirstIterationTest(unittest.TestCase):
         print "zb: ", zb
 
 
-@unittest.skip("skipping second iteration, EI\n")
+# @unittest.skip("skipping second iteration, EI\n")
 class SecondIterationTestEI(unittest.TestCase):
     def setUp(self):
 
+        # set random seed
+        np.random.seed(1)
 
         self.D = 2 # dimension of input space
         # self.x_prev = np.array([])
@@ -61,8 +63,8 @@ class SecondIterationTestEI(unittest.TestCase):
 
         self.X = np.array([[6.8165, 15.1224]])
         self.Y = np.array([[213.3935]])
-        self.kernel = GPy.kern.rbf(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
-        self.model = GPyModel(self.kernel)
+        self.kernel = GPy.kern.RBF(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
+        self.model = GPyModel(self.kernel, optimize = False)
         self.model.train(self.X, self.Y)
 
         self.BestGuesses = np.array([
@@ -72,16 +74,17 @@ class SecondIterationTestEI(unittest.TestCase):
         # fac = 42.9076/68.20017903
 
     def test(self):
-        entropy = Entropy(self.model)
-        acquisition_fn = EI(self.model, par = 0)
+        entropy = Entropy(self.model, self.xmin, self.xmax)
+        acquisition_fn = EI(self.model, par = 0, xmin = self.xmin, xmax = self.xmax)
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
         print "zb: ", zb
+        self.assertTrue(True)
 
 # @unittest.skip("second iteration, PI")
 class SecondIterationTestPI(unittest.TestCase):
     def setUp(self):
 
-
+        np.random.seed(1)
         self.D = 2 # dimension of input space
         # self.x_prev = np.array([])
         self.xmin = np.array([[-8,-8]])
@@ -106,6 +109,7 @@ class SecondIterationTestPI(unittest.TestCase):
         acquisition_fn = PI(self.model, par = 0, xmin = self.xmin, xmax = self.xmax)
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
         print "zb: ", zb
+        # self.assertTrue(True)
 
 @unittest.skip("test for nullspace projection method")
 class ProjNullSpaceTests(unittest.TestCase):
@@ -119,7 +123,7 @@ class ProjNullSpaceTests(unittest.TestCase):
         self.X = np.array([[6.8165, 15.1224]])
         self.Y = np.array([[213.3935]])
         self.kernel = GPy.kern.rbf(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
-        self.model = GPyModel(self.kernel)
+        self.model = GPyModel(self.kernel, optimize = False)
         self.model.train(self.X, self.Y)
 
         self.BestGuesses = np.array([
@@ -142,40 +146,6 @@ class ProjNullSpaceTests(unittest.TestCase):
         self.assertEqual(entropy.projNullSpace(self.JJ, self.vv).tolist(),
                          np.array([[2.9283919723599983], [1.7522158685840008]]).tolist())
 
-
-
-@unittest.skip("skipping third iteration\n")
-class ThirdIterationTest(unittest.TestCase):
-    def setUp(self):
-        self.D = 2 # dimension of input space
-        self.x_prev = np.array([])
-        self.xmin = np.array([[-8,-8]])
-        self.xmax =  np.array([[19, 19]])
-        self.n_representers = 20
-
-        self.X = np.array([
-            [6.81648061143168, 15.1224216919405],
-            [7.175994953837093, 4.410131392920116]
-        ])
-        self.Y = np.array([[213.393471408362], [47.849496333858006]])
-        self.kernel = GPy.kern.rbf(input_dim = self.D, variance = 3.690198808146339**2,
-                                   lengthscale = (1.6963e-11, 4.1267e-36), ARD = True)
-        self.model = GPyModel(self.kernel)
-        self.model.train(self.X, self.Y)
-
-
-
-        self.BestGuesses = np.array([
-            [-7.99691187993169,	0.462452810299556],
-            [-7.14017599085650,	-7.76524114707603],
-            [1.74264535658588, -6.40800531312687]
-        ])
-
-    def test(self):
-        entropy = Entropy(self.model)
-        acquisition_fn = EI(self.model, par = 0)
-        zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
-        print "zb: ", zb
 
 
 if __name__=="__main__":

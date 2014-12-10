@@ -33,6 +33,7 @@ class PI(object):
         self.par = par
         self.xmin = xmin
         self.xmax = xmax
+
     def __call__(self, X, Z=None, **kwargs):
         # TODO: add a parameter to condition the derivative being returned
 
@@ -49,8 +50,8 @@ class PI(object):
 
         # Derivative values:
         # Derivative of kernel values:
-        dkxX = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X, X)
-        dkxx = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X)
+        dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, X)
+        dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
 
         # dmdx = derivative of the gaussian process mean function
         dmdx = np.dot(dkxX.transpose(), alpha)
@@ -66,6 +67,7 @@ class PI(object):
         du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
 
         return u, du
+
     def model_changed(self):
         pass
 
@@ -374,7 +376,7 @@ class Entropy(object):
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
     def sample_from_measure(self, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
-        # TODO: does it make sense to use the same GP model for the acquisition function used in the sampling of representer points?
+
         # acquisition_fn = acquisition_fn(self.model)
 
         # If there are no prior observations, do uniform sampling
@@ -436,6 +438,7 @@ class Entropy(object):
 
     def projNullSpace(self, J, v):
         # Auxiliary function for the multivariate slice sampler
+        # print "shape of J: %s" % str(J.shape)
         if J.shape[1] > 0:
             return v - J.dot(J.transpose()).dot(v)
         else:
@@ -463,7 +466,7 @@ class Entropy(object):
         # print "logf: %f" % logf
         # print "logy: %f" % logy
         c = np.zeros((D,0))
-        J = np.zeros((0,0))
+        J = np.zeros((D,0))
         while True:
             k += 1
             # print '*'*30
@@ -482,7 +485,8 @@ class Entropy(object):
 
             # TODO: add the derivative values (we're not considering them yet)
             # fk, dfk = P(xk.transpose())
-            fk, dfk = P(xk.transpose())
+            fk, dfk = P(xk.transpose(), derivative = True)
+            # print "value of fk: %s" % fk
             logfk  = np.log(fk)
             dlogfk = np.divide(dfk, fk)
 
@@ -501,8 +505,8 @@ class Entropy(object):
                 g = self.projNullSpace(J, dlogfk)
                 if J.shape[1] < D - 1 and \
                    np.dot(g.transpose(), dlogfk) > 0.5 * np.linalg.norm(g) * np.linalg.norm(dlogfk):
-                    J = np.append(J, np.divide(g, np.linalg.norm(g)))
-                    s[k] = s[k-1]
+                    J = np.append(J, np.divide(g, np.linalg.norm(g)), axis = 1)
+                    # s[k] = s[k-1]
                     s = np.append(s, s[k-1])
                 else:
                     s = np.append(s, np.multiply(theta, s[k-1]))
@@ -516,15 +520,25 @@ class Entropy(object):
 
 
 class EI(object):
-    def __init__(self, model, par = 0.01, **kwargs):
+    def __init__(self, model, xmin, xmax, par = 0.01, **kwargs):
         self.model = model
         self.par = par
+        self.xmin = xmin
+        self.xmax = xmax
+
         if len(self.model.X) > 0:
             # alpha = GP.cK \ (GP.cK' \ GP.y);
             self.alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
             # print "alpha: ", self.alpha
+
     def __call__(self, x, Z=None, **kwargs):
         # TODO: add a parameter to condition the derivative being returned
+
+        if (x < self.xmin).any() or (x > self.xmax).any():
+            f = 0
+            df = np.zeros((x.shape[1],1))
+            return f, df
+
         dim = x.shape[1]
         f_est = self.model.predict(x)
         # print "f_est: ", f_est
@@ -532,11 +546,10 @@ class EI(object):
         z = (eta - f_est[0] + self.par) / f_est[1]
         f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
 
-        # Derivative values:
         # Derivative of kernel values:
-        dkxX = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X, x)
+        dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
         # print "dkxX: ", dkxX
-        dkxx = self.model.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X)
+        dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
         # print "dkxx: ", dkxx
 
         # dm = derivative of the gaussian process mean function
@@ -553,7 +566,9 @@ class EI(object):
                                                                                         np.linalg.solve(self.model.cK.transpose(),
                                                                                                         self.model.K[0,None].transpose()))))
         df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
+
         return f, df
+
 
     def model_changed(self):
         pass
