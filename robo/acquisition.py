@@ -3,6 +3,7 @@
 this module contains acquisition functions that have high values
 where the objective function is low.
 
+
 .. class:: AcquisitionFunction
 
     An acquisition function is a class that gets instatiated with a model 
@@ -94,9 +95,9 @@ eps = np.finfo(np.float32).eps
 debug_print = False
 
 class Entropy(object):
-    def __init__(self, model, X_lower, X_upper, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, **kwargs):
         self.model = model
-        self.Nb = 10 
+        self.Nb = Nb 
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
         self.UCB = UCB(model)
@@ -109,10 +110,10 @@ class Entropy(object):
         self.zb = np.zeros((self.Nb, self.X_lower.shape[0]))
         for i in range(self.X_lower.shape[0]):
             self.zb[:,i] = np.linspace(self.X_lower[i], self.X_upper[i], self.Nb, endpoint = False)
-        self.mb = np.dot(-np.log(np.prod(self.X_upper - self.X_lower)), np.ones((self.Nb, 1)))
+        self.lmb = np.dot(-np.log(np.prod(self.X_upper - self.X_lower)), np.ones((self.Nb, 1)))
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
-        
-        self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)           
+        self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
+        self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )          
         
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
         
@@ -632,6 +633,7 @@ class LogEI(object):
 
     def model_changed(self):
         pass    
+
 if __name__ == "__main__":
     Var= np.array([[  3.87161361e+02,   3.13109917e+02,   1.69058548e+02,   4.72396572e+01,   -4.04833571e-01,   6.72054465e+00,   2.18906542e+01,   2.20972808e+01,    1.29360166e+01,   5.03719525e+00],
        [3.13109917e+02, 3.23248412e+02, 2.14223648e+02, 7.13191223e+01, -3.97504818e-01, 1.17772024e+01, 4.18066141e+01, 4.41174447e+01, 2.65510341e+01, 1.05254731e+01],

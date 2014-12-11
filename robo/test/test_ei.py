@@ -3,8 +3,8 @@ sys.path.insert(0, '../')
 import unittest
 import numpy as np
 import GPy
-from models import GPyModel
-from acquisition import EI
+from robo.models import GPyModel
+from robo.acquisition import EI
 
 @unittest.skip("skip first test")
 class EITestCase1(unittest.TestCase):

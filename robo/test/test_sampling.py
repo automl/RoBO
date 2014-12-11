@@ -3,9 +3,13 @@ sys.path.insert(0, '../')
 import unittest
 import numpy as np
 import GPy
-from models import GPyModel
+
+# from models import GPyModel
 from acquisition import Entropy, PI, EI
 from test_functions import branin
+
+from robo.models import GPyModel
+from robo.acquisition import Entropy
 
 @unittest.skip("empty array, sampling from measure \n")
 class FirstIterationTest(unittest.TestCase):
