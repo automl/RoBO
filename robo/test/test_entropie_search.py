@@ -117,9 +117,11 @@ class EmptySampleTestCase(unittest.TestCase):
         zb  = np.array([ [0.1569],  [6.4306],  [6.4735], [-2.6102],  [2.7876], [-4.3457], [-0.9570], [13.6003],  [2.4161],  [1.3773]])
         lmb = np.array([ 4.1938,  3.1827,  3.1675,  4.2753,  3.9806,  4.2928,  4.2381,  2.4608,  4.0232,  4.1183])
         Mb  = np.array([ 7.6510, 50.3527, 50.7310,  2.0226, 20.4149,  0.7512,  4.6460, 63.3195, 18.0728, 12.4844])
-        
+
         self.acquisition_fkt.model_changed();
-        
+        #mu, var = self.model.predict(np.array(zb), full_cov=True)
+        logP,dlogPdMu,dlogPdSigma,dlogPdMudMu = self.acquisition_fkt._joint_min(Mb, Var, with_derivatives=True)
+
         L = self.acquisition_fkt._get_gp_innovation_local(zb);
         L(np.array([[2.0]]))
         
