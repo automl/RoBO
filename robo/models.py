@@ -73,8 +73,6 @@ class GPyModel(object):
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
-        self.K = self.kernel.K(X, X)
-        self.cK = np.linalg.cholesky(self.K)
 
     def update(self, X, Y, Z=None):
         X = np.append(self.X, X, axis=0)
@@ -82,7 +80,7 @@ class GPyModel(object):
         if self.Z != None:
             Z = np.append(self.Z, [Z], axis=0)
         self.train(X, Y, Z)
-    
+
     def predict(self, X, Z=None, full_cov=False):
         #old gpy version 
         try:
