@@ -42,6 +42,7 @@ import StringIO
 import numpy as np
 import GPy as GPy
 
+
 class GPyModel(object):
     """
     GPyModel is just a wrapper around the GPy Lib
@@ -76,7 +77,11 @@ class GPyModel(object):
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
         self.K = self.kernel.K(X, X)
-        self.cK = np.linalg.cholesky(self.K)
+        try:
+            self.cK = np.linalg.cholesky(self.K)
+        except np.linalg.LinAlgError:
+            self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
+
 
     def update(self, X, Y, Z=None):
         X = np.append(self.X, X, axis=0)
