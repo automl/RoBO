@@ -74,7 +74,7 @@ class GPyModel(object):
         self.X_star = self.X[index_min]
         self.Y_star = self.Y[index_min]
         self.K = self.kernel.K(X, X)
-        self.cK = np.linalg.cholesky(self.K)
+        self.cK = np.linalg.cholesky(self.K )
 
     def update(self, X, Y, Z=None):
         X = np.append(self.X, X, axis=0)

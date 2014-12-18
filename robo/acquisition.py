@@ -115,15 +115,15 @@ class Entropy(object):
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
-                
+
     def dh_mc_local(self, zbel, logP, dlogPdM, dlogPdV, ddlogPdMdM, T, lmb, xmin, xmax, invertsign, LossFunc):
         pass
 
     
 
     def _get_gp_innovation_local(self, zb):
-        K = self.model.K
-        cK = self.model.cK.T 
+        K = self.K
+        cK = self.cK.T
         kbX = self.model.kernel.K(zb,self.model.X)
         def _gp_innovation_local(x):
             #TODO empty observation
@@ -645,5 +645,5 @@ class LogEI(object):
         return log_ei
 
     def model_changed(self):
-        pass    
+        pass
 
