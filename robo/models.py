@@ -51,6 +51,7 @@ class GPyModel(object):
         self.noise_variance = noise_variance
         self.optimize = optimize
         
+        
     def train(self, X, Y,  Z=None):
         self.X = X
         self.Y = Y
@@ -58,6 +59,7 @@ class GPyModel(object):
             return
         self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
+        self.likelihood = self.m.likelihood
         #old gpy 
         if self.noise_variance is not None:
             try:

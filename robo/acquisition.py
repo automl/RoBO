@@ -121,16 +121,51 @@ class Entropy(object):
                 
     
     def _get_gp_innovation_local(self, zb):
-        K = self.model.K
-        cK = self.model.cK.T 
+        K = self.K
+        cK = self.cK.T 
         kbX = self.model.kernel.K(zb,self.model.X)
         def _gp_innovation_local(x):
-            #TODO empty observation
-            kbx = self.model.kernel.K(x, zb)
-            kXx = self.model.kernel.K(x, self.model.X)
-            kxx = self.model.kernel.K(x, self.model.x)
-            self.model.kernel.dK_dr_via_X()
+            if self.model.X.shape[0] == 0:
+                # kernel values
+                kbx = self.model.kernel.K(zb,x)
+                kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
+                
+                #derivatives of kernel values
+                dkxx = self.model.kernel.gradients_X(kxx, x)
+                dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
+                
+                #terms of the innovation
+                sloc   = np.sqrt(kxx)
+                proj   = kbx
+                
+                dvloc  = dkxx
+                dproj  = dkxb
+                
+                # innovation, and its derivative
+                Lx     = proj / sloc;
+                dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
+                return Lx, dLxdx
+            kbx = self.model.kernel.K(zb,x)
+            kXx = self.model.kernel.K(self.model.X, x)
+            kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
+            # derivatives of kernel values 
+            dkxx = self.model.kernel.gradients_X(kxx, x)
+            dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
+            dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
+            # terms of innovation
+            a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
+            sloc = np.sqrt(a)
+            proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
+            
+            dvloc  = (dkxx.T - 2 * np.dot(dkxX.T, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))).T;
+            dproj  = dkxb - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, dkxX)));
+            
+            #innovation, and its derivative
+            Lx     = proj / sloc;
+            dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
+            return Lx, dLxdx
         return _gp_innovation_local
+    
     def _dhdxH(self):
         pass
         
