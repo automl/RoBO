@@ -26,7 +26,5 @@ DIRresults.txt
 #CMA
 outcma*.dat
 
-
-*~
-
 /EntropySearch
+*~

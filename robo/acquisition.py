@@ -46,7 +46,7 @@ class PI(object):
             else:
                 return 0
 
-        alpha = np.linalg.solve(self.cK, np.linalg.solve(self.cK.transpose(), self.model.Y))
+        alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
         dim = X.shape[1]
         mean, var = self.model.predict(X, Z)
         Y_star = self.model.getCurrentBest()
@@ -65,9 +65,9 @@ class PI(object):
             dsdx = np.zeros((dim, 1))
             for i in range(0, dim):
                 dsdx[i] = np.dot(0.5 / var, dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                       np.linalg.solve(self.cK,
-                                                                                       np.linalg.solve(self.cK.transpose(),
-                                                                                                       self.K[0,None].transpose()))))
+                                                                       np.linalg.solve(self.model.cK,
+                                                                                       np.linalg.solve(self.model.cK.transpose(),
+                                                                                                       self.model.K[0,None].transpose()))))
             # (-phi/s) * (dmdx + dsdx * z)
             z = (Y_star - mean) / var
             du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
@@ -76,8 +76,7 @@ class PI(object):
             return u
 
     def model_changed(self):
-        self.K = self.model.kernel.K(self.model.X, self.model.X)
-        self.cK = np.linalg.cholesky(self.K)
+        pass
 
 class UCB(object):
     def __init__(self, model, par=1.0, **kwargs):
@@ -108,8 +107,8 @@ class Entropy(object):
         return self.UCB(X, Z, **kwargs)
     
     def model_changed(self):
-        self.K = self.model.kernel.K(self.model.X, self.model.X)
-        self.cK = np.linalg.cholesky(self.K)
+        #self.K = self.model.kernel.K(self.model.X, self.model.X)
+        #self.cK = np.linalg.cholesky(self.K)
         #self.zb = np.add(np.multiply((self.X_upper - self.X_lower), np.random.uniform(size=(self.Nb, self.X_lower.shape[0]))), self.X_lower)
         self.zb = np.zeros((self.Nb, self.X_lower.shape[0]))
         for i in range(self.X_lower.shape[0]):
@@ -118,11 +117,15 @@ class Entropy(object):
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
-                
+
+    def dh_mc_local(self, zbel, logP, dlogPdM, dlogPdV, ddlogPdMdM, T, lmb, xmin, xmax, invertsign, LossFunc):
+        pass
+
     
+
     def _get_gp_innovation_local(self, zb):
-        K = self.K
-        cK = self.cK.T 
+        K = self.model.K
+        cK = self.model.cK.T
         kbX = self.model.kernel.K(zb,self.model.X)
         def _gp_innovation_local(x):
             if self.model.X.shape[0] == 0:
@@ -582,7 +585,7 @@ class EI(object):
 
         if len(self.model.X) > 0:
             # alpha = GP.cK \ (GP.cK' \ GP.y);
-            self.alpha = np.linalg.solve(self.cK, np.linalg.solve(self.cK.transpose(), self.model.Y))
+            self.alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
             # print "alpha: ", self.alpha
 
     def __call__(self, x, Z=None, derivative=False, **kwargs):
@@ -619,9 +622,9 @@ class EI(object):
             # print self.model.K[0,None].shape
             for i in range(0, dim):
                 dsdx[i] = np.dot(0.5 / f_est[1], dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                            np.linalg.solve(self.cK,
-                                                                                            np.linalg.solve(self.cK.transpose(),
-                                                                                                            self.K[0,None].transpose()))))
+                                                                            np.linalg.solve(self.model.cK,
+                                                                                            np.linalg.solve(self.model.cK.transpose(),
+                                                                                                            self.model.K[0,None].transpose()))))
             df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
             return f, df
         else:
@@ -629,8 +632,7 @@ class EI(object):
 
 
     def model_changed(self):
-        self.K = self.model.kernel.K(self.model.X, self.model.X)
-        self.cK = np.linalg.cholesky(self.K)
+        pass
 
 
 class LogEI(object):
@@ -680,5 +682,5 @@ class LogEI(object):
         return log_ei
 
     def model_changed(self):
-        pass    
+        pass
 
