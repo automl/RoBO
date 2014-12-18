@@ -47,7 +47,6 @@ def _plot_model(model, acquisition_fkt, objective_fkt, i, callback):
     fig.clf()
     plt.close()
     
-    
 class EmptySampleTestCase(unittest.TestCase):
     def setUp(self):
 
@@ -88,7 +87,6 @@ class EmptySampleTestCase(unittest.TestCase):
     @unittest.skip("skip it")
     def test_pmin(self):
         for i in xrange(self.num_initial_vals, len(self.x_values)):
-            
             self.acquisition_fkt.model_changed()
             new_x = np.array(self.x_values[i]).reshape((1,1,))#  grid_search(self.acquisition_fkt, self.X_lower, self.X_upper)
             new_y = self.objective_fkt(new_x)

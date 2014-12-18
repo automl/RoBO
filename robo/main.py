@@ -50,11 +50,12 @@ def _plot_model(model, acquisition_fkt, objective_fkt, i):
     plt.close()
     
 
-def bayesian_optimization(objective_fkt, acquisition_fkt, model, minimize_fkt, X_lower, X_upper,  maxN ):
+
+def bayesian_optimization(objective_fkt, acquisition_fkt, model, maximize_fkt, X_lower, X_upper,  maxN ):
    
     for i in xrange(maxN):
         acquisition_fkt.model_changed()
-        new_x = minimize_fkt(acquisition_fkt, X_lower, X_upper)
+        new_x = maximize_fkt(acquisition_fkt, X_lower, X_upper)
         new_y = objective_fkt(new_x)
         _plot_model(model, acquisition_fkt, objective_fkt, i)
         model.update(np.array(new_x), np.array(new_y))
