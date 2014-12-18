@@ -5,8 +5,9 @@ import numpy as np
 import GPy
 from robo.models import GPyModel
 from robo.acquisition import EI
+import matplotlib.pyplot as plt
 
-@unittest.skip("skip first test")
+@unittest.skip("skip first test\n")
 class EITestCase1(unittest.TestCase):
 
     def setUp(self):
@@ -28,31 +29,37 @@ class EITestCase2(unittest.TestCase):
 
     def setUp(self):
         self.dims = 1
-        self.X_lower = np.array([-8])
-        self.X_upper = np.array([19])
+        self.xmin = np.array([-3])
+        self.xmax = np.array([3])
         #initialize the samples
-        self.X = np.random.uniform(-3.,3.,(5,1))
-        self.Y = np.sin(self.X) + np.random.randn(5,1)*0.05
+        self.X = np.random.uniform(-3.,3.,(100,1))
+        self.Y = np.sin(self.X) + np.random.randn(100,1)*0.05
 
-        #draw a random sample from the objective function in the
-        #dimension space
-        # X[0,:] = [random.random() * (X_upper[0] - X_lower[0]) + X_lower[0]];
-        # objective_fkt= branin2
-        # Y[0:] = objective_fkt(X[0,:])
-
-        #
         # Building up the model
         #
-        self.kernel = GPy.kern.RBF(input_dim=self.dims, variance=12.3, lengthscale=5.0)
+        self.kernel = GPy.kern.RBF(input_dim=self.dims, variance=2, lengthscale=1.5)
         self.model = GPyModel(self.kernel, optimize = False)
+        # print "K matrix: ", self.model.K
         self.model.train(self.X, self.Y)
 
     def test(self):
         # print self.model.cK
-        acquisition_fn = EI(self.model)
+        acquisition_fn = EI(self.model, self.xmin, self.xmax)
         new_x = np.array([[2.1]])
+
+        plt.figure(1)
+        plt.subplot(211)
+        plt.plot(self.X, self.Y, 'bo')
+        plt.savefig("test.png")
+        # plt.subplot(212)
+        # plt.plot(t2, np.cos(2*np.pi*t2), 'r--')
+        # plt.show()
+
         print "X: ", self.X
-        acquisition_fn(new_x)
+        print new_x
+
+        new_y = acquisition_fn(new_x)
+        print new_y
         # print self.model.Y
         # self.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X)
 
