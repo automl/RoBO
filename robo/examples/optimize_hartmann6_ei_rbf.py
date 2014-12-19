@@ -7,10 +7,11 @@ import matplotlib.pyplot as plt;
 import GPy
 import pylab as pb
 #pb.ion()
+from robo import bayesian_optimization_main
 from robo.models import GPyModel 
 import numpy as np
-from robo.test_functions import branin2, branin
-from robo.acquisition import PI, UCB, Entropy, EI
+from robo.test_functions import hartmann6
+from robo.acquisition import EI
 from robo.maximize import cma, DIRECT, grid_search
 #np.seterr(all='raise')
 here = os.path.abspath(os.path.dirname(__file__))
@@ -21,16 +22,16 @@ here = os.path.abspath(os.path.dirname(__file__))
 # where the second domension is 12
 #
 
-obj_samples = 700
-plot_min = -8
-plot_max = 19
-plotting_range = np.linspace(plot_min, plot_max, num=obj_samples)
+#obj_samples = 700
+#plot_min = -8
+#plot_max = 19
+#plotting_range = np.linspace(plot_min, plot_max, num=obj_samples)
 
-second_branin_arg = np.empty((obj_samples,))
-second_branin_arg.fill(12)
-branin_arg = np.append(np.reshape(plotting_range, (obj_samples, 1)), np.reshape(second_branin_arg, (obj_samples, 1)), axis=1)
-branin_result = branin(branin_arg)
-branin_result = branin_result.reshape(branin_result.shape[0],)
+#second_branin_arg = np.empty((obj_samples,))
+#second_branin_arg.fill(12)
+#branin_arg = np.append(np.reshape(plotting_range, (obj_samples, 1)), np.reshape(second_branin_arg, (obj_samples, 1)), axis=1)
+#branin_result = branin(branin_arg)
+#branin_result = branin_result.reshape(branin_result.shape[0],)
 
 def _plot_model(model, acquisition_fkt, objective_fkt, i):
     
@@ -48,65 +49,46 @@ def _plot_model(model, acquisition_fkt, objective_fkt, i):
     fig.savefig("%s/tmp/np_%s.png"%(here, i), format='png')
     fig.clf()
     plt.close()
-    
-
-
-def bayesian_optimization(objective_fkt, acquisition_fkt, model, maximize_fkt, X_lower, X_upper,  maxN ):
-   
-    for i in xrange(maxN):
-        acquisition_fkt.model_changed()
-        new_x = maximize_fkt(acquisition_fkt, X_lower, X_upper)
-        new_y = objective_fkt(new_x)
-        _plot_model(model, acquisition_fkt, objective_fkt, i)
-        model.update(np.array(new_x), np.array(new_y))
-        print model.m
 
 def main():
     #
     # Dimension Space where the 
     # objective function can be evaluated 
     #
-    dims = 1
-    X_lower = np.array([-8]);#, -8])
-    X_upper = np.array([19]);#, 19])
+    dims = 6
+    X_lower = np.array([0.0,0.0,0.0,0.0,0.0,0.0]);
+    X_upper = np.array([1.0,1.0,1.0,1.0,1.0,1.0]);
     #initialize the samples
     X = np.empty((1, dims))
-
     Y = np.empty((1, 1))
     #draw a random sample from the objective function in the
     #dimension space 
     for i in range(dims):
-        X[0,i] = 2.6190#random.random() * (X_upper[i] - X_lower[i]) + X_lower[i];
-    objective_fkt= branin2
+        X[0,i] = random.random() * (X_upper[i] - X_lower[i]) + X_lower[i];
+        
+    objective_fkt= hartmann6
     Y[0:] = objective_fkt(np.array([X[0,:]]))
     
     #
     # Building up the model
-    #    
-    #old gpy version 
-    try:
-        kernel = GPy.kern.rbf(input_dim=dims, variance=400.0, lengthscale=5.0)
-    #gpy version >=0.6
-    except AttributeError, e:
-        kernel = GPy.kern.RBF(input_dim=dims, variance=400.0, lengthscale=5.0)
-        
-    model = GPyModel(kernel, optimize=True, noise_variance = 0.002)
+    #
+    kernel = GPy.kern.RBF(input_dim=dims)    
+    model = GPyModel(kernel, optimize=True)
     model.train(X,Y)
     #
     # creating an acquisition function
     #
-    acquisition_fkt = UCB(model, par=0.001)
+    acquisition_fkt = EI(model, X_upper= X_upper, X_lower=X_lower)
     #
     # start the main loop
     #
-    bayesian_optimization(objective_fkt, acquisition_fkt, model, grid_search, X_lower, X_upper, maxN = 14)
+    print bayesian_optimization_main(objective_fkt, acquisition_fkt, model, cma, X_lower, X_upper, maxN = 60)
     
     
 
 if __name__ == "__main__":
-    
     try:
-        os.makedirs("%s/tmp/"%here)
+        os.makedirs("%s/../tmp/"%here)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise

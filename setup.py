@@ -30,6 +30,6 @@ setup(name='robo',
       test_suite='robo',
       install_requires=requires,
       entry_points=dict(
-      		console_scripts = ['robo_main = robo.main:main']
+##      		console_scripts = ['robo_main = robo.main:main']
       )
 	)

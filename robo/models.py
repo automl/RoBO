@@ -84,6 +84,7 @@ class GPyModel(object):
 
 
     def update(self, X, Y, Z=None):
+        print Y
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         if self.Z != None:
@@ -91,20 +92,11 @@ class GPyModel(object):
         self.train(X, Y, Z)
 
     def predict(self, X, Z=None, full_cov=False):
-        #old gpy version 
-        try:
-            mean, var, _025pm, _975pm = self.m.predict(X, full_cov=full_cov)
-            if not full_cov:
-                return mean[:,0], var[:,0]
-            else:
-                return mean[:,0], var
-        #gpy version >=0.6
-        except (ValueError, AssertionError):
-            mean, var = self.m.predict(X, full_cov=full_cov)
-            if not full_cov:
-                return mean[:,0], var[:,0]
-            else:
-                return mean[:,0], var
+        mean, var = self.m.predict(X, full_cov=full_cov)
+        if not full_cov:
+            return mean[:,0], var[:,0]
+        else:
+            return mean[:,0], var
             
     def load(self, filename):
         pass
@@ -117,3 +109,5 @@ class GPyModel(object):
     
     def getCurrentBest(self):
         return self.Y_star
+    def getCurrentBestX(self):
+        return self.X_star
