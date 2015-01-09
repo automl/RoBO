@@ -39,24 +39,34 @@ def hartmann6(x, zero_mean=False):
             P_ij.fill(P[i,j])
             c += A_ij * (x[:, j] - P_ij) * (x[:, j] - P_ij)  
         b += alpha[i] * np.exp(-c)
-    return np.array(a*b)    
+    return np.array(a*b)
+    
+def hartmann3(x):
+    alpha = [1.0, 1.2, 3.0, 3.2]
+    A = np.array([[ 3.0, 10.0, 30.0],
+                  [ 0.1, 10.0, 35.0],
+                  [ 3.0, 10.0, 30.0],
+                  [ 0.1, 10.0, 35.0]])
+    P = 0.0001 * np.array([[3689, 1170, 2673],
+                           [4699, 4387, 7470],
+                           [1091, 8732, 5547],
+                           [ 381, 5743, 8828]])
+    external_sum = 0
+    for i in range(4):
+        internal_sum = 0
+        for j in range(3):
+            A_ij = np.empty((x.shape[0],1))
+            A_ij.fill(A[i,j])
+            P_ij = np.empty((x.shape[0],1))
+            P_ij.fill(P[i,j])
+            internal_sum += A_ij * (x[:, j] - P_ij) * (x[:, j] - P_ij)  
+        external_sum += alpha[i] * np.exp(-internal_sum)
+    return np.array(-external_sum)
 
-if  __name__ == "__main__":
-    import random
-    X_lower = np.array([0.0,0.0,0.0,0.0,0.0,0.0]);
-    X_upper = np.array([1.0,1.0,1.0,1.0,1.0,1.0]);
-    x_star =  np.array(((0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573),))
-    
-    assert -3.32237 - hartmann6(x_star) < 0.0001
-    print  "f(0.31225309,  0.1687257 ,  0.4116617 ,  0.27186383,  0.29280941, 0.6497946) = " + str(hartmann6(np.array([[0.31225309,  0.1687257 ,  0.4116617 ,  0.27186383,  0.29280941,
-        0.6497946 ]])))
-    num_t = 2000
-    dims = 6
-    X = np.empty((num_t, dims))
-    Y = np.empty((num_t, 1))
-    for j in range(num_t):
-        for i in range(dims):
-            X[j,i] = random.random() * (X_upper[i] - X_lower[i]) + X_lower[i];
-    Y = hartmann6(X)
-    print  Y.min()
-    
+def goldstein_price_fkt(x):
+    x1 = x[:,0]
+    x2 = x[:,1]
+    one = np.ones((x.shape[0],1))
+    factor_1 = 1 + (x1+x2+1)*(x1+x2+1)*(19-14*x1+3*x1*x1-14*x2+6*x1*x2+3*x2*x2)
+    factor_2 = 30 + (2*x1-3*x2)*(2*x1-3*x2)*(18-32*x1+12*x1*x1+48*x2-36*x1*x2+27*x2*x2)
+    return factor_1*factor_2
