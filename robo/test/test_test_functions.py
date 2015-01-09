@@ -6,7 +6,6 @@ from robo.test_functions import branin, hartmann6, hartmann3, goldstein_price_fk
 class TestTestFunction(object):
     def test(self):
         ys = self.fkt(self.X_star)
-        print ys, self.Y_star + 0.000001
         assert np.all( ys < (self.Y_star + 0.0001))
         X = np.empty((self.num_t, self.dims))
         Y = np.empty((self.num_t, 1))

@@ -41,7 +41,7 @@ import sys
 import StringIO
 import numpy as np
 import GPy as GPy
-
+import cPickle as pickle
 
 class GPyModel(object):
     """
@@ -63,13 +63,9 @@ class GPyModel(object):
         self.likelihood = self.m.likelihood
         #old gpy 
         if self.noise_variance is not None:
-            try:
-                self.m.constrain_fixed('.*noise', self.noise_variance)
-            #gpy version >=0.6
-            except:
-                self.m['.*Gaussian_noise.variance'] = self.noise_variance
-                self.m['.*Gaussian_noise.variance'].unconstrain()
-                self.m['.*Gaussian_noise.variance'].fix()
+            self.m['.*Gaussian_noise.variance'] = self.noise_variance
+            #self.m['.*Gaussian_noise.variance'].unconstrain()
+            self.m['.*Gaussian_noise.variance'].fix()
         if self.optimize:
             self.m.optimize_restarts(num_restarts = 10, robust=True)
 
@@ -81,7 +77,6 @@ class GPyModel(object):
             self.cK = np.linalg.cholesky(self.K)
         except np.linalg.LinAlgError:
             self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
-
 
     def update(self, X, Y, Z=None):
         print Y
@@ -99,15 +94,13 @@ class GPyModel(object):
             return mean[:,0], var
             
     def load(self, filename):
-        pass
+        return pickle.load(filename)
     
     def save(self, filename):
-        pass
-    
-    def visualize(self):
-        pass
+        pickle.dump(self, filename)
     
     def getCurrentBest(self):
         return self.Y_star
+    
     def getCurrentBestX(self):
         return self.X_star
