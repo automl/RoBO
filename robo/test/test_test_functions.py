@@ -5,7 +5,7 @@ from robo.test_functions import branin, hartmann6, hartmann3, goldstein_price_fk
 
 class TestTestFunction(object):
     def test(self):
-        ys = self.fkt(self.X_star)
+        ys = self.fkt(self.X_stars)
         assert np.all( ys < (self.Y_star + 0.0001))
         X = np.empty((self.num_t, self.dims))
         Y = np.empty((self.num_t, 1))
@@ -14,45 +14,37 @@ class TestTestFunction(object):
                 X[j,i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i];
         Y = self.fkt(X)
         assert np.all(Y >= self.Y_star)
-
+        
+    def _setUp(self):
+        self.dims = self.fkt.dims
+        self.X_lower = self.fkt.X_lower
+        self.X_upper = self.fkt.X_upper
+        self.X_stars = self.fkt.X_stars
+        self.Y_star = self.fkt.Y_star
+        
 class TestHartmann6Function(unittest.TestCase, TestTestFunction):
     def setUp(self):
-        self.X_lower = np.array([0.0,0.0,0.0,0.0,0.0,0.0]);
-        self.X_upper = np.array([1.0,1.0,1.0,1.0,1.0,1.0]);
-        self.X_star =  np.array(((0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573),))
-        self.Y_star = -3.32237
         self.fkt = hartmann6
-        self.dims = 6
+        TestTestFunction._setUp(self)
         self.num_t = 2000
 
 class TestHartmann3Function(unittest.TestCase, TestTestFunction):
     def setUp(self):
-        self.X_lower = np.array([0.0,0.0,0.0]);
-        self.X_upper = np.array([1.0,1.0,1.0]);
-        self.X_star =  np.array(((0.114614, 0.555649, 0.852547),))
-        self.Y_star = -3.86278
         self.fkt = hartmann3
-        self.dims = 3
+        TestTestFunction._setUp(self)
         self.num_t = 2000
 
 class TestBraninFunction(unittest.TestCase, TestTestFunction):
     def setUp(self):
-        self.X_lower = np.array([-5, 0]);
-        self.X_upper = np.array([10, 15]);
-        self.X_star =  np.array(((-np.pi, 12.275),(np.pi, 2.275), (9.42478, 2.475)))
-        self.Y_star = 0.397887
         self.fkt = branin
-        self.dims = 2
+        TestTestFunction._setUp(self)
         self.num_t = 2000
+
         
 class TestGoldsteinPriceFkt(unittest.TestCase, TestTestFunction):
     def setUp(self):
-        self.X_lower = np.array([-2, -2]);
-        self.X_upper = np.array([2, 2]);
-        self.X_star =  np.array(((0,-1), ))
-        self.Y_star = 3
         self.fkt = goldstein_price_fkt
-        self.dims = 2
+        TestTestFunction._setUp(self)
         self.num_t = 2000
     
 if __name__=="__main__":

@@ -61,7 +61,6 @@ class GPyModel(object):
         self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
         self.likelihood = self.m.likelihood
-        #old gpy 
         if self.noise_variance is not None:
             self.m['.*Gaussian_noise.variance'] = self.noise_variance
             #self.m['.*Gaussian_noise.variance'].unconstrain()
@@ -76,10 +75,12 @@ class GPyModel(object):
         try:
             self.cK = np.linalg.cholesky(self.K)
         except np.linalg.LinAlgError:
-            self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
+            try:
+                self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
+            except np.linalg.LinAlgError:
+                self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
 
     def update(self, X, Y, Z=None):
-        print Y
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         if self.Z != None:

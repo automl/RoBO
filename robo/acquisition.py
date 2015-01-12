@@ -19,7 +19,7 @@ where the objective function is low.
         :param X: X values, where to evaluate the acquisition function 
         :param Z: instance features to evaluate at. Could be None.
     
-    .. method:: model_changed()
+    .. method:: update(model)
     
         this method should be called if the model is updated. The Entropy search needs
         to update its aproximation about P(x=x_min) 
@@ -75,8 +75,8 @@ class PI(object):
         else:
             return u
 
-    def model_changed(self):
-        pass
+    def update(self, model):
+        self.model = model
 
 class UCB(object):
     def __init__(self, model, par=1.0, **kwargs):
@@ -85,8 +85,8 @@ class UCB(object):
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
         return -mean + self.par * var
-    def model_changed(self):
-        pass
+    def update(self, model):
+        self.model = model
 
 
 sq2 = np.sqrt(2)
@@ -105,7 +105,8 @@ class Entropy(object):
     def __call__(self, X, Z=None, **kwargs):
         return self.UCB(X, Z, **kwargs)
     
-    def model_changed(self):
+    def update(self, model):
+        self.model = model
         #self.K = self.model.kernel.K(self.model.X, self.model.X)
         #self.cK = np.linalg.cholesky(self.K)
         #self.zb = np.add(np.multiply((self.X_upper - self.X_lower), np.random.uniform(size=(self.Nb, self.X_lower.shape[0]))), self.X_lower)
@@ -596,8 +597,8 @@ class EI(object):
             return f
 
 
-    def model_changed(self):
-        pass
+    def update(self, model):
+        self.model = model
 
 
 class LogEI(object):
@@ -646,6 +647,6 @@ class LogEI(object):
                         log_ei[i] = b + np.log(1 - np.exp(a - b))
         return log_ei
 
-    def model_changed(self):
-        pass
+    def update(self, model):
+        self.model = model
 

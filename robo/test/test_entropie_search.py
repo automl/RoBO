@@ -87,7 +87,7 @@ class EmptySampleTestCase(unittest.TestCase):
     @unittest.skip("skip it")
     def test_pmin(self):
         for i in xrange(self.num_initial_vals, len(self.x_values)):
-            self.acquisition_fkt.model_changed()
+            self.acquisition_fkt.update(model)
             new_x = np.array(self.x_values[i]).reshape((1,1,))#  grid_search(self.acquisition_fkt, self.X_lower, self.X_upper)
             new_y = self.objective_fkt(new_x)
             def plot_pmin(ax):
@@ -116,7 +116,7 @@ class EmptySampleTestCase(unittest.TestCase):
         lmb = np.array([ 4.1938,  3.1827,  3.1675,  4.2753,  3.9806,  4.2928,  4.2381,  2.4608,  4.0232,  4.1183])
         Mb  = np.array([ 7.6510, 50.3527, 50.7310,  2.0226, 20.4149,  0.7512,  4.6460, 63.3195, 18.0728, 12.4844])
 
-        self.acquisition_fkt.model_changed();
+        self.acquisition_fkt.update(model);
         #mu, var = self.model.predict(np.array(zb), full_cov=True)
         logP,dlogPdMu,dlogPdSigma,dlogPdMudMu = self.acquisition_fkt._joint_min(Mb, Var, with_derivatives=True)
 
