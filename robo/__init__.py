@@ -45,7 +45,7 @@ class BayesianOptimization(object):
             new_x = self.get_next_x(X, Y)
             
         if save_dir != None:
-            self.save_iteration(save_dir, X, Y, new_x);
+            self.save_iteration(save_dir, X, Y, new_x, num_iteration);
         
         return new_x, self.model.getCurrentBestX(), self.model.getCurrentBest(), X, Y
                 
@@ -67,5 +67,10 @@ class BayesianOptimization(object):
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
+        stream = file("info.yaml", "w")
+        yaml.dump({})
+        
+        
+        
         
         
