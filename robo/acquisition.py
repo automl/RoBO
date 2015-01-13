@@ -558,9 +558,15 @@ class EI(object):
         self.par = par
         self.X_lower = X_lower
         self.X_upper = X_upper
-
-        if len(self.model.X) > 0:
-            self.alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
+        self._alpha = None
+        
+    @property
+    def alpha(self):
+        if self.model.X is not None and len(self.model.X) > 0 and self._alpha is None:
+            self._alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
+        else:
+            raise Exception("self.model.X is not properly initialized in acquisition EI")
+        return self._alpha
 
     def __call__(self, x, Z=None, derivative=False, **kwargs):
         if (x < self.X_lower).any() or (x > self.X_upper).any():

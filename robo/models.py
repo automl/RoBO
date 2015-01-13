@@ -51,6 +51,8 @@ class GPyModel(object):
         self.kernel = kernel
         self.noise_variance = noise_variance
         self.optimize = optimize
+        self.X_star = None
+        self.Y_star = None
         
         
     def train(self, X, Y,  Z=None):
@@ -81,6 +83,7 @@ class GPyModel(object):
                 self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
 
     def update(self, X, Y, Z=None):
+        #TODO use correct update method
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         if self.Z != None:
