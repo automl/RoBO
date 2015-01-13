@@ -1,6 +1,5 @@
 import os
 import random
-import errno
 
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt;
@@ -14,17 +13,16 @@ from robo.test_functions import hartmann6
 from robo.acquisition import EI
 from robo.maximize import cma, DIRECT, grid_search
 #np.seterr(all='raise')
-here = os.path.abspath(os.path.dirname(__file__))
-def main():
+
+def main(save_dir):
+
     #
     # Dimension Space where the 
     # objective function can be evaluated 
     #
     dims = 6
-    X_lower = np.array([0.0,0.0,0.0,0.0,0.0,0.0]);
-    X_upper = np.array([1.0,1.0,1.0,1.0,1.0,1.0]);
-    #initialize the samples
-        
+    X_lower = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
+    X_upper = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
     objective_fkt= hartmann6
     
     #
@@ -32,25 +30,19 @@ def main():
     #
     kernel = GPy.kern.RBF(input_dim=dims)    
     model = GPyModel(kernel, optimize=True)
+    
     #
     # creating an acquisition function
     #
     acquisition_fkt = EI(model, X_upper= X_upper, X_lower=X_lower)
+    
     #
     # start the main loop
     #
     bo = BayesianOptimization(acquisition_fkt, model, cma, X_lower, X_upper, dims, objective_fkt)
-    bo.run(10)
-    
+    bo.run(10.0, save_dir)
 
 if __name__ == "__main__":
-    try:
-        os.makedirs("%s/../tmp/"%here)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-    #from GPy.examples.non_gaussian import student_t_approx
-    #student_t_approx(plot=True)
-    #plt.show()
-    
-    main()
+    here = os.path.abspath(os.path.dirname(__file__))
+    save_dir = "%s/../tmp/example_optimize_hartmann6_ei/"%here
+    main(save_dir)
