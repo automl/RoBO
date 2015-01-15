@@ -1,20 +1,18 @@
 import os
 import random
-import errno
 
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt;
 import GPy
 import pylab as pb
 #pb.ion()
-from robo import bayesian_optimization_main
+from robo import BayesianOptimization
 from robo.models import GPyModel 
 import numpy as np
 from robo.test_functions import goldstein_price_fkt as goldstein_price_fkt
 from robo.acquisition import PI
 from robo.maximize import cma, DIRECT, grid_search
 #np.seterr(all='raise')
-here = os.path.abspath(os.path.dirname(__file__))
 
 #
 # Plotting Stuff.
@@ -49,7 +47,7 @@ def _plot_model(model, acquisition_fkt, objective_fkt, i):
     fig.clf()
     plt.close()
 
-def main():
+def main(save_dir):
     #
     # Dimension Space where the 
     # objective function can be evaluated 
@@ -59,37 +57,25 @@ def main():
     dims = objective_fkt.dims
     X_lower = objective_fkt.X_lower;
     X_upper = objective_fkt.X_upper;
-    #initialize the samples
-    X = np.empty((1, dims))
-    Y = np.empty((1, 1))
-    #draw a random sample from the objective function in the
-    #dimension space 
-    for i in range(dims):
-        X[0,i] = random.random() * (X_upper[i] - X_lower[i]) + X_lower[i];
-        
-    Y[0:] = objective_fkt(np.array([X[0,:]]))
     
     #
     # Building up the model
     #
     kernel = GPy.kern.RBF(input_dim=dims)    
     model = GPyModel(kernel, optimize=True)
-    model.train(X,Y)
+
     #
     # creating an acquisition function
     #
     acquisition_fkt = PI(model, X_upper= X_upper, X_lower=X_lower)
-    #
+ #
     # start the main loop
     #
-    print "-"*50 +"\n- " + str(bayesian_optimization_main(objective_fkt, acquisition_fkt, model, cma, X_lower, X_upper, maxN = 60)) + "-"*50
-    
-    
+    bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=cma, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=save_dir)
+    bo.run(10.0, overwrite=True)
+    bo.run(10.0, overwrite=False)
 
 if __name__ == "__main__":
-    try:
-        os.makedirs("%s/../tmp/"%here)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-    main()
+    here = os.path.abspath(os.path.dirname(__file__))
+    save_dir = "%s/../tmp/example_optimize_goldstein_price_pi/"%here
+    main(save_dir)

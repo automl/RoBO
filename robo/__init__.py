@@ -3,21 +3,42 @@ import os
 import errno
 import numpy as np
 import shutil
+try:
+    import cpickle as pickle
+except:
+    import pickle
 here = os.path.abspath(os.path.dirname(__file__))
 class BayesianOptimization(object):
-    def __init__(self, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims, objective_fkt=None):
-        self.objective_fkt = objective_fkt
-        self.acquisition_fkt = acquisition_fkt
-        self.model = model
-        self.maximize_fkt = maximize_fkt
-        self.X_lower = X_lower
-        self.X_upper = X_upper
-        self.dims = dims
-         
-    def run(self, num_iterations=10, save_dir=None, X=None, Y=None, overwrite=True):
-        """
+    """
         save_dir: 
             save to save_dir after each iteration
+    """
+    def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None):
+        if reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims]):
+            self.objective_fkt = objective_fkt
+            self.acquisition_fkt = acquisition_fkt
+            self.model = model
+            self.maximize_fkt = maximize_fkt
+            self.X_lower = X_lower
+            self.X_upper = X_upper
+            self.dims = dims
+            self.save_dir = save_dir
+            if save_dir is not None:
+                self.create_save_dir()
+        elif save_dir is not None:
+            self.save_dir = save_dir
+        else:
+            raise ArgumentError()
+            
+    def create_save_dir(self):
+        if self.save_dir is not None:
+            try:
+                os.makedirs(self.save_dir)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+    def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
+        """
         overwrite:
             True: data present in save_dir will be deleted.
             False: data present will be loaded an the run will continue
@@ -28,11 +49,11 @@ class BayesianOptimization(object):
         def _onerror(dirs, path, info):
             if info[1].errno != errno.ENOENT:
                 raise
-        if overwrite:
-            shutil.rmtree(save_dir, onerror=_onerror)
-            
+        if overwrite and self.save_dir:
+            shutil.rmtree(self.save_dir, onerror=_onerror)
+            self.create_save_dir()
         if num_iterations > 1:
-            new_x, old_best_x, old_best_y, X, Y = self.run(num_iterations=num_iterations-1, save_dir=save_dir, X=X, Y=Y, overwrite=False) 
+            new_x, old_best_x, old_best_y, X, Y = self.run(num_iterations=num_iterations-1, X=X, Y=Y, overwrite=False) 
             new_y = np.array(self.objective_fkt(np.array(new_x)))
             if X is not None and Y is not None:
                 X = np.append(X, new_x, axis=0)
@@ -42,10 +63,15 @@ class BayesianOptimization(object):
                 Y = new_y
             new_x = self.get_next_x(X, Y)
         else:        
-            new_x = self.get_next_x(X, Y)
+            if X is None and Y is None and self.save_dir:
+                try:
+                    new_x, X, Y = self.load_last_iteration()
+                except IOError as exception:
+                    new_x = self.get_next_x(X, Y)
+               
             
-        if save_dir != None:
-            self.save_iteration(save_dir, X, Y, new_x, num_iteration);
+        if self.save_dir != None:
+            self.save_iteration(X, Y, new_x);
         
         return new_x, self.model.getCurrentBestX(), self.model.getCurrentBest(), X, Y
                 
@@ -61,14 +87,37 @@ class BayesianOptimization(object):
                 X[0,i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i];
             return np.array(X)
     
-    def save_iteration(self, save_dir, X, Y, new_x):
-        try:
-            os.makedirs(save_dir)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
-        stream = file("info.yaml", "w")
-        yaml.dump({})
+    def load_last_iteration(self):
+        max_iteration = self._get_last_iteration_number()
+        iteration_folder = self.save_dir + "/%03d" % (max_iteration, )
+        that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "w"))
+        self.objective_fkt = that.objective_fkt
+        self.acquisition_fkt = that.acquisition_fkt
+        self.model = that.model
+        self.maximize_fkt = that.maximize_fkt
+        self.X_lower = that.X_lower
+        self.X_upper = that.X_upper
+        self.dims = that,dims
+        return pickle.load(open(iteration_folder+"/observations.pickle", "w"))
+    
+    def _get_last_iteration_number(self):
+        max_iteration = 0
+        for i in os.listdir(self.save_dir):
+            try:
+                it_num = int(i)
+                if it_num > max_iteration:
+                    max_iteration = it_num
+            except Exception, e:
+                print e
+        return max_iteration
+    
+    def save_iteration(self, X, Y, new_x):
+        max_iteration = self._get_last_iteration_number()
+        iteration_folder = self.save_dir + "/%03d" % (max_iteration+1, )
+        os.makedirs(iteration_folder)
+        pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
+        pickle.dump([new_x, X, Y], open(iteration_folder+"/observations.pickle", "w"))
+        
         
         
         
