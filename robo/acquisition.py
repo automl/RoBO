@@ -119,9 +119,125 @@ class Entropy(object):
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
 
     def dh_mc_local(self, zbel, logP, dlogPdM, dlogPdV, ddlogPdMdM, T, lmb, xmin, xmax, invertsign, LossFunc):
-        pass
+        W = np.random.randn(1, T)
+        L = _get_gp_innovation_local(self, zbel)
 
-    
+        def dhdx_local(x, logP, dlogPdM, dlogPdV, ddlogPdMdM, lmb, W, L, xmin, xmax, invertsign, LossFunc, zbel):
+            if np.any(x < xmin) or np.any(x > xmax):
+                dH = spacing(1)
+                ddHdx = np.zeros((x.shape[1], 1))
+                return dH, ddHdx
+            if x.shape[0] > 1:
+                raise Exception("dHdx_local is only for single x inputs")
+            # Number of belief locations:
+            N = logP.size
+
+            D = x.shape[1]
+            T = W.shape[1]
+            # Evaluate innovation
+            Lx, _ = L(x)
+            # Innovation function for mean:
+            dMdx = Lx
+            # Innovation function for covariance:
+            dVdx = -Lx.dot(Lx.T)
+            dVdx = dVdx[np.triu(np.ones((N,N))).astype(bool)]
+
+            dMM = dMdx.dot(dMdx.T)
+            trterm = np.sum(np.sum(
+                np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
+                2), 1)
+
+            # Deterministic part of change:
+            detchange = dlogPdV.dot(dVdx) + 0.5 * trterm
+            # Stochastic part of change:
+            stochange = (dlogPdM.dot(dMdx)).dot(W)
+            # Predicted new logP:
+            lPred = np.add(logP + detchange, stochange)
+            lselP = np.log(np.sum(np.exp(lPred), 0))
+            # Normalise:
+            lPred = np.subtract(lPred, lselP)
+
+            dHp = LossFunc(logP, lmb, lPred, zbel)
+            dH = np.mean(dHp)
+
+            if invertsign:
+                dH = - dH
+            if not np.isreal(dH):
+                raise Exception("dH is not real")
+            # Numerical derivative, renormalisation makes analytical derivatives unstable.
+            e = 1.0e-5
+            ddHdx = np.zeros((D,1))
+            for d in range(D):
+                ### First part:
+                y = x
+                y[d] = y[d] + e
+                # Evaluate innovation:
+                Ly, _ = L(y)
+                # Innovation function for mean:
+                dMdy = Ly
+                # Innovation function for covariance:
+                dVdy = -Ly.dot(Ly.T)
+                dVdy = dVdy[np.triu(np.ones((N,N))).astype(bool)]
+
+                dMM = dMdy.dot(dMdy.T)
+                # TODO: is this recalculation really necessary? (See below as well)
+                trterm = np.sum(np.sum(
+                    np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
+                    2), 1)
+
+                # Deterministic part of change:
+                detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
+                # Stochastic part of change:
+                stochange = (dlogPdM.dot(dMdy)).dot(W)
+                # Predicted new logP:
+                lPred = np.add(logP + detchange, stochange)
+                lselP = np.log(np.sum(np.exp(lPred), 0))
+                # Normalise:
+                lPred = np.subtract(lPred, lselP)
+
+                dHp = LossFunc(logP, lmb, lPred, zbel)
+                dHy1 = np.mean(dHp)
+
+                ### Second part:
+                y = x
+                y[d] = y[d] - e
+                # Evaluate innovation:
+                Ly, _ = L(y)
+                # Innovation function for mean:
+                dMdy = Ly
+                # Innovation function for covariance:
+                dVdy = -Ly.dot(Ly.T)
+                dVdy = dVdy[np.triu(np.ones((N,N))).astype(bool)]
+
+                dMM = dMdy.dot(dMdy.T)
+                # TODO: is this recalculation really necessary? (See below as well)
+                trterm = np.sum(np.sum(
+                    np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
+                    2), 1)
+
+                # Deterministic part of change:
+                detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
+                # Stochastic part of change:
+                stochange = (dlogPdM.dot(dMdy)).dot(W)
+                # Predicted new logP:
+                lPred = np.add(logP + detchange, stochange)
+                lselP = np.log(np.sum(np.exp(lPred), 0))
+                # Normalise:
+                lPred = np.subtract(lPred, lselP)
+
+                dHp = LossFunc(logP, lmb, lPred, zbel)
+                dHy2 = np.mean(dHp)
+
+                ddHdx[d] = np.divide((dHy1 - dHy2), 2*e)
+                if invertsign:
+                    ddHdx = -ddHdx
+            # endfor
+            return dH, ddHdx
+        # end function dhdx_local
+
+        dh_fun = dhdx_local(x, logP, dlogPdM, dlogPdV, ddlogPdMdM, lmb, W, L, xmin, xmax, invertsign, LossFunc, zbel)
+        return dh_fun
+
 
     def _get_gp_innovation_local(self, zb):
         K = self.model.K
