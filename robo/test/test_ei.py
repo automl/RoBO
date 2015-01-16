@@ -32,36 +32,34 @@ class EITestCase2(unittest.TestCase):
         self.xmin = np.array([-3])
         self.xmax = np.array([3])
         #initialize the samples
-        self.X = np.random.uniform(-3.,3.,(100,1))
-        self.Y = np.sin(self.X) + np.random.randn(100,1)*0.05
+        self.x = np.random.uniform(-3.,3.,(100,1))
+        self.y = self.x + 1.13 * np.sin(self.x) - 2.5 * np.cos(3*self.x) + 1.7 * np.cos(17 * self.x)
 
         # Building up the model
         #
         self.kernel = GPy.kern.RBF(input_dim=self.dims, variance=2, lengthscale=1.5)
         self.model = GPyModel(self.kernel, optimize = False)
         # print "K matrix: ", self.model.K
-        self.model.train(self.X, self.Y)
+        self.model.train(self.x, self.y)
 
     def test(self):
         # print self.model.cK
         acquisition_fn = EI(self.model, self.xmin, self.xmax)
-        new_x = np.array([[2.1]])
 
-        plt.figure(1)
+        t = np.arange(-3, 3, 0.1)
+        t = t.reshape((t.size, 1))
+
+        y = t + 1.13 * np.sin(t) - 2.5 * np.cos(3*t) + 1.7 * np.cos(17 * t)
+        new_y = acquisition_fn(t)
+
         plt.subplot(211)
-        plt.plot(self.X, self.Y, 'bo')
+        plt.plot(t, y, 'g--')
+        plt.plot(self.x, self.y, 'o')
+
+        plt.subplot(212)
+        plt.plot(t, new_y, 'r-')
         plt.savefig("test.png")
-        # plt.subplot(212)
-        # plt.plot(t2, np.cos(2*np.pi*t2), 'r--')
-        # plt.show()
 
-        print "X: ", self.X
-        print new_x
-
-        new_y = acquisition_fn(new_x)
-        print new_y
-        # print self.model.Y
-        # self.kernel.dK_dX(np.array([np.ones(len(self.model.X))]), self.model.X)
 
 if __name__=="__main__":
     unittest.main()

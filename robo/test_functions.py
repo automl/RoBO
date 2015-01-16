@@ -13,6 +13,19 @@ def branin(x):
     y = a*f*f+s*(1-t)*np.cos(x1)+s;
     return y
 
+def branin2(x):
+    x1 = x[:,0]
+    x2 = 12
+    a = 1
+    b = 5.1/(4*math.pi**2)
+    c = 5/math.pi
+    r = 6;
+    s = 10;
+    t = 1/(8*math.pi);
+    f = (x2-b*x1*x1+c*x1-r)
+    y = a*f*f+s*(1-t)*np.cos(x1)+s;
+    return y
+
 def hartmann6(x, zero_mean=False):
     alpha = [1.00, 1.20,  3.00,  3.20]
     A = np.array([[10.00,  3.00, 17.00,  3.50,  1.70,  8.00],
