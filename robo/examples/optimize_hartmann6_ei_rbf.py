@@ -39,7 +39,14 @@ def main(save_dir):
     #
     # start the main loop
     #
-    bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=cma, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=save_dir)
+    bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, 
+                              model=model, 
+                              maximize_fkt=cma, 
+                              X_lower=X_lower, 
+                              X_upper=X_upper, 
+                              dims=dims, 
+                              objective_fkt=objective_fkt, 
+                              save_dir=save_dir)
     #bo.run(10.0, overwrite=True)
     bo.run(10.0, overwrite=False)
 
