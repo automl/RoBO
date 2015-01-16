@@ -7,8 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 #CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-	'GPy',
-	'pyyaml'
+	'GPy'
     ]
 
 setup(name='robo',
@@ -31,6 +30,6 @@ setup(name='robo',
       test_suite='robo',
       install_requires=requires,
       entry_points=dict(
-##      		console_scripts = ['robo_main = robo.main:main']
+      		console_scripts = ['robo_visualize = robo.scripts.visualize_sh:main']
       )
 	)

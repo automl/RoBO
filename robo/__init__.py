@@ -8,6 +8,12 @@ try:
 except:
     import pickle
 here = os.path.abspath(os.path.dirname(__file__))
+class BayesianOptimizationError(Exception):
+    LOAD_ERROR = 1
+    def __init__(self, errno, *args, **kwargs):
+        self.errno = errno
+        Exception.__init__(self,*args, **kwargs)
+
 class BayesianOptimization(object):
     """
         save_dir: 
@@ -29,7 +35,29 @@ class BayesianOptimization(object):
             self.save_dir = save_dir
         else:
             raise ArgumentError()
-            
+        
+    def init_last_iteration(self):
+        max_iteration = self._get_last_iteration_number()
+        iteration_folder = self.save_dir + "/%03d" % (max_iteration, )
+        that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "r"))
+        self.objective_fkt = that.objective_fkt
+        self.acquisition_fkt = that.acquisition_fkt
+        self.model = that.model
+        self.maximize_fkt = that.maximize_fkt
+        self.X_lower = that.X_lower
+        self.X_upper = that.X_upper
+        self.dims = that.dims
+        return pickle.load(open(iteration_folder+"/observations.pickle", "r"))        
+    
+    @classmethod
+    def from_iteration(cls, save_dir, i):
+        iteration_folder = save_dir + "/%03d" % (i, )
+        that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "r"))
+        if not isinstance(that, cls):
+            raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR, "not a robo instance")
+        new_x, X, Y = pickle.load(open(iteration_folder+"/observations.pickle", "r"))
+        return that, new_x, X, Y
+        
     def create_save_dir(self):
         if self.save_dir is not None:
             try:
@@ -37,6 +65,7 @@ class BayesianOptimization(object):
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
                     raise
+                
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
         overwrite:
@@ -65,8 +94,9 @@ class BayesianOptimization(object):
         else:        
             if X is None and Y is None and self.save_dir:
                 try:
-                    new_x, X, Y = self.load_last_iteration()
+                    new_x, X, Y = self.init_last_iteration()
                 except IOError as exception:
+                    print exception
                     new_x = self.get_next_x(X, Y)
                
             
@@ -87,18 +117,7 @@ class BayesianOptimization(object):
                 X[0,i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i];
             return np.array(X)
     
-    def load_last_iteration(self):
-        max_iteration = self._get_last_iteration_number()
-        iteration_folder = self.save_dir + "/%03d" % (max_iteration, )
-        that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "w"))
-        self.objective_fkt = that.objective_fkt
-        self.acquisition_fkt = that.acquisition_fkt
-        self.model = that.model
-        self.maximize_fkt = that.maximize_fkt
-        self.X_lower = that.X_lower
-        self.X_upper = that.X_upper
-        self.dims = that,dims
-        return pickle.load(open(iteration_folder+"/observations.pickle", "w"))
+
     
     def _get_last_iteration_number(self):
         max_iteration = 0

@@ -96,12 +96,6 @@ class GPyModel(object):
             return mean[:,0], var[:,0]
         else:
             return mean[:,0], var
-            
-    def load(self, filename):
-        return pickle.load(filename)
-    
-    def save(self, filename):
-        pickle.dump(self, filename)
     
     def getCurrentBest(self):
         return self.Y_star
