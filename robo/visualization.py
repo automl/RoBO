@@ -18,6 +18,7 @@ class Visualization(object):
             self.plot_acquisition_fkt(num)
         if obj_method:
             self.objective_fkt = bayesian_opt.objective_fkt
+            self.plot_objective_fkt(num)
             
     def plot_model(self, model):
         pass
