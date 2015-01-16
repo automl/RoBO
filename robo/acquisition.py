@@ -99,20 +99,18 @@ class Entropy(object):
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
-        self.UCB = UCB(model)
-          
         
     def __call__(self, X, Z=None, **kwargs):
-        return self.UCB(X, Z, **kwargs)
+        return self.dh_fun(X)
     
     def update(self, model):
         self.model = model
-        #self.K = self.model.kernel.K(self.model.X, self.model.X)
-        #self.cK = np.linalg.cholesky(self.K)
-        #self.zb = np.add(np.multiply((self.X_upper - self.X_lower), np.random.uniform(size=(self.Nb, self.X_lower.shape[0]))), self.X_lower)
+        
+        #TODO replace it by calling sampling over EI
         self.zb = np.zeros((self.Nb, self.X_lower.shape[0]))
         for i in range(self.X_lower.shape[0]):
             self.zb[:,i] = np.linspace(self.X_lower[i], self.X_upper[i], self.Nb, endpoint = False)
+            
         self.lmb = np.dot(-np.log(np.prod(self.X_upper - self.X_lower)), np.ones((self.Nb, 1)))
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
