@@ -41,7 +41,6 @@ import sys
 import StringIO
 import numpy as np
 import GPy as GPy
-import cPickle as pickle
 
 class GPyModel(object):
     """
@@ -53,8 +52,8 @@ class GPyModel(object):
         self.optimize = optimize
         self.X_star = None
         self.Y_star = None
-        
-        
+        self.m = None
+    
     def train(self, X, Y,  Z=None):
         self.X = X
         self.Y = Y
@@ -81,7 +80,8 @@ class GPyModel(object):
                 self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
             except np.linalg.LinAlgError:
                 self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
-
+        
+        
     def update(self, X, Y, Z=None):
         #TODO use correct update method
         X = np.append(self.X, X, axis=0)

@@ -1,17 +1,23 @@
+import matplotlib; matplotlib.use('Agg')
 import argparse
 import os
-import robo
 import errno
 from robo.visualization import Visualization
+import robo
+
+
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description='Visualize a robo run', 
                                      prog='robo_visualize')
                                      #formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('source_folder', metavar="SOURCE_FOLDER", type=str)#, required=True)
     parser.add_argument('dest_folder',   metavar="DESTINATION_FOLDER", type=str)#, required=True)
-    parser.add_argument('-a', '--acq', metavar="METHOD", default=None, 
-                        help='Choose a method to visualize the acquisition fkt', 
-                        dest="acq_method", choices=('subplot',))
+    parser.add_argument('-a', '--acq',  default=False, 
+                        help='Choose visualizing the acquisition fkt if its one_dimensional', 
+                        dest="acq_method", action='store_true')
+    parser.add_argument('-o', '--obj',  default=False, 
+                        help='Choose visualizing the objective fkt if its one_dimensional', 
+                        dest="obj_method", action='store_true')
     args = parser.parse_args()
     source_folder = args.source_folder
     dest_folder = args.dest_folder
@@ -27,10 +33,16 @@ def main(*args, **kwargs):
     while True:
         try:
             bo, new_x, X, Y = robo.BayesianOptimization.from_iteration(source_folder, i)
-            vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **args.__dict__) 
-        except Exception, e:
-            print e
-            break;
+            if bo.model_untrained:
+                first_vis = args.__dict__.copy()
+                del first_vis["acq_method"]
+                vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **first_vis)
+            else: 
+                vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **args.__dict__) 
+            del vis, bo, new_x, X, Y
+            
+        except IOError, e:
+            break
         i += 1
     
         

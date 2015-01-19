@@ -47,6 +47,17 @@ def branin2(x):
     y = a*f*f+s*(1-t)*np.cos(x1)+s;
     return y        
 
+def _one_dim_test(x):
+    #return 4 * (3 * (x**2+x-2) * np.cos(3 * x)+(2 * x+1) * np.sin(3 *x))
+
+    return  np.sin(3*x) * 4*(x-1)* (x+2)
+
+one_dim_test= ObjectiveFkt(1, 
+                      X_lower=np.array([-2.1]), 
+                      X_upper=np.array([2.1]), 
+                      fkt=_one_dim_test,
+                      X_stars=np.array(((1.73633274819831,),)),
+                      Y_star=-9.67539878)
 
 def _hartmann6(x, zero_mean=False):
     alpha = [1.00, 1.20, 3.00, 3.20]
