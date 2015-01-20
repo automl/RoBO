@@ -9,11 +9,11 @@ from robo import BayesianOptimization
 from robo.models import GPyModel 
 import numpy as np
 from robo.test_functions import one_dim_test as one_dim_test
-from robo.acquisition import EI
-from robo.maximize import  grid_search
+from robo.acquisition import PI
+from robo.maximize import   grid_search
 
 here = os.path.abspath(os.path.dirname(__file__))
-save_dir = "%s/../tmp/example_optimize_one_dim_test_ei/"%here
+save_dir = "%s/../tmp/example_optimize_one_dim_test_pi/"%here
 def main(save_dir):
     #
     # Dimension Space where the 
@@ -34,7 +34,7 @@ def main(save_dir):
     #
     # creating an acquisition function
     #
-    acquisition_fkt = EI(model, X_upper= X_upper, X_lower=X_lower)
+    acquisition_fkt = PI(model, X_upper= X_upper, X_lower=X_lower)
     #
     # start the main loop
     #

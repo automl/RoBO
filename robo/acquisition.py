@@ -41,7 +41,7 @@ class EI(object):
     def alpha(self):
         if self.model.X is not None and len(self.model.X) > 0 and self._alpha is None:
             self._alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
-        else:
+        elif self._alpha is None:
             raise Exception("self.model.X is not properly initialized in acquisition EI")
         return self._alpha
 
@@ -164,153 +164,175 @@ class Entropy(object):
         self.T = T
 
     def __call__(self, X, Z=None, **kwargs):
-        return self.acq(X)
+        return self.dh_fun(X)[0]
     
+    """def __getstate__(self):
+        state = {
+                "model" : self.model,
+                "Nb" : self.Nb,
+                "X_lower": self.X_lower,
+                "BestGuesses": self.BestGuesses,
+                "sampling_acquisition" : self.sampling_acquisition,
+                "loss_function" : self.loss_function,
+                "T" : self.T,
+                "acq" : self.acq 
+        }
+        print "*"*100, state
+        return state
+    
+    def __setstate__(self, state):
+        for key, value in state.iteritems():
+            setattr(self, key, value)
+    @property
+    def acq(self):
+        return self._acq if hasattr(self, "_acq") else None
+    
+    @acq.setter
+    def acq(self, value):
+        self._acq = value"""
+        
+        
     def update(self, model):
         self.model = model
-
         self.zb, self.lmb = self.sample_from_measure(self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
-        self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
+        self.logP, self.dlogPdMu, self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
-        self._acq = self.dh_mc_local(self.zb, self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu, self.T, lmb, self.X_lower, self.X_upper, false, self.loss_function )
+        #self.acq = self.dh_mc_local(self.zb, self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu, self.T, self.lmb, self.X_lower, self.X_upper, False, self.loss_function )
+        self.W = np.random.randn(1, self.T)
+        self.L = self._get_gp_innovation_local(self.zb)
         
+        self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
-    def dh_mc_local(self, zbel, logP, dlogPdM, dlogPdV, ddlogPdMdM, T, lmb, xmin, xmax, invertsign, LossFunc):
-        #################################
-        W = np.random.randn(1, T)
-        L = self._get_gp_innovation_local(zbel)
-
-        # add a second dimension to the arrays if necessary:
-        logP = np.reshape(logP, (logP.shape[0], 1))
-        # logP = np.reshape(logP, (logP.shape[0], 1))
-
-        def dh_fun(x):
-            def dhdx_local(x, logP, dlogPdM, dlogPdV, ddlogPdMdM, lmb, W, L, xmin, xmax, invertsign, LossFunc, zbel):
-                if np.any(x < xmin) or np.any(x > xmax):
-                    dH = spacing(1)
-                    ddHdx = np.zeros((x.shape[1], 1))
-                    return dH, ddHdx
-                if x.shape[0] > 1:
-                    raise Exception("dHdx_local is only for single x inputs")
-                # Number of belief locations:
-                N = logP.size
-
-                D = x.shape[1]
-                T = W.shape[1]
-                # Evaluate innovation
-                Lx, _ = L(x)
-                # Innovation function for mean:
-                dMdx = Lx
-                # Innovation function for covariance:
-                dVdx = -Lx.dot(Lx.T)
-                # The transpose operator is there to make the array indexing equivalent to matlab's
-                dVdx = dVdx[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
-
-                dMM = dMdx.dot(dMdx.T)
-                trterm = np.sum(np.sum(
-                    np.multiply(ddlogPdMdM, np.reshape(dMM, (1, dMM.shape[0],dMM.shape[1]))),
-                    2), 1)[:, np.newaxis]
-
-
-
-                # Deterministic part of change:
-                detchange = dlogPdV.dot(dVdx) + 0.5 * trterm
-                # Stochastic part of change:
-                stochange = (dlogPdM.dot(dMdx)).dot(W)
-                # Predicted new logP:
-                lPred = np.add(logP + detchange, stochange)
-                lselP = np.log(np.sum(np.exp(lPred), 0))[np.newaxis,:]
-                # Normalise:
-                lPred = np.subtract(lPred, lselP)
-
-                dHp = LossFunc(logP, lmb, lPred, zbel)
-                dH = np.mean(dHp)
-
-                if invertsign:
-                    dH = - dH
-                if not np.isreal(dH):
-                    raise Exception("dH is not real")
-                # Numerical derivative, renormalisation makes analytical derivatives unstable.
-                e = 1.0e-5
-                ddHdx = np.zeros((D,1))
-                for d in range(D):
-                    ### First part:
-                    y = np.array(x)
-                    y[d] += e
-
-                    # Evaluate innovation:
-                    Ly, _ = L(y)
-                    # Innovation function for mean:
-                    dMdy = Ly
-                    # Innovation function for covariance:
-                    dVdy = -Ly.dot(Ly.T)
-                    dVdy = dVdy[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
-
-                    dMM = dMdy.dot(dMdy.T)
-                    # TODO: is this recalculation really necessary? (See below as well)
-                    trterm = np.sum(np.sum(
-                        np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
-                        2), 1)[:, np.newaxis]
-
-                    # Deterministic part of change:
-                    detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
-                    # Stochastic part of change:
-                    stochange = (dlogPdM.dot(dMdy)).dot(W)
-                    # Predicted new logP:
-                    lPred = np.add(logP + detchange, stochange)
-                    lselP = np.log(np.sum(np.exp(lPred), 0))
-                    # Normalise:
-                    lPred = np.subtract(lPred, lselP)
-
-                    dHp = LossFunc(logP, lmb, lPred, zbel)
-                    dHy1 = np.mean(dHp, dtype=np.float64)
-
-                    ### Second part:
-                    y = np.array(x)
-                    y[d] = y[d] - e
-
-                    # Evaluate innovation:
-                    Ly, _ = L(y)
-                    # Innovation function for mean:
-                    dMdy = Ly
-                    # Innovation function for covariance:
-                    dVdy = -Ly.dot(Ly.T)
-                    dVdy = dVdy[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
-
-                    dMM = dMdy.dot(dMdy.T)
-                    # TODO: is this recalculation really necessary? (See below as well)
-                    trterm = np.sum(np.sum(
-                        np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
-                        2), 1)[:, np.newaxis]
-
-                    # Deterministic part of change:
-                    detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
-                    # Stochastic part of change:
-                    stochange = (dlogPdM.dot(dMdy)).dot(W)
-                    # Predicted new logP:
-                    lPred = np.add(logP + detchange, stochange)
-                    lselP = np.log(np.sum(np.exp(lPred), 0))
-                    # Normalise:
-                    lPred = np.subtract(lPred, lselP)
-
-                    dHp = LossFunc(logP, lmb, lPred, zbel)
-                    dHy2 = np.mean(dHp, dtype=np.float64)
-
-                    ddHdx[d] = np.divide((dHy1 - dHy2), 2*e)
-                    if invertsign:
-                        ddHdx = -ddHdx
-                # endfor
-                return dH, ddHdx
-                # end function dhdx_local
-            # this return ends dh_fun, which is a function of x only
-            return dhdx_local(x, logP, dlogPdM, dlogPdV, ddlogPdMdM, lmb, W, L, xmin, xmax, invertsign, LossFunc, zbel)
-
-        return dh_fun
-    
-    
-
+    def dh_fun(self,x):
+        logP = self.logP
+        dlogPdM = self.dlogPdMu
+        dlogPdV = self.dlogPdSigma
+        ddlogPdMdM = self.dlogPdMudMu
+        lmb = self.lmb 
+        W = self.W 
+        L = self.L
+        xmin = self.X_lower
+        xmax = self.X_upper
+        invertsign = False
+        LossFunc = self.loss_function 
+        zbel = self.zb
+        if np.any(x < xmin) or np.any(x > xmax):
+            dH = spacing(1)
+            ddHdx = np.zeros((x.shape[1], 1))
+            return dH, ddHdx
+        if x.shape[0] > 1:
+            raise Exception("dHdx_local is only for single x inputs")
         
+        # Number of belief locations:
+        N = logP.size
+
+        D = x.shape[1]
+        T = W.shape[1]
+        # Evaluate innovation
+        Lx, _ = L(x)
+        # Innovation function for mean:
+        dMdx = Lx
+        # Innovation function for covariance:
+        dVdx = -Lx.dot(Lx.T)
+        # The transpose operator is there to make the array indexing equivalent to matlab's
+        dVdx = dVdx[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
+
+        dMM = dMdx.dot(dMdx.T)
+        trterm = np.sum(np.sum(
+            np.multiply(ddlogPdMdM, np.reshape(dMM, (1, dMM.shape[0],dMM.shape[1]))),
+            2), 1)[:, np.newaxis]
+
+
+
+        # Deterministic part of change:
+        detchange = dlogPdV.dot(dVdx) + 0.5 * trterm
+        # Stochastic part of change:
+        stochange = (dlogPdM.dot(dMdx)).dot(W)
+        # Predicted new logP:
+        lPred = np.add(logP + detchange, stochange)
+        lselP = np.log(np.sum(np.exp(lPred), 0))[np.newaxis,:]
+        # Normalise:
+        lPred = np.subtract(lPred, lselP)
+
+        dHp = LossFunc(logP, lmb, lPred, zbel)
+        dH = np.mean(dHp)
+
+        if invertsign:
+            dH = - dH
+        if not np.isreal(dH):
+            raise Exception("dH is not real")
+        # Numerical derivative, renormalisation makes analytical derivatives unstable.
+        e = 1.0e-5
+        ddHdx = np.zeros((D,1))
+        for d in range(D):
+            ### First part:
+            y = np.array(x)
+            y[d] += e
+
+            # Evaluate innovation:
+            Ly, _ = L(y)
+            # Innovation function for mean:
+            dMdy = Ly
+            # Innovation function for covariance:
+            dVdy = -Ly.dot(Ly.T)
+            dVdy = dVdy[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
+
+            dMM = dMdy.dot(dMdy.T)
+            # TODO: is this recalculation really necessary? (See below as well)
+            trterm = np.sum(np.sum(
+                np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
+                2), 1)[:, np.newaxis]
+
+            # Deterministic part of change:
+            detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
+            # Stochastic part of change:
+            stochange = (dlogPdM.dot(dMdy)).dot(W)
+            # Predicted new logP:
+            lPred = np.add(logP + detchange, stochange)
+            lselP = np.log(np.sum(np.exp(lPred), 0))
+            # Normalise:
+            lPred = np.subtract(lPred, lselP)
+
+            dHp = LossFunc(logP, lmb, lPred, zbel)
+            dHy1 = np.mean(dHp, dtype=np.float64)
+
+            ### Second part:
+            y = np.array(x)
+            y[d] = y[d] - e
+
+            # Evaluate innovation:
+            Ly, _ = L(y)
+            # Innovation function for mean:
+            dMdy = Ly
+            # Innovation function for covariance:
+            dVdy = -Ly.dot(Ly.T)
+            dVdy = dVdy[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
+
+            dMM = dMdy.dot(dMdy.T)
+            # TODO: is this recalculation really necessary? (See below as well)
+            trterm = np.sum(np.sum(
+                np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
+                2), 1)[:, np.newaxis]
+
+            # Deterministic part of change:
+            detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
+            # Stochastic part of change:
+            stochange = (dlogPdM.dot(dMdy)).dot(W)
+            # Predicted new logP:
+            lPred = np.add(logP + detchange, stochange)
+            lselP = np.log(np.sum(np.exp(lPred), 0))
+            # Normalise:
+            lPred = np.subtract(lPred, lselP)
+
+            dHp = LossFunc(logP, lmb, lPred, zbel)
+            dHy2 = np.mean(dHp, dtype=np.float64)
+
+            ddHdx[d] = np.divide((dHy1 - dHy2), 2*e)
+            if invertsign:
+                ddHdx = -ddHdx
+        # endfor
+        return dH, ddHdx
 
     def _get_gp_innovation_local(self, zb):
         K = self.model.K
@@ -620,7 +642,7 @@ class Entropy(object):
     # This method corresponds to the function SampleBeliefLocations in the original ES code
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
-    def sample_from_measure(self, X_Lower, xmax, n_representers, BestGuesses, acquisition_fn):
+    def sample_from_measure(self, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
 
         # acquisition_fn = acquisition_fn(self.model)
 
@@ -686,7 +708,7 @@ class Entropy(object):
         # This function is equivalent to the similarly named function in the original ES code
         if transpose:
             xx = xx.transpose()
-
+            
         # set random seed
         D = xx.shape[0]
         f = P(xx.transpose())
