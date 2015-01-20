@@ -102,3 +102,9 @@ class GPyModel(object):
     
     def getCurrentBestX(self):
         return self.X_star
+    
+    def visualize(self, ax, plot_min, plot_max):
+        print ax, plot_min, plot_max 
+        self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
+        
+        #xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()

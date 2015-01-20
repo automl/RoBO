@@ -37,8 +37,8 @@ def main(save_dir):
     # start the main loop
     #
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=grid_search, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=save_dir)
-    bo.run(2.0, overwrite=True)
-    bo.run(2.0, overwrite=False)
+    bo.run(20.0, overwrite=True)
+    bo.run(20.0, overwrite=False)
 
 if __name__ == "__main__":
     here = os.path.abspath(os.path.dirname(__file__))

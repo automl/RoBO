@@ -27,6 +27,7 @@ where the objective function is low.
 from scipy.stats import norm
 import scipy
 import numpy as np
+from robo.loss_functions import logLoss
 
 class EI(object):
     def __init__(self, model, X_lower, X_upper, par = 0.01, **kwargs):
@@ -148,19 +149,22 @@ l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 class Entropy(object):
-    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.1}, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.1}, T=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
-        if not sampling_acquisition:
+        if sampling_acquisition is None:
             sampling_acquisition = EI
         self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
+        if loss_function is None:
+            loss_function = logLoss
+        self.loss_function = loss_function        
+        self.T = T
 
-        
     def __call__(self, X, Z=None, **kwargs):
-        return self.dh_fun(X)
+        return self.acq(X)
     
     def update(self, model):
         self.model = model
@@ -169,6 +173,8 @@ class Entropy(object):
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
+        self._acq = self.dh_mc_local(self.zb, self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu, self.T, lmb, self.X_lower, self.X_upper, false, self.loss_function )
+        
 
     def dh_mc_local(self, zbel, logP, dlogPdM, dlogPdV, ddlogPdMdM, T, lmb, xmin, xmax, invertsign, LossFunc):
         #################################
@@ -301,7 +307,10 @@ class Entropy(object):
             return dhdx_local(x, logP, dlogPdM, dlogPdV, ddlogPdMdM, lmb, W, L, xmin, xmax, invertsign, LossFunc, zbel)
 
         return dh_fun
+    
+    
 
+        
 
     def _get_gp_innovation_local(self, zb):
         K = self.model.K
@@ -349,8 +358,7 @@ class Entropy(object):
             return Lx, dLxdx
         return _gp_innovation_local
     
-    def _dhdxH(self):
-        pass
+    
         
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
         logP = np.zeros(mu.shape)

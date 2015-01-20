@@ -4,7 +4,8 @@ import os
 import errno
 from robo.visualization import Visualization
 import robo
-
+import numpy as np
+#np.seterr(all='raise')
 
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description='Visualize a robo run', 
@@ -18,6 +19,9 @@ def main(*args, **kwargs):
     parser.add_argument('-o', '--obj',  default=False, 
                         help='Choose visualizing the objective fkt if its one_dimensional', 
                         dest="obj_method", action='store_true')
+    parser.add_argument('-m', '--model',  default=False, 
+                        help='Choose visualizing the model fkt if its one_dimensional', 
+                        dest="model_method", action='store_true')
     args = parser.parse_args()
     source_folder = args.source_folder
     dest_folder = args.dest_folder
@@ -36,10 +40,13 @@ def main(*args, **kwargs):
             if bo.model_untrained:
                 first_vis = args.__dict__.copy()
                 del first_vis["acq_method"]
+                del first_vis["model_method"]
                 vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **first_vis)
             else: 
-                vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **args.__dict__) 
-            del vis, bo, new_x, X, Y
+                vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **args.__dict__)
+            
+            print i,": ", bo.model.kernel 
+            #del vis, bo, new_x, X, Y
             
         except IOError, e:
             break
