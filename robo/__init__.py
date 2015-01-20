@@ -11,9 +11,11 @@ from robo.models import GPyModel
 here = os.path.abspath(os.path.dirname(__file__))
 class BayesianOptimizationError(Exception):
     LOAD_ERROR = 1
+    SINGLE_INPUT_ONLY = 2
     def __init__(self, errno, *args, **kwargs):
         self.errno = errno
         Exception.__init__(self,*args, **kwargs)
+        
 
 class BayesianOptimization(object):
     """

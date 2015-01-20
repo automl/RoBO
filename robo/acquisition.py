@@ -28,7 +28,7 @@ from scipy.stats import norm
 import scipy
 import numpy as np
 from robo.loss_functions import logLoss
-
+from robo import BayesianOptimizationError 
 class EI(object):
     def __init__(self, model, X_lower, X_upper, par = 0.01, **kwargs):
         self.model = model
@@ -39,7 +39,9 @@ class EI(object):
 
     @property
     def alpha(self):
-        if self.model.X is not None and len(self.model.X) > 0 and self._alpha is None:
+        invalid_alpha = (self._alpha is None or len(self.model.X) > len(self._alpha))
+        valid_X = self.model.X is not None and len(self.model.X) > 0 
+        if valid_X and invalid_alpha:
             self._alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
         elif self._alpha is None:
             raise Exception("self.model.X is not properly initialized in acquisition EI")
@@ -64,9 +66,34 @@ class EI(object):
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
             dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-
+            
+            """
+            #perhaps
+            #"""
+            
+            #dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
+            #kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
+            
+            #derivatives of kernel values
+            #dkxx = self.model.kernel.gradients_X(kxx, x)
+            
+            """ TODO Joel
+            kbx = self.model.kernel.K(zb,x)
+            kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
+            
+            #derivatives of kernel values
+            dkxx = self.model.kernel.gradients_X(kxx, x)
+            dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
+            """
+            
             # dm = derivative of the gaussian process mean function
-            dmdx = np.dot(dkxX.transpose(), self.alpha)
+            
+            try:
+                dmdx = np.dot(dkxX.transpose(), self.alpha)
+            except:
+                print "+"*100,"\n","dkxX.T = ", dkxX.T, "\n", "alpha = ", self.alpha
+                print "X = ", self.model.X, "\n", "+"*100
+                raise
             # ds = derivative of the gaussian process covariance function
             dsdx = np.zeros((dim, 1))
             for i in range(0, dim):
@@ -143,7 +170,6 @@ class UCB(object):
     def update(self, model):
         self.model = model
 
-
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
@@ -165,32 +191,6 @@ class Entropy(object):
 
     def __call__(self, X, Z=None, **kwargs):
         return self.dh_fun(X)[0]
-    
-    """def __getstate__(self):
-        state = {
-                "model" : self.model,
-                "Nb" : self.Nb,
-                "X_lower": self.X_lower,
-                "BestGuesses": self.BestGuesses,
-                "sampling_acquisition" : self.sampling_acquisition,
-                "loss_function" : self.loss_function,
-                "T" : self.T,
-                "acq" : self.acq 
-        }
-        print "*"*100, state
-        return state
-    
-    def __setstate__(self, state):
-        for key, value in state.iteritems():
-            setattr(self, key, value)
-    @property
-    def acq(self):
-        return self._acq if hasattr(self, "_acq") else None
-    
-    @acq.setter
-    def acq(self, value):
-        self._acq = value"""
-        
         
     def update(self, model):
         self.model = model
@@ -200,8 +200,10 @@ class Entropy(object):
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
         #self.acq = self.dh_mc_local(self.zb, self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu, self.T, self.lmb, self.X_lower, self.X_upper, False, self.loss_function )
         self.W = np.random.randn(1, self.T)
-        self.L = self._get_gp_innovation_local(self.zb)
-        
+        self.K = self.model.K
+        self.cK = self.model.cK.T
+        self.kbX = self.model.kernel.K(self.zb,self.model.X)
+        self.L = self._gp_innovation_local(self.zb)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
     def dh_fun(self,x):
@@ -211,10 +213,10 @@ class Entropy(object):
         ddlogPdMdM = self.dlogPdMudMu
         lmb = self.lmb 
         W = self.W 
-        L = self.L
+        L = self._gp_innovation_local
         xmin = self.X_lower
         xmax = self.X_upper
-        invertsign = False
+        invertsign = True
         LossFunc = self.loss_function 
         zbel = self.zb
         if np.any(x < xmin) or np.any(x > xmax):
@@ -222,7 +224,7 @@ class Entropy(object):
             ddHdx = np.zeros((x.shape[1], 1))
             return dH, ddHdx
         if x.shape[0] > 1:
-            raise Exception("dHdx_local is only for single x inputs")
+            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
         
         # Number of belief locations:
         N = logP.size
@@ -334,54 +336,51 @@ class Entropy(object):
         # endfor
         return dH, ddHdx
 
-    def _get_gp_innovation_local(self, zb):
-        K = self.model.K
-        cK = self.model.cK.T
-        kbX = self.model.kernel.K(zb,self.model.X)
-        def _gp_innovation_local(x):
-            if self.model.X.shape[0] == 0:
-                # kernel values
-                kbx = self.model.kernel.K(zb,x)
-                kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
-                
-                #derivatives of kernel values
-                dkxx = self.model.kernel.gradients_X(kxx, x)
-                dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
-                
-                #terms of the innovation
-                sloc   = np.sqrt(kxx)
-                proj   = kbx
-                
-                dvloc  = dkxx
-                dproj  = dkxb
-                
-                # innovation, and its derivative
-                Lx     = proj / sloc;
-                dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
-                return Lx, dLxdx
+    def _gp_innovation_local(self, x):
+        zb = self.zb
+        K = self.K
+        cK = self.cK
+        kbX = self.kbX
+        if self.model.X.shape[0] == 0:
+            # kernel values
             kbx = self.model.kernel.K(zb,x)
-            kXx = self.model.kernel.K(self.model.X, x)
             kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
-            # derivatives of kernel values 
+            
+            #derivatives of kernel values
             dkxx = self.model.kernel.gradients_X(kxx, x)
-            dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
             dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
-            # terms of innovation
-            a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
-            sloc = np.sqrt(a)
-            proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
             
-            dvloc  = (dkxx.T - 2 * np.dot(dkxX.T, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))).T;
-            dproj  = dkxb - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, dkxX)));
+            #terms of the innovation
+            sloc   = np.sqrt(kxx)
+            proj   = kbx
             
-            #innovation, and its derivative
+            dvloc  = dkxx
+            dproj  = dkxb
+            
+            # innovation, and its derivative
             Lx     = proj / sloc;
             dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
             return Lx, dLxdx
-        return _gp_innovation_local
-    
-    
+        kbx = self.model.kernel.K(zb,x)
+        kXx = self.model.kernel.K(self.model.X, x)
+        kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
+        # derivatives of kernel values 
+        dkxx = self.model.kernel.gradients_X(kxx, x)
+        dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
+        dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
+        # terms of innovation
+        a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
+        sloc = np.sqrt(a)
+        proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
         
+        dvloc  = (dkxx.T - 2 * np.dot(dkxX.T, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))).T;
+        dproj  = dkxb - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, dkxX)));
+        
+        #innovation, and its derivative
+        Lx     = proj / sloc;
+        dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
+        return Lx, dLxdx
+         
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
@@ -429,8 +428,7 @@ class Entropy(object):
         adds = np.reshape(-gg+Zij,(1,D,D));
         dlogPdMudMu = dlogPdMudMuold + adds
         return logP,dlogPdMu,dlogPdSigma,dlogPdMudMu
-            
-        
+             
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
         """
         1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
@@ -638,7 +636,6 @@ class Entropy(object):
             e = np.exp(logphi - logPhi)
             return e, logPhi, 0
 
-
     # This method corresponds to the function SampleBeliefLocations in the original ES code
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
@@ -688,7 +685,11 @@ class Entropy(object):
         for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing
             if (i % (subsample*10) == 0) and (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), np.newaxis]
-            xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
+            try:
+                xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
+            except:
+                print "-"*100, "\n","xx =", xx, "\n", "-"*100 
+                raise
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
                 emb = acquisition_fn(xx)

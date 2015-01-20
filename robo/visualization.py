@@ -1,7 +1,7 @@
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt;
 import numpy as np
-
+from robo import BayesianOptimizationError
 
 
 class Visualization(object):
@@ -43,7 +43,14 @@ class Visualization(object):
     
     def plot_acquisition_fkt(self, num, one_dim_min, one_dim_max):
         ax = self.fig.add_subplot(self.nrows, self.ncols, num)
-        ax.plot(self.plotting_range, self.acquisition_fkt(self.plotting_range[:,np.newaxis]), 'r')
+        try:
+            ax.plot(self.plotting_range, self.acquisition_fkt(self.plotting_range[:,np.newaxis]), 'r')
+        except BayesianOptimizationError, e:
+            if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:
+                acq_v =  [ self.acquisition_fkt(np.array([x])) for x in self.plotting_range[:,np.newaxis] ]
+                ax.plot(self.plotting_range, acq_v)
+            else:
+                raise
         ax.set_xlim(one_dim_min, one_dim_max)
         num+=1
         return ax, num
