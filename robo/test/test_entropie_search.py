@@ -30,7 +30,7 @@ second_branin_arg = np.empty((obj_samples,))
 second_branin_arg.fill(12)
 branin_arg = np.append(np.reshape(plotting_range, (obj_samples, 1)), np.reshape(second_branin_arg, (obj_samples, 1)), axis=1)
 branin_result = branin(branin_arg)
-branin_result = branin_result.reshape(branin_result.shape[0],)
+# branin_result = branin_result.reshape(branin_result.shape[0],)
 
 def _plot_model(model, acquisition_fkt, objective_fkt, i, callback):
     fig = plt.figure()
@@ -54,8 +54,8 @@ class EmptySampleTestCase(unittest.TestCase):
 
         dims = 1
         self.num_initial_vals = 3
-        self.X_lower = np.array([-8]);#, -8])
-        self.X_upper = np.array([19]);#, 19])
+        self.X_lower = np.array([-5]);#, -8])
+        self.X_upper = np.array([15]);#, 19])
         #initialize the samples
         X = np.empty((self.num_initial_vals, dims))
     
@@ -126,6 +126,7 @@ class EmptySampleTestCase(unittest.TestCase):
         L = self.acquisition_fkt._get_gp_innovation_local(zb);
         print L(np.array([[2.0]]))
 
+    @unittest.skip("skip dhmc_local")
     def test_dhmc_local(self):
         self.acquisition_fn = Entropy(self.model, self.X_lower, self.X_upper, Nb = 10)
 
@@ -151,6 +152,40 @@ class EmptySampleTestCase(unittest.TestCase):
         invertsign = False
         dH_fun = self.acquisition_fn.dh_mc_local(zb,logP,dlogPdM,dlogPdV,ddlogPdMdM,T,lmb,self.X_lower,self.X_upper,invertsign,logLoss)
         print dH_fun(np.array([[2.]]))
+
+
+    def test_predict_info_gain(self):
+        self.acquisition_fn = Entropy(self.model, self.X_lower, self.X_upper, Nb = 10)
+
+        Var= np.array( [[  493.2476,  192.0936,  189.3891,  426.5045,  419.9972,  332.1155,  483.1472,  -30.6904,  437.6728,  475.2670],
+                        [  192.0936,  267.2359,  265.4794,   88.2276,  288.7455,   45.6296,  146.3654, -112.2569,  278.3833,  242.1045],
+                        [  189.3891,  265.4794,  263.7466,   86.6537,  285.6440,   44.7031,  144.0873, -112.2385,  275.2662,  239.0783],
+                        [  426.5045,   88.2276,   86.6537,  498.2159,  274.9279,  469.3545,  471.2575,   -9.0593,  297.7650,  360.6824],
+                        [  419.9972,  288.7455,  285.6440,  274.9279,  460.5593,  179.1422,  368.1959,  -69.6378,  463.5500,  455.9222],
+                        [  332.1155,   45.6296,   44.7031,  469.3545,  179.1422,  498.5377,  396.1277,   -3.5359,  198.9042,  258.4307],
+                        [  483.1472,  146.3654,  144.0873,  471.2575,  368.1959,  396.1277,  496.6195,  -19.5925,  389.6205,  441.9061],
+                        [  -30.6904, -112.2569, -112.2385,   -9.0593,  -69.6378,   -3.5359,  -19.5925,  132.7377,  -63.3793,  -46.8737],
+                        [  437.6728,  278.3833,  275.2662,  297.7650,  463.5500,  198.9042,  389.6205,  -63.3793,  468.7849,  467.3753],
+                        [  475.2670,  242.1045,  239.0783,  360.6824,  455.9222,  258.4307,  441.9061,  -46.8737,  467.3753,  484.3670]])
+        zb  = np.array([ [0.1569],  [6.4306],  [6.4735], [-2.6102],  [2.7876], [-4.3457], [-0.9570], [13.6003],  [2.4161],  [1.3773]])
+        lmb = np.array([[ 4.1938,  3.1827,  3.1675,  4.2753,  3.9806,  4.2928,  4.2381,  2.4608,  4.0232,  4.1183]]).T
+        Mb  = np.array([ 7.6510, 50.3527, 50.7310,  2.0226, 20.4149,  0.7512,  4.6460, 63.3195, 18.0728, 12.4844])
+
+        # mu, var = self.model.predict(np.array(zb), full_cov=True)
+        logP,dlogPdM,dlogPdV,ddlogPdMdM = self.acquisition_fn._joint_min(Mb, Var, with_derivatives=True)
+
+        L = self.acquisition_fn._get_gp_innovation_local(zb)
+        T = 200
+        invertsign = False
+
+        Ne = 10
+
+        dH_fun   = self.acquisition_fn.dh_mc_local(zb,logP,dlogPdM,dlogPdV,ddlogPdMdM,T,lmb,self.X_lower,self.X_upper,False,logLoss)
+        dH_fun_p = self.acquisition_fn.dh_mc_local(zb,logP,dlogPdM,dlogPdV,ddlogPdMdM,T,lmb,self.X_lower,self.X_upper,True,logLoss)
+
+        self.acquisition_fn.predict_info_gain(dH_fun, dH_fun_p, zb, logP, self.X_lower, self.X_upper, Ne)
+
+
 
 
 if __name__=="__main__":
