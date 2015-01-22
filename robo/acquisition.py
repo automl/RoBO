@@ -184,12 +184,18 @@ class Entropy(object):
 
         def dh_fun(x, derivative = True):
             def dhdx_local(x, logP, dlogPdM, dlogPdV, ddlogPdMdM, lmb, W, L, xmin, xmax, invertsign, LossFunc, zbel):
+
+                # If x is a vector, convert it to a matrix (some functions are sensitive to this distinction)
+                if len(x.shape) == 1:
+                    x = x[np.newaxis]
+
                 if np.any(x < xmin) or np.any(x > xmax):
                     dH = np.spacing(1)
                     ddHdx = np.zeros((x.shape[1], 1))
                     return dH, ddHdx
                 if x.shape[0] > 1:
                     raise Exception("dHdx_local is only for single x inputs")
+
                 # Number of belief locations:
                 N = logP.size
 
@@ -650,7 +656,7 @@ class Entropy(object):
             e = np.exp(logphi - logPhi)
             return e, logPhi, 0
 
-    def predict_info_gain(self, fun, fun_p, zb, logP, X_lower, X_upper, Ne):
+    def predict_info_gain(self, entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne):
         # print logP
 
         # set random seed
@@ -669,13 +675,29 @@ class Entropy(object):
         for i in range(1, 10*Ne):
             if i % 10 == 1 and i > 1:
                 xx = X_lower + np.multiply(X_upper - X_lower, np.random.uniform(size=(1,D)))
-            xx = self.slice_ShrinkRank_nolog(xx, fun_p, S0, True)
+            xx = self.slice_ShrinkRank_nolog(xx, entropy_fun_p, S0, True)
             xxs[i,:] = xx
             if i % 10 == 0:
                 Xstart[(i/10)-1,:] = xx
-                Xdhi[(i/10)-1],_ = fun(xx)
+                Xdhi[(i/10)-1],_ = entropy_fun(xx)
 
-        print Xstart
+        search_cons = []
+        for i in range(0, X_lower.shape[0]):
+            xmin = X_lower[i]
+            xmax = X_upper[i]
+            search_cons.append({'type': 'ineq',
+                                'fun' : lambda x: x - xmin})
+            search_cons.append({'type': 'ineq',
+                                'fun' : lambda x: xmax - x})
+        search_cons = tuple(search_cons)
+        minima = []
+        for i in range(1, Ne):
+            minima.append(scipy.optimize.minimize(
+               fun=entropy_fun, x0=Xstart[i,np.newaxis], jac=True, method='slsqp', constraints=search_cons,
+               options={'ftol':np.spacing(1), 'maxiter':20}
+            ))
+
+        print minima
 
     # This method corresponds to the function SampleBeliefLocations in the original ES code
     # It is assumed that the GP data structure is a Python dictionary
