@@ -190,6 +190,7 @@ class Entropy(object):
         self.T = T
 
     def __call__(self, X, Z=None, **kwargs):
+        return np.mean(self._gp_innovation_local(X)[0])
         return self.dh_fun(X)[0]
         
     def update(self, model):
@@ -203,7 +204,7 @@ class Entropy(object):
         self.K = self.model.K
         self.cK = self.model.cK.T
         self.kbX = self.model.kernel.K(self.zb,self.model.X)
-        self.L = self._gp_innovation_local(self.zb)
+        #self.L = self._gp_innovation_local(self.zb)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
     def dh_fun(self,x):
@@ -341,6 +342,11 @@ class Entropy(object):
         K = self.K
         cK = self.cK
         kbX = self.kbX
+        print x
+        if x.shape[0] > 1:
+            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
+    
+        
         if self.model.X.shape[0] == 0:
             # kernel values
             kbx = self.model.kernel.K(zb,x)

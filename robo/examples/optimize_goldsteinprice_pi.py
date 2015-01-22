@@ -11,7 +11,7 @@ from robo.models import GPyModel
 import numpy as np
 from robo.test_functions import goldstein_price_fkt as goldstein_price_fkt
 from robo.acquisition import PI
-from robo.maximize import cma, DIRECT, grid_search
+from robo.maximize import  cma
 
 def main(save_dir):
     #
@@ -39,7 +39,7 @@ def main(save_dir):
     #
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=cma, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=save_dir)
     #bo.run(10.0, overwrite=True)
-    bo.run(10.0, overwrite=False)
+    bo.run(10.0, overwrite=True)
 
 if __name__ == "__main__":
     here = os.path.abspath(os.path.dirname(__file__))

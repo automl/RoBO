@@ -28,12 +28,13 @@ class BayesianOptimization(object):
             self.acquisition_fkt = acquisition_fkt
             self.model = model
             self.maximize_fkt = maximize_fkt
+            print "-"*100, X_lower
             self.X_lower = X_lower
-            if len(self.X_lower.shape) ==1:
-                 self.X_lower = self.X_lower[:,np.newaxis]
+            #if len(self.X_lower.shape) ==1:
+            #     self.X_lower = self.X_lower[:,np.newaxis]
             self.X_upper = X_upper
-            if len(self.X_upper.shape) ==1:
-                self.X_upper = self.X_upper[:,np.newaxis]
+            #if len(self.X_upper.shape) ==1:
+            #    self.X_upper = self.X_upper[:,np.newaxis]
             self.dims = dims
             self.save_dir = save_dir
             if save_dir is not None:

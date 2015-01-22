@@ -47,7 +47,7 @@ def main(save_dir):
                               dims=dims, 
                               objective_fkt=objective_fkt, 
                               save_dir=save_dir)
-    #bo.run(10.0, overwrite=True)
+    bo.run(10.0, overwrite=True)
     bo.run(10.0, overwrite=False)
 
 if __name__ == "__main__":
