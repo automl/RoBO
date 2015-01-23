@@ -1,4 +1,5 @@
-import matplotlib; matplotlib.use('Agg')
+import matplotlib; 
+matplotlib.use('Agg')
 import argparse
 import os
 import errno

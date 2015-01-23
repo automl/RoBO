@@ -2,6 +2,8 @@ import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt;
 import numpy as np
 from robo import BayesianOptimizationError
+from robo.acquisition import Entropy
+
 
 
 class Visualization(object):
@@ -19,49 +21,58 @@ class Visualization(object):
             self.plotting_range = np.linspace(one_dim_min,one_dim_max, num=resolution)
         if acq_method:
             self.acquisition_fkt = bayesian_opt.acquisition_fkt
-            acq_plot, num = self.plot_acquisition_fkt(num, one_dim_min, one_dim_max)
+            ax = self.fig.add_subplot(self.nrows, self.ncols, num)
+            acq_plot = self.plot_acquisition_fkt( ax, one_dim_min, one_dim_max)
+            num+=1
         obj_plot = None
         if obj_method:
+            obj_plot = self.fig.add_subplot(self.nrows, self.ncols, num)
             self.objective_fkt = bayesian_opt.objective_fkt
-            obj_plot, num = self.plot_objective_fkt(num, one_dim_min, one_dim_max)
+            self.plot_objective_fkt(obj_plot, one_dim_min, one_dim_max)
+            num+=1
         if model_method:
+            if obj_plot is None:
+                obj_plot = self.fig.add_subplot(self.nrows, self.ncols, num)
             self.model = bayesian_opt.model
-            self.plot_model(num, obj_plot, one_dim_min, one_dim_max)
+            self.plot_model(obj_plot, one_dim_min, one_dim_max)
         self.fig.savefig(dest_folder + "/" + prefix +"_iteration.png", format='png')
         self.fig.clf()
         plt.close()
         
-    def plot_model(self, num, ax, one_dim_min, one_dim_max):
-        if ax is None:
-            ax = self.fig.add_subplot(self.nrows, self.ncols, num)
-            num += 1
-            
+    def plot_model(self,  ax, one_dim_min, one_dim_max):
         if hasattr(self.model, "visualize"):
             self.model.visualize(ax, one_dim_min, one_dim_max)
-        return ax, num
-        
+        return ax
     
-    def plot_acquisition_fkt(self, num, one_dim_min, one_dim_max):
-        ax = self.fig.add_subplot(self.nrows, self.ncols, num)
+    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}):
+        
+        acquisition_fkt = acquisition_fkt or self.acquisition_fkt
         try:
-            ax.plot(self.plotting_range, self.acquisition_fkt(self.plotting_range[:,np.newaxis]), 'r')
+            if isinstance(acquisition_fkt, Entropy):
+                self.plot_entropy_acquisition_fkt( ax, one_dim_min, one_dim_max, acquisition_fkt)
+            ax.plot(self.plotting_range, acquisition_fkt(self.plotting_range[:,np.newaxis]), **plot_attr)
         except BayesianOptimizationError, e:
             if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:
-                acq_v =  [ self.acquisition_fkt(np.array([x])) for x in self.plotting_range[:,np.newaxis] ]
+                acq_v =  [ acquisition_fkt(np.array([x])) for x in self.plotting_range[:,np.newaxis] ]
                 ax.plot(self.plotting_range, acq_v)
             else:
                 raise
         ax.set_xlim(one_dim_min, one_dim_max)
-        num+=1
-        return ax, num
+        return ax
+    
+    def plot_entropy_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt):
+        zb = acquisition_fkt.zb
+        pmin = np.exp(acquisition_fkt.logP)
+        ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")
+        self.plot_acquisition_fkt(ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"})
+    
+    def plot_objective_fkt(self, ax, one_dim_min, one_dim_max):
         
-        
-    def plot_objective_fkt(self, num, one_dim_min, one_dim_max):
-        ax = self.fig.add_subplot(self.nrows, self.ncols, num)
-        ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), 'b')
+        ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), color='b', linestyle="--")
         ax.set_xlim(one_dim_min, one_dim_max)
-        num+=1
-        return ax, num
+        ax._min_y, ax._max_y = ax.get_ylim()
+        print ax._min_y, ax._max_y
+        return ax
     
     def plot_improvement(self, observations):
         pass

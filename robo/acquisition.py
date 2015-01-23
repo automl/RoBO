@@ -88,12 +88,12 @@ class EI(object):
             
             # dm = derivative of the gaussian process mean function
             
-            try:
-                dmdx = np.dot(dkxX.transpose(), self.alpha)
-            except:
-                print "+"*100,"\n","dkxX.T = ", dkxX.T, "\n", "alpha = ", self.alpha
-                print "X = ", self.model.X, "\n", "+"*100
-                raise
+            #try:
+            dmdx = np.dot(dkxX.transpose(), self.alpha)
+            #except:
+                #print "+"*100,"\n","dkxX.T = ", dkxX.T, "\n", "alpha = ", self.alpha
+                #print "X = ", self.model.X, "\n", "+"*100
+                #raise
             # ds = derivative of the gaussian process covariance function
             dsdx = np.zeros((dim, 1))
             for i in range(0, dim):
@@ -342,7 +342,6 @@ class Entropy(object):
         K = self.K
         cK = self.cK
         kbX = self.kbX
-        print x
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
     
@@ -694,7 +693,7 @@ class Entropy(object):
             try:
                 xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
             except:
-                print "-"*100, "\n","xx =", xx, "\n", "-"*100 
+                #print "-"*100, "\n","xx =", xx, "\n", "-"*100 
                 raise
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx

@@ -29,8 +29,6 @@ try:
     def cma(acquisition_fkt, X_lower, X_upper):
         #stdout = sys.stdout
         #sys.stdout = StringIO.StringIO()
-        print  (X_upper + X_lower)*0.5
-        print X_upper
         x = _cma.fmin(_cma_acquisition_fkt_wrapper(acquisition_fkt), (X_upper + X_lower)*0.5, 0.6, options={"bounds":[X_lower, X_upper], "verbose":-1, "verb_log":sys.maxint})[0]
         #sys.stdout = stdout
         return np.array([x])
@@ -46,6 +44,5 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     x = linspace(X_lower[0], X_upper[0], resolution).reshape((resolution, 1, 1))
     
     y = array(map(acquisition_fkt, x))
-    print y
     x_star = x[y.argmax()]
     return x_star

@@ -1,3 +1,5 @@
+import matplotlib; 
+matplotlib.use('Agg')
 import random
 import os
 import errno
@@ -28,7 +30,7 @@ class BayesianOptimization(object):
             self.acquisition_fkt = acquisition_fkt
             self.model = model
             self.maximize_fkt = maximize_fkt
-            print "-"*100, X_lower
+            
             self.X_lower = X_lower
             #if len(self.X_lower.shape) ==1:
             #     self.X_lower = self.X_lower[:,np.newaxis]
