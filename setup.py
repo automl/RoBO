@@ -27,6 +27,10 @@ setup(name='robo',
       test_suite='robo',
       install_requires=requires,
       entry_points=dict(
-      		console_scripts = ['robo_visualize = robo.scripts.visualize_sh:main']
+      		console_scripts = [
+								'robo_visualize = robo.scripts.visualize_sh:main',
+								'robo_examples = robo.scripts.examples:main'
+							  ]
+      		
       )
 	)

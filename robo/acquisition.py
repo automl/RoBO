@@ -185,7 +185,7 @@ class Entropy(object):
         self.T = T
 
     def __call__(self, X, Z=None, **kwargs):
-        return np.mean(self._gp_innovation_local(X)[0])
+        #return np.mean(self._gp_innovation_local(X)[0])
         return self.dh_fun(X)[0]
 
     def update(self, model):

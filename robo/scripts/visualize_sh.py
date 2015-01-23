@@ -1,12 +1,9 @@
-import matplotlib; 
-matplotlib.use('Agg')
 import argparse
 import os
 import errno
 from robo.visualization import Visualization
 import robo
 import numpy as np
-#np.seterr(all='raise')
 
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description='Visualize a robo run', 

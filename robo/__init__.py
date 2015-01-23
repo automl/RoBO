@@ -25,7 +25,8 @@ class BayesianOptimization(object):
             save to save_dir after each iteration
     """
     def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None):
-        if reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims]):
+        self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims])
+        if self.enough_arguments:
             self.objective_fkt = objective_fkt
             self.acquisition_fkt = acquisition_fkt
             self.model = model
@@ -111,9 +112,9 @@ class BayesianOptimization(object):
                 try:
                     new_x, X, Y = self.init_last_iteration()
                 except IOError as exception:
-                    print exception
+                    if not self.enough_arguments:
+                        raise
                     new_x = self.get_next_x(X, Y)
-               
             
         if self.save_dir != None:
             self.save_iteration(X, Y, new_x);
