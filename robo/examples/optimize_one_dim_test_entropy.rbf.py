@@ -29,7 +29,7 @@ def main(save_dir):
     # Building up the model
     #
     kernel = GPy.kern.RBF(input_dim=dims)    
-    model = GPyModel(kernel, optimize=True)
+    model = GPyModel(kernel, optimize=True, noise_variance=1e-5)
 
     #
     # creating an acquisition function
@@ -39,8 +39,8 @@ def main(save_dir):
     # start the main loop
     #
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=grid_search, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=save_dir)
-    bo.run(20.0, overwrite=True)
-    bo.run(20.0, overwrite=False)
+    bo.run(10.0, overwrite=True)
+    #bo.run(20.0, overwrite=False)
 
 if __name__ == "__main__":
     main(save_dir)
