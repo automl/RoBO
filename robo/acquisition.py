@@ -1,4 +1,4 @@
-#encoding=utf8
+    #encoding=utf8
 """
 this module contains acquisition functions that have high values
 where the objective function is low.
@@ -66,26 +66,7 @@ class EI(object):
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
             dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-            
-            """
-            #perhaps
-            #"""
-            
-            #dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
-            #kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
-            
-            #derivatives of kernel values
-            #dkxx = self.model.kernel.gradients_X(kxx, x)
-            
-            """ TODO Joel
-            kbx = self.model.kernel.K(zb,x)
-            kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
-            
-            #derivatives of kernel values
-            dkxx = self.model.kernel.gradients_X(kxx, x)
-            dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
-            """
-            
+
             # dm = derivative of the gaussian process mean function
             dmdx = np.dot(dkxX.transpose(), self.alpha)
             # ds = derivative of the gaussian process covariance function
@@ -184,6 +165,7 @@ class Entropy(object):
         self.loss_function = loss_function        
         self.T = T
 
+        
     def __call__(self, X, Z=None, **kwargs):
         #return np.mean(self._gp_innovation_local(X)[0])
         return self.dh_fun(X)[0]
@@ -197,6 +179,7 @@ class Entropy(object):
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
         #self.acq = self.dh_mc_local(self.zb, self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu, self.T, self.lmb, self.X_lower, self.X_upper, False, self.loss_function )
         self.W = np.random.randn(1, self.T)
+        #self.W = np.array([[-2.17462056629639, 0.144614651456100, 0.669033435302303, -0.848829159757920, -0.0570901191929413, 0.291786264353796, -0.614618540132659, -0.0136431885670602, 0.412113496148595, -0.937149595361607, 0.835157036407438, 1.09453846090965, 0.321180732968874, 0.0151128385440506, -1.16449254121656, 0.494840747422341, -1.21584898482425, 1.59078797675859, 0.526475048595550, 0.264818591763603, -0.393597890579411, -2.17631003833625, -1.19565443202559, 0.365328392431846, 2.41244305717062, 0.740247220579396, 0.309746388607370, -0.541987183113314, 0.122283184138499, 0.962279332770060, -0.253974843323265, 1.89175598926363, -1.22025413722763, -0.376237143988673, 0.0524291487772232, -1.95393370060853, 0.565420571160198, 0.0777944624002781, 0.0807011876263225, 0.794707809437465, 1.04368893647872, 0.802184648027535, -0.468824364835627, -0.0465923743265948, 0.353453034782426, -1.25680056318429, -1.03603143787954, -0.426962687763533, 0.0776686794320303, 1.79093025896060, 0.797263135406905, -0.442500740824704, -0.629091091514816, 1.53379627132611, 2.73354038131324, 0.167439077485047, -0.478865165602679, -1.41265388318180, 0.974988055068974, 0.289718984218535, 1.16540825109215, -0.908705616318882, 0.240575037229452, -0.654046335191623, 1.27495453830672, -0.551190610935942, -0.0874088682817872, -0.347820318259741, 0.993962534155598, 0.428436173023810, -1.00418528016197, -0.632687876663078, -1.04570999122494, 0.505707009458752, 0.331953721396756, -1.63541252268811, -1.90684020531619, -0.0403987210424983, 0.697193329646415, 0.168802575488670, -1.54379632573123, -1.55180239414170, 0.867077803619383, -0.145372990423397, -0.386241663817012, 1.31620411236280, -0.796464226593885, 0.135441371885595, 0.417806430208596, 0.819879645963700, -0.854353379120009, 0.357318588185117, 2.74846655587521, -1.51297699352819, 0.433979032773600, -0.229767733464022, -0.827086376299091, -0.831982615393436, 0.497899500583305, 2.31562610334450, -0.793825701652537, 0.540959569281976, -0.559061357111602, 1.97656605832667, 0.544660375289434, -0.137905557777941, 0.619875635750664, -0.00558278344490564, 1.10719924542420, -0.185590108437143, -1.12141781251190, 0.246449516399111, 1.56103723018519, -1.19662171456272, -0.242345277992204, 1.00482816344250, -1.92012580512738, 0.625445779460800, 0.752960417782594, 0.213483683522705, -0.770234072868573, -0.00713465252874278, 0.0931865247774352, 0.935251207390719, 0.663517921831603, -0.350232666735205, 1.61987743935497, -0.0508330964816129, -0.812697070766603, -0.438419934696927, 0.858609994635494, 0.195215935238338, 0.888862153882707, 0.0692218210392502, 2.48682132029734, -1.66564311788150, -0.415927944852021, -0.0842246064708947, 0.0892519475074891, 1.45614720047535, 0.219453518638082, -0.114877251919321, 0.0686024694830988, 0.751494856970101, -0.689427057923177, 0.450813584524417, -1.56502465785673, -0.0787959236624287, -0.941791969061035, -0.652861505816215, 0.282529239916988, -1.12507904298537, -0.988974087143185, -1.51585876104897, -2.22851047687315, -0.151521678303304, 1.16274436560636, -0.181936286155354, -0.233953540330954, -1.04673406988337, 1.58331887778704, -0.249413421524592, 1.29401900835506, 0.361980137920309, -0.263052508703654, 1.08214445191656, 0.982434080192891, -0.111443964288855, 1.29595078548944, 1.78129502150358, -0.0656148757390404, -0.255680865369883, 0.404638157039467, 0.351756753327098, 0.807511060208285, -0.255590492307781, 0.715113278785686, 1.04859731286360, 0.177548555016550, 0.153297684827984, -1.25432447831637, -1.17280085830884, -1.46144181507780, -1.24428798710640, -0.155099375334764, -1.61491381350160, 2.24606514978483, 0.739281132309719, -2.06764536263329, -1.15455058140430, -0.107191878127395, -1.71287908652886, -0.459894542126372, 1.09100010337293, -0.163880256756727, -0.0672404702443348, -1.00159245598463, -0.555661447134641, -1.35155634252200, 0.364211322734809]])
         self.K = self.model.K
         self.cK = self.model.cK.T
         self.kbX = self.model.kernel.K(self.zb,self.model.X)
@@ -216,6 +199,9 @@ class Entropy(object):
         invertsign = True
         LossFunc = self.loss_function 
         zbel = self.zb
+        # If x is a vector, convert it to a matrix (some functions are sensitive to this distinction)
+        if len(x.shape) == 1:
+            x = x[np.newaxis]
         if np.any(x < xmin) or np.any(x > xmax):
             dH = np.spacing(1)
             ddHdx = np.zeros((x.shape[1], 1))
@@ -242,7 +228,11 @@ class Entropy(object):
             np.multiply(ddlogPdMdM, np.reshape(dMM, (1, dMM.shape[0],dMM.shape[1]))),
             2), 1)[:, np.newaxis]
 
+        # add a second dimension to the arrays if necessary:
+        logP = np.reshape(logP, (logP.shape[0], 1))
+        # logP = np.reshape(logP, (logP.shape[0], 1))
 
+        
 
         # Deterministic part of change:
         detchange = dlogPdV.dot(dVdx) + 0.5 * trterm
@@ -282,6 +272,17 @@ class Entropy(object):
             trterm = np.sum(np.sum(
                 np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
                 2), 1)[:, np.newaxis]
+            # trterm = np.array(
+            #     [[-0.843010908566320], \
+            #      [-0.582029313251303], \
+            #      [-0.758961809411626], \
+            #      [-0.534968553942584], \
+            #      [-0.805424071511742], \
+            #      [-0.206116671234491], \
+            #      [-0.702439309633706], \
+            #      [-0.704391419459464], \
+            #      [-0.930137189649854], \
+            #      [-0.916431159870648]])
 
             # Deterministic part of change:
             detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
@@ -314,6 +315,18 @@ class Entropy(object):
                 np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
                 2), 1)[:, np.newaxis]
 
+            # trterm = np.array(
+            #     [[-0.843010908566320], \
+            #      [-0.582029313251303], \
+            #      [-0.758961809411626], \
+            #      [-0.534968553942584], \
+            #      [-0.805424071511742], \
+            #      [-0.206116671234491], \
+            #      [-0.702439309633706], \
+            #      [-0.704391419459464], \
+            #      [-0.930137189649854], \
+            #      [-0.916431159870648]])
+
             dHp = LossFunc(logP, lmb, lPred, zbel)
             dHy2 = np.mean(dHp, dtype=np.float64)
 
@@ -335,11 +348,17 @@ class Entropy(object):
         if self.model.X.shape[0] == 0:
             # kernel values
             kbx = self.model.kernel.K(zb,x)
+            kXx = self.model.kernel.K(self.model.X, x)
             kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
             
             #derivatives of kernel values
             dkxx = self.model.kernel.gradients_X(kxx, x)
+            dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
             dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
+            # terms of innovation
+            a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
+            sloc = np.sqrt(a)
+            proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
             
             #terms of the innovation
             sloc   = np.sqrt(kxx)
@@ -627,7 +646,7 @@ class Entropy(object):
             e = np.exp(logphi - logPhi)
             return e, logPhi, 0
 
-    def predict_info_gain(self, fun, fun_p, zb, logP, X_lower, X_upper, Ne):
+    def predict_info_gain(self, entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne):
         # print logP
 
         # set random seed
@@ -646,13 +665,29 @@ class Entropy(object):
         for i in range(1, 10*Ne):
             if i % 10 == 1 and i > 1:
                 xx = X_lower + np.multiply(X_upper - X_lower, np.random.uniform(size=(1,D)))
-            xx = self.slice_ShrinkRank_nolog(xx, fun_p, S0, True)
+            xx = self.slice_ShrinkRank_nolog(xx, entropy_fun_p, S0, True)
             xxs[i,:] = xx
             if i % 10 == 0:
                 Xstart[(i/10)-1,:] = xx
-                Xdhi[(i/10)-1],_ = fun(xx)
+                Xdhi[(i/10)-1],_ = entropy_fun(xx)
 
-        print Xstart
+        search_cons = []
+        for i in range(0, X_lower.shape[0]):
+            xmin = X_lower[i]
+            xmax = X_upper[i]
+            search_cons.append({'type': 'ineq',
+                                'fun' : lambda x: x - xmin})
+            search_cons.append({'type': 'ineq',
+                                'fun' : lambda x: xmax - x})
+        search_cons = tuple(search_cons)
+        minima = []
+        for i in range(1, Ne):
+            minima.append(scipy.optimize.minimize(
+               fun=entropy_fun, x0=Xstart[i,np.newaxis], jac=True, method='slsqp', constraints=search_cons,
+               options={'ftol':np.spacing(1), 'maxiter':20}
+            ))
+
+        print minima
 
     # This method corresponds to the function SampleBeliefLocations in the original ES code
     # It is assumed that the GP data structure is a Python dictionary
@@ -788,7 +823,6 @@ class LogEI(object):
         eta = self.model.getCurrentBest()
         z = (eta - f_est[0] - self.par) / f_est[1]
         log_ei = np.zeros((f_est[0].size, 1))
-
         for i in range(0, f_est[0].size):
             mu, sigma = f_est[0][i], f_est[1][i]
             # Degenerate case 1: first term vanishes
