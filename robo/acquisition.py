@@ -87,13 +87,7 @@ class EI(object):
             """
             
             # dm = derivative of the gaussian process mean function
-            
-            #try:
             dmdx = np.dot(dkxX.transpose(), self.alpha)
-            #except:
-                #print "+"*100,"\n","dkxX.T = ", dkxX.T, "\n", "alpha = ", self.alpha
-                #print "X = ", self.model.X, "\n", "+"*100
-                #raise
             # ds = derivative of the gaussian process covariance function
             dsdx = np.zeros((dim, 1))
             for i in range(0, dim):
@@ -170,6 +164,7 @@ class UCB(object):
     def update(self, model):
         self.model = model
 
+
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
@@ -192,12 +187,13 @@ class Entropy(object):
     def __call__(self, X, Z=None, **kwargs):
         return np.mean(self._gp_innovation_local(X)[0])
         return self.dh_fun(X)[0]
-        
+
     def update(self, model):
         self.model = model
+
         self.zb, self.lmb = self.sample_from_measure(self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
-        self.logP, self.dlogPdMu, self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
+        self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
         #self.acq = self.dh_mc_local(self.zb, self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu, self.T, self.lmb, self.X_lower, self.X_upper, False, self.loss_function )
         self.W = np.random.randn(1, self.T)
@@ -221,7 +217,7 @@ class Entropy(object):
         LossFunc = self.loss_function 
         zbel = self.zb
         if np.any(x < xmin) or np.any(x > xmax):
-            dH = spacing(1)
+            dH = np.spacing(1)
             ddHdx = np.zeros((x.shape[1], 1))
             return dH, ddHdx
         if x.shape[0] > 1:
@@ -230,8 +226,8 @@ class Entropy(object):
         # Number of belief locations:
         N = logP.size
 
-        D = x.shape[1]
-        T = W.shape[1]
+        D = x.shape[0]
+        T = W.shape[0]
         # Evaluate innovation
         Lx, _ = L(x)
         # Innovation function for mean:
@@ -318,16 +314,6 @@ class Entropy(object):
                 np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
                 2), 1)[:, np.newaxis]
 
-            # Deterministic part of change:
-            detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
-            # Stochastic part of change:
-            stochange = (dlogPdM.dot(dMdy)).dot(W)
-            # Predicted new logP:
-            lPred = np.add(logP + detchange, stochange)
-            lselP = np.log(np.sum(np.exp(lPred), 0))
-            # Normalise:
-            lPred = np.subtract(lPred, lselP)
-
             dHp = LossFunc(logP, lmb, lPred, zbel)
             dHy2 = np.mean(dHp, dtype=np.float64)
 
@@ -385,7 +371,6 @@ class Entropy(object):
         Lx     = proj / sloc;
         dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
         return Lx, dLxdx
-         
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
@@ -433,7 +418,8 @@ class Entropy(object):
         adds = np.reshape(-gg+Zij,(1,D,D));
         dlogPdMudMu = dlogPdMudMuold + adds
         return logP,dlogPdMu,dlogPdSigma,dlogPdMudMu
-             
+            
+        
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
         """
         1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
@@ -641,6 +627,33 @@ class Entropy(object):
             e = np.exp(logphi - logPhi)
             return e, logPhi, 0
 
+    def predict_info_gain(self, fun, fun_p, zb, logP, X_lower, X_upper, Ne):
+        # print logP
+
+        # set random seed
+        np.random.seed(1)
+
+        S0 = 0.5 * np.linalg.norm(X_upper - X_lower)
+        D = X_lower.shape[0]
+        mi = np.argmax(logP)
+        xx = zb[mi,np.newaxis]
+        Xstart = np.zeros((Ne, D))
+        Xend = np.zeros((Ne, D))
+        Xdhi = np.zeros((Ne, 1))
+        Xdh = np.zeros((Ne,1))
+        xxs = np.zeros((10*Ne, D))
+
+        for i in range(1, 10*Ne):
+            if i % 10 == 1 and i > 1:
+                xx = X_lower + np.multiply(X_upper - X_lower, np.random.uniform(size=(1,D)))
+            xx = self.slice_ShrinkRank_nolog(xx, fun_p, S0, True)
+            xxs[i,:] = xx
+            if i % 10 == 0:
+                Xstart[(i/10)-1,:] = xx
+                Xdhi[(i/10)-1],_ = fun(xx)
+
+        print Xstart
+
     # This method corresponds to the function SampleBeliefLocations in the original ES code
     # It is assumed that the GP data structure is a Python dictionary
     # This function calls PI, EI etc and samples them (using their values)
@@ -690,11 +703,7 @@ class Entropy(object):
         for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing
             if (i % (subsample*10) == 0) and (i / (subsample*10.) < numblock):
                 xx = restarts[i/(subsample*10), np.newaxis]
-            try:
-                xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
-            except:
-                #print "-"*100, "\n","xx =", xx, "\n", "-"*100 
-                raise
+            xx = self.slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
                 emb = acquisition_fn(xx)
@@ -714,7 +723,7 @@ class Entropy(object):
         # This function is equivalent to the similarly named function in the original ES code
         if transpose:
             xx = xx.transpose()
-            
+
         # set random seed
         D = xx.shape[0]
         f = P(xx.transpose())
@@ -747,7 +756,7 @@ class Entropy(object):
             logfk  = np.log(fk)
             dlogfk = np.divide(dfk, fk)
 
-            if logfk > logy: # accept these values
+            if (logfk > logy).all(): # accept these values
                 xx = xk.transpose()
                 return xx
             else: # shrink
