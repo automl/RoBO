@@ -23,29 +23,43 @@ def main(*args, **kwargs):
     parser.add_argument('-o', '--objective', default=None, type=str,
                         help='Choose your objective function', 
                         dest="objective", choices= ("one_dim_test", "branin", "hartmann6", "hartmann3", "goldstein_price_fkt"))
+    
     parser.add_argument('-a', '--acquisition',  default=None, type=str,
                         help='Choose the acquisition function', 
-                        dest="acquisition", choices= ("EI", "PI", "LogEI", "Entropie", "UCB"))
+                        dest="acquisition", choices= ("EI", "PI", "LogEI", "Entropy", "UCB"))
+    
+    parser.add_argument('-p', '--acquisition-parameter',  default=None, type=str, nargs="*",
+                        help='Choose the acquisition function parameters', 
+                        dest="acquisition_parameters")
+    
     parser.add_argument('-m', '--model',  default="GPy",  type=str,
                         choices = ("GPy",),
                         help='Choose the model', 
                         dest="model")
+    
     parser.add_argument('-e', '--maximizer',  default="",  type=str,
                         choices = ("grid_search", "DIRECT", "cma"),
                         help='Choose the acquisition maximizer', 
                         dest="maximizer")
+    
     parser.add_argument('-n', '--num',  default="10",  type=int,
                         help='number of evaluations', 
                         dest="n")
-    parser.add_argument('--kernel', default="", nargs="+",  type=str,
-                        help='Choose a kernel for GP based models', 
+    
+    parser.add_argument('--without-noise', help='disable noise', 
+                        dest="with_noise", default=True, action="store_false" )
+    
+    parser.add_argument('--kernel', default="RBF", nargs="+",  type=str,
+                        help='Choose a kernel for GP based models',
+                        choices= ("RBF", ),
                         dest="kernel")
+    
+    
     args = parser.parse_args()
-    #
+    
     # Dimension Space where the 
     # objective function can be evaluated 
     #
-    
     if args.overwrite == False:
         try:
             bo = BayesianOptimization(save_dir=args.save_dir)
@@ -54,9 +68,17 @@ def main(*args, **kwargs):
         except OSError as exception:
             if exception.errno != errno.ENOENT:
                 raise
-    exit()
-    objective_fkt= one_dim_test
-    exit()
+    if args.objective == "one_dim_test":
+        objective_fkt= one_dim_test
+    elif args.objective == "branin":
+        objective_fkt= branin
+    elif args.objective == "hartmann6":
+        objective_fkt= hartmann6
+    elif args.objective == "hartmann3":
+        objective_fkt= hartmann3
+    elif args.objective == "goldstein_price_fkt":
+        objective_fkt= goldstein_price_fkt
+    
     dims = objective_fkt.dims
     X_lower = objective_fkt.X_lower;
     X_upper = objective_fkt.X_upper;
@@ -64,18 +86,50 @@ def main(*args, **kwargs):
     #
     # Building up the model
     #
-    kernel = GPy.kern.RBF(input_dim=dims)    
-    model = GPyModel(kernel, optimize=True)
+    if args.model in ("GPy",) and args.kernel == "RBF":
+        kernel = GPy.kern.RBF(input_dim=dims)
+    
+    model_kwargs = {}
+    if not args.with_noise:
+        model_kwargs["noise_variance"] = 1e-10
+    if args.model == "GPy":
+        model = GPyModel(kernel, optimize=True, **model_kwargs)
 
     #
     # creating an acquisition function
     #
-    acquisition_fkt = EI(model, X_upper= X_upper, X_lower=X_lower)
+    acquisition_kwargs = {}
+    if args.acquisition == "EI":
+        if len(args.acquisition_parameters): 
+            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+        acquisition_fkt = EI(model, X_upper= X_upper, X_lower=X_lower, **acquisition_kwargs)
+    elif args.acquisition == "PI":
+        if len(args.acquisition_parameters): 
+            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+        acquisition_fkt = PI(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
+    elif args.acquisition == "LogEI":
+        if len(args.acquisition_parameters): 
+            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+        acquisition_fkt = LogEI(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
+    elif args.acquisition == "Entropy": 
+        acquisition_fkt = Entropy(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
+    elif args.acquisition == "UCB":
+        if len(args.acquisition_parameters): 
+            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+        acquisition_fkt = UCB(model, X_upper= X_upper, X_lower=X_lower**acquisition_kwargs)
+        
+    
+    if args.maximizer == "grid_search":
+        maximize_fkt = grid_search
+    elif args.maximizer == "DIRECT":
+        maximize_fkt = DIRECT
+    elif args.maximizer == "cma":
+        maximize_fkt = cma
     #
     # start the main loop
     #
-    #bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=grid_search, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=save_dir)
-    #bo.run(20.0, overwrite=True)
+    bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=maximize_fkt, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=args.save_dir)
+    bo.run(20.0, overwrite=args.overwrite)
     #bo.run(20.0, overwrite=False)
 
 if __name__ == "__main__":

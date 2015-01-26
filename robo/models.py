@@ -63,6 +63,7 @@ class GPyModel(object):
         self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
         self.m.constrain_positive('')
+        
         self.likelihood = self.m.likelihood
         if self.noise_variance is not None:
             print "fixing noise variance"

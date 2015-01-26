@@ -12,7 +12,7 @@ try:
         #sys.stdout = StringIO.StringIO()
         x, fmin, ierror = _DIRECT.solve(_DIRECT_acquisition_fkt_wrapper(acquisition_fkt), l=[X_lower], u=[X_upper], maxT=2000, maxf=2000)
         #sys.stdout = stdout
-        return x
+        return np.array([x])
     
 except Exception, e:
     def DIRECT(acquisition_fkt, X_lower, X_upper):
