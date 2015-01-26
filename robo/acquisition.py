@@ -186,7 +186,13 @@ class Entropy(object):
         #self.L = self._gp_innovation_local(self.zb)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
-    def dh_fun(self,x):
+    def dh_fun_false(self,x, **kwargs):
+        return self.dh_fun(x, False)
+
+    def dh_fun_true(self,x, **kwargs):
+        return self.dh_fun(x, True)
+
+    def dh_fun(self,x, invertsign = True):
         logP = self.logP
         dlogPdM = self.dlogPdMu
         dlogPdV = self.dlogPdSigma
@@ -196,7 +202,7 @@ class Entropy(object):
         L = self._gp_innovation_local
         xmin = self.X_lower
         xmax = self.X_upper
-        invertsign = True
+
         LossFunc = self.loss_function 
         zbel = self.zb
         # If x is a vector, convert it to a matrix (some functions are sensitive to this distinction)
