@@ -4,6 +4,7 @@ import random
 import os
 import errno
 import numpy as np
+np.seterr(all='raise')
 import shutil
 try:
     import cpickle as pickle

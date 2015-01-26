@@ -42,9 +42,17 @@ class Visualization(object):
     def plot_model(self,  ax, one_dim_min, one_dim_max):
         if hasattr(self.model, "visualize"):
             self.model.visualize(ax, one_dim_min, one_dim_max)
+        _min_y, _max_y = ax.get_ylim()
+        if hasattr(ax, "_min_y") and hasattr(ax, "_min_x"):
+            ax._min_y = min(_min_y, ax._min_y)
+            ax._max_y = max(_max_y, ax._max_y)
+            ax.set_ylim(ax._min_y, ax._max_y)
+        else:
+            ax._min_y = _min_y
+            ax._max_y = _max_y
         return ax
     
-    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}):
+    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}, scale=[0,1]):
         
         acquisition_fkt = acquisition_fkt or self.acquisition_fkt
         try:
@@ -53,7 +61,11 @@ class Visualization(object):
             ax.plot(self.plotting_range, acquisition_fkt(self.plotting_range[:,np.newaxis]), **plot_attr)
         except BayesianOptimizationError, e:
             if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:
-                acq_v =  [ acquisition_fkt(np.array([x])) for x in self.plotting_range[:,np.newaxis] ]
+                acq_v =  np.array([ acquisition_fkt(np.array([x])) for x in self.plotting_range[:,np.newaxis] ])
+                if scale:
+                    acq_v = acq_v - acq_v.min() 
+                    acq_v = (scale[1] -scale[0]) * acq_v / acq_v.max() +scale[0]
+                    
                 ax.plot(self.plotting_range, acq_v)
             else:
                 raise
@@ -64,14 +76,22 @@ class Visualization(object):
         zb = acquisition_fkt.zb
         pmin = np.exp(acquisition_fkt.logP)
         ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")
-        self.plot_acquisition_fkt(ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"})
+        self.plot_acquisition_fkt(ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1])
     
     def plot_objective_fkt(self, ax, one_dim_min, one_dim_max):
         
         ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), color='b', linestyle="--")
         ax.set_xlim(one_dim_min, one_dim_max)
-        ax._min_y, ax._max_y = ax.get_ylim()
-        print ax._min_y, ax._max_y
+        _min_y, _max_y = ax.get_ylim()
+        if hasattr(ax, "_min_y") and hasattr(ax, "_min_x"):
+            
+            ax._min_y = min(_min_y, ax._min_y)
+            ax._max_y = max(_max_y, ax._max_y)
+            ax.set_ylim(ax._min_y, ax._max_y)
+        else:
+            ax._min_y = _min_y
+            ax._max_y = _max_y
+            ax.set_ylim(ax._min_y, ax._max_y)
         return ax
     
     def plot_improvement(self, observations):

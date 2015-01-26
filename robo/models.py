@@ -65,16 +65,22 @@ class GPyModel(object):
         self.m.constrain_positive('')
         
         self.likelihood = self.m.likelihood
+        print self.m[".*variance"].values
+        self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
             print "fixing noise variance"
             #self.m['.*Gaussian_noise.variance'].unconstrain()
             #self.m.constrain_fixed('noise',self.noise_variance)
+            
             self.m['.*Gaussian_noise.variance'] = self.noise_variance
             self.m['.*Gaussian_noise.variance'].fix()
             
         if self.optimize:
+            stdout = sys.stdout
+            sys.stdout = StringIO.StringIO()
             self.m.optimize_restarts(num_restarts = 10, robust=True)
             print "optimize finished"
+            sys.stdout = stdout
             print self.m
 
         index_min = np.argmin(self.Y)

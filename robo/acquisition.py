@@ -29,6 +29,7 @@ import scipy
 import numpy as np
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError 
+
 class EI(object):
     def __init__(self, model, X_lower, X_upper, par = 0.01, **kwargs):
         self.model = model
@@ -60,8 +61,10 @@ class EI(object):
         f_est = self.model.predict(x)
         eta = self.model.getCurrentBest()
         z = (eta - f_est[0] + self.par) / f_est[1]
+        #joel
+        z[np.where(z > 6)] = 6.0
+        z[np.where(z < -6)] = -6.0
         f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
-
         if derivative:
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
@@ -245,11 +248,18 @@ class Entropy(object):
         # Stochastic part of change:
         stochange = (dlogPdM.dot(dMdx)).dot(W)
         # Predicted new logP:
+        
         lPred = np.add(logP + detchange, stochange)
-        lselP = np.log(np.sum(np.exp(lPred), 0))[np.newaxis,:]
+        #
+        _maxLPred = np.max(lPred)
+        s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred)))
+        lselP = _maxLPred if np.isinf(s) else s
+        
+        #
+        #lselP = np.log(np.sum(np.exp(lPred), 0))[np.newaxis,:]
         # Normalise:
         lPred = np.subtract(lPred, lselP)
-
+        
         dHp = LossFunc(logP, lmb, lPred, zbel)
         dH = np.mean(dHp)
 
@@ -296,7 +306,9 @@ class Entropy(object):
             stochange = (dlogPdM.dot(dMdy)).dot(W)
             # Predicted new logP:
             lPred = np.add(logP + detchange, stochange)
-            lselP = np.log(np.sum(np.exp(lPred), 0))
+            _maxLPred = np.max(lPred)
+            s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred)))
+            lselP = _maxLPred if np.isinf(s) else s
             # Normalise:
             lPred = np.subtract(lPred, lselP)
 
@@ -396,6 +408,7 @@ class Entropy(object):
         Lx     = proj / sloc;
         dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
         return Lx, dLxdx
+    
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
@@ -444,7 +457,6 @@ class Entropy(object):
         dlogPdMudMu = dlogPdMudMuold + adds
         return logP,dlogPdMu,dlogPdSigma,dlogPdMudMu
             
-        
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
         """
         1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
@@ -517,6 +529,7 @@ class Entropy(object):
             mpm = None
             
             mpm     = MP * MP / P;
+            
             if not all(MP != 0):
                 mpm[np.where(MP ==0)]=0
             mpm     = sum(mpm);
@@ -794,6 +807,7 @@ class Entropy(object):
             # TODO: add the derivative values (we're not considering them yet)
             # fk, dfk = P(xk.transpose())
             fk, dfk = P(xk.transpose(), derivative = True)
+            
             logfk  = np.log(fk)
             dlogfk = np.divide(dfk, fk)
 
