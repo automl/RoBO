@@ -181,8 +181,8 @@ class Entropy(object):
         self.model = model
 
         self.zb, self.lmb = self.sample_from_measure(self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
-        if np.isinf(self.lmb).any():
-            raise Exception("lmb is inf")
+        #if np.isinf(self.lmb).any():
+        #    raise Exception("lmb is inf")
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
