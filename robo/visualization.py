@@ -10,7 +10,8 @@ class Visualization(object):
     def __init__(self, bayesian_opt, new_x, X, Y, dest_folder, prefix="", acq_method = False, obj_method = False, model_method = False, resolution=1000):
         if bayesian_opt.dims > 1 and acq_method:
             raise AttributeError("acquisition function can only be visualized if the objective funktion has only one dimension")
-        self.nrows = reduce(lambda x, y : x + 1 if y else x, [0, acq_method, obj_method or model_method, isinstance(acq_method, Entropy)])
+        self.nrows = reduce(lambda x, y : x + 1 if y else x, [0, acq_method, obj_method or model_method, isinstance(bayesian_opt.acquisition_fkt, Entropy)])
+        
         self.ncols = 1
         self.prefix = prefix
         self.num = 1
@@ -21,16 +22,16 @@ class Visualization(object):
             self.plotting_range = np.linspace(one_dim_min,one_dim_max, num=resolution)
         if acq_method:
             self.acquisition_fkt = bayesian_opt.acquisition_fkt
-            ax = self.fig.add_subplot(self.nrows, self.ncols, num)
+            ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
             self.num+=1
             acq_plot = self.plot_acquisition_fkt( ax, one_dim_min, one_dim_max)
             
         obj_plot = None
         if obj_method:
             obj_plot = self.fig.add_subplot(self.nrows, self.ncols, self.num)
+            self.num+=1
             self.objective_fkt = bayesian_opt.objective_fkt
             self.plot_objective_fkt(obj_plot, one_dim_min, one_dim_max)
-            self.num+=1
         if model_method:
             if obj_plot is None:
                 obj_plot = self.fig.add_subplot(self.nrows, self.ncols, num)
@@ -79,10 +80,10 @@ class Visualization(object):
         bar_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
         self.num += 1
         bar_ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")
+        bar_ax.set_xlim(one_dim_min, one_dim_max)
         self.plot_acquisition_fkt(ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1])
     
     def plot_objective_fkt(self, ax, one_dim_min, one_dim_max):
-        
         ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), color='b', linestyle="--")
         ax.set_xlim(one_dim_min, one_dim_max)
         _min_y, _max_y = ax.get_ylim()

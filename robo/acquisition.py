@@ -65,12 +65,12 @@ class EI(object):
             #TODO which error
             print x
             raise
-        eta = self.model.getCurrentBest()
+        eta = self.model.predict(np.array([self.model.getCurrentBestX()]))[0]
         z = (eta - f_est[0] + self.par) / f_est[1]
         
         f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
         
-        if derivative:
+        if 1:#derivative:
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
             dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
@@ -79,12 +79,29 @@ class EI(object):
             dmdx = np.dot(dkxX.transpose(), self.alpha)
             # ds = derivative of the gaussian process covariance function
             dsdx = np.zeros((dim, 1))
+            
             for i in range(0, dim):
                 dsdx[i] = np.dot(0.5 / f_est[1], dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
                                                                             np.linalg.solve(self.model.cK,
                                                                                             np.linalg.solve(self.model.cK.transpose(),
                                                                                                             self.model.K[0,None].transpose()))))
             df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
+            if (f < 0).any():
+                print f
+                print df[np.where(f < 0)]
+                print "\n z = \n", 
+                print z[np.where(f < 0)] 
+                print "\n eta = \n" 
+                print eta
+                print "\n mean (f<0)= \n"  
+                print f_est[0][np.where(f < 0)] 
+                #"\n mean (f>=0)= \n"  , 
+                #f_est[0][np.where(f >= 0)], 
+                print "\n sigma (f<0)= \n",
+                print f_est[1][np.where(f < 0)] 
+                       
+                raise Exception("EI can't be smaller than 0")
+        if derivative:
             return f, df
         else:
             return f
@@ -102,7 +119,6 @@ class PI(object):
 
     def __call__(self, X, Z=None, derivative=False, **kwargs):
         # TODO: add a parameter to condition the derivative being returned
-
         if (X < self.X_lower).any() or (X > self.X_upper).any():
             if derivative:
                 u = 0
@@ -116,14 +132,11 @@ class PI(object):
         mean, var = self.model.predict(X, Z)
         Y_star = self.model.getCurrentBest()
         u = norm.cdf((Y_star - mean - self.par ) / var)
-
-
         if derivative:
             # Derivative values:
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, X)
             dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-
             # dmdx = derivative of the gaussian process mean function
             dmdx = np.dot(dkxX.transpose(), alpha)
             # dsdx = derivative of the gaussian process covariance function
@@ -172,7 +185,6 @@ class Entropy(object):
             loss_function = logLoss
         self.loss_function = loss_function        
         self.T = T
-
         
     def __call__(self, X, Z=None, **kwargs):
         return self.dh_fun_true(X)[0]
@@ -797,9 +809,7 @@ class Entropy(object):
         # set random seed
         D = xx.shape[0]
         f = P(xx.transpose())
-        if np.any(f == 0):
-            print f
-            
+                
         
         try:
             logf = np.log(f)
