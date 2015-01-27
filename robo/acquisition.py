@@ -24,6 +24,7 @@ where the objective function is low.
         this method should be called if the model is updated. The Entropy search needs
         to update its aproximation about P(x=x_min) 
 """
+import sys
 from scipy.stats import norm
 import scipy
 import numpy as np
@@ -58,13 +59,17 @@ class EI(object):
                 return 0
 
         dim = x.shape[1]
-        f_est = self.model.predict(x)
+        try:
+            f_est = self.model.predict(x)
+        except:
+            #TODO which error
+            print x
+            raise
         eta = self.model.getCurrentBest()
         z = (eta - f_est[0] + self.par) / f_est[1]
-        #joel
-        z[np.where(z > 6)] = 6.0
-        z[np.where(z < -6)] = -6.0
+        
         f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
+        
         if derivative:
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
@@ -154,7 +159,7 @@ l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 class Entropy(object):
-    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.1}, T=200, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, T=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
@@ -170,13 +175,14 @@ class Entropy(object):
 
         
     def __call__(self, X, Z=None, **kwargs):
-        #return np.mean(self._gp_innovation_local(X)[0])
-        return self.dh_fun(X)[0]
+        return self.dh_fun_true(X)[0]
 
     def update(self, model):
         self.model = model
 
         self.zb, self.lmb = self.sample_from_measure(self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
+        if np.isinf(self.lmb).any():
+            raise Exception("lmb is inf")
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
@@ -528,7 +534,12 @@ class Entropy(object):
             r       = np.sum(MP.T * C, 1)
             mpm = None
             
-            mpm     = MP * MP / P;
+            try:
+                mpm     = MP * MP / P;
+            except:
+                print P, MP
+                raise
+            
             
             if not all(MP != 0):
                 mpm[np.where(MP ==0)]=0
@@ -761,7 +772,12 @@ class Entropy(object):
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
                 emb = acquisition_fn(xx)
-                mb[(i / subsample) - 1, 0]  = np.log(emb)
+                try:
+            
+                    mb[(i / subsample) - 1, 0]  = np.log(emb)
+                except:
+                    mb[(i / subsample) - 1, 0]  = -np.inf#sys.float_info.max
+                    raise
 
         # Return values
         return zb, mb
@@ -781,8 +797,17 @@ class Entropy(object):
         # set random seed
         D = xx.shape[0]
         f = P(xx.transpose())
-        logf = np.log(f)
+        if np.any(f == 0):
+            print f
+            
+        
+        try:
+            logf = np.log(f)
+        except:
+            #print "~"*90
+            logf = -np.inf#sys.float_info.max
         logy = np.log(np.random.uniform()) + logf
+        
 
         theta = 0.95
 
@@ -808,9 +833,13 @@ class Entropy(object):
             # fk, dfk = P(xk.transpose())
             fk, dfk = P(xk.transpose(), derivative = True)
             
-            logfk  = np.log(fk)
-            dlogfk = np.divide(dfk, fk)
-
+            try:
+                logfk  = np.log(fk)
+                dlogfk = np.divide(dfk, fk)
+            except:
+                logfk = - np.inf#sys.float_info.max
+                dlogfk = 0
+                 
             if (logfk > logy).all(): # accept these values
                 xx = xk.transpose()
                 return xx
