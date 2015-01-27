@@ -693,7 +693,15 @@ class Entropy(object):
                options={'ftol':np.spacing(1), 'maxiter':20}
             ))
 
-        print minima
+        # X points:
+        Xend = np.array([res.x for res in minima])
+        # Objective function values:
+        Xdh = np.array([res.fun for res in minima])
+
+        # print "xend: ", Xend
+        # print "xdh: ", Xdh
+        # print "the desired value is then: ", Xend[np.argmin(Xdh)]
+        return Xend[np.argmin(Xdh)]
 
     # This method corresponds to the function SampleBeliefLocations in the original ES code
     # It is assumed that the GP data structure is a Python dictionary
