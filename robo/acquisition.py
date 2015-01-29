@@ -32,7 +32,7 @@ from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError 
 
 class EI(object):
-    def __init__(self, model, X_lower, X_upper, par = 0.01, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
         self.model = model
         self.par = par
         self.X_lower = X_lower
@@ -49,7 +49,7 @@ class EI(object):
             raise Exception("self.model.X is not properly initialized in acquisition EI")
         return self._alpha
 
-    def __call__(self, x, Z=None, derivative=False, **kwargs):
+    def __call__(self, x, Z=None, derivative=False, verbose=False, **kwargs):
         if (x < self.X_lower).any() or (x > self.X_upper).any():
             if derivative:
                 f = 0
@@ -59,18 +59,18 @@ class EI(object):
                 return 0
 
         dim = x.shape[1]
-        try:
-            f_est = self.model.predict(x)
-        except:
-            #TODO which error
-            print x
-            raise
+        f_est = self.model.predict(x)
+        
         eta = self.model.predict(np.array([self.model.getCurrentBestX()]))[0]
         z = (eta - f_est[0] + self.par) / f_est[1]
         
         f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
-        
-        if 1:#derivative:
+        if verbose:
+            print "f = ", f
+            print "s = ", f_est[1]
+            print "eta = ", eta
+            print "z = ",z
+        if derivative:
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
             dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
@@ -85,22 +85,25 @@ class EI(object):
                                                                             np.linalg.solve(self.model.cK,
                                                                                             np.linalg.solve(self.model.cK.transpose(),
                                                                                                             self.model.K[0,None].transpose()))))
+        
             df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
-            if (f < 0).any():
-                print f
-                print df[np.where(f < 0)]
-                print "\n z = \n", 
-                print z[np.where(f < 0)] 
-                print "\n eta = \n" 
-                print eta
-                print "\n mean (f<0)= \n"  
-                print f_est[0][np.where(f < 0)] 
-                #"\n mean (f>=0)= \n"  , 
-                #f_est[0][np.where(f >= 0)], 
-                print "\n sigma (f<0)= \n",
-                print f_est[1][np.where(f < 0)] 
-                       
-                raise Exception("EI can't be smaller than 0")
+        if (f < 0).any() :
+            print f
+            #print df[np.where(f < 0)]
+            #print "\n x (f<0)= ",
+            #print x
+            print "\n z (f<0)= \n", 
+            print z[np.where(f < 0)] 
+            print "\n eta = \n" 
+            print eta
+            print "\n mean (f<0)= \n"  
+            print f_est[0][np.where(f < 0)] 
+            #"\n mean (f>=0)= \n"  , 
+            #f_est[0][np.where(f >= 0)], 
+            print "\n sigma (f<0)= \n",
+            print f_est[1][np.where(f < 0)] 
+                   
+            raise Exception("EI can't be smaller than 0")
         if derivative:
             return f, df
         else:
@@ -191,7 +194,7 @@ class Entropy(object):
 
     def update(self, model):
         self.model = model
-
+        self.sampling_acquisition.update(model)
         self.zb, self.lmb = self.sample_from_measure(self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
         #if np.isinf(self.lmb).any():
         #    raise Exception("lmb is inf")

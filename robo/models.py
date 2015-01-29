@@ -55,7 +55,6 @@ class GPyModel(object):
         self.m = None
     
     def train(self, X, Y,  Z=None):
-        print "start training"
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
@@ -65,7 +64,6 @@ class GPyModel(object):
         self.m.constrain_positive('')
         
         self.likelihood = self.m.likelihood
-        print self.m[".*variance"].values
         self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
             print "fixing noise variance"
@@ -81,7 +79,7 @@ class GPyModel(object):
             self.m.optimize_restarts(num_restarts = 10, robust=True)
             print "optimize finished"
             sys.stdout = stdout
-            print self.m
+
 
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
@@ -118,7 +116,6 @@ class GPyModel(object):
         return self.X_star
     
     def visualize(self, ax, plot_min, plot_max):
-        print ax, plot_min, plot_max 
         self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
         
         #xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()

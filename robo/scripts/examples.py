@@ -18,8 +18,11 @@ from robo.maximize import grid_search, DIRECT, cma
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description='Run robo examples', 
                                      prog='robo_examples')
+    
     parser.add_argument('save_dir', metavar="DESTINATION_FOLDER", type=str)
+    
     parser.add_argument('--overwrite', action="store_true", default=False)
+    
     parser.add_argument('-o', '--objective', default=None, type=str,
                         help='Choose your objective function', 
                         dest="objective", choices= ("one_dim_test", "branin", "hartmann6", "hartmann3", "goldstein_price_fkt"))
@@ -68,6 +71,7 @@ def main(*args, **kwargs):
         except OSError as exception:
             if exception.errno != errno.ENOENT:
                 raise
+            
     if args.objective == "one_dim_test":
         objective_fkt= one_dim_test
     elif args.objective == "branin":
@@ -103,26 +107,31 @@ def main(*args, **kwargs):
         if len(args.acquisition_parameters): 
             acquisition_kwargs["par"] = int(acquisition_parameters[0])
         acquisition_fkt = EI(model, X_upper= X_upper, X_lower=X_lower, **acquisition_kwargs)
+        
     elif args.acquisition == "PI":
         if len(args.acquisition_parameters): 
             acquisition_kwargs["par"] = int(acquisition_parameters[0])
         acquisition_fkt = PI(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
+        
     elif args.acquisition == "LogEI":
         if len(args.acquisition_parameters): 
             acquisition_kwargs["par"] = int(acquisition_parameters[0])
         acquisition_fkt = LogEI(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
+        
     elif args.acquisition == "Entropy": 
         acquisition_fkt = Entropy(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
+        
     elif args.acquisition == "UCB":
         if len(args.acquisition_parameters): 
             acquisition_kwargs["par"] = int(acquisition_parameters[0])
         acquisition_fkt = UCB(model, X_upper= X_upper, X_lower=X_lower**acquisition_kwargs)
-        
-    
+
     if args.maximizer == "grid_search":
         maximize_fkt = grid_search
+        
     elif args.maximizer == "DIRECT":
         maximize_fkt = DIRECT
+        
     elif args.maximizer == "cma":
         maximize_fkt = cma
     #
