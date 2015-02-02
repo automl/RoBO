@@ -1,2 +1,2 @@
-from .GPy import GPyModel
+from .GPyModel import GPyModel
   

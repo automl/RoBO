@@ -111,7 +111,6 @@ class GPyModel(object):
     
     def sample(self, X, size=10):
         return self.m.posterior_samples_f(X, size)
-        
     
     def getCurrentBest(self):
         return self.Y_star
