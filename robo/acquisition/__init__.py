@@ -30,7 +30,8 @@ import scipy
 import numpy as np
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError 
-
+from .LogEI import LogEI
+from .PI import PI
 class EI(object):
     def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
         self.model = model
@@ -109,54 +110,6 @@ class EI(object):
             return f, df
         else:
             return f
-
-
-    def update(self, model):
-        self.model = model
-
-class PI(object):
-    def __init__(self, model, X_lower, X_upper, par=0.001, **kwargs):
-        self.model = model
-        self.par = par
-        self.X_lower = X_lower
-        self.X_upper = X_upper
-
-    def __call__(self, X, Z=None, derivative=False, **kwargs):
-        # TODO: add a parameter to condition the derivative being returned
-        if (X < self.X_lower).any() or (X > self.X_upper).any():
-            if derivative:
-                u = 0
-                du = np.zeros((X.shape[1],1))
-                return u, du
-            else:
-                return 0
-
-        alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
-        dim = X.shape[1]
-        mean, var = self.model.predict(X, Z)
-        Y_star = self.model.getCurrentBest()
-        u = norm.cdf((Y_star - mean - self.par ) / var)
-        if derivative:
-            # Derivative values:
-            # Derivative of kernel values:
-            dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, X)
-            dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-            # dmdx = derivative of the gaussian process mean function
-            dmdx = np.dot(dkxX.transpose(), alpha)
-            # dsdx = derivative of the gaussian process covariance function
-            dsdx = np.zeros((dim, 1))
-            for i in range(0, dim):
-                dsdx[i] = np.dot(0.5 / var, dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                       np.linalg.solve(self.model.cK,
-                                                                                       np.linalg.solve(self.model.cK.transpose(),
-                                                                                                       self.model.K[0,None].transpose()))))
-            # (-phi/s) * (dmdx + dsdx * z)
-            z = (Y_star - mean) / var
-            du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
-            return u, du
-        else:
-            return u
-
     def update(self, model):
         self.model = model
 
@@ -170,13 +123,12 @@ class UCB(object):
     def update(self, model):
         self.model = model
 
-
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 class Entropy(object):
-    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, T=200, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.4}, T=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
@@ -652,7 +604,7 @@ class Entropy(object):
         # print logP
 
         # set random seed
-        np.random.seed(1)
+        # np.random.seed(1)
 
         S0 = 0.5 * np.linalg.norm(X_upper - X_lower)
         D = X_lower.shape[0]
@@ -833,51 +785,4 @@ class Entropy(object):
 
 
 
-class LogEI(object):
-    def __init__(self, model, par = 0.01):
-        self.model = model
-        self.par = par,
-    def __call__(self, x, par = 0.01, Z=None, **kwargs):
-        f_est = self.model.predict(x)
-        eta = self.model.getCurrentBest()
-        z = (eta - f_est[0] - self.par) / f_est[1]
-        log_ei = np.zeros((f_est[0].size, 1))
-        for i in range(0, f_est[0].size):
-            mu, sigma = f_est[0][i], f_est[1][i]
-            # Degenerate case 1: first term vanishes
-            if abs(eta - mu) == 0:
-                if sigma > 0:
-                    log_ei[i] = np.log(sigma) + norm.logpdf(z[i])
-                else:
-                    log_ei[i] = -float('Inf')
-            # Degenerate case 2: second term vanishes and first term has a special form.
-            elif sigma == 0:
-                if mu < eta:
-                    log_ei[i] = np.log(eta - mu)
-                else:
-                    log_ei[i] = -float('Inf')
-            # Normal case
-            else:
-                b = np.log(sigma) + norm.logpdf(z[i])
-                # log(y+z) is tricky, we distinguish two cases:
-                if eta > mu:
-                    # When y>0, z>0, we define a=ln(y), b=ln(z).
-                    # Then y+z = exp[ max(a,b) + ln(1 + exp(-|b-a|)) ],
-                    # and thus log(y+z) = max(a,b) + ln(1 + exp(-|b-a|))
-                    a = np.log(eta - mu) + norm.logcdf(z[i])
-                    log_ei[i] = max(a, b) + np.log(1 + np.exp(-abs(b-a)))
-                else:
-                    # When y<0, z>0, we define a=ln(-y), b=ln(z), and it has to be true that b >= a in order to satisfy y+z>=0.
-                    # Then y+z = exp[ b + ln(exp(b-a) -1) ],
-                    # and thus log(y+z) = a + ln(exp(b-a) -1)
-                    a = np.log(mu - eta) + norm.logcdf(z[i])
-                    if a >= b:
-                        # a>b can only happen due to numerical inaccuracies or approximation errors
-                        log_ei[i] = -float('Inf')
-                    else:
-                        log_ei[i] = b + np.log(1 - np.exp(a - b))
-        return log_ei
-
-    def update(self, model):
-        self.model = model
 
