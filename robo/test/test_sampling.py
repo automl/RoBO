@@ -52,7 +52,7 @@ class FirstIterationTest(unittest.TestCase):
         print "zb: ", zb
 
 
-# @unittest.skip("skipping second iteration, EI\n")
+@unittest.skip("skipping second iteration, EI\n")
 class SecondIterationTestEI(unittest.TestCase):
     def setUp(self):
 
@@ -84,7 +84,7 @@ class SecondIterationTestEI(unittest.TestCase):
         print "zb: ", zb
         self.assertTrue(True)
 
-# @unittest.skip("second iteration, PI")
+@unittest.skip("second iteration, PI")
 class SecondIterationTestPI(unittest.TestCase):
     def setUp(self):
 
@@ -147,6 +147,37 @@ class ProjNullSpaceTests(unittest.TestCase):
                          np.array([[30.7746], [-16.0128]]).tolist())
         self.assertEqual(entropy.projNullSpace(self.JJ, self.vv).tolist(),
                          np.array([[2.9283919723599983], [1.7522158685840008]]).tolist())
+
+
+class MontecarloSamplerTest(unittest.TestCase):
+    def setUp(self):
+        self.D = 2 # dimension of input space
+        # self.x_prev = np.array([])
+        self.xmin = np.array([[-8,-8]])
+        self.xmax =  np.array([[19, 19]])
+        self.n_representers = 20
+
+        self.X = np.array([[6.8165, 15.1224]])
+        self.Y = np.array([[213.3935]])
+        self.kernel = GPy.kern.RBF(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
+        self.model = GPyModel(self.kernel, optimize = False)
+        self.model.train(self.X, self.Y)
+
+        self.BestGuesses = np.array([
+            [-7.9969,    0.4625],
+            [-7.1402,   -7.7652]
+        ])
+        # fac = 42.9076/68.20017903
+        self.J = np.zeros((0,0))
+        self.v = np.array([[30.7746], [-16.0128]])
+
+        self.JJ = np.array([[0.5135], [-0.8581]])
+        self.vv = np.array([[-1.4660], [9.0956]])
+
+    def test(self):
+        entropy = Entropy(self.model, self.xmin, self.xmax, 20)
+        entropy.montecarlo_sampler(self.xmin, self.xmax, Nx = 5, Nf = 10)
+
 
 
 if __name__=="__main__":

@@ -768,6 +768,36 @@ class Entropy(object):
         else:
             return v
 
+    def montecarlo_sampler(self, X_lower, X_upper, Nx, Nf):
+        # Nx is the "grid resolution"
+        # Nf is the number of functions to sample from the gaussian process
+
+        dim = X_lower.size
+        n_bins = Nx*np.ones(dim)
+        bounds = np.empty((dim, 2))
+        bounds[:,0] = X_lower
+        bounds[:,1] = X_upper
+
+        xs = np.mgrid[[slice(row[0], row[1], n*1j) for row, n in zip(bounds, n_bins)]]
+        xs = xs.reshape(dim,-1).T
+        # print "grid values: "
+        # print xs
+
+        mu, K = self.model.predict(xs, full_cov=True)
+        for i in range(Nf):
+            # Create array for function values
+            ys = np.array((xs.shape[0], 1))
+            ys = np.random.multivariate_normal(mu, K)
+        # print self.model.predict(xs)
+        # xs = np.empty((dim, N))
+        # for i in range(0, dim):
+        #     xs[i,:] = np.linspace(X_lower[[0],[i]], X_upper[[0],[i]], N)
+
+        # print xs
+
+
+
+
     def slice_ShrinkRank_nolog(self, xx, P, s0, transpose):
         # This function is equivalent to the similarly named function in the original ES code
         if transpose:
@@ -800,7 +830,6 @@ class Entropy(object):
             xk = xx + self.projNullSpace(J, mx.reshape((D, 1)) + np.multiply(sx, np.random.normal(size=(D,1))))
 
             # TODO: add the derivative values (we're not considering them yet)
-            # fk, dfk = P(xk.transpose())
             fk, dfk = P(xk.transpose(), derivative = True)
             logfk  = np.log(fk)
             dlogfk = np.divide(dfk, fk)
