@@ -76,7 +76,6 @@ class Visualization(object):
     def plot_entropy_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt):
         zb = acquisition_fkt.zb
         pmin = np.exp(acquisition_fkt.logP)
-        
         bar_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
         self.num += 1
         bar_ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")

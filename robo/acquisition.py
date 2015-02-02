@@ -88,20 +88,21 @@ class EI(object):
         
             df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
         if (f < 0).any() :
-            print f
+            print f_est
+            #print f
             #print df[np.where(f < 0)]
             #print "\n x (f<0)= ",
             #print x
-            print "\n z (f<0)= \n", 
-            print z[np.where(f < 0)] 
-            print "\n eta = \n" 
-            print eta
-            print "\n mean (f<0)= \n"  
-            print f_est[0][np.where(f < 0)] 
+            #print "\n z (f<0)= \n", 
+            #print z[np.where(f < 0)] 
+            #print "\n eta = \n" 
+            #print eta
+            #print "\n mean (f<0)= \n"  
+            #print f_est[0][np.where(f < 0)] 
             #"\n mean (f>=0)= \n"  , 
             #f_est[0][np.where(f >= 0)], 
-            print "\n sigma (f<0)= \n",
-            print f_est[1][np.where(f < 0)] 
+            #print "\n sigma (f<0)= \n",
+            #print f_est[1][np.where(f < 0)] 
                    
             raise Exception("EI can't be smaller than 0")
         if derivative:
@@ -382,8 +383,7 @@ class Entropy(object):
         kbX = self.kbX
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
-    
-        
+
         if self.model.X.shape[0] == 0:
             # kernel values
             kbx = self.model.kernel.K(zb,x)
@@ -410,6 +410,7 @@ class Entropy(object):
             Lx     = proj / sloc;
             dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
             return Lx, dLxdx
+        
         kbx = self.model.kernel.K(zb,x)
         kXx = self.model.kernel.K(self.model.X, x)
         kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
@@ -479,20 +480,6 @@ class Entropy(object):
         return logP,dlogPdMu,dlogPdSigma,dlogPdMudMu
             
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
-        """
-        1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
-        2: Initialise messages t  ̃ i with zero precision.
-        3: while q(x) has not converged do
-        4:     for i ← 1 : m do
-        5:        form cavity local q \i (x) by Equation 17 (stably calculated by 51).
-        6:        calculate moments of q \i (x)t i (x) by Equations 21-23.
-        7:        choose t  ̃ i (x) so q \i (x) t  ̃ i (x) matches above moments by Equation 16.
-        8:     end for
-        9:     update μ, Σ with new t  ̃ i (x) (stably using Equations 53 and 58).
-        10:end while
-        11:calculate Z, the total mass of q(x) using Equation 19 (stably using Equation 60).
-        12:return Z, the approximation of F (A).
-        """
         D = Mu.shape[0]
         logS = np.zeros((D-1,))
         #mean time first moment
@@ -585,37 +572,7 @@ class Entropy(object):
             yield dlogZdSigma
             
     def _lt_factor(self, s, l, M, V, mp, p, gamma):
-        """
-        1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
-        2: Initialise messages t  ̃ i with zero precision.
-        3: while q(x) has not converged do
-        4:     for i ← 1 : m do
-        5:        form cavity local q \i (x) by Equation 17 (stably calculated by 51).
-        6:        calculate moments of q \i (x)t i (x) by Equations 21-23.
-        7:        choose t  ̃ i (x) so q \i (x) t  ̃ i (x) matches above moments by Equation 16.
-        8:     end for
-        9:     update μ, Σ with new t  ̃ i (x) (stably using Equations 53 and 58).
-        10:end while
-        11:calculate Z, the total mass of q(x) using Equation 19 (stably using Equation 60).
-        12:return Z, the approximation of F (A).
-        """
-        """
-        c_i = delta_{il} - delta{is}
-        """
-        """
-        Equation 17:
-        μ_\i = σ_\i^2 (c^T_i*μ          μ̃ _i )
-                      (-----------  -   -----
-                      (c_i^T Σ c_i      σ̃ i^2)
-                      
-        σ_\i^2 = ((c^T_i Σ c_i)^-1 - σ̃ i^-2)^-1
-        
-        Equation 11:
-        q \i = q / t̃ _i = Z \i N(x;u \i, V\i)
-        
-        Equation 21:
-        
-        """
+
         cVc = (V[l,l] - 2*V[s,l] + V[s,s])/ 2.0
         Vc  = (V[:, l] - V [:, s]) / sq2
         cM =  (M[l] - M[s])/ sq2

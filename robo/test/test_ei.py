@@ -16,7 +16,9 @@ class EITestCase1(unittest.TestCase):
         #self.xx = np.array([[0.49399399], [-1], [2.0]])
         self.kernel = GPy.kern.RBF(input_dim=1, variance= 38.2441777589, lengthscale = 0.369019360085)
         self.kernel = GPy.kern.RBF(input_dim=1, variance= 46.7009706712, lengthscale = 0.414883807937)
-        
+        self.x = np.array([[ 0.62971589], [ 0.63273273], [ 0.17867868], [ 0.17447447], [ 1.88558559]]);
+        self.y = np.array([[-3.69925653], [-3.66221988], [-3.65560591], [-3.58907791], [-8.06925984]]);
+        self.kernel = GPy.kern.RBF(input_dim=1, variance= 30.1646253727, lengthscale = 0.435343653946)    
         self.model = GPyModel(self.kernel, noise_variance=1e-10, optimize=False)
         print self.model.m
         self.model.train(self.x, self.y)
@@ -30,6 +32,7 @@ class EITestCase1(unittest.TestCase):
         #acq_fn = EI(self.model,  X_upper=[2.1], X_lower=[-2.1], par=0.1)
         xx = np.linspace(-2.1,2.1, 1000)[:,np.newaxis]
         ei_value = acq_fn(xx, verbose=True, derivatives=True)
+        
         print self.model.m
         print ei_value
 
