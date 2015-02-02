@@ -24,13 +24,16 @@ where the objective function is low.
         this method should be called if the model is updated. The Entropy search needs
         to update its aproximation about P(x=x_min) 
 """
+import sys
 from scipy.stats import norm
 import scipy
 import numpy as np
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError 
+from .LogEI import LogEI
+from .PI import PI
 class EI(object):
-    def __init__(self, model, X_lower, X_upper, par = 0.01, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
         self.model = model
         self.par = par
         self.X_lower = X_lower
@@ -47,7 +50,7 @@ class EI(object):
             raise Exception("self.model.X is not properly initialized in acquisition EI")
         return self._alpha
 
-    def __call__(self, x, Z=None, derivative=False, **kwargs):
+    def __call__(self, x, Z=None, derivative=False, verbose=False, **kwargs):
         if (x < self.X_lower).any() or (x > self.X_upper).any():
             if derivative:
                 f = 0
@@ -58,10 +61,16 @@ class EI(object):
 
         dim = x.shape[1]
         f_est = self.model.predict(x)
-        eta = self.model.getCurrentBest()
+        
+        eta = self.model.predict(np.array([self.model.getCurrentBestX()]))[0]
         z = (eta - f_est[0] + self.par) / f_est[1]
+        
         f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
-
+        if verbose:
+            print "f = ", f
+            print "s = ", f_est[1]
+            print "eta = ", eta
+            print "z = ",z
         if derivative:
             # Derivative of kernel values:
             dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
@@ -71,67 +80,36 @@ class EI(object):
             dmdx = np.dot(dkxX.transpose(), self.alpha)
             # ds = derivative of the gaussian process covariance function
             dsdx = np.zeros((dim, 1))
+            
             for i in range(0, dim):
                 dsdx[i] = np.dot(0.5 / f_est[1], dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
                                                                             np.linalg.solve(self.model.cK,
                                                                                             np.linalg.solve(self.model.cK.transpose(),
                                                                                                             self.model.K[0,None].transpose()))))
+        
             df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
+        if (f < 0).any() :
+            print f_est
+            #print f
+            #print df[np.where(f < 0)]
+            #print "\n x (f<0)= ",
+            #print x
+            #print "\n z (f<0)= \n", 
+            #print z[np.where(f < 0)] 
+            #print "\n eta = \n" 
+            #print eta
+            #print "\n mean (f<0)= \n"  
+            #print f_est[0][np.where(f < 0)] 
+            #"\n mean (f>=0)= \n"  , 
+            #f_est[0][np.where(f >= 0)], 
+            #print "\n sigma (f<0)= \n",
+            #print f_est[1][np.where(f < 0)] 
+                   
+            raise Exception("EI can't be smaller than 0")
+        if derivative:
             return f, df
         else:
             return f
-
-
-    def update(self, model):
-        self.model = model
-
-class PI(object):
-    def __init__(self, model, X_lower, X_upper, par=0.001, **kwargs):
-        self.model = model
-        self.par = par
-        self.X_lower = X_lower
-        self.X_upper = X_upper
-
-    def __call__(self, X, Z=None, derivative=False, **kwargs):
-        # TODO: add a parameter to condition the derivative being returned
-
-        if (X < self.X_lower).any() or (X > self.X_upper).any():
-            if derivative:
-                u = 0
-                du = np.zeros((X.shape[1],1))
-                return u, du
-            else:
-                return 0
-
-        alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
-        dim = X.shape[1]
-        mean, var = self.model.predict(X, Z)
-        Y_star = self.model.getCurrentBest()
-        u = norm.cdf((Y_star - mean - self.par ) / var)
-
-
-        if derivative:
-            # Derivative values:
-            # Derivative of kernel values:
-            dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, X)
-            dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-
-            # dmdx = derivative of the gaussian process mean function
-            dmdx = np.dot(dkxX.transpose(), alpha)
-            # dsdx = derivative of the gaussian process covariance function
-            dsdx = np.zeros((dim, 1))
-            for i in range(0, dim):
-                dsdx[i] = np.dot(0.5 / var, dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                       np.linalg.solve(self.model.cK,
-                                                                                       np.linalg.solve(self.model.cK.transpose(),
-                                                                                                       self.model.K[0,None].transpose()))))
-            # (-phi/s) * (dmdx + dsdx * z)
-            z = (Y_star - mean) / var
-            du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
-            return u, du
-        else:
-            return u
-
     def update(self, model):
         self.model = model
 
@@ -145,13 +123,12 @@ class UCB(object):
     def update(self, model):
         self.model = model
 
-
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 class Entropy(object):
-    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.1}, T=200, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.4}, T=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
@@ -164,16 +141,16 @@ class Entropy(object):
             loss_function = logLoss
         self.loss_function = loss_function        
         self.T = T
-
         
     def __call__(self, X, Z=None, **kwargs):
-        #return np.mean(self._gp_innovation_local(X)[0])
-        return self.dh_fun(X)[0]
+        return self.dh_fun_true(X)[0]
 
     def update(self, model):
         self.model = model
-
+        self.sampling_acquisition.update(model)
         self.zb, self.lmb = self.sample_from_measure(self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
+        #if np.isinf(self.lmb).any():
+        #    raise Exception("lmb is inf")
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
@@ -245,11 +222,18 @@ class Entropy(object):
         # Stochastic part of change:
         stochange = (dlogPdM.dot(dMdx)).dot(W)
         # Predicted new logP:
+        
         lPred = np.add(logP + detchange, stochange)
-        lselP = np.log(np.sum(np.exp(lPred), 0))[np.newaxis,:]
+        #
+        _maxLPred = np.max(lPred)
+        s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred)))
+        lselP = _maxLPred if np.isinf(s) else s
+        
+        #
+        #lselP = np.log(np.sum(np.exp(lPred), 0))[np.newaxis,:]
         # Normalise:
         lPred = np.subtract(lPred, lselP)
-
+        
         dHp = LossFunc(logP, lmb, lPred, zbel)
         dH = np.mean(dHp)
 
@@ -296,7 +280,9 @@ class Entropy(object):
             stochange = (dlogPdM.dot(dMdy)).dot(W)
             # Predicted new logP:
             lPred = np.add(logP + detchange, stochange)
-            lselP = np.log(np.sum(np.exp(lPred), 0))
+            _maxLPred = np.max(lPred)
+            s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred)))
+            lselP = _maxLPred if np.isinf(s) else s
             # Normalise:
             lPred = np.subtract(lPred, lselP)
 
@@ -349,8 +335,7 @@ class Entropy(object):
         kbX = self.kbX
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
-    
-        
+
         if self.model.X.shape[0] == 0:
             # kernel values
             kbx = self.model.kernel.K(zb,x)
@@ -377,6 +362,7 @@ class Entropy(object):
             Lx     = proj / sloc;
             dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
             return Lx, dLxdx
+        
         kbx = self.model.kernel.K(zb,x)
         kXx = self.model.kernel.K(self.model.X, x)
         kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
@@ -396,6 +382,7 @@ class Entropy(object):
         Lx     = proj / sloc;
         dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
         return Lx, dLxdx
+    
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
@@ -444,22 +431,7 @@ class Entropy(object):
         dlogPdMudMu = dlogPdMudMuold + adds
         return logP,dlogPdMu,dlogPdSigma,dlogPdMudMu
             
-        
     def _min_faktor(self, Mu, Sigma, k, gamma = 1):
-        """
-        1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
-        2: Initialise messages t  ̃ i with zero precision.
-        3: while q(x) has not converged do
-        4:     for i ← 1 : m do
-        5:        form cavity local q \i (x) by Equation 17 (stably calculated by 51).
-        6:        calculate moments of q \i (x)t i (x) by Equations 21-23.
-        7:        choose t  ̃ i (x) so q \i (x) t  ̃ i (x) matches above moments by Equation 16.
-        8:     end for
-        9:     update μ, Σ with new t  ̃ i (x) (stably using Equations 53 and 58).
-        10:end while
-        11:calculate Z, the total mass of q(x) using Equation 19 (stably using Equation 60).
-        12:return Z, the approximation of F (A).
-        """
         D = Mu.shape[0]
         logS = np.zeros((D-1,))
         #mean time first moment
@@ -516,7 +488,13 @@ class Entropy(object):
             r       = np.sum(MP.T * C, 1)
             mpm = None
             
-            mpm     = MP * MP / P;
+            try:
+                mpm     = MP * MP / P;
+            except:
+                print P, MP
+                raise
+            
+            
             if not all(MP != 0):
                 mpm[np.where(MP ==0)]=0
             mpm     = sum(mpm);
@@ -546,37 +524,7 @@ class Entropy(object):
             yield dlogZdSigma
             
     def _lt_factor(self, s, l, M, V, mp, p, gamma):
-        """
-        1: Initialise with any q(x) defined by Z, μ, Σ (typically the parameters of p 0 (x)).
-        2: Initialise messages t  ̃ i with zero precision.
-        3: while q(x) has not converged do
-        4:     for i ← 1 : m do
-        5:        form cavity local q \i (x) by Equation 17 (stably calculated by 51).
-        6:        calculate moments of q \i (x)t i (x) by Equations 21-23.
-        7:        choose t  ̃ i (x) so q \i (x) t  ̃ i (x) matches above moments by Equation 16.
-        8:     end for
-        9:     update μ, Σ with new t  ̃ i (x) (stably using Equations 53 and 58).
-        10:end while
-        11:calculate Z, the total mass of q(x) using Equation 19 (stably using Equation 60).
-        12:return Z, the approximation of F (A).
-        """
-        """
-        c_i = delta_{il} - delta{is}
-        """
-        """
-        Equation 17:
-        μ_\i = σ_\i^2 (c^T_i*μ          μ̃ _i )
-                      (-----------  -   -----
-                      (c_i^T Σ c_i      σ̃ i^2)
-                      
-        σ_\i^2 = ((c^T_i Σ c_i)^-1 - σ̃ i^-2)^-1
-        
-        Equation 11:
-        q \i = q / t̃ _i = Z \i N(x;u \i, V\i)
-        
-        Equation 21:
-        
-        """
+
         cVc = (V[l,l] - 2*V[s,l] + V[s,s])/ 2.0
         Vc  = (V[:, l] - V [:, s]) / sq2
         cM =  (M[l] - M[s])/ sq2
@@ -656,7 +604,7 @@ class Entropy(object):
         # print logP
 
         # set random seed
-        np.random.seed(1)
+        # np.random.seed(1)
 
         S0 = 0.5 * np.linalg.norm(X_upper - X_lower)
         D = X_lower.shape[0]
@@ -756,7 +704,12 @@ class Entropy(object):
             if i % subsample == 0:
                 zb[(i / subsample) - 1, ] = xx
                 emb = acquisition_fn(xx)
-                mb[(i / subsample) - 1, 0]  = np.log(emb)
+                try:
+            
+                    mb[(i / subsample) - 1, 0]  = np.log(emb)
+                except:
+                    mb[(i / subsample) - 1, 0]  = -np.inf#sys.float_info.max
+                    raise
 
         # Return values
         return zb, mb
@@ -806,8 +759,15 @@ class Entropy(object):
         # set random seed
         D = xx.shape[0]
         f = P(xx.transpose())
-        logf = np.log(f)
+                
+        
+        try:
+            logf = np.log(f)
+        except:
+            #print "~"*90
+            logf = -np.inf#sys.float_info.max
         logy = np.log(np.random.uniform()) + logf
+        
 
         theta = 0.95
 
@@ -831,9 +791,14 @@ class Entropy(object):
 
             # TODO: add the derivative values (we're not considering them yet)
             fk, dfk = P(xk.transpose(), derivative = True)
-            logfk  = np.log(fk)
-            dlogfk = np.divide(dfk, fk)
-
+            
+            try:
+                logfk  = np.log(fk)
+                dlogfk = np.divide(dfk, fk)
+            except:
+                logfk = - np.inf#sys.float_info.max
+                dlogfk = 0
+                 
             if (logfk > logy).all(): # accept these values
                 xx = xk.transpose()
                 return xx
@@ -857,51 +822,4 @@ class Entropy(object):
 
 
 
-class LogEI(object):
-    def __init__(self, model, par = 0.01):
-        self.model = model
-        self.par = par,
-    def __call__(self, x, par = 0.01, Z=None, **kwargs):
-        f_est = self.model.predict(x)
-        eta = self.model.getCurrentBest()
-        z = (eta - f_est[0] - self.par) / f_est[1]
-        log_ei = np.zeros((f_est[0].size, 1))
-        for i in range(0, f_est[0].size):
-            mu, sigma = f_est[0][i], f_est[1][i]
-            # Degenerate case 1: first term vanishes
-            if abs(eta - mu) == 0:
-                if sigma > 0:
-                    log_ei[i] = np.log(sigma) + norm.logpdf(z[i])
-                else:
-                    log_ei[i] = -float('Inf')
-            # Degenerate case 2: second term vanishes and first term has a special form.
-            elif sigma == 0:
-                if mu < eta:
-                    log_ei[i] = np.log(eta - mu)
-                else:
-                    log_ei[i] = -float('Inf')
-            # Normal case
-            else:
-                b = np.log(sigma) + norm.logpdf(z[i])
-                # log(y+z) is tricky, we distinguish two cases:
-                if eta > mu:
-                    # When y>0, z>0, we define a=ln(y), b=ln(z).
-                    # Then y+z = exp[ max(a,b) + ln(1 + exp(-|b-a|)) ],
-                    # and thus log(y+z) = max(a,b) + ln(1 + exp(-|b-a|))
-                    a = np.log(eta - mu) + norm.logcdf(z[i])
-                    log_ei[i] = max(a, b) + np.log(1 + np.exp(-abs(b-a)))
-                else:
-                    # When y<0, z>0, we define a=ln(-y), b=ln(z), and it has to be true that b >= a in order to satisfy y+z>=0.
-                    # Then y+z = exp[ b + ln(exp(b-a) -1) ],
-                    # and thus log(y+z) = a + ln(exp(b-a) -1)
-                    a = np.log(mu - eta) + norm.logcdf(z[i])
-                    if a >= b:
-                        # a>b can only happen due to numerical inaccuracies or approximation errors
-                        log_ei[i] = -float('Inf')
-                    else:
-                        log_ei[i] = b + np.log(1 - np.exp(a - b))
-        return log_ei
-
-    def update(self, model):
-        self.model = model
 

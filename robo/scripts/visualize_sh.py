@@ -41,9 +41,11 @@ def main(*args, **kwargs):
                 del first_vis["model_method"]
                 vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **first_vis)
             else: 
+                print X, Y
+                print i,": ", bo.model.m
                 vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **args.__dict__)
             
-            print i,": ", bo.model.kernel 
+            
             #del vis, bo, new_x, X, Y
             
         except IOError, e:
