@@ -46,3 +46,52 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     y = array(map(acquisition_fkt, x))
     x_star = x[y.argmax()]
     return x_star
+
+def predict_info_gain(self, entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne):
+    import scipy.optimize.minimize
+    from sampling import slice_ShrinkRank_nolog
+
+    S0 = 0.5 * np.linalg.norm(X_upper - X_lower)
+    D = X_lower.shape[0]
+    mi = np.argmax(logP)
+    xx = zb[mi,np.newaxis]
+    Xstart = np.zeros((Ne, D))
+    Xend = np.zeros((Ne, D))
+    Xdhi = np.zeros((Ne, 1))
+    Xdh = np.zeros((Ne,1))
+    xxs = np.zeros((10*Ne, D))
+
+    for i in range(1, 10*Ne):
+        if i % 10 == 1 and i > 1:
+            xx = X_lower + np.multiply(X_upper - X_lower, np.random.uniform(size=(1,D)))
+        xx = slice_ShrinkRank_nolog(xx, entropy_fun_p, S0, True)
+        xxs[i,:] = xx
+        if i % 10 == 0:
+            Xstart[(i/10)-1,:] = xx
+            Xdhi[(i/10)-1],_ = entropy_fun(xx)
+
+    search_cons = []
+    for i in range(0, X_lower.shape[0]):
+        xmin = X_lower[i]
+        xmax = X_upper[i]
+        search_cons.append({'type': 'ineq',
+                            'fun' : lambda x: x - xmin})
+        search_cons.append({'type': 'ineq',
+                            'fun' : lambda x: xmax - x})
+    search_cons = tuple(search_cons)
+    minima = []
+    for i in range(1, Ne):
+        minima.append(scipy.optimize.minimize(
+           fun=entropy_fun, x0=Xstart[i,np.newaxis], jac=True, method='slsqp', constraints=search_cons,
+           options={'ftol':np.spacing(1), 'maxiter':20}
+        ))
+
+    # X points:
+    Xend = np.array([res.x for res in minima])
+    # Objective function values:
+    Xdh = np.array([res.fun for res in minima])
+
+    # print "xend: ", Xend
+    # print "xdh: ", Xdh
+    # print "the desired value is then: ", Xend[np.argmin(Xdh)]
+    return Xend[np.argmin(Xdh)]

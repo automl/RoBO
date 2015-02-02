@@ -10,6 +10,7 @@ from test_functions import branin
 
 from robo.models import GPyModel
 from robo.acquisition import Entropy
+from robo.sampling import *
 
 @unittest.skip("empty array, sampling from measure \n")
 class FirstIterationTest(unittest.TestCase):
@@ -84,7 +85,7 @@ class SecondIterationTestEI(unittest.TestCase):
         print "zb: ", zb
         self.assertTrue(True)
 
-@unittest.skip("second iteration, PI")
+# @unittest.skip("second iteration, PI")
 class SecondIterationTestPI(unittest.TestCase):
     def setUp(self):
 
@@ -148,7 +149,7 @@ class ProjNullSpaceTests(unittest.TestCase):
         self.assertEqual(entropy.projNullSpace(self.JJ, self.vv).tolist(),
                          np.array([[2.9283919723599983], [1.7522158685840008]]).tolist())
 
-
+@unittest.skip("test for montecarlo sampling method")
 class MontecarloSamplerTest(unittest.TestCase):
     def setUp(self):
         self.D = 2 # dimension of input space
