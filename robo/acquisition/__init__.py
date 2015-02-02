@@ -344,6 +344,7 @@ class Entropy(object):
             
             #derivatives of kernel values
             dkxx = self.model.kernel.gradients_X(kxx, x)
+            print "GP INNOVATION:", self.model.m.predictive_gradients(x)
             dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
             dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
             # terms of innovation

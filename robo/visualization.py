@@ -10,7 +10,13 @@ class Visualization(object):
     def __init__(self, bayesian_opt, new_x, X, Y, dest_folder, prefix="", acq_method = False, obj_method = False, model_method = False, resolution=1000):
         if bayesian_opt.dims > 1 and acq_method:
             raise AttributeError("acquisition function can only be visualized if the objective funktion has only one dimension")
-        self.nrows = reduce(lambda x, y : x + 1 if y else x, [0, acq_method, obj_method or model_method, isinstance(bayesian_opt.acquisition_fkt, Entropy)])
+        self.nrows = reduce(lambda x, y : x + 1 if y else x, 
+                            [0, 
+                             acq_method, 
+                             obj_method or model_method, 
+                             isinstance(bayesian_opt.acquisition_fkt, Entropy),
+                             isinstance(bayesian_opt.acquisition_fkt, Entropy)
+                             ])
         
         self.ncols = 1
         self.prefix = prefix
@@ -80,7 +86,10 @@ class Visualization(object):
         self.num += 1
         bar_ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")
         bar_ax.set_xlim(one_dim_min, one_dim_max)
-        self.plot_acquisition_fkt(ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1])
+        other_acq_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
+        self.num += 1
+        other_acq_ax.set_xlim(one_dim_min, one_dim_max)
+        self.plot_acquisition_fkt(other_acq_ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1])
     
     def plot_objective_fkt(self, ax, one_dim_min, one_dim_max):
         ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), color='b', linestyle="--")

@@ -31,7 +31,7 @@ def main(*args, **kwargs):
                         help='Choose the acquisition function', 
                         dest="acquisition", choices= ("EI", "PI", "LogEI", "Entropy", "UCB"))
     
-    parser.add_argument('-p', '--acquisition-parameter',  default=None, type=str, nargs="*",
+    parser.add_argument('-p', '--acquisition-parameter',  default=[], type=str, nargs="*",
                         help='Choose the acquisition function parameters', 
                         dest="acquisition_parameters")
     
@@ -95,7 +95,7 @@ def main(*args, **kwargs):
     
     model_kwargs = {}
     if not args.with_noise:
-        model_kwargs["noise_variance"] = 1e-10
+        model_kwargs["noise_variance"] = 1e-4
     if args.model == "GPy":
         model = GPyModel(kernel, optimize=True, **model_kwargs)
 
@@ -105,17 +105,17 @@ def main(*args, **kwargs):
     acquisition_kwargs = {}
     if args.acquisition == "EI":
         if len(args.acquisition_parameters): 
-            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+            acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
         acquisition_fkt = EI(model, X_upper= X_upper, X_lower=X_lower, **acquisition_kwargs)
         
     elif args.acquisition == "PI":
         if len(args.acquisition_parameters): 
-            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+            acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
         acquisition_fkt = PI(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     elif args.acquisition == "LogEI":
         if len(args.acquisition_parameters): 
-            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+            acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
         acquisition_fkt = LogEI(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     elif args.acquisition == "Entropy": 
@@ -123,7 +123,7 @@ def main(*args, **kwargs):
         
     elif args.acquisition == "UCB":
         if len(args.acquisition_parameters): 
-            acquisition_kwargs["par"] = int(acquisition_parameters[0])
+            acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
         acquisition_fkt = UCB(model, X_upper= X_upper, X_lower=X_lower**acquisition_kwargs)
 
     if args.maximizer == "grid_search":
