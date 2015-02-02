@@ -61,13 +61,25 @@ class GPyModel(object):
             return
         self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
+        self.m.constrain_positive('')
+        
         self.likelihood = self.m.likelihood
+        self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
-            self.m['.*Gaussian_noise.variance'] = self.noise_variance
+            print "fixing noise variance"
             #self.m['.*Gaussian_noise.variance'].unconstrain()
+            #self.m.constrain_fixed('noise',self.noise_variance)
+            
+            self.m['.*Gaussian_noise.variance'] = self.noise_variance
             self.m['.*Gaussian_noise.variance'].fix()
+            
         if self.optimize:
+            stdout = sys.stdout
+            sys.stdout = StringIO.StringIO()
             self.m.optimize_restarts(num_restarts = 10, robust=True)
+            print "optimize finished"
+            sys.stdout = stdout
+
 
         index_min = np.argmin(self.Y)
         self.X_star = self.X[index_min]
@@ -104,7 +116,6 @@ class GPyModel(object):
         return self.X_star
     
     def visualize(self, ax, plot_min, plot_max):
-        print ax, plot_min, plot_max 
         self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
         
         #xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()
