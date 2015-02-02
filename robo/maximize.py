@@ -47,7 +47,7 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     x_star = x[y.argmax()]
     return x_star
 
-def predict_info_gain(self, entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne):
+def predict_info_gain(entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne):
     import scipy.optimize.minimize
     from sampling import slice_ShrinkRank_nolog
 

@@ -10,7 +10,7 @@ from test_functions import branin
 
 from robo.models import GPyModel
 from robo.acquisition import Entropy
-from robo.sampling import *
+from robo.sampling import sample_from_measure
 
 @unittest.skip("empty array, sampling from measure \n")
 class FirstIterationTest(unittest.TestCase):
@@ -51,7 +51,6 @@ class FirstIterationTest(unittest.TestCase):
         acquisition_fn = EI(self.model)
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
         print "zb: ", zb
-
 
 @unittest.skip("skipping second iteration, EI\n")
 class SecondIterationTestEI(unittest.TestCase):
@@ -111,8 +110,8 @@ class SecondIterationTestPI(unittest.TestCase):
 
     def test(self):
         entropy = Entropy(self.model, self.xmin, self.xmax)
-        acquisition_fn = PI(self.model, par = 0, xmin = self.xmin, xmax = self.xmax)
-        zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
+        acquisition_fn = PI(self.model, X_lower = self.xmin, X_upper = self.xmax)
+        zb, mb = sample_from_measure(entropy, self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
         print "zb: ", zb
         # self.assertTrue(True)
 

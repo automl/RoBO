@@ -69,7 +69,7 @@ def projNullSpace(J, v):
         return v
 
 
-def slice_ShrinkRank_nolog(self, xx, P, s0, transpose):
+def slice_ShrinkRank_nolog(xx, P, s0, transpose):
     # This function is equivalent to the similarly named function in the original ES code
     if transpose:
         xx = xx.transpose()
