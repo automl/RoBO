@@ -47,7 +47,7 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     x_star = x[y.argmax()]
     return x_star
 
-def predict_info_gain(entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne):
+def predict_info_gain(fun, fun_p, zb, logP, X_lower, X_upper, Ne):
     import scipy.optimize.minimize
     from sampling import slice_ShrinkRank_nolog
 
@@ -64,11 +64,11 @@ def predict_info_gain(entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne
     for i in range(1, 10*Ne):
         if i % 10 == 1 and i > 1:
             xx = X_lower + np.multiply(X_upper - X_lower, np.random.uniform(size=(1,D)))
-        xx = slice_ShrinkRank_nolog(xx, entropy_fun_p, S0, True)
+        xx = slice_ShrinkRank_nolog(xx, fun_p, S0, True)
         xxs[i,:] = xx
         if i % 10 == 0:
             Xstart[(i/10)-1,:] = xx
-            Xdhi[(i/10)-1],_ = entropy_fun(xx)
+            Xdhi[(i/10)-1],_ = fun(xx)
 
     search_cons = []
     for i in range(0, X_lower.shape[0]):
@@ -82,7 +82,7 @@ def predict_info_gain(entropy_fun, entropy_fun_p, zb, logP, X_lower, X_upper, Ne
     minima = []
     for i in range(1, Ne):
         minima.append(scipy.optimize.minimize(
-           fun=entropy_fun, x0=Xstart[i,np.newaxis], jac=True, method='slsqp', constraints=search_cons,
+           fun=fun, x0=Xstart[i,np.newaxis], jac=True, method='slsqp', constraints=search_cons,
            options={'ftol':np.spacing(1), 'maxiter':20}
         ))
 
