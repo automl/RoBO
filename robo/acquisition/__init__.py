@@ -32,86 +32,7 @@ from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError 
 from .LogEI import LogEI
 from .PI import PI
-class EI(object):
-    def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
-        self.model = model
-        self.par = par
-        self.X_lower = X_lower
-        self.X_upper = X_upper
-        self._alpha = None
-
-    @property
-    def alpha(self):
-        invalid_alpha = (self._alpha is None or len(self.model.X) > len(self._alpha))
-        valid_X = self.model.X is not None and len(self.model.X) > 0 
-        if valid_X and invalid_alpha:
-            self._alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
-        elif self._alpha is None:
-            raise Exception("self.model.X is not properly initialized in acquisition EI")
-        return self._alpha
-
-    def __call__(self, x, Z=None, derivative=False, verbose=False, **kwargs):
-        if (x < self.X_lower).any() or (x > self.X_upper).any():
-            if derivative:
-                f = 0
-                df = np.zeros((x.shape[1],1))
-                return f, df
-            else:
-                return 0
-
-        dim = x.shape[1]
-        f_est = self.model.predict(x)
-        
-        eta = self.model.predict(np.array([self.model.getCurrentBestX()]))[0]
-        z = (eta - f_est[0] + self.par) / f_est[1]
-        
-        f = (eta - f_est[0] + self.par) * norm.cdf(z) + f_est[1] * norm.pdf(z)
-        if verbose:
-            print "f = ", f
-            print "s = ", f_est[1]
-            print "eta = ", eta
-            print "z = ",z
-        if derivative:
-            # Derivative of kernel values:
-            dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, x)
-            dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-
-            # dm = derivative of the gaussian process mean function
-            dmdx = np.dot(dkxX.transpose(), self.alpha)
-            # ds = derivative of the gaussian process covariance function
-            dsdx = np.zeros((dim, 1))
-            
-            for i in range(0, dim):
-                dsdx[i] = np.dot(0.5 / f_est[1], dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                            np.linalg.solve(self.model.cK,
-                                                                                            np.linalg.solve(self.model.cK.transpose(),
-                                                                                                            self.model.K[0,None].transpose()))))
-        
-            df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
-        if (f < 0).any() :
-            print f_est
-            #print f
-            #print df[np.where(f < 0)]
-            #print "\n x (f<0)= ",
-            #print x
-            #print "\n z (f<0)= \n", 
-            #print z[np.where(f < 0)] 
-            #print "\n eta = \n" 
-            #print eta
-            #print "\n mean (f<0)= \n"  
-            #print f_est[0][np.where(f < 0)] 
-            #"\n mean (f>=0)= \n"  , 
-            #f_est[0][np.where(f >= 0)], 
-            #print "\n sigma (f<0)= \n",
-            #print f_est[1][np.where(f < 0)] 
-                   
-            raise Exception("EI can't be smaller than 0")
-        if derivative:
-            return f, df
-        else:
-            return f
-    def update(self, model):
-        self.model = model
+from .EI import EI
 
 class UCB(object):
     def __init__(self, model, par=1.0, **kwargs):
@@ -128,7 +49,7 @@ l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 class Entropy(object):
-    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.4}, T=200, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":2.4}, T=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
@@ -344,7 +265,6 @@ class Entropy(object):
             
             #derivatives of kernel values
             dkxx = self.model.kernel.gradients_X(kxx, x)
-            print "GP INNOVATION:", self.model.m.predictive_gradients(x)
             dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
             dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
             # terms of innovation
