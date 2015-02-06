@@ -1,9 +1,11 @@
 import argparse
 import os
 import errno
+
 from robo.visualization import Visualization
 import robo
 import numpy as np
+
 
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description='Visualize a robo run', 

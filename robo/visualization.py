@@ -17,7 +17,6 @@ class Visualization(object):
                              isinstance(bayesian_opt.acquisition_fkt, Entropy),
                              isinstance(bayesian_opt.acquisition_fkt, Entropy)
                              ])
-        
         self.ncols = 1
         self.prefix = prefix
         self.num = 1
@@ -31,7 +30,6 @@ class Visualization(object):
             ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
             self.num+=1
             acq_plot = self.plot_acquisition_fkt( ax, one_dim_min, one_dim_max)
-            
         obj_plot = None
         if obj_method:
             obj_plot = self.fig.add_subplot(self.nrows, self.ncols, self.num)
@@ -40,7 +38,7 @@ class Visualization(object):
             self.plot_objective_fkt(obj_plot, one_dim_min, one_dim_max)
         if model_method:
             if obj_plot is None:
-                obj_plot = self.fig.add_subplot(self.nrows, self.ncols, num)
+                obj_plot = self.fig.add_subplot(self.nrows, self.ncols, self.num)
             self.model = bayesian_opt.model
             self.plot_model(obj_plot, one_dim_min, one_dim_max)
         self.fig.savefig(dest_folder + "/" + prefix +"_iteration.png", format='png')
@@ -60,7 +58,7 @@ class Visualization(object):
             ax._max_y = _max_y
         return ax
     
-    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}, scale=[0,1]):
+    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}, scale=False):
         acquisition_fkt = acquisition_fkt or self.acquisition_fkt
         try:
             if isinstance(acquisition_fkt, Entropy):
@@ -72,7 +70,6 @@ class Visualization(object):
                 if scale:
                     acq_v = acq_v - acq_v.min() 
                     acq_v = (scale[1] -scale[0]) * acq_v / acq_v.max() +scale[0]
-                    
                 ax.plot(self.plotting_range, acq_v)
             else:
                 raise

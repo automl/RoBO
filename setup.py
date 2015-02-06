@@ -28,9 +28,9 @@ setup(name='robo',
       install_requires=requires,
       entry_points=dict(
       		console_scripts = [
-								'robo_visualize = robo.scripts.visualize_sh:main',
-								'robo_examples = robo.scripts.examples:main'
-							  ]
+		'robo_visualize = robo.scripts.visualize_sh:main',
+		'robo_examples = robo.scripts.examples:main'
+	  ]
       		
       )
 	)
