@@ -12,7 +12,7 @@ import numpy as np
 from robo import BayesianOptimization
 from robo.models import GPyModel 
 from robo.test_functions import one_dim_test, branin, hartmann6, hartmann3, goldstein_price_fkt
-from robo.acquisition import EI, PI, LogEI, Entropy, UCB
+from robo.acquisition import EI, PI, LogEI, Entropy, UCB, EntropyMC
 from robo.maximize import grid_search, DIRECT, cma
 
 def main(*args, **kwargs):
@@ -29,7 +29,7 @@ def main(*args, **kwargs):
     
     parser.add_argument('-a', '--acquisition',  default=None, type=str,
                         help='Choose the acquisition function', 
-                        dest="acquisition", choices= ("EI", "PI", "LogEI", "Entropy", "UCB"))
+                        dest="acquisition", choices= ("EI", "PI", "LogEI", "Entropy", "EntropyMC", "UCB"))
     
     parser.add_argument('-p', '--acquisition-parameter',  default=[], type=str, nargs="*",
                         help='Choose the acquisition function parameters', 
@@ -120,6 +120,9 @@ def main(*args, **kwargs):
         
     elif args.acquisition == "Entropy": 
         acquisition_fkt = Entropy(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
+        
+    if args.acquisition == "EntropyMC":
+        acquisition_fkt = EntropyMC(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     elif args.acquisition == "UCB":
         if len(args.acquisition_parameters): 

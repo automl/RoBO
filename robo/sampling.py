@@ -3,10 +3,10 @@ import numpy as np
 # This method corresponds to the function SampleBeliefLocations in the original ES code
 # It is assumed that the GP data structure is a Python dictionary
 # This function calls PI, EI etc and samples them (using their values)
-def sample_from_measure(entropy, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
+def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
 
     # If there are no prior observations, do uniform sampling
-    if (entropy.model.X.size == 0):
+    if (model.X.size == 0):
         dim = xmax.size
         zb = np.add(np.multiply((xmax - xmin), np.random.uniform(size=(n_representers, dim))), xmin)
         # This is a rather ugly trick to get around the different ways of filling up an array from a sampled
@@ -17,7 +17,7 @@ def sample_from_measure(entropy, xmin, xmax, n_representers, BestGuesses, acquis
         return zb, mb
 
     # There are prior observations, i.e. it's not the first ES iteration
-    dim = entropy.model.X.shape[1]
+    dim = model.X.shape[1]
 
     # Calculate the step size for the slice sampler
     d0 = np.divide(
