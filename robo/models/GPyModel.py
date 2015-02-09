@@ -51,7 +51,7 @@ class GPyModel(object):
         self.noise_variance = noise_variance
         self.optimize = optimize
         self.X_star = None
-        self.Y_star = None
+        self.f_star = None
         self.m = None
     
     def train(self, X, Y,  Z=None):
