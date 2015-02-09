@@ -27,8 +27,8 @@ class EI(object):
         m, v = self.model.predict(x)
         eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
         s = np.sqrt(v)
-        z = (eta - m - self.par) / s
-        f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)
+        z = (eta - m) / s - self.par
+        f = (eta - m - self.par*s) * norm.cdf(z) + s * norm.pdf(z)
         if derivative:
             dmdx, ds2dx = self.model.m.predictive_gradients(x)
             dsdx = ds2dx / (2*s)

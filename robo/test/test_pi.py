@@ -7,7 +7,7 @@ import numpy as np
 import random
 import GPy
 from robo.models import GPyModel
-from robo.acquisition import EI, Entropy
+from robo.acquisition import PI, Entropy
 from robo.visualization import Visualization
 import matplotlib.pyplot as plt
 class Dummy(object):
@@ -16,7 +16,7 @@ class Dummy(object):
 here = os.path.abspath(os.path.dirname(__file__))
 
 #@unittest.skip("skip first test\n")
-class EITestCase1(unittest.TestCase):
+class PITestCase1(unittest.TestCase):
     def setUp(self):
         self.x = np.array([[ 0.62971589], [ 0.63273273], [ 0.17867868], [ 0.17447447], [ 1.88558559]]);
         self.y = np.array([[-3.69925653], [-3.66221988], [-3.65560591], [-3.58907791], [-8.06925984]]);
@@ -31,28 +31,30 @@ class EITestCase1(unittest.TestCase):
     def test(self):
         X_upper = np.array([ 2.1])
         X_lower = np.array([-2.1])
-        ei_par_0 = EI(self.model, X_upper=X_upper, X_lower=X_lower,  par=0.0, derivative=True)
-        ei_par_1 = EI(self.model, X_upper=X_upper, X_lower=X_lower,  par=1.0, derivative=True)
-        ei_par_2 = EI(self.model, X_upper=X_upper, X_lower=X_lower,  par=2.0, derivative=True)
+        pi_par_0 = PI(self.model, X_upper=X_upper, X_lower=X_lower,  par=0.0, derivative=True)
+        pi_par_1 = PI(self.model, X_upper=X_upper, X_lower=X_lower,  par=1.0, derivative=True)
+        pi_par_2 = PI(self.model, X_upper=X_upper, X_lower=X_lower,  par=2.0, derivative=True)
         x_values = [0.62971589] + [2.1 * random.random() - 2.1 for i in range(10)]
-        out0 = np.array([ ei_par_0(np.array([[x]]), derivative=True) for x in x_values])
+        out0 = np.array([ pi_par_0(np.array([[x]]), derivative=True) for x in x_values])
         value0 = out0[:,0]
         derivative0 = out0[:,1]
         
-        out1 = np.array([ ei_par_1(np.array([[x]]), derivative=True) for x in x_values])
+        out1 = np.array([ pi_par_1(np.array([[x]]), derivative=True) for x in x_values])
         value1 = out1[:,0]
         derivative1 = out1[:,1]
         
-        out2 = np.array([ ei_par_2(np.array([[x]]), derivative=True) for x in x_values])
+        out2 = np.array([ pi_par_2(np.array([[x]]), derivative=True) for x in x_values])
         value2 = out2[:,0]
         derivative2 = out2[:,1]
+        
         assert(value0[0] <= 1e-5)
         assert(np.all(value0 >= value1))
         assert(np.all(value1 >= value2))
         assert(np.all(np.abs(derivative0) >= np.abs(derivative1)))
         assert(np.all(np.abs(derivative1) >= np.abs(derivative2)))
-        ei_par_0.update(self.noise_model)
-        out0_noise = np.array([ ei_par_0(np.array([[x]]), derivative=True) for x in x_values])
+        
+        pi_par_0.update(self.noise_model)
+        out0_noise = np.array([ pi_par_0(np.array([[x]]), derivative=True) for x in x_values])
         value0_noise = out0[:,0]
         derivative0_noise = out0[:,1]
         assert(np.all(np.abs(value0_noise) >= np.abs(value0)))
@@ -60,11 +62,11 @@ class EITestCase1(unittest.TestCase):
         bo_dummy = Dummy()
         bo_dummy.X_upper = X_upper
         bo_dummy.X_lower = X_lower
-        bo_dummy.acquisition_fkt = ei_par_1
+        bo_dummy.acquisition_fkt = pi_par_1
         bo_dummy.dims = 1
         bo_dummy.model = self.model
         bo_dummy.acquisition_fkt.update( bo_dummy.model)
-        dest_folder =here+"/tmp/test_ei/vis"
+        dest_folder =here+"/tmp/test_pi/vis"
         if dest_folder is not None:
             try:
                 os.makedirs(dest_folder)

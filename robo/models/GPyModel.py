@@ -80,10 +80,10 @@ class GPyModel(object):
             print "optimize finished"
             sys.stdout = stdout
 
-
-        index_min = np.argmin(self.Y)
+        self.observation_means = self.predict(self.X)[0]
+        index_min = np.argmin(self.observation_means)
         self.X_star = self.X[index_min]
-        self.Y_star = self.Y[index_min]
+        self.f_star = self.observation_means[index_min]
         self.K = self.kernel.K(X, X)
         try:
             self.cK = np.linalg.cholesky(self.K)
@@ -113,7 +113,7 @@ class GPyModel(object):
         return self.m.posterior_samples_f(X, size)
     
     def getCurrentBest(self):
-        return self.Y_star
+        return self.f_star
     
     def getCurrentBestX(self):
         return self.X_star

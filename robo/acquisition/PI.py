@@ -19,29 +19,18 @@ class PI(object):
 
         alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
         dim = X.shape[1]
-        mean, var = self.model.predict(X, Z)
-        Y_star = self.model.getCurrentBest()
-        u = norm.cdf((Y_star - mean - self.par ) / var)
+        m, v = self.model.predict(X, Z)
+        eta = self.model.getCurrentBest()
+        s = np.sqrt(v)
+        z = (eta - m) / s - self.par
+        f = norm.cdf(z)
         if derivative:
-            # Derivative values:
-            # Derivative of kernel values:
-            dkxX = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X, X)
-            dkxx = self.model.kernel.gradients_X(np.array([np.ones(len(self.model.X))]), self.model.X)
-            # dmdx = derivative of the gaussian process mean function
-            dmdx = np.dot(dkxX.transpose(), alpha)
-            # dsdx = derivative of the gaussian process covariance function
-            dsdx = np.zeros((dim, 1))
-            for i in range(0, dim):
-                dsdx[i] = np.dot(0.5 / var, dkxx[0,dim-1] - 2 * np.dot(dkxX[:,dim-1].transpose(),
-                                                                       np.linalg.solve(self.model.cK,
-                                                                                       np.linalg.solve(self.model.cK.transpose(),
-                                                                                                       self.model.K[0,None].transpose()))))
-            # (-phi/s) * (dmdx + dsdx * z)
-            z = (Y_star - mean) / var
-            du = (- norm.pdf(z) / var) * (dmdx + dsdx * z)
-            return u, du
+            dmdx, ds2dx = self.model.m.predictive_gradients(X)
+            dsdx = ds2dx / (2*s)
+            df = -(- norm.pdf(z) / s) * (dmdx + dsdx * z)
+            return f, df
         else:
-            return u
+            return f
 
     def update(self, model):
         self.model = model
