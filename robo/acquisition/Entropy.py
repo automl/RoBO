@@ -5,6 +5,7 @@ import numpy as np
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling import sample_from_measure
+from robo.acquisition.EI import EI
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
@@ -24,9 +25,17 @@ class Entropy(object):
             loss_function = logLoss
         self.loss_function = loss_function        
         self.T = T
+    
+    def _get_most_probable_minimum(self):
+        mi = np.argmax(self.logP)
+        xx = self.zb[mi,np.newaxis]
+        return xx
         
-    def __call__(self, X, Z=None, **kwargs):
-        return self.dh_fun_true(X)[0]
+    def __call__(self, X, Z=None, derivative=False, **kwargs):
+        if derivative:
+            return self.dh_fun_true(X)
+        else:
+            return self.dh_fun_true(X)[0]
 
     def update(self, model):
         self.model = model
@@ -52,7 +61,7 @@ class Entropy(object):
     def dh_fun_true(self,x, **kwargs):
         return self.dh_fun(x, True)
 
-    def dh_fun(self,x, invertsign = True):
+    def dh_fun(self, x, invertsign = True):
         logP = self.logP
         dlogPdM = self.dlogPdMu
         dlogPdV = self.dlogPdSigma
