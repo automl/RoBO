@@ -20,7 +20,6 @@ except Exception, e:
     def DIRECT(acquisition_fkt, X_lower, X_upper):
         raise NotImplementedError("cannot find DIRECT library")
 
-
 try:
     
     import cma as _cma
@@ -104,9 +103,10 @@ def sample_optimizer(acquisition_fkt, X_lower, X_upper, Ne=20):
     Xend = np.array([res.x for res in minima])
     # Objective function values:
     Xdh = np.array([res.fun for res in minima])
-
+    
     # print "xend: ", Xend
     # print "xdh: ", Xdh
     # print "the desired value is then: ", Xend[np.argmin(Xdh)]
     new_x = Xend[np.argmin(Xdh)]
+    print minima
     return [new_x]

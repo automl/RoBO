@@ -121,16 +121,20 @@ class BayesianOptimization(object):
         
     def get_next_x(self, X=None, Y=None):
         if X is not None and Y is not None:
-            self.model.train(X, Y)
-            self.model_untrained = False
-            self.acquisition_fkt.update(self.model)
-            x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
+            try:
+                self.model.train(X, Y)
+                self.model_untrained = False
+                self.acquisition_fkt.update(self.model)
+                x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
+            except Exception, e:
+                print X, Y
+                raise e
         else:
             X = np.empty((1, self.dims)) 
             for i in range(self.dims):
                 X[0,i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i];
             x = np.array(X)
-        print x
+        print x, self.model.m
         return x
     
     def _get_last_iteration_number(self):

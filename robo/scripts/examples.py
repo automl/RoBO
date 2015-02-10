@@ -1,5 +1,6 @@
 import os
 import random
+random.seed(13)
 import argparse
 import errno
 
@@ -95,7 +96,7 @@ def main(*args, **kwargs):
     
     model_kwargs = {}
     if not args.with_noise:
-        model_kwargs["noise_variance"] = 1e-4
+        model_kwargs["noise_variance"] = 1e-3
     if args.model == "GPy":
         model = GPyModel(kernel, optimize=True, **model_kwargs)
 

@@ -4,10 +4,11 @@ RoBO - a Robust Bayesian Optimization framework.
 Installation
 ~~~~~~~~~~~~
 
-You can use a virtualenv to install the dependencies and the robo package, with commands similar to this
+Using a virtual environment
+---------------------------
 
+create a environment with system packages enabled. This will install pip and python executables with different path settings under
 
-create a environment with system packages enabled. This will install pip and python executables with different path settings under ~/envs/robo/bin:
 
 	.. code:: 
 	 

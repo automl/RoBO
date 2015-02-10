@@ -51,12 +51,13 @@ def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisit
         if i % subsample == 0:
             zb[(i / subsample) - 1, ] = xx
             emb = acquisition_fn(xx)
-            try:
-
+            
+            if emb > 0:
                 mb[(i / subsample) - 1, 0]  = np.log(emb)
-            except:
+            elif emb == 0:
                 mb[(i / subsample) - 1, 0]  = -np.inf#sys.float_info.max
-                raise
+            else:
+                raise Exception
 
     # Return values
     return zb, mb
@@ -79,11 +80,13 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
     f = P(xx.transpose())
 
 
-    try:
+
+    if f > 0:
         logf = np.log(f)
-    except:
-        #print "~"*90
-        logf = -np.inf#sys.float_info.max
+    elif f == 0:
+        logf = -np.inf
+    else:
+        raise Exception
     logy = np.log(np.random.uniform()) + logf
 
 
@@ -109,13 +112,16 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
 
         # TODO: add the derivative values (we're not considering them yet)
         fk, dfk = P(xk.transpose(), derivative = True)
-
-        try:
+        
+            
+        if fk > 0:
             logfk  = np.log(fk)
             dlogfk = np.divide(dfk, fk)
-        except:
+        elif fk == 0:
             logfk = - np.inf#sys.float_info.max
             dlogfk = 0
+        else:
+            raise Exception
 
         if (logfk > logy).all(): # accept these values
             xx = xk.transpose()
