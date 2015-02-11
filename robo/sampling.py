@@ -160,5 +160,6 @@ def montecarlo_sampler(model, X_lower, X_upper, zb=None, Nx=20, Nf=10):
     min_count = np.zeros(ys.shape)
     min_count[mins, np.arange(0, Nf)] = 1
     pmin = np.sum(min_count, axis=1) * (1. / Nf)
+    pmin = pmin[np.newaxis,:]
 
     return xs, pmin

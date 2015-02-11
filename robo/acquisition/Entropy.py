@@ -5,6 +5,7 @@ import numpy as np
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling import sample_from_measure
+from robo.acquisition.EI import EI
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
@@ -22,7 +23,7 @@ class Entropy(object):
         self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
         if loss_function is None:
             loss_function = logLoss
-        self.loss_function = loss_function        
+        self.loss_function = loss_function
         self.T = T
         
     def __call__(self, X, Z=None, **kwargs):

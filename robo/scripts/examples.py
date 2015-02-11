@@ -145,4 +145,4 @@ def main(*args, **kwargs):
     #bo.run(20.0, overwrite=False)
 
 if __name__ == "__main__":
-    main(save_dir)
+    main()
