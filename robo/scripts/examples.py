@@ -1,5 +1,6 @@
 import os
 import random
+random.seed(13)
 import argparse
 import errno
 
@@ -13,7 +14,7 @@ from robo import BayesianOptimization
 from robo.models import GPyModel 
 from robo.test_functions import one_dim_test, branin, hartmann6, hartmann3, goldstein_price_fkt
 from robo.acquisition import EI, PI, LogEI, Entropy, UCB, EntropyMC
-from robo.maximize import grid_search, DIRECT, cma
+from robo.maximize import grid_search, DIRECT, cma, sample_optimizer
 
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description='Run robo examples', 
@@ -41,7 +42,7 @@ def main(*args, **kwargs):
                         dest="model")
     
     parser.add_argument('-e', '--maximizer',  default="",  type=str,
-                        choices = ("grid_search", "DIRECT", "cma"),
+                        choices = ("grid_search", "DIRECT", "cma", "sample_optimizer"),
                         help='Choose the acquisition maximizer', 
                         dest="maximizer")
     
@@ -95,7 +96,7 @@ def main(*args, **kwargs):
     
     model_kwargs = {}
     if not args.with_noise:
-        model_kwargs["noise_variance"] = 1e-4
+        model_kwargs["noise_variance"] = 1e-3
     if args.model == "GPy":
         model = GPyModel(kernel, optimize=True, **model_kwargs)
 
@@ -137,6 +138,10 @@ def main(*args, **kwargs):
         
     elif args.maximizer == "cma":
         maximize_fkt = cma
+        
+    elif args.maximizer == "sample_optimizer":
+        maximize_fkt = sample_optimizer
+        
     #
     # start the main loop
     #

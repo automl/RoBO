@@ -33,13 +33,8 @@ class BayesianOptimization(object):
             self.acquisition_fkt = acquisition_fkt
             self.model = model
             self.maximize_fkt = maximize_fkt
-            
             self.X_lower = X_lower
-            #if len(self.X_lower.shape) ==1:
-            #     self.X_lower = self.X_lower[:,np.newaxis]
             self.X_upper = X_upper
-            #if len(self.X_upper.shape) ==1:
-            #    self.X_upper = self.X_upper[:,np.newaxis]
             self.dims = dims
             self.save_dir = save_dir
             if save_dir is not None:
@@ -126,17 +121,21 @@ class BayesianOptimization(object):
         
     def get_next_x(self, X=None, Y=None):
         if X is not None and Y is not None:
-            self.model.train(X, Y)
-            self.model_untrained = False
-            self.acquisition_fkt.update(self.model)
-            return self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
+            try:
+                self.model.train(X, Y)
+                self.model_untrained = False
+                self.acquisition_fkt.update(self.model)
+                x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
+            except Exception, e:
+                print X, Y
+                raise e
         else:
             X = np.empty((1, self.dims)) 
             for i in range(self.dims):
                 X[0,i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i];
-            return np.array(X)
-    
-
+            x = np.array(X)
+        print x, self.model.m
+        return x
     
     def _get_last_iteration_number(self):
         max_iteration = 0

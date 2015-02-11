@@ -4,6 +4,7 @@ import numpy as np
 from robo import BayesianOptimizationError 
 
 class EI(object):
+    
     def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
         self.model = model
         self.par = par
