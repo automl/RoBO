@@ -66,12 +66,15 @@ class Entropy(object):
         dlogPdM = self.dlogPdMu
         dlogPdV = self.dlogPdSigma
         ddlogPdMdM = self.dlogPdMudMu
-        lmb = self.lmb 
+        
+        lmb = self.lmb
+        if not (np.all(np.isfinite(lmb))):
+            print self.zb[np.where(np.isinf(lmb))], self.lmb[np.where(np.isinf(lmb))]
+            raise Exception("lmb should not be infinite. Is not allowed to be sampled")
         W = self.W 
         L = self._gp_innovation_local
         xmin = self.X_lower
         xmax = self.X_upper
-
         LossFunc = self.loss_function 
         zbel = self.zb
         # If x is a vector, convert it to a matrix (some functions are sensitive to this distinction)
@@ -154,17 +157,6 @@ class Entropy(object):
             trterm = np.sum(np.sum(
                 np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
                 2), 1)[:, np.newaxis]
-            # trterm = np.array(
-            #     [[-0.843010908566320], \
-            #      [-0.582029313251303], \
-            #      [-0.758961809411626], \
-            #      [-0.534968553942584], \
-            #      [-0.805424071511742], \
-            #      [-0.206116671234491], \
-            #      [-0.702439309633706], \
-            #      [-0.704391419459464], \
-            #      [-0.930137189649854], \
-            #      [-0.916431159870648]])
 
             # Deterministic part of change:
             detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
@@ -194,26 +186,13 @@ class Entropy(object):
             dVdy = dVdy[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
 
             dMM = dMdy.dot(dMdy.T)
-            # TODO: is this recalculation really necessary? (See below as well)
             trterm = np.sum(np.sum(
                 np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
                 2), 1)[:, np.newaxis]
 
-            # trterm = np.array(
-            #     [[-0.843010908566320], \
-            #      [-0.582029313251303], \
-            #      [-0.758961809411626], \
-            #      [-0.534968553942584], \
-            #      [-0.805424071511742], \
-            #      [-0.206116671234491], \
-            #      [-0.702439309633706], \
-            #      [-0.704391419459464], \
-            #      [-0.930137189649854], \
-            #      [-0.916431159870648]])
-
             dHp = LossFunc(logP, lmb, lPred, zbel)
             dHy2 = np.mean(dHp, dtype=np.float64)
-
+            
             ddHdx[d] = np.divide((dHy1 - dHy2), 2*e)
             if invertsign:
                 ddHdx = -ddHdx
