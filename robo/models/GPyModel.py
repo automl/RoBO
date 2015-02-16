@@ -75,7 +75,7 @@ class GPyModel(object):
         if self.optimize:
             stdout = sys.stdout
             sys.stdout = StringIO.StringIO()
-            self.m.optimize_restarts(num_restarts = 10, robust=True)
+            self.m.optimize_restarts(num_restarts = 100, robust=True)
             sys.stdout = stdout
 
         self.observation_means = self.predict(self.X)[0]

@@ -25,11 +25,13 @@ def main(*args, **kwargs):
     parser.add_argument('--overwrite', action="store_true", default=False)
     
     parser.add_argument('-o', '--objective', default=None, type=str,
-                        help='Choose your objective function', 
+                        help='Choose your objective function',
+                        required = True,
                         dest="objective", choices= ("one_dim_test", "branin", "hartmann6", "hartmann3", "goldstein_price_fkt"))
     
     parser.add_argument('-a', '--acquisition',  default=None, type=str,
-                        help='Choose the acquisition function', 
+                        help='Choose the acquisition function',
+                        required = True,
                         dest="acquisition", choices= ("EI", "PI", "LogEI", "Entropy", "EntropyMC", "UCB"))
     
     parser.add_argument('-p', '--acquisition-parameter',  default=[], type=str, nargs="*",
@@ -43,6 +45,7 @@ def main(*args, **kwargs):
     
     parser.add_argument('-e', '--maximizer',  default="",  type=str,
                         choices = ("grid_search", "DIRECT", "cma", "sample_optimizer"),
+                        required = True,
                         help='Choose the acquisition maximizer', 
                         dest="maximizer")
     
@@ -50,8 +53,8 @@ def main(*args, **kwargs):
                         help='number of evaluations', 
                         dest="n")
     
-    parser.add_argument('--without-noise', help='disable noise', 
-                        dest="with_noise", default=True, action="store_false" )
+    parser.add_argument('--noise', help='noise variance. Defaults to 1e-10', 
+                        dest="noise_variance", default=1e-10 )
     
     parser.add_argument('--kernel', default="RBF", nargs="+",  type=str,
                         help='Choose a kernel for GP based models',
@@ -95,8 +98,7 @@ def main(*args, **kwargs):
         kernel = GPy.kern.RBF(input_dim=dims)
     
     model_kwargs = {}
-    if not args.with_noise:
-        model_kwargs["noise_variance"] = 1e-3
+    model_kwargs["noise_variance"] = args.noise_variance
     if args.model == "GPy":
         model = GPyModel(kernel, optimize=True, **model_kwargs)
 

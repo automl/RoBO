@@ -1,16 +1,29 @@
+#encoding=utf8
 from scipy.stats import norm
 import scipy
 import numpy as np
 from robo import BayesianOptimizationError 
 
 class EI(object):
+    r'''
+    The expected improvement:
+    :model:
     
+    .. math::
+       \begin{array}{rl}
+            EI(\mathbf{x}) = \left\{ \begin{array}{ll}
+               \left(\mu(\mathbf{x}) - f (\mathbf{x}^+) -
+               \xi\sigma(\mathbf{x})\right)\Phi(Z) +
+               \sigma(\mathbf{x})\varphi(Z) & if \sigma(\mathbf{x}) > 0 \\
+               0 & if \sigma(\mathbf{x}) = 0
+            \end{array}\right.
+       \end{array}
+    '''
     def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
         self.model = model
         self.par = par
         self.X_lower = X_lower
         self.X_upper = X_upper
-        self._alpha = None
 
     def __call__(self, x, Z=None, derivative=False,  **kwargs):
         if x.shape[0] > 1 :
@@ -26,7 +39,12 @@ class EI(object):
         dim = x.shape[1]
         
         m, v = self.model.predict(x)
+        if v < 0 and np.abs(v) < 1e-6:
+            print v
+            v = -v
+            
         eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
+        
         s = np.sqrt(v)
         z = (eta - m) / s - self.par
         f = (eta - m - self.par*s) * norm.cdf(z) + s * norm.pdf(z)
@@ -41,5 +59,6 @@ class EI(object):
             return f, df
         else:
             return f
+        
     def update(self, model):
         self.model = model

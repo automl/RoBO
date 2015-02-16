@@ -8,7 +8,6 @@ class PI(object):
         self.X_upper = X_upper
 
     def __call__(self, X, Z=None, derivative=False, **kwargs):
-        # TODO: add a parameter to condition the derivative being returned
         if (X < self.X_lower).any() or (X > self.X_upper).any():
             if derivative:
                 u = 0

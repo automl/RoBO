@@ -357,17 +357,8 @@ class Entropy(object):
             
             R       = np.sqrt(P.T) * C
             r       = np.sum(MP.T * C, 1)
-            mpm = None
-            
-            try:
-                mpm     = MP * MP / P;
-            except:
-                print P, MP
-                raise
-            
-            
-            if not all(MP != 0):
-                mpm[np.where(MP ==0)]=0
+            mp_not_zero = np.where(MP !=0)
+            mpm = MP[mp_not_zero] * MP[mp_not_zero] / P[mp_not_zero]
             mpm     = sum(mpm);
             
             s       = sum(logS);
