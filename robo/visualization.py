@@ -58,7 +58,7 @@ class Visualization(object):
             ax._max_y = _max_y
         return ax
     
-    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}, scale=False):
+    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}, scale=False, logscale=False):
         acquisition_fkt = acquisition_fkt or self.acquisition_fkt
         try:
             if isinstance(acquisition_fkt, Entropy):
@@ -73,6 +73,8 @@ class Visualization(object):
                 ax.plot(self.plotting_range, acq_v)
             else:
                 raise
+        if logscale:
+            ax.set_yscale('log')
         ax.set_xlim(one_dim_min, one_dim_max)
         return ax
     
@@ -86,7 +88,7 @@ class Visualization(object):
         other_acq_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
         self.num += 1
         other_acq_ax.set_xlim(one_dim_min, one_dim_max)
-        self.plot_acquisition_fkt(other_acq_ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1])
+        self.plot_acquisition_fkt(other_acq_ax, one_dim_min, one_dim_max, acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1], logscale=True)
     
     def plot_objective_fkt(self, ax, one_dim_min, one_dim_max):
         ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), color='b', linestyle="--")

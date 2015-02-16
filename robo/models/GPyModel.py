@@ -66,7 +66,6 @@ class GPyModel(object):
         self.likelihood = self.m.likelihood
         self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
-            print "fixing noise variance"
             #self.m['.*Gaussian_noise.variance'].unconstrain()
             #self.m.constrain_fixed('noise',self.noise_variance)
             
@@ -77,7 +76,6 @@ class GPyModel(object):
             stdout = sys.stdout
             sys.stdout = StringIO.StringIO()
             self.m.optimize_restarts(num_restarts = 10, robust=True)
-            print "optimize finished"
             sys.stdout = stdout
 
         self.observation_means = self.predict(self.X)[0]

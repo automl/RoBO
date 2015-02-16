@@ -44,20 +44,25 @@ def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisit
 
     xx = restarts[0,np.newaxis]
     subsample = 20
-    for i in range(0, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing
+    for i in range(1, subsample * n_representers + 1): # Subasmpling by a factor of 10 improves mixing
         if (i % (subsample*10) == 0) and (i / (subsample*10.) < numblock):
             xx = restarts[i/(subsample*10), np.newaxis]
         xx = slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
         if i % subsample == 0:
-            zb[(i / subsample) - 1, ] = xx
+            
             emb = acquisition_fn(xx)
             
             if emb > 0:
                 mb[(i / subsample) - 1, 0]  = np.log(emb)
             elif emb == 0:
+                #raise Exception("should not sammple from 0")
+                #joell is this ok?
+                i = i - subsample+1
+                continue
                 mb[(i / subsample) - 1, 0]  = -np.inf#sys.float_info.max
             else:
                 raise Exception
+            zb[(i / subsample) - 1, ] = xx
 
     # Return values
     return zb, mb
@@ -86,6 +91,7 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
     elif f == 0:
         logf = -np.inf
     else:
+        print "F", f
         raise Exception
     logy = np.log(np.random.uniform()) + logf
 

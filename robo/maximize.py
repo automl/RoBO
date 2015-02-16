@@ -109,5 +109,5 @@ def sample_optimizer(acquisition_fkt, X_lower, X_upper, Ne=20):
     # print "xdh: ", Xdh
     # print "the desired value is then: ", Xend[np.argmin(Xdh)]
     new_x = Xend[np.argmin(Xdh)]
-    print minima
+    
     return [new_x]
