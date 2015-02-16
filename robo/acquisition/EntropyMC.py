@@ -35,17 +35,18 @@ class EntropyMC(object):
         # lmb = log_proposal_values; representer_points = zb; hallucinated_values= pmin approximation
 
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
-        self.pmin = montecarlo_sampler(model, self.X_lower, self.X_upper, zb=self.zb)[1]
+        self.pmin = montecarlo_sampler(model, self.X_lower, self.X_upper, zb=self.zb)[1].T
 
         # return pmin[1]
 
     
     def dh_fun(self, x, zb, lmb, pmin):
+        # TODO: should this be shape[1] ?
         n = pmin.shape[0]
         kl_divergence = 0
 
         for i in range(0, n):
-            entropy_pmin = -np.dot(pmin, np.log(pmin + 1e-50).T)
-            log_proposal = np.dot(lmb, pmin)
+            entropy_pmin = -np.dot(pmin.T, np.log(pmin + 1e-50))
+            log_proposal = np.dot(lmb.T, pmin)
             kl_divergence += (entropy_pmin - log_proposal) / n
         return kl_divergence
