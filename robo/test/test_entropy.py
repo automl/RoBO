@@ -1,12 +1,11 @@
-
+import random
+random.seed(12)
 import sys
 import os
 #sys.path.insert(0, '../')
 import unittest
 import errno
 import numpy as np
-import random
-random.seed(12)
 import GPy
 import scipy
 from robo.models import GPyModel
@@ -36,8 +35,6 @@ class EITestCase1(unittest.TestCase):
         X_upper = np.array([ 2.1])
         X_lower = np.array([-2.1])
         entropy = Entropy(self.model, X_upper=X_upper, X_lower=X_lower,  derivative=True)
-        #ei_par_1 = Entropy(self.model, X_upper=X_upper, X_lower=X_lower,  derivative=True)
-        #ei_par_2 = Entropy(self.model, X_upper=X_upper, X_lower=X_lower,  derivative=True)
         x_values = [0.62971589] 
         entropy.update(self.model)
         scipy.io.savemat(here+'/../../../entropie_search/EntropySearch/test.mat', dict(zb = entropy.zb,
@@ -45,31 +42,13 @@ class EITestCase1(unittest.TestCase):
                                                     logP = entropy.logP,
                                                     dlogPdM = entropy.dlogPdMu,
                                                     dlogPdV = entropy.dlogPdSigma,
-                                                    ddlogPdMdM = entropy.dlogPdMudMu))
+                                                    ddlogPdMdM = entropy.dlogPdMudMu,
+                                                    W = entropy.W))
         out0 = np.array([ entropy(np.array([[x]]), derivative=True) for x in x_values])
         value0 = out0[:,0]
         
         
         print value0
-        """
-        out1 = np.array([ ei_par_1(np.array([[x]]), derivative=True) for x in x_values])
-        value1 = out1[:,0]
-        derivative1 = out1[:,1]
-        
-        out2 = np.array([ ei_par_2(np.array([[x]]), derivative=True) for x in x_values])
-        value2 = out2[:,0]
-        derivative2 = out2[:,1]
-        assert(value0[0] <= 1e-5)
-        assert(np.all(value0 >= value1))
-        assert(np.all(value1 >= value2))
-        assert(np.all(np.abs(derivative0) >= np.abs(derivative1)))
-        assert(np.all(np.abs(derivative1) >= np.abs(derivative2)))
-        ei_par_0.update(self.noise_model)
-        out0_noise = np.array([ ei_par_0(np.array([[x]]), derivative=True) for x in x_values])
-        value0_noise = out0[:,0]
-        derivative0_noise = out0[:,1]
-        assert(np.all(np.abs(value0_noise) >= np.abs(value0)))
-        """
         bo_dummy = Dummy()
         bo_dummy.X_upper = X_upper
         bo_dummy.X_lower = X_lower

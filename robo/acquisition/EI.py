@@ -40,8 +40,9 @@ class EI(object):
         
         m, v = self.model.predict(x)
         if v < 0 and np.abs(v) < 1e-6:
-            print v
-            v = -v
+            print "v", v
+            v = -1 *v
+            print "v", v
             
         eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
         
@@ -49,7 +50,7 @@ class EI(object):
         z = (eta - m) / s - self.par
         f = (eta - m - self.par*s) * norm.cdf(z) + s * norm.pdf(z)
         if derivative:
-            dmdx, ds2dx = self.model.m.predictive_gradients(x)
+            dmdx, ds2dx = self.model.predictive_gradients(x)
             dsdx = ds2dx / (2*s)
             df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
         if (f < 0).any():

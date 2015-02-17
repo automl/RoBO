@@ -85,18 +85,26 @@ class Visualization(object):
         innovation_gain_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
         self.num += 1
         acq_v =  np.array([ acquisition_fkt._gp_innovation_local(np.array([x]))[0][0] for x in self.plotting_range[:,np.newaxis] ])
-        print acq_v
+        
         innovation_gain_ax.plot(self.plotting_range, acq_v)
         innovation_gain_ax.set_xlim(one_dim_min, one_dim_max)
         bar_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
         self.num += 1
         bar_ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")
         bar_ax.set_xlim(one_dim_min, one_dim_max)
+        pmin_v =  np.empty_like(self.plotting_range)
+        for i,x in enumerate(self.plotting_range[:,np.newaxis]):
+            idx = (np.abs(x-acquisition_fkt.zb)).argmin()
+            x_i = -acquisition_fkt.zb[idx]
+            pmin_v[i] = pmin[idx] * np.exp(acquisition_fkt.lmb[idx])
+        pmin_v = pmin_v * np.max(pmin)/np.max(pmin_v)
+        bar_ax.plot(self.plotting_range, pmin_v, color="#aa23ff")
+        
         other_acq_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
         self.num += 1
         other_acq_ax.set_xlim(one_dim_min, one_dim_max)
         self.plot_acquisition_fkt(other_acq_ax, one_dim_min, one_dim_max,
-            acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1], logscale=True)
+            acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1])#, logscale=True)
     
     def plot_objective_fkt(self, ax, one_dim_min, one_dim_max):
         ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), color='b', linestyle="--")

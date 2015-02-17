@@ -24,7 +24,7 @@ class PI(object):
         z = (eta - m) / s - self.par
         f = norm.cdf(z)
         if derivative:
-            dmdx, ds2dx = self.model.m.predictive_gradients(X)
+            dmdx, ds2dx = self.model.predictive_gradients(X)
             dsdx = ds2dx / (2*s)
             df = -(- norm.pdf(z) / s) * (dmdx + dsdx * z)
             return f, df

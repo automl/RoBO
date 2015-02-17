@@ -133,9 +133,7 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
             logfk = - np.inf#sys.float_info.max
             dlogfk = 0
         else:
-            print fk
             raise Exception
-
         if (logfk > logy).all(): # accept these values
             xx = xk.transpose()
             return xx

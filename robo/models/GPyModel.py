@@ -102,10 +102,18 @@ class GPyModel(object):
 
     def predict(self, X, Z=None, full_cov=False):
         mean, var = self.m.predict(X, full_cov=full_cov)
+        
         if not full_cov:
+            if not np.all(var >=0):
+                print "-a"*30, var, x
+                var[np.where(var < 0) ] *= -1
+                
             return mean[:,0], var[:,0]
-        else:
+        else:    
             return mean[:,0], var
+        
+    def predictive_gradients(self, X, Z=None):
+        return self.m.predictive_gradients(X)
     
     def sample(self, X, size=10):
         return self.m.posterior_samples_f(X, size)
