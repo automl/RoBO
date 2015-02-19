@@ -6,6 +6,7 @@ import os
 import unittest
 import errno
 import numpy as np
+np.random.seed(12)
 import GPy
 import scipy
 from robo.models import GPyModel
@@ -35,7 +36,8 @@ class EITestCase1(unittest.TestCase):
         X_upper = np.array([ 2.1])
         X_lower = np.array([-2.1])
         entropy = Entropy(self.model, X_upper=X_upper, X_lower=X_lower,  derivative=True)
-        x_values = [0.62971589] 
+        x_values = [0.62971589, 0.82971589, 0.9,1.1, 0.31944842]
+        x_values = [0.31944842] 
         entropy.update(self.model)
         scipy.io.savemat(here+'/../../../entropie_search/EntropySearch/test.mat', dict(zb = entropy.zb,
                                                     lmb = entropy.lmb, 
@@ -48,7 +50,7 @@ class EITestCase1(unittest.TestCase):
         value0 = out0[:,0]
         
         
-        print value0
+        print out0
         bo_dummy = Dummy()
         bo_dummy.X_upper = X_upper
         bo_dummy.X_lower = X_lower

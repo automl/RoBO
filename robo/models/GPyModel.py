@@ -105,7 +105,7 @@ class GPyModel(object):
         
         if not full_cov:
             if not np.all(var >=0):
-                print "-a"*30, var, x
+                print "-a"*30, var, X
                 var[np.where(var < 0) ] *= -1
                 
             return mean[:,0], var[:,0]

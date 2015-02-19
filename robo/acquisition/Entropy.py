@@ -1,4 +1,4 @@
-import sys
+import sys, os
 from scipy.stats import norm
 import scipy
 import numpy as np
@@ -10,6 +10,7 @@ sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
+here = os.path.abspath(os.path.dirname(__file__))
 class Entropy(object):
     
     def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":2.4}, T=200, loss_function=None, **kwargs):
@@ -32,10 +33,7 @@ class Entropy(object):
         return xx
         
     def __call__(self, X, Z=None, derivative=False, **kwargs):
-        if derivative:
-            return self.dh_fun_true(X)
-        else:
-            return self.dh_fun_true(X)[0]
+        return self.dh_fun(X, invertsign=True, derivative=derivative)
 
     def update(self, model):
         self.model = model
@@ -50,48 +48,16 @@ class Entropy(object):
         self.kbX = self.model.kernel.K(self.zb,self.model.X)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
-    def dh_fun_false(self,x, **kwargs):
-        return self.dh_fun(x, False)
 
-    def dh_fun_true(self,x, **kwargs):
-        return self.dh_fun(x, True)
 
-    def dh_fun(self, x, invertsign = True):
-        logP = self.logP
-        dlogPdM = self.dlogPdMu
-        dlogPdV = self.dlogPdSigma
-        ddlogPdMdM = self.dlogPdMudMu
+    def _dh_fun(self, x):
+            # Number of belief locations:
+        N = self.logP.size
         
-        lmb = self.lmb
-        if not (np.all(np.isfinite(lmb))):
-            print self.zb[np.where(np.isinf(lmb))], self.lmb[np.where(np.isinf(lmb))]
-            raise Exception("lmb should not be infinite. This is not allowed to be sampled")
-        W = self.W 
-        L = self._gp_innovation_local
-        xmin = self.X_lower
-        xmax = self.X_upper
-        LossFunc = self.loss_function 
-        zbel = self.zb
-        # If x is a vector, convert it to a matrix (some functions are sensitive to this distinction)
-        if len(x.shape) == 1:
-            x = x[np.newaxis]
-            
-        if np.any(x < xmin) or np.any(x > xmax):
-            dH = np.spacing(1)
-            ddHdx = np.zeros((x.shape[1], 1))
-            return dH, ddHdx
-        if x.shape[0] > 1:
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
-        
-        # Number of belief locations:
-        N = logP.size
-
-        D = x.shape[0]
-        
-        T = W.shape[0]
+        #T = self.T
         
         # Evaluate innovation
-        Lx, _ = L(x)
+        Lx, _ = self._gp_innovation_local(x)
         # Innovation function for mean:
         dMdx = Lx
         # Innovation function for covariance:
@@ -101,35 +67,51 @@ class Entropy(object):
 
         dMM = dMdx.dot(dMdx.T)
         trterm = np.sum(np.sum(
-            np.multiply(ddlogPdMdM, np.reshape(dMM, (1, dMM.shape[0],dMM.shape[1]))),
+            np.multiply(self.dlogPdMudMu, np.reshape(dMM, (1, dMM.shape[0],dMM.shape[1]))),
             2), 1)[:, np.newaxis]
 
         # add a second dimension to the arrays if necessary:
-        logP = np.reshape(logP, (logP.shape[0], 1))
-        # logP = np.reshape(logP, (logP.shape[0], 1))
-
-        
+        logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
         # Deterministic part of change:
-        detchange = dlogPdV.dot(dVdx) + 0.5 * trterm
+        detchange = self.dlogPdSigma.dot(dVdx) + 0.5 * trterm
         # Stochastic part of change:
-        stochange = (dlogPdM.dot(dMdx)).dot(W)
+        stochange = (self.dlogPdMu.dot(dMdx)).dot(self.W)
         # Predicted new logP:
         
         lPred = np.add(logP + detchange, stochange)
         #
-        _maxLPred = np.max(lPred)
-        s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred)))
-        #TODO Fix it
-        lselP = _maxLPred if np.isinf(s) else s
-        
+        _maxLPred = np.amax(lPred, axis=0)
+        s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred), axis=0))
+        lselP = _maxLPred if np.any(np.isinf(s)) else s
         #
         #lselP = np.log(np.sum(np.exp(lPred), 0))[np.newaxis,:]
         # Normalise:
         lPred = np.subtract(lPred, lselP)
         
-        dHp = LossFunc(logP, lmb, lPred, zbel)
+        dHp = self.loss_function(logP, self.lmb, lPred, self.zb)
         dH = np.mean(dHp)
+        return dH
+        
+    def dh_fun(self, x, invertsign = True, derivative=False):
+        if not (np.all(np.isfinite(self.lmb))):
+            print self.zb[np.where(np.isinf(self.lmb))], self.lmb[np.where(np.isinf(self.lmb))]
+            raise Exception("lmb should not be infinite. This is not allowed to be sampled")
+        
+        D = x.shape[1]
+        # If x is a vector, convert it to a matrix (some functions are sensitive to this distinction)
+        if len(x.shape) == 1:
+            x = x[np.newaxis]
+            
+        if np.any(x < self.X_lower) or np.any(x > self.X_upper):
+            dH = np.spacing(1)
+            ddHdx = np.zeros((x.shape[1], 1))
+            return dH, ddHdx
+        
+        if x.shape[0] > 1:
+            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
+        
+        dH = self._dh_fun(x)
 
         if invertsign:
             dH = - dH
@@ -137,66 +119,24 @@ class Entropy(object):
             raise Exception("dH is not real")
         # Numerical derivative, renormalisation makes analytical derivatives unstable.
         e = 1.0e-5
-        ddHdx = np.zeros((D,1))
-        for d in range(D):
-            ### First part:
-            y = np.array(x)
-            y[d] += e
-
-            # Evaluate innovation:
-            Ly, _ = L(y)
-            # Innovation function for mean:
-            dMdy = Ly
-            # Innovation function for covariance:
-            dVdy = -Ly.dot(Ly.T)
-            dVdy = dVdy[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
-
-            dMM = dMdy.dot(dMdy.T)
-            # TODO: is this recalculation really necessary? (See below as well)
-            trterm = np.sum(np.sum(
-                np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
-                2), 1)[:, np.newaxis]
-
-            # Deterministic part of change:
-            detchange = dlogPdV.dot(dVdy) + 0.5 * trterm
-            # Stochastic part of change:
-            stochange = (dlogPdM.dot(dMdy)).dot(W)
-            # Predicted new logP:
-            lPred = np.add(logP + detchange, stochange)
-            _maxLPred = np.max(lPred)
-            s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred)))
-            lselP = _maxLPred if np.isinf(s) else s
-            # Normalise:
-            lPred = np.subtract(lPred, lselP)
-
-            dHp = LossFunc(logP, lmb, lPred, zbel)
-            dHy1 = np.mean(dHp, dtype=np.float64)
-
-            ### Second part:
-            y = np.array(x)
-            y[d] = y[d] - e
-
-            # Evaluate innovation:
-            Ly, _ = L(y)
-            # Innovation function for mean:
-            dMdy = Ly
-            # Innovation function for covariance:
-            dVdy = -Ly.dot(Ly.T)
-            dVdy = dVdy[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
-
-            dMM = dMdy.dot(dMdy.T)
-            trterm = np.sum(np.sum(
-                np.multiply(ddlogPdMdM, np.reshape(dMM, (1,dMM.shape[0],dMM.shape[1]))),
-                2), 1)[:, np.newaxis]
-
-            dHp = LossFunc(logP, lmb, lPred, zbel)
-            dHy2 = np.mean(dHp, dtype=np.float64)
-            
-            ddHdx[d] = np.divide((dHy1 - dHy2), 2*e)
-            if invertsign:
-                ddHdx = -ddHdx
-        # endfor
-        return dH, ddHdx
+        if derivative:
+            ddHdx = np.zeros((D,1))
+            for d in range(D):
+                ### First part:
+                y = np.array(x)
+                y[d] += e
+                dHy1 = self._dh_fun(y)
+                ### Second part:
+                y = np.array(x)
+                y[d] -= e
+                dHy2 = self._dh_fun(y)
+                
+                ddHdx[d] = np.divide((dHy1 - dHy2), 2*e)
+                if invertsign:
+                    ddHdx = -ddHdx
+            # endfor
+            return dH, ddHdx
+        return dH
 
     def _gp_innovation_local(self, x):
         zb = self.zb
@@ -232,7 +172,7 @@ class Entropy(object):
             Lx     = proj / sloc;
             dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
             return Lx, dLxdx
-        m, kxx = self.model.predict(x)
+        #m, kxx = self.model.predict(x)
         #s = np.sqrt(v)
         #dmdx, ds2dx = self.model.m.predictive_gradients(x)
         #dsdx = ds2dx / (2*s)
@@ -240,13 +180,19 @@ class Entropy(object):
         kbx = self.model.kernel.K(zb,x)
         kXx = self.model.kernel.K(self.model.X, x)
         #kxx = self.model.likelihood.variance +
-        kxx = self.model.kernel.K(x, x)
+        kxx = self.model.kernel.K(x, x) #TODO Joel
         # derivatives of kernel values 
-        dkxx = self.model.kernel.gradients_X(kxx, x)
+        dkxx = self.model.kernel.gradients_X(np.ones((kxx.shape[0], x.shape[0])), kxx, x)
         dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
         dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
+        
+        matlab_matrices =scipy.io.loadmat(here+'/../../../entropie_search/EntropySearch/pqfile.mat')
         # terms of innovation
         a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
+        m, v = self.model.predict(x)
+        sloc1 = np.sqrt(v)
+        matlab_matrices['kxx'] -np.dot(matlab_matrices['kXx'].T, (np.linalg.solve(cK, np.linalg.solve(cK.T, matlab_matrices['kXx']))))
+        #posterior, self._log_marginal_likelihood, self.grad_dict = self.model.m.inference_method.inference(self.model.m.kern, self.model.m.X, self.model.m.likelihood, self.model.m.Y_normalized, self.model.m.Y_metadata)
         sloc = np.sqrt(a)
         proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
         
