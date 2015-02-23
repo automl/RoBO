@@ -104,12 +104,10 @@ class GPyModel(object):
         mean, var = self.m.predict(X, full_cov=full_cov)
         
         if not full_cov:
-            if not np.all(var >=0):
-                print "-a"*30, var, X
-                var[np.where(var < 0) ] *= -1
-                
-            return mean[:,0], var[:,0]
-        else:    
+            
+            return mean[:,0], np.clip(var[:,0], np.finfo(var.dtype).eps, np.inf)
+        else:
+            var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
             return mean[:,0], var
         
     def predictive_gradients(self, X, Z=None):

@@ -63,14 +63,16 @@ class Visualization(object):
         try:
             if isinstance(acquisition_fkt, Entropy):
                 self.plot_entropy_acquisition_fkt( ax, one_dim_min, one_dim_max, acquisition_fkt)
-            ax.plot(self.plotting_range, acquisition_fkt(self.plotting_range[:,np.newaxis]), **plot_attr)
+            else:
+                ax.plot(self.plotting_range, acquisition_fkt(self.plotting_range[:,np.newaxis], derivative=True), **plot_attr)
+            
         except BayesianOptimizationError, e:
             if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:
                 acq_v =  np.array([ acquisition_fkt(np.array([x])) for x in self.plotting_range[:,np.newaxis] ])
                 if scale:
                     acq_v = acq_v - acq_v.min() 
                     acq_v = (scale[1] -scale[0]) * acq_v / acq_v.max() +scale[0]
-                ax.plot(self.plotting_range, acq_v)
+                ax.plot(self.plotting_range, acq_v, **plot_attr)
             else:
                 raise
         if logscale:
@@ -78,16 +80,19 @@ class Visualization(object):
         ax.set_xlim(one_dim_min, one_dim_max)
         return ax
     
-    def plot_entropy_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt):
+    def plot_entropy_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt,plot_attr={"color":"red"}):
+        acq_v =  np.array([ acquisition_fkt(np.array([x]), derivative=True) for x in self.plotting_range[:,np.newaxis] ])
+        ax.plot(self.plotting_range, acq_v[:,0], **plot_attr)
+        #ax.plot(self.plotting_range, acq_v[:,1])
         zb = acquisition_fkt.zb
         pmin = np.exp(acquisition_fkt.logP)
         
-        innovation_gain_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
-        self.num += 1
-        acq_v =  np.array([ acquisition_fkt._gp_innovation_local(np.array([x]))[0][0] for x in self.plotting_range[:,np.newaxis] ])
+        #innovation_gain_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
+        #self.num += 1
+        #acq_v =  np.array([ acquisition_fkt._gp_innovation_local(np.array([x]))[0][0] for x in self.plotting_range[:,np.newaxis] ])
         
-        innovation_gain_ax.plot(self.plotting_range, acq_v)
-        innovation_gain_ax.set_xlim(one_dim_min, one_dim_max)
+        #innovation_gain_ax.plot(self.plotting_range, acq_v)
+        #innovation_gain_ax.set_xlim(one_dim_min, one_dim_max)
         bar_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
         self.num += 1
         bar_ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")

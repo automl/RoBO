@@ -176,22 +176,22 @@ class Entropy(object):
         #s = np.sqrt(v)
         #dmdx, ds2dx = self.model.m.predictive_gradients(x)
         #dsdx = ds2dx / (2*s)
-            
+       
         kbx = self.model.kernel.K(zb,x)
         kXx = self.model.kernel.K(self.model.X, x)
         #kxx = self.model.likelihood.variance +
-        kxx = self.model.kernel.K(x, x) #TODO Joel
+        kxx = self.model.kernel.K(x) #+ self.model.likelihood.variance #TODO Joel
         # derivatives of kernel values 
         dkxx = self.model.kernel.gradients_X(np.ones((kxx.shape[0], x.shape[0])), kxx, x)
         dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
         dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
         
-        matlab_matrices =scipy.io.loadmat(here+'/../../../entropie_search/EntropySearch/pqfile.mat')
         # terms of innovation
         a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
-        m, v = self.model.predict(x)
-        sloc1 = np.sqrt(v)
-        matlab_matrices['kxx'] -np.dot(matlab_matrices['kXx'].T, (np.linalg.solve(cK, np.linalg.solve(cK.T, matlab_matrices['kXx']))))
+        a = np.clip(a, np.finfo(a.dtype).eps, np.inf)
+        #m, v = self.model.predict(x)
+        #sloc1 = np.sqrt(v)
+        #matlab_matrices['kxx'] -np.dot(matlab_matrices['kXx'].T, (np.linalg.solve(cK, np.linalg.solve(cK.T, matlab_matrices['kXx']))))
         #posterior, self._log_marginal_likelihood, self.grad_dict = self.model.m.inference_method.inference(self.model.m.kern, self.model.m.X, self.model.m.likelihood, self.model.m.Y_normalized, self.model.m.Y_metadata)
         sloc = np.sqrt(a)
         proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
