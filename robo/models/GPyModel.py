@@ -82,7 +82,8 @@ class GPyModel(object):
         index_min = np.argmin(self.observation_means)
         self.X_star = self.X[index_min]
         self.f_star = self.observation_means[index_min]
-        self.K = self.kernel.K(X, X)
+        self.K = self.kernel.K(X, X) + self.m.likelihood.variance 
+        #self.cK = self.m.posterior.K_chol
         try:
             self.cK = np.linalg.cholesky(self.K)
         except np.linalg.LinAlgError:

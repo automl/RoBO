@@ -40,9 +40,8 @@ class Entropy(object):
     def sampling_acquisition_wrapper(self,x):
         return  self.sampling_acquisition(np.array([x]))[0]
     
-    def update(self, model):
-        self.model = model
-        self.sampling_acquisition.update(model)
+    def update_representer_points(self):
+        self.sampling_acquisition.update(self.model)
         #self.zb, self.lmb = sample_from_measure(self.model, self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
         
         restarts = np.zeros((self.Nb, self.D))    
@@ -54,9 +53,12 @@ class Entropy(object):
             self.zb = self.zb[:,None]
         if len(self.lmb.shape) == 1:
             self.lmb = self.lmb[:,None]
+            
+    def update(self, model):
+        self.model = model
+        self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
-        #self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
         self.W = np.random.randn(1, self.T)
         self.K = self.model.K
         self.cK = self.model.cK.T
@@ -166,7 +168,7 @@ class Entropy(object):
             # kernel values
             kbx = self.model.kernel.K(zb,x)
             kXx = self.model.kernel.K(self.model.X, x)
-            kxx = self.model.likelihood.variance + self.model.kernel.K(x, x)
+            kxx = self.model.kernel.K(x) + self.model.likelihood.variance 
             
             #derivatives of kernel values
             dkxx = self.model.kernel.gradients_X(kxx, x)
@@ -196,7 +198,7 @@ class Entropy(object):
         kbx = self.model.kernel.K(zb,x)
         kXx = self.model.kernel.K(self.model.X, x)
         #kxx = self.model.likelihood.variance +
-        kxx = self.model.kernel.K(x) #+ self.model.likelihood.variance #TODO Joel
+        kxx = self.model.kernel.K(x) + self.model.likelihood.variance 
         # derivatives of kernel values 
         dkxx = self.model.kernel.gradients_X(np.ones((kxx.shape[0], x.shape[0])), kxx, x)
         dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
@@ -309,12 +311,12 @@ class Entropy(object):
             yield dlogZdSigma
             mvmin = [Mu[k],Sigma[k,k]]
             yield mvmin
-            dMdMu = np.zeros((1,D))
-            yield dMdMu
-            dMdSigma = np.zeros((1,0.5*(D*(D+1))))
-            yield dMdSigma
-            dVdSigma = np.zeros((1,0.5*(D*(D+1))))
-            yield dVdSigma
+            #dMdMu = np.zeros((1,D))
+            #yield dMdMu
+            #dMdSigma = np.zeros((1,0.5*(D*(D+1))))
+            #yield dMdSigma
+            #dVdSigma = np.zeros((1,0.5*(D*(D+1))))
+            #yield dVdSigma
         else:
             #evaluate log Z:
             C = np.eye(D) / sq2 
