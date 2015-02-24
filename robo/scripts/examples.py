@@ -1,6 +1,5 @@
 import os
 import random
-random.seed(13)
 import argparse
 import errno
 

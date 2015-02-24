@@ -93,7 +93,8 @@ class BayesianOptimization(object):
         if overwrite and self.save_dir:
             shutil.rmtree(self.save_dir, onerror=_onerror)
             self.create_save_dir()
-            
+        else:
+            self.create_save_dir()
         if num_iterations > 1:
             new_x, old_best_x, old_best_y, X, Y = self.run(num_iterations=num_iterations-1, X=X, Y=Y, overwrite=False) 
             new_y = np.array(self.objective_fkt(np.array(new_x)))

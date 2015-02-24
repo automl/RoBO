@@ -101,6 +101,7 @@ class EntopyTestCase2(unittest.TestCase):
         self.bo.acquisition_fkt = entropy
         Visualization(self.bo, dest_folder=dest_folder, prefix=datetime.now().strftime("%Y.%m.%d.%H.%M.%S"), new_x = None, X=self.x, Y=self.y, acq_method = True, obj_method = False, model_method = True, )
         print out0
+        
 
 class EntopyTestCase3(unittest.TestCase):
     def setUp(self):
@@ -118,11 +119,12 @@ class EntopyTestCase3(unittest.TestCase):
         X_lower = np.array([-2.1])
         entropy = Entropy(self.model, X_upper=X_upper, X_lower=X_lower,  derivative=True)
         x_values = [0.62971589, 0.82971589, 0.9,1.1, 0.31944842]
-        #x_values = [0.31944842] 
+        
 
         entropy.model = self.model
         
         entropy.zb, entropy.lmb = robo.sampling.sample_from_measure(self.model, self.X_lower, self.X_upper, 100, entropy.BestGuesses, entropy.sampling_acquisition)
+        print entropy.sampling_acquisition(np.array([[0.0]]))
         mu, var = self.model.predict(np.array(entropy.zb), full_cov=True)
         
         scipy.io.savemat(here+'/../../../entropie_search/EntropySearch/test3.mat', dict(zb = entropy.zb,

@@ -2,10 +2,11 @@ import sys, os
 from scipy.stats import norm
 import scipy
 import numpy as np
+import emcee
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling import sample_from_measure
-from robo.acquisition.EI import EI
+from robo.acquisition.LogEI import LogEI
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
@@ -13,14 +14,15 @@ eps = np.finfo(np.float32).eps
 here = os.path.abspath(os.path.dirname(__file__))
 class Entropy(object):
     
-    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":2.4}, T=200, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, T=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
+        self.D = self.X_lower.shape[0]
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
-            sampling_acquisition = EI
+            sampling_acquisition = LogEI
         self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
         if loss_function is None:
             loss_function = logLoss
@@ -34,14 +36,27 @@ class Entropy(object):
         
     def __call__(self, X, Z=None, derivative=False, **kwargs):
         return self.dh_fun(X, invertsign=True, derivative=derivative)
-
+    
+    def sampling_acquisition_wrapper(self,x):
+        return  self.sampling_acquisition(np.array([x]))[0]
+    
     def update(self, model):
         self.model = model
         self.sampling_acquisition.update(model)
-        self.zb, self.lmb = sample_from_measure(self.model, self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
+        #self.zb, self.lmb = sample_from_measure(self.model, self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
+        
+        restarts = np.zeros((self.Nb, self.D))    
+        restarts[0:self.Nb, ] = self.X_lower+ (self.X_upper-self.X_lower)* np.random.uniform( size = (self.Nb, self.D))
+        
+        sampler = emcee.EnsembleSampler(self.Nb, 1, self.sampling_acquisition_wrapper)
+        self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
+        if len(self.zb.shape) == 1:
+            self.zb = self.zb[:,None]
+        if len(self.lmb.shape) == 1:
+            self.lmb = self.lmb[:,None]
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
-        self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
+        #self.current_entropy = - np.sum (np.exp(self.logP) * (self.logP+self.lmb) )
         self.W = np.random.randn(1, self.T)
         self.K = self.model.K
         self.cK = self.model.cK.T
@@ -94,6 +109,7 @@ class Entropy(object):
         return dH
         
     def dh_fun(self, x, invertsign = True, derivative=False):
+        
         if not (np.all(np.isfinite(self.lmb))):
             print self.zb[np.where(np.isinf(self.lmb))], self.lmb[np.where(np.isinf(self.lmb))]
             raise Exception("lmb should not be infinite. This is not allowed to be sampled")

@@ -64,7 +64,7 @@ class Visualization(object):
             if isinstance(acquisition_fkt, Entropy):
                 self.plot_entropy_acquisition_fkt( ax, one_dim_min, one_dim_max, acquisition_fkt)
             else:
-                ax.plot(self.plotting_range, acquisition_fkt(self.plotting_range[:,np.newaxis], derivative=True), **plot_attr)
+                ax.plot(self.plotting_range, acquisition_fkt(self.plotting_range[:,np.newaxis], derivative=False), **plot_attr)
             
         except BayesianOptimizationError, e:
             if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:

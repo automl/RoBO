@@ -2,13 +2,18 @@ from scipy.stats import norm
 import numpy as np
 from robo import BayesianOptimizationError
 class LogEI(object):
-    def __init__(self, model, par = 0.01, **kwargs):
+    def __init__(self, model,  X_lower, X_upper, par = 0.01, **kwargs):
         self.model = model
         self.par = par
+        self.X_lower = X_lower
+        self.X_upper = X_upper
+        
     def __call__(self,X,  Z=None, derivative=False, **kwargs):
         if derivative:
             raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
-                                            "LogEI does not support derivative calculation")
+                                            "LogEI does not support derivative calculation until now")
+        if (X < self.X_lower).any() or (X > self.X_upper).any():
+            return np.array([[- np.inf]])
         m, v = self.model.predict(X, Z)
         
         eta = self.model.getCurrentBest()

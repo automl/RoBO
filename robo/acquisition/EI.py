@@ -32,17 +32,13 @@ class EI(object):
             if derivative:
                 f = 0
                 df = np.zeros((x.shape[1],1))
-                return f, df
+                return np.array([[f]]), np.array([[df]])
             else:
-                return 0
+                return np.array([[0]])
 
-        dim = x.shape[1]
+        dim = x.shape[-1]
         
         m, v = self.model.predict(x)
-        if v < 0 and np.abs(v) < 1e-6:
-            print "v", v
-            v = -1 *v
-            print "v", v
             
         eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
         
@@ -54,12 +50,16 @@ class EI(object):
             dsdx = ds2dx / (2*s)
             df = -dmdx * norm.cdf(z) + dsdx * norm.pdf(z)
         if (f < 0).any():
-            f[np.where(f < 0)] = 0
-            df[np.where(f < 0), :] = np.zeros_like(x)
+            f[np.where(f < 0)] = 0.0
+            if derivative:
+                df[np.where(f < 0), :] = np.zeros_like(x)
+        if (f < 0).any():
+            raise Exception
         if derivative:
-            return f, df
+            return np.array([f]), np.array([df])
         else:
-            return f
+            return np.array([f])
         
     def update(self, model):
+        print "*"*300 +"update"
         self.model = model

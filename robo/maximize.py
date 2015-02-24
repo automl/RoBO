@@ -7,7 +7,7 @@ try:
     import DIRECT as _DIRECT
     def _DIRECT_acquisition_fkt_wrapper(acq_f):
         def _l(x, user_data):
-            return -acq_f(x), 0
+            return -acq_f(np.array([x])), 0
         return _l
     def DIRECT(acquisition_fkt, X_lower, X_upper):
         stdout = sys.stdout

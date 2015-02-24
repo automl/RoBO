@@ -48,26 +48,12 @@ def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisit
     i = 0
     while i < subsample * n_representers + 1: # Subasmpling by a factor of 10 improves mixing
         i+=1
-        if (i % (subsample*10) == 0) and (i / (subsample*10.) < numblock):
+        if ((i-1) % (subsample*10) == 0) and (i / (subsample*10.) < numblock):
             xx = restarts[i/(subsample*10), np.newaxis]
         xx = slice_ShrinkRank_nolog(xx, acquisition_fn, d0, True)
         if i % subsample == 0:
-            
             emb = acquisition_fn(xx)
-            
-            if emb > 0:
-                mb[(i / subsample) - 1, 0]  = np.log(emb)
-            elif emb == 0:
-                #raise Exception("should not sammple from 0")
-                i = i - subsample+1
-                num_interrupts += 1
-                xx =  xmin + (xmax-xmin) * np.random.uniform(size=(1, dim))
-                if num_interrupts >= n_representers*10:
-                    raise Exception("num_interrupts > 10")
-                continue
-                mb[(i / subsample) - 1, 0]  = -np.inf#sys.float_info.max
-            else:
-                raise Exception
+            mb[(i / subsample) - 1, 0]  = np.log(emb)
             zb[(i / subsample) - 1, ] = xx
 
     # Return values
@@ -92,13 +78,8 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
 
 
 
-    if f > 0:
-        logf = np.log(f)
-    elif f == 0:
-        logf = -np.inf
-    else:
-        print "F", f
-        raise Exception
+    logf = np.log(f)
+    
     logy = np.log(np.random.uniform()) + logf
 
 
@@ -124,16 +105,9 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
 
         # TODO: add the derivative values (we're not considering them yet)
         fk, dfk = P(xk.transpose(), derivative = True)
-        
-            
-        if fk > 0:
-            logfk  = np.log(fk)
-            dlogfk = np.divide(dfk, fk)
-        elif fk == 0:
-            logfk = - np.inf#sys.float_info.max
-            dlogfk = 0
-        else:
-            raise Exception
+        logfk  = np.log(fk)
+        dlogfk = np.divide(dfk, fk)
+   
         if (logfk > logy).all(): # accept these values
             xx = xk.transpose()
             return xx

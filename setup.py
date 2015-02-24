@@ -7,7 +7,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 #CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-	'GPy'
+	'GPy',
+	'emcee'
     ]
 
 setup(name='robo',
