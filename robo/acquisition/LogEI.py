@@ -1,7 +1,8 @@
 from scipy.stats import norm
 import numpy as np
 from robo import BayesianOptimizationError
-class LogEI(object):
+from robo.acquisition.base import AcquisitionFunction 
+class LogEI(AcquisitionFunction):
     def __init__(self, model,  X_lower, X_upper, par = 0.01, **kwargs):
         self.model = model
         self.par = par
@@ -57,5 +58,3 @@ class LogEI(object):
                         log_ei[i] = b + np.log(1 - np.exp(a - b))
         return log_ei
 
-    def update(self, model):
-        self.model = model

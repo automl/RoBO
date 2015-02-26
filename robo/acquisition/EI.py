@@ -3,8 +3,9 @@ from scipy.stats import norm
 import scipy
 import numpy as np
 from robo import BayesianOptimizationError 
+from robo.acquisition.base import AcquisitionFunction 
 
-class EI(object):
+class EI(AcquisitionFunction):
     r'''
     The expected improvement:
     :model:
@@ -60,6 +61,3 @@ class EI(object):
         else:
             return np.array([f])
         
-    def update(self, model):
-        print "*"*300 +"update"
-        self.model = model

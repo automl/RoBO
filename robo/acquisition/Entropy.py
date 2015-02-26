@@ -3,16 +3,18 @@ from scipy.stats import norm
 import scipy
 import numpy as np
 import emcee
+
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling import sample_from_measure
 from robo.acquisition.LogEI import LogEI
+from robo.acquisition.base import AcquisitionFunction 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 here = os.path.abspath(os.path.dirname(__file__))
-class Entropy(object):
+class Entropy(AcquisitionFunction):
     
     def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, T=200, loss_function=None, **kwargs):
         self.model = model

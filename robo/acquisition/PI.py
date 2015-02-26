@@ -1,6 +1,7 @@
 from scipy.stats import norm
 import numpy as np
-class PI(object):
+from robo.acquisition.base import AcquisitionFunction 
+class PI(AcquisitionFunction):
     def __init__(self, model, X_lower, X_upper, par=0.1, **kwargs):
         self.model = model
         self.par = par
@@ -30,6 +31,3 @@ class PI(object):
             return f, df
         else:
             return f
-
-    def update(self, model):
-        self.model = model
