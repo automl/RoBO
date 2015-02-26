@@ -52,8 +52,8 @@ def main(*args, **kwargs):
                         help='number of evaluations', 
                         dest="n")
     
-    parser.add_argument('--noise', help='noise variance. Defaults to 1e-10', 
-                        dest="noise_variance", default=1e-10 )
+    parser.add_argument('--noise', help='noise variance. Defaults None. If nois is None then it will be optimized.', 
+                        dest="noise_variance", default=None )
     
     parser.add_argument('--kernel', default="RBF", nargs="+",  type=str,
                         help='Choose a kernel for GP based models',
@@ -97,6 +97,7 @@ def main(*args, **kwargs):
         kernel = GPy.kern.RBF(input_dim=dims)
     
     model_kwargs = {}
+    
     model_kwargs["noise_variance"] = args.noise_variance
     if args.model == "GPy":
         model = GPyModel(kernel, optimize=True, **model_kwargs)

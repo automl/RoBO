@@ -15,8 +15,6 @@ class Visualization(object):
             self.nrows += 1
         if obj_method or model_method:
             self.nrows += 1
-        if isinstance(bayesian_opt.acquisition_fkt, Entropy):
-            self.nrows += 3
         self.ncols = 1
         self.prefix = prefix
         self.num = 1
@@ -27,9 +25,9 @@ class Visualization(object):
             self.plotting_range = np.linspace(one_dim_min,one_dim_max, num=resolution)
         if acq_method:
             self.acquisition_fkt = bayesian_opt.acquisition_fkt
-            ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
+            acq_plot = self.fig.add_subplot(self.nrows, self.ncols, self.num)
             self.num+=1
-            acq_plot = self.plot_acquisition_fkt( ax, one_dim_min, one_dim_max)
+            self.acquisition_fkt.plot(acq_plot, one_dim_min, one_dim_max)
         obj_plot = None
         if obj_method:
             obj_plot = self.fig.add_subplot(self.nrows, self.ncols, self.num)
@@ -58,58 +56,6 @@ class Visualization(object):
             ax._max_y = _max_y
         return ax
     
-    def plot_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt = None, plot_attr={"color":"red"}, scale=False, logscale=False):
-        acquisition_fkt = acquisition_fkt or self.acquisition_fkt
-        try:
-            if isinstance(acquisition_fkt, Entropy):
-                self.plot_entropy_acquisition_fkt( ax, one_dim_min, one_dim_max, acquisition_fkt)
-            else:
-                ax.plot(self.plotting_range, acquisition_fkt(self.plotting_range[:,np.newaxis], derivative=False), **plot_attr)
-            
-        except BayesianOptimizationError, e:
-            if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:
-                acq_v =  np.array([ acquisition_fkt(np.array([x])) for x in self.plotting_range[:,np.newaxis] ])
-                if scale:
-                    acq_v = acq_v - acq_v.min() 
-                    acq_v = (scale[1] -scale[0]) * acq_v / acq_v.max() +scale[0]
-                ax.plot(self.plotting_range, acq_v, **plot_attr)
-            else:
-                raise
-        if logscale:
-            ax.set_yscale('log')
-        ax.set_xlim(one_dim_min, one_dim_max)
-        return ax
-    
-    def plot_entropy_acquisition_fkt(self, ax, one_dim_min, one_dim_max, acquisition_fkt,plot_attr={"color":"red"}):
-        acq_v =  np.array([ acquisition_fkt(np.array([x]), derivative=True) for x in self.plotting_range[:,np.newaxis] ])
-        ax.plot(self.plotting_range, acq_v[:,0], **plot_attr)
-        #ax.plot(self.plotting_range, acq_v[:,1])
-        zb = acquisition_fkt.zb
-        pmin = np.exp(acquisition_fkt.logP)
-        
-        #innovation_gain_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
-        #self.num += 1
-        #acq_v =  np.array([ acquisition_fkt._gp_innovation_local(np.array([x]))[0][0] for x in self.plotting_range[:,np.newaxis] ])
-        
-        #innovation_gain_ax.plot(self.plotting_range, acq_v)
-        #innovation_gain_ax.set_xlim(one_dim_min, one_dim_max)
-        bar_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
-        self.num += 1
-        bar_ax.bar(zb, pmin, width=(one_dim_max - one_dim_min)/(2*zb.shape[0]), color="yellow")
-        bar_ax.set_xlim(one_dim_min, one_dim_max)
-        pmin_v =  np.empty_like(self.plotting_range)
-        for i,x in enumerate(self.plotting_range[:,np.newaxis]):
-            idx = (np.abs(x-acquisition_fkt.zb)).argmin()
-            x_i = -acquisition_fkt.zb[idx]
-            pmin_v[i] = pmin[idx] * np.exp(acquisition_fkt.lmb[idx])
-        pmin_v = pmin_v * np.max(pmin)/np.max(pmin_v)
-        bar_ax.plot(self.plotting_range, pmin_v, color="#aa23ff")
-        
-        other_acq_ax = self.fig.add_subplot(self.nrows, self.ncols, self.num)
-        self.num += 1
-        other_acq_ax.set_xlim(one_dim_min, one_dim_max)
-        self.plot_acquisition_fkt(other_acq_ax, one_dim_min, one_dim_max,
-            acquisition_fkt.sampling_acquisition, {"color":"orange"}, scale = [0,1])#, logscale=True)
     
     def plot_objective_fkt(self, ax, one_dim_min, one_dim_max):
         ax.plot(self.plotting_range, self.objective_fkt(self.plotting_range[:,np.newaxis]), color='b', linestyle="--")

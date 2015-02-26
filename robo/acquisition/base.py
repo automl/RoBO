@@ -29,7 +29,8 @@ the minimum of the objective function.
         this method should be called if the model is updated. E.g. the Entropy search needs
         to update its aproximation about P(x=x_min) 
 """
-
+import numpy as np
+from robo import BayesianOptimizationError
 class AcquisitionFunction(object):
     def __init__(self,  model, X_lower, X_upper, **kwargs):
         self.model = model
@@ -41,3 +42,21 @@ class AcquisitionFunction(object):
     
     def __call__(self, x):
         raise NotImplementedError()
+    
+    def plot(self, ax, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
+        plotting_range = np.linspace(minx, maxx, num=resolution)
+        try:
+            ax.plot(plotting_range, self(plotting_range[:,np.newaxis]), **plot_attr)
+            
+        except BayesianOptimizationError, e:
+            if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:
+                acq_v =  np.array([ self(np.array([x]))[0][0] for x in plotting_range[:,np.newaxis] ])
+                #if scale:
+                #    acq_v = acq_v - acq_v.min() 
+                #    acq_v = (scale[1] -scale[0]) * acq_v / acq_v.max() +scale[0]
+                
+                ax.plot(plotting_range, acq_v, **plot_attr)
+            else:
+                raise
+        ax.set_xlim(minx, maxx)
+        return ax

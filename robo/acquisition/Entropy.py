@@ -3,6 +3,7 @@ from scipy.stats import norm
 import scipy
 import numpy as np
 import emcee
+import copy
 
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
@@ -49,7 +50,7 @@ class Entropy(AcquisitionFunction):
         restarts = np.zeros((self.Nb, self.D))    
         restarts[0:self.Nb, ] = self.X_lower+ (self.X_upper-self.X_lower)* np.random.uniform( size = (self.Nb, self.D))
         
-        sampler = emcee.EnsembleSampler(self.Nb, 1, self.sampling_acquisition_wrapper)
+        sampler = emcee.EnsembleSampler(self.Nb, self.D, self.sampling_acquisition_wrapper)
         self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
         if len(self.zb.shape) == 1:
             self.zb = self.zb[:,None]
@@ -66,7 +67,7 @@ class Entropy(AcquisitionFunction):
         self.cK = self.model.cK.T
         self.kbX = self.model.kernel.K(self.zb,self.model.X)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
-
+        #self.model_clone = copy.deepcopy(self.model)
 
 
     def _dh_fun(self, x):
@@ -126,7 +127,7 @@ class Entropy(AcquisitionFunction):
         if np.any(x < self.X_lower) or np.any(x > self.X_upper):
             dH = np.spacing(1)
             ddHdx = np.zeros((x.shape[1], 1))
-            return dH, ddHdx
+            return np.array([[dH]]), np.array([[ddHdx]])
         
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
@@ -155,8 +156,8 @@ class Entropy(AcquisitionFunction):
                 if invertsign:
                     ddHdx = -ddHdx
             # endfor
-            return dH, ddHdx
-        return dH
+            return np.array([[dH]]), np.array([[ddHdx]])
+        return np.array([[dH]])
 
     def _gp_innovation_local(self, x):
         zb = self.zb
@@ -166,62 +167,22 @@ class Entropy(AcquisitionFunction):
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
 
-        if self.model.X.shape[0] == 0:
-            # kernel values
-            kbx = self.model.kernel.K(zb,x)
-            kXx = self.model.kernel.K(self.model.X, x)
-            kxx = self.model.kernel.K(x) + self.model.likelihood.variance 
-            
-            #derivatives of kernel values
-            dkxx = self.model.kernel.gradients_X(kxx, x)
-            dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
-            dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
-            # terms of innovation
-            a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
-            sloc = np.sqrt(a)
-            proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
-            
-            #terms of the innovation
-            sloc   = np.sqrt(kxx)
-            proj   = kbx
-            
-            dvloc  = dkxx
-            dproj  = dkxb
-            
-            # innovation, and its derivative
-            Lx     = proj / sloc;
-            dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
-            return Lx, dLxdx
-        #m, kxx = self.model.predict(x)
-        #s = np.sqrt(v)
-        #dmdx, ds2dx = self.model.m.predictive_gradients(x)
-        #dsdx = ds2dx / (2*s)
-       
-        kbx = self.model.kernel.K(zb,x)
-        kXx = self.model.kernel.K(self.model.X, x)
-        #kxx = self.model.likelihood.variance +
-        kxx = self.model.kernel.K(x) + self.model.likelihood.variance 
-        # derivatives of kernel values 
-        dkxx = self.model.kernel.gradients_X(np.ones((kxx.shape[0], x.shape[0])), kxx, x)
-        dkxX = -1* self.model.kernel.gradients_X(np.ones((self.model.X.shape[0], x.shape[0])),self.model.X, x)
-        dkxb = -1* self.model.kernel.gradients_X(np.ones((zb.shape[0], x.shape[0])), zb, x)
+        m, v = self.model.predict(x)
+        s = np.sqrt(v)
         
-        # terms of innovation
-        a = kxx - np.dot(kXx.T, (np.linalg.solve(cK, np.linalg.solve(cK.T, kXx))))
-        a = np.clip(a, np.finfo(a.dtype).eps, np.inf)
-        #m, v = self.model.predict(x)
-        #sloc1 = np.sqrt(v)
-        #matlab_matrices['kxx'] -np.dot(matlab_matrices['kXx'].T, (np.linalg.solve(cK, np.linalg.solve(cK.T, matlab_matrices['kXx']))))
-        #posterior, self._log_marginal_likelihood, self.grad_dict = self.model.m.inference_method.inference(self.model.m.kern, self.model.m.X, self.model.m.likelihood, self.model.m.Y_normalized, self.model.m.Y_metadata)
-        sloc = np.sqrt(a)
-        proj = kbx - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))
+        #print sloc, sloc1
         
-        dvloc  = (dkxx.T - 2 * np.dot(dkxX.T, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))).T;
-        dproj  = dkxb - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, dkxX)));
+        m_projected, v_projected = self.model.predict(x, projectTo=zb, full_cov = True)
+        
+        
+        
+        #dvloc  = (dkxx.T - 2 * np.dot(dkxX.T, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))).T;
+        #dproj  = dkxb - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, dkxX)));
         
         #innovation, and its derivative
-        Lx     = proj / sloc;
-        dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
+        Lx     = v_projected / s;
+        #dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
+        dLxdx = None
         return Lx, dLxdx
     
     def _joint_min(self, mu, var, with_derivatives= False, **kwargs):
@@ -431,3 +392,23 @@ class Entropy(AcquisitionFunction):
             logPhi = np.log(.5 * scipy.special.erfc(-z / sq2))
             e = np.exp(logphi - logPhi)
             return e, logPhi, 0
+        
+    def plot(self, ax, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
+        plotting_range = np.linspace(minx, maxx, num=resolution)
+        acq_v =  np.array([ self(np.array([x]), derivative=True)[0][0] for x in plotting_range[:,np.newaxis] ])
+        ax.plot(plotting_range, acq_v, **plot_attr)
+        #ax.plot(self.plotting_range, acq_v[:,1])
+        zb = self.zb
+        pmin = np.exp(self.logP)
+        ax.set_xlim(minx, maxx)
+        """
+        bar_ax = ax.add_subplot(211)
+        bar_ax.bar(zb, pmin, width=(maxx - minx)/(2*zb.shape[0]), color="yellow")
+        bar_ax.set_xlim(one_dim_min, one_dim_max)
+        
+        other_acq_ax = ax.add_subplot(212)
+        other_acq_ax.set_xlim(one_dim_min, one_dim_max)
+        self.sampling_acquisition.plot(other_acq_ax, minx, maxx,
+            self.sampling_acquisition, {"color":"orange"}, scale = [0,1])#, logscale=True)
+        """
+        return ax

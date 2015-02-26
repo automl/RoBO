@@ -54,12 +54,11 @@ class GPyModel(object):
         self.f_star = None
         self.m = None
     
-    def train(self, X, Y,  Z=None):
+    def train(self, X, Y):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
             return
-        self.Z = Z
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
         self.m.constrain_positive('')
         
@@ -82,8 +81,7 @@ class GPyModel(object):
         index_min = np.argmin(self.observation_means)
         self.X_star = self.X[index_min]
         self.f_star = self.observation_means[index_min]
-        self.K = self.kernel.K(X, X) + self.m.likelihood.variance 
-        #self.cK = self.m.posterior.K_chol
+        self.K = self.kernel.K(X, X) + self.m.likelihood.variance
         try:
             self.cK = np.linalg.cholesky(self.K)
         except np.linalg.LinAlgError:
@@ -93,26 +91,41 @@ class GPyModel(object):
                 self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
         
         
-    def update(self, X, Y, Z=None):
+    def update(self, X, Y):
         #TODO use correct update method
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
-        if self.Z != None:
-            Z = np.append(self.Z, [Z], axis=0)
-        self.train(X, Y, Z)
+        self.train(X, Y)
 
-    def predict(self, X, Z=None, full_cov=False):
-        mean, var = self.m.predict(X, full_cov=full_cov)
-        
+    def predict(self, X,  projectTo = None,  full_cov=False):
+        if projectTo is None:
+            mean, var = self.m.predict(X, full_cov=full_cov)
+        else:
+            kern = self.m.kern
+            KbX = kern.K(projectTo, self.m.X).T
+            Kx = kern.K(X, self.m.X).T
+            WiKx = np.dot(self.m.posterior.woodbury_inv, Kx)
+            mean = np.dot(KbX.T, self.m.posterior.woodbury_vector)
+            if full_cov:
+                Kbx = kern.K(projectTo, X)
+                var = Kbx - np.dot(KbX.T, WiKx)
+            else:
+                Kbx = kern.K(projectTo, X)
+                var = Kbx - np.sum(WiKx*KbX, 0)
+                var = var.reshape(-1, 1)
         if not full_cov:
-            
             return mean[:,0], np.clip(var[:,0], np.finfo(var.dtype).eps, np.inf)
         else:
-            var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
+            if projectTo is None:
+                var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
             return mean[:,0], var
         
-    def predictive_gradients(self, X, Z=None):
-        return self.m.predictive_gradients(X)
+        
+        
+    def predictive_gradients(self, Xnew, X=None):
+        if X == None:
+            return self.m.predictive_gradients(Xnew)
+        
     
     def sample(self, X, size=10):
         return self.m.posterior_samples_f(X, size)

@@ -44,8 +44,8 @@ class EI(AcquisitionFunction):
         eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
         
         s = np.sqrt(v)
-        z = (eta - m) / s - self.par
-        f = (eta - m - self.par*s) * norm.cdf(z) + s * norm.pdf(z)
+        z = (eta - m - self.par) / s 
+        f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)
         if derivative:
             dmdx, ds2dx = self.model.predictive_gradients(x)
             dsdx = ds2dx / (2*s)
