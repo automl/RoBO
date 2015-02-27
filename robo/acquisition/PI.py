@@ -3,6 +3,8 @@ import numpy as np
 from robo import BayesianOptimizationError 
 from robo.acquisition.base import AcquisitionFunction 
 class PI(AcquisitionFunction):
+    
+    long_name = "Probability of Improvement" 
     def __init__(self, model, X_lower, X_upper, par=0.1, **kwargs):
         self.model = model
         self.par = par

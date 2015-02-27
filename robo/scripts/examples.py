@@ -2,8 +2,6 @@ import os
 import random
 import argparse
 import errno
-
-import matplotlib.pyplot as plt;
 import GPy
 import pylab as pb
 import numpy as np
@@ -130,7 +128,7 @@ def main(*args, **kwargs):
     elif args.acquisition == "UCB":
         if len(args.acquisition_parameters): 
             acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
-        acquisition_fkt = UCB(model, X_upper= X_upper, X_lower=X_lower**acquisition_kwargs)
+        acquisition_fkt = UCB(model, X_upper= X_upper, X_lower=X_lower, **acquisition_kwargs)
 
     if args.maximizer == "grid_search":
         maximize_fkt = grid_search

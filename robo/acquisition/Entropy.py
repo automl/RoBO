@@ -16,7 +16,7 @@ eps = np.finfo(np.float32).eps
 
 here = os.path.abspath(os.path.dirname(__file__))
 class Entropy(AcquisitionFunction):
-    
+    long_name = "Information gain over p_min(x)" 
     def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, T=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
@@ -170,11 +170,7 @@ class Entropy(AcquisitionFunction):
         m, v = self.model.predict(x)
         s = np.sqrt(v)
         
-        #print sloc, sloc1
-        
         m_projected, v_projected = self.model.predict(x, projectTo=zb, full_cov = True)
-        
-        
         
         #dvloc  = (dkxx.T - 2 * np.dot(dkxX.T, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))).T;
         #dproj  = dkxb - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, dkxX)));
@@ -411,4 +407,5 @@ class Entropy(AcquisitionFunction):
         self.sampling_acquisition.plot(other_acq_ax, minx, maxx,
             self.sampling_acquisition, {"color":"orange"}, scale = [0,1])#, logscale=True)
         """
+        ax.set_title(str(self))
         return ax

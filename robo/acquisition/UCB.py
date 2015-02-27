@@ -1,6 +1,7 @@
 from robo.acquisition.base import AcquisitionFunction
  
 class UCB(AcquisitionFunction):
+    long_name = "Upper Confidence Bound" 
     def __init__(self, model, par=1.0, **kwargs):
         self.model = model
         self.par = par

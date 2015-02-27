@@ -32,6 +32,10 @@ the minimum of the objective function.
 import numpy as np
 from robo import BayesianOptimizationError
 class AcquisitionFunction(object):
+    long_name = ""
+    def __str__(self):
+        return type(self).__name__ + " (" +self.long_name + ")"
+    
     def __init__(self,  model, X_lower, X_upper, **kwargs):
         self.model = model
         self.X_lower = X_lower
@@ -59,4 +63,5 @@ class AcquisitionFunction(object):
             else:
                 raise
         ax.set_xlim(minx, maxx)
+        ax.set_title(str(self))
         return ax

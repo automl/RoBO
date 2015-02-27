@@ -46,10 +46,6 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     # y = array(map(acquisition_fkt, x))
     ys = [None] * resolution
     for i in range(resolution):
-        if i % 50 == 0:
-            print "*"*50
-            print "current iteration in grid search: ", i
-            print "*"*50
         ys[i] = acquisition_fkt(x[i])
     y = array(ys)
     x_star = x[y.argmax()]

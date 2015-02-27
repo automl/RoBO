@@ -1,10 +1,7 @@
-import matplotlib; 
-matplotlib.use('Agg')
 import random
 import os
 import errno
 import numpy as np
-#np.seterr(all='raise')
 import shutil
 try:
     import cpickle as pickle
@@ -31,6 +28,7 @@ class BayesianOptimization(object):
             self.save_dir = save_dir
             if save_dir is not None:
                 self.create_save_dir()
+            
             self.model_untrained = True
         
         elif save_dir is not None:
@@ -96,7 +94,7 @@ class BayesianOptimization(object):
             else:
                 X = new_x
                 Y = new_y
-            new_x = self.get_next_x(X, Y)
+            new_x = self.choose_next(X, Y)
         else:        
             if X is None and Y is None and self.save_dir:
                 try:
@@ -104,7 +102,7 @@ class BayesianOptimization(object):
                 except IOError as exception:
                     if not self.enough_arguments:
                         raise
-                    new_x = self.get_next_x(X, Y)
+                    new_x = self.choose_next(X, Y)
             
         if self.save_dir != None:
             self.save_iteration(X, Y, new_x);
@@ -112,7 +110,7 @@ class BayesianOptimization(object):
         return new_x, self.model.getCurrentBestX(), self.model.getCurrentBest(), X, Y
                 
         
-    def get_next_x(self, X=None, Y=None):
+    def choose_next(self, X=None, Y=None):
         if X is not None and Y is not None:
             #try:
             self.model.train(X, Y)

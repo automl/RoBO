@@ -6,20 +6,8 @@ from robo import BayesianOptimizationError
 from robo.acquisition.base import AcquisitionFunction 
 
 class EI(AcquisitionFunction):
-    r'''
-    The expected improvement:
-    :model:
     
-    .. math::
-       \begin{array}{rl}
-            EI(\mathbf{x}) = \left\{ \begin{array}{ll}
-               \left(\mu(\mathbf{x}) - f (\mathbf{x}^+) -
-               \xi\sigma(\mathbf{x})\right)\Phi(Z) +
-               \sigma(\mathbf{x})\varphi(Z) & if \sigma(\mathbf{x}) > 0 \\
-               0 & if \sigma(\mathbf{x}) = 0
-            \end{array}\right.
-       \end{array}
-    '''
+    long_name = "Expected Improvement" 
     def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
         self.model = model
         self.par = par

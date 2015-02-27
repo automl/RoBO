@@ -15,13 +15,13 @@ def main(*args, **kwargs):
     parser.add_argument('dest_folder',   metavar="DESTINATION_FOLDER", type=str)#, required=True)
     parser.add_argument('-a', '--acq',  default=False, 
                         help='Choose visualizing the acquisition fkt if its one_dimensional', 
-                        dest="acq_method", action='store_true')
+                        dest="show_acq_method", action='store_true')
     parser.add_argument('-o', '--obj',  default=False, 
                         help='Choose visualizing the objective fkt if its one_dimensional', 
-                        dest="obj_method", action='store_true')
+                        dest="show_obj_method", action='store_true')
     parser.add_argument('-m', '--model',  default=False, 
                         help='Choose visualizing the model fkt if its one_dimensional', 
-                        dest="model_method", action='store_true')
+                        dest="show_model_method", action='store_true')
     args = parser.parse_args()
     source_folder = args.source_folder
     dest_folder = args.dest_folder
@@ -39,8 +39,8 @@ def main(*args, **kwargs):
             bo, new_x, X, Y = robo.BayesianOptimization.from_iteration(source_folder, i)
             if bo.model_untrained:
                 first_vis = args.__dict__.copy()
-                del first_vis["acq_method"]
-                del first_vis["model_method"]
+                del first_vis["show_acq_method"]
+                del first_vis["show_model_method"]
                 vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **first_vis)
             else: 
                 vis = Visualization(bo, new_x, X, Y, dest_folder, prefix="%03d_"%(i,), **args.__dict__)

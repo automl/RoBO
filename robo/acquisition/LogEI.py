@@ -3,6 +3,7 @@ import numpy as np
 from robo import BayesianOptimizationError
 from robo.acquisition.base import AcquisitionFunction 
 class LogEI(AcquisitionFunction):
+    long_name = "Logarithm  of Expected Improvement"
     def __init__(self, model,  X_lower, X_upper, par = 0.01, **kwargs):
         self.model = model
         self.par = par
