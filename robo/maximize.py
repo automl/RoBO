@@ -43,10 +43,17 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     from numpy import linspace, array
     if  X_lower.shape[0] >1 :
         raise RuntimeError("grid search works for 1D only")
-    # x = linspace(X_lower[0], X_upper[0], resolution).reshape((resolution, 1, 1))
-    x = linspace(X_lower[0], X_upper[0], resolution)
-    y = acquisition_fkt(x)
-    x_star = np.array(x[y.argmax()])
+    x = linspace(X_lower[0], X_upper[0], resolution).reshape((resolution, 1, 1))
+    # y = array(map(acquisition_fkt, x))
+    ys = [None] * resolution
+    for i in range(resolution):
+        if i % 50 == 0:
+            print "*"*50
+            print "current iteration in grid search: ", i
+            print "*"*50
+        ys[i] = acquisition_fkt(x[i])
+    y = array(ys)
+    x_star = x[y.argmax()]
     return x_star
 
 def _sample_optimizer_fkt_wrapper(acq_f):

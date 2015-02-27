@@ -26,27 +26,50 @@ class EntropyMC(object):
         self.T = T
     
     def __call__(self, X, Z=None, **kwargs):
-        return self.dh_fun(X, self.zb, self.lmb, self.pmin)
+        return self.dh_fun(X, self.zb, self.lmb)
 
     def update(self, model):
         self.model = model
         self.sampling_acquisition.update(model)
         self.zb, self.lmb = sample_from_measure(self.model, self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
         # lmb = log_proposal_values; representer_points = zb; hallucinated_values= pmin approximation
+        self.W = np.random.multivariate_normal(mean=np.zeros(self.Nb), cov=np.eye(self.Nb), size=self.T)
+        self.F = np.random.randn(self.T,1)
 
-        mu, var = self.model.predict(np.array(self.zb), full_cov=True)
-        self.pmin = montecarlo_sampler(model, self.X_lower, self.X_upper, zb=self.zb)[1].T
 
-        # return pmin[1]
 
     
-    def dh_fun(self, x, zb, lmb, pmin):
+    def dh_fun(self, x, zb, lmb):
+        import copy
         # TODO: should this be shape[1] ?
-        n = pmin.shape[0]
+        if x.shape[0] > 1:
+            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
+        # print pmin.shape
+        n = x.shape[0]
         kl_divergence = 0
 
-        for i in range(0, n):
-            entropy_pmin = -np.dot(pmin.T, np.log(pmin + 1e-50))
-            log_proposal = np.dot(lmb.T, pmin)
-            kl_divergence += (entropy_pmin - log_proposal) / n
-        return kl_divergence
+        # Simulate the value of f at the candidate point, x
+        new_y = self.model.sample(x, size=1)
+
+        # Construct new GP model with the simulated observation
+        sim_model = copy.deepcopy(self.model)
+        sim_model.update(x, new_y)
+
+        mu, var = sim_model.predict(zb, full_cov=True)
+        cVar = np.linalg.cholesky(var)
+
+        model_samples = np.add(np.dot(cVar.T, self.W.T).T, mu)
+
+        # Approximate pmin:
+        mins = np.argmin(model_samples, axis=1)
+        min_count = np.zeros(model_samples.shape).T
+        min_count[mins, np.arange(0, self.T)] = 1
+        pmin = np.sum(min_count, axis=1) * (1. / self.T)
+
+        # Calculate the Kullback-Leibler divergence w.r.t. this pmin approximation and return
+        entropy_pmin = -np.dot(pmin, np.log(pmin + 1e-50))
+        log_proposal = np.dot(lmb.T, pmin)
+        kl_divergence += (entropy_pmin - log_proposal) / n
+        # print "value of acquisition_fkt: ", kl_divergence
+
+        return kl_divergence[0]
