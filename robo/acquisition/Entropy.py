@@ -29,7 +29,7 @@ class Entropy(AcquisitionFunction):
         self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
         if loss_function is None:
             loss_function = logLoss
-        self.loss_function = loss_function        
+        self.loss_function = loss_function
         self.T = T
     
     def _get_most_probable_minimum(self):
