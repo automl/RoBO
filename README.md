@@ -86,9 +86,9 @@ for acquisition_fkt in [ei, pi, entropy]:
 	
 This will produce an output similar to this
 
-![Example output using EI](http://renumi/readme_example_ei.png)
-![Example output using PI](http://renumi/readme_example_pi.png)
-![Example output using Entropy](http://renumi/readme_example_entropy.png)
+![Example output using EI](http://renumi.de/readme_example_ei.png)
+![Example output using PI](http://renumi.de/readme_example_pi.png)
+![Example output using Entropy](http://renumi.de/readme_example_entropy.png)
 
 
 
