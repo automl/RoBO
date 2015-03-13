@@ -72,16 +72,12 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
     if transpose:
         xx = xx.transpose()
 
-    # set random seed
     D = xx.shape[0]
     f = P(xx.transpose())
-
-
 
     logf = np.log(f)
     
     logy = np.log(np.random.uniform()) + logf
-
 
     theta = 0.95
 

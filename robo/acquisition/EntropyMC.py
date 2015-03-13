@@ -41,7 +41,6 @@ class EntropyMC(object):
     
     def dh_fun(self, x, zb, lmb):
         import copy
-        # TODO: should this be shape[1] ?
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
         # print pmin.shape
@@ -70,6 +69,5 @@ class EntropyMC(object):
         entropy_pmin = -np.dot(pmin, np.log(pmin + 1e-50))
         log_proposal = np.dot(lmb.T, pmin)
         kl_divergence += (entropy_pmin - log_proposal) / n
-        # print "value of acquisition_fkt: ", kl_divergence
 
         return kl_divergence[0]
