@@ -102,6 +102,7 @@ class GPyModel(object):
         if projectTo is None:
             mean, var = self.m.predict(X, full_cov=full_cov)
         else:
+            
             kern = self.m.kern
             KbX = kern.K(projectTo, self.m.X).T
             Kx = kern.K(X, self.m.X).T
@@ -111,9 +112,10 @@ class GPyModel(object):
                 Kbx = kern.K(projectTo, X)
                 var = Kbx - np.dot(KbX.T, WiKx)
             else:
-                Kbx = kern.K(projectTo, X)
-                var = Kbx - np.sum(WiKx*KbX, 0)
-                var = var.reshape(-1, 1)
+                raise NotImplementedError()
+            #    Kbx = kern.K(projectTo, X)
+            #    var = Kbx - np.sum(WiKx*KbX, 0)
+            #    var = var.reshape(-1, 1)
         if not full_cov:
             return mean[:,0], np.clip(var[:,0], np.finfo(var.dtype).eps, np.inf)
         else:

@@ -97,6 +97,7 @@ def main(*args, **kwargs):
     model_kwargs = {}
     
     model_kwargs["noise_variance"] = args.noise_variance
+    print args.noise_variance
     if args.model == "GPy":
         model = GPyModel(kernel, optimize=True, **model_kwargs)
 
