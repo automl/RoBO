@@ -7,7 +7,7 @@ Installation
 	   
 
 ```
-git clone git@bitbucket.org:aadfreiburg/robo.git
+git clone https:// <your_bitbucket_user_name> @bitbucket.org/aadfreiburg/robo.git
 cd robo
 pip install .
 ```
