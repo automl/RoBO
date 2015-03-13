@@ -63,11 +63,7 @@ class Entropy(AcquisitionFunction):
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.W = np.random.randn(1, self.T)
-        self.K = self.model.K
-        self.cK = self.model.cK.T
-        self.kbX = self.model.kernel.K(self.zb,self.model.X)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
-        #self.model_clone = copy.deepcopy(self.model)
 
 
     def _dh_fun(self, x):
@@ -160,24 +156,14 @@ class Entropy(AcquisitionFunction):
         return np.array([[dH]])
 
     def _gp_innovation_local(self, x):
-        zb = self.zb
-        K = self.K
-        cK = self.cK
-        kbX = self.kbX
+        
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
 
         m, v = self.model.predict(x)
         s = np.sqrt(v)
-        
-        m_projected, v_projected = self.model.predict(x, projectTo=zb, full_cov = True)
-        
-        #dvloc  = (dkxx.T - 2 * np.dot(dkxX.T, np.linalg.solve(cK, np.linalg.solve(cK.T, kXx)))).T;
-        #dproj  = dkxb - np.dot(kbX, np.linalg.solve(cK, np.linalg.solve(cK.T, dkxX)));
-        
-        #innovation, and its derivative
+        v_projected = self.model.predict_variance(x, self.zb)
         Lx     = v_projected / s;
-        #dLxdx  = dproj / sloc - 0.5 * proj * dvloc / (sloc**3);
         dLxdx = None
         return Lx, dLxdx
     

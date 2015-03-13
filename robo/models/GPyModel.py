@@ -82,14 +82,17 @@ class GPyModel(object):
         index_min = np.argmin(self.observation_means)
         self.X_star = self.X[index_min]
         self.f_star = self.observation_means[index_min]
-        self.K = self.kernel.K(X, X) + self.m.likelihood.variance
-        try:
-            self.cK = np.linalg.cholesky(self.K)
-        except np.linalg.LinAlgError:
-            try:
-                self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
-            except np.linalg.LinAlgError:
-                self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
+        #self.K = self.kernel.K(X, X) + self.m.likelihood.variance
+        #self.K = self.m.posterior.covariance
+        #self.cK = self.m.posterior.K_chol
+        #self.Sigma_chol = self.m.posterior.K_chol
+        #try:
+        #    self.cK = np.linalg.cholesky(self.K)
+        #except np.linalg.LinAlgError:
+        #    try:
+        #        self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
+        #    except np.linalg.LinAlgError:
+        #        self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
         
         
     def update(self, X, Y):
@@ -98,29 +101,22 @@ class GPyModel(object):
         Y = np.append(self.Y, Y, axis=0)
         self.train(X, Y)
 
+    
+    def predict_variance(self, X1, X2):
+        kern = self.m.kern
+        KbX = kern.K(X2, self.m.X).T
+        Kx = kern.K(X1, self.m.X).T
+        WiKx = np.dot(self.m.posterior.woodbury_inv, Kx)
+        Kbx = kern.K(X2, X1)
+        var = Kbx - np.dot(KbX.T, WiKx)
+        return var
+        
     def predict(self, X,  projectTo = None,  full_cov=False):
-        if projectTo is None:
-            mean, var = self.m.predict(X, full_cov=full_cov)
-        else:
-            
-            kern = self.m.kern
-            KbX = kern.K(projectTo, self.m.X).T
-            Kx = kern.K(X, self.m.X).T
-            WiKx = np.dot(self.m.posterior.woodbury_inv, Kx)
-            mean = np.dot(KbX.T, self.m.posterior.woodbury_vector)
-            if full_cov:
-                Kbx = kern.K(projectTo, X)
-                var = Kbx - np.dot(KbX.T, WiKx)
-            else:
-                raise NotImplementedError()
-            #    Kbx = kern.K(projectTo, X)
-            #    var = Kbx - np.sum(WiKx*KbX, 0)
-            #    var = var.reshape(-1, 1)
+        mean, var = self.m.predict(X, full_cov=full_cov)    
         if not full_cov:
             return mean[:,0], np.clip(var[:,0], np.finfo(var.dtype).eps, np.inf)
         else:
-            if projectTo is None:
-                var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
+            var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
             return mean[:,0], var
         
         

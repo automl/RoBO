@@ -34,12 +34,14 @@ class Visualization(object):
         if show_acq_method:
             self.acquisition_fkt = bayesian_opt.acquisition_fkt
             self.acquisition_fkt.plot(self.fig, one_dim_min, one_dim_max)
+        insert_last = False
         if show_obj_method:
             self.objective_fkt = bayesian_opt.objective_fkt
             self.plot_objective_fkt(self.fig, one_dim_min, one_dim_max)
+            insert_last = True
         if show_model_method:
             self.model = bayesian_opt.model
-            self.plot_model(self.fig, one_dim_min, one_dim_max)
+            self.plot_model(self.fig, one_dim_min, one_dim_max, insert_last)
         if not interactive:
             self.fig.savefig(dest_folder + "/" + prefix +"_iteration.png", format='png')
             self.fig.clf()
@@ -47,11 +49,13 @@ class Visualization(object):
         else:
             plt.show(block=True)
         
-    def plot_model(self, fig, one_dim_min, one_dim_max):
-        n = len(fig.axes)
-        for i in range(n):
-            fig.axes[i].change_geometry(n+1, 1, i+1) 
-        ax = fig.add_subplot(n+1, 1, n+1) 
+    def plot_model(self, fig, one_dim_min, one_dim_max, insert_last=False):
+        ax = fig.axes[-1]
+        if not insert_last:
+            n = len(fig.axes)
+            for i in range(n):
+                fig.axes[i].change_geometry(n+1, 1, i+1) 
+            ax = fig.add_subplot(n+1, 1, n+1) 
         if hasattr(self.model, "visualize"):
             self.model.visualize(ax, one_dim_min, one_dim_max)
         _min_y, _max_y = ax.get_ylim()

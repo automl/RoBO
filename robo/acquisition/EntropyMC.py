@@ -8,11 +8,12 @@ from robo import BayesianOptimizationError
 from robo.sampling import sample_from_measure, montecarlo_sampler
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.base import AcquisitionFunction 
+from robo.acquisition import Entropy
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
-class EntropyMC(AcquisitionFunction):
+class EntropyMC(Entropy):
     def __init__(self, model, X_lower, X_upper, Nb = 50, Nf= 200, sampling_acquisition = None, sampling_acquisition_kw = {"par":2.4}, Np=15, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb
@@ -32,26 +33,22 @@ class EntropyMC(AcquisitionFunction):
     def __call__(self, X, Z=None, **kwargs):
         return self.dh_fun(X)
     
-    def sampling_acquisition_wrapper(self,x):
-        return  self.sampling_acquisition(np.array([x]))[0]
-    
-    def update_representer_points(self):
-        self.sampling_acquisition.update(self.model)
-        restarts = np.zeros((self.Nb, self.D))    
-        restarts[0:self.Nb, ] = self.X_lower+ (self.X_upper-self.X_lower)* np.random.uniform( size = (self.Nb, self.D))
-        sampler = emcee.EnsembleSampler(self.Nb, self.D, self.sampling_acquisition_wrapper)
-        self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
-        if len(self.zb.shape) == 1:
-            self.zb = self.zb[:,None]
-        if len(self.lmb.shape) == 1:
-            self.lmb = self.lmb[:,None]
-            
     def update(self, model):
         self.model = model
         self.sampling_acquisition.update(model)
         self.update_representer_points()
-        self.W = np.random.randn(self.Np,1)
-        self.f = self.model.sample(self.zb, self.Nf)
+        
+        self.W = np.random.randn(1, self.Np)
+        self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True) 
+        self.F = np.random.multivariate_normal(mean=np.zeros(self.Nb), cov=np.eye(self.Nb), size=self.Nf)
+        self.cVb = np.linalg.cholesky(self.Vb)
+
+        #model_samples = np.add(np.dot(cVar.T, self.W.T).T, mu)
+
+        #self.f = self.model.sample(self.zb, self.Nf)
+        
+        self.f = np.add(np.dot(self.cVb, self.F.T).T, self.Mb).T
+        
         self.pmin = self.calc_pmin(self.f)
         self.logP = np.log(self.pmin)
     
@@ -67,16 +64,23 @@ class EntropyMC(AcquisitionFunction):
         return pmin
 
     def change_pmin_by_innovation(self, x, f):
-        delta_mu, delta_var = self.model.predict(x, projectTo = self.zb, full_cov = True)
+        Lx, _ = self._gp_innovation_local(x)
+        # Innovation function for mean:
+        dMdb = Lx
+        print dMdb.shape
+        # Innovation function for covariance:
+        dVdb = -Lx.dot(Lx.T)
         
-        #delta_f = np.dot(delta_mu[:,None],self.W.T) +  delta_var
-        #self.delta_f2 = delta_f
-        delta_f = delta_mu[:,None] +  np.dot(delta_var,self.W.T)
-        #self.delta_f1 = delta_f
+        stoch_changes = dMdb.dot(self.W)
+        Mb_new = self.Mb[:,None] + stoch_changes
+        Vb_new = self.Vb + dVdb
+        cVb_new = np.linalg.cholesky(Vb_new)
+        f_new = np.dot(cVb_new, self.F.T)
+        f_new = f_new[:,:,None]
+        Mb_new = Mb_new[:,None, :]
+        f_new = Mb_new + f_new
         
-        #print delta_mu.shape, delta_var.shape, self.W.shape
-        a = delta_f[:,None,:]+f[:,:,None]
-        return self.calc_pmin(a)
+        return self.calc_pmin(f_new)
         
         
         
