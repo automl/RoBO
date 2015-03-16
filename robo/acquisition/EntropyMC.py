@@ -5,7 +5,6 @@ import numpy as np
 import emcee
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
-from robo.sampling import sample_from_measure, montecarlo_sampler
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.base import AcquisitionFunction 
 from robo.acquisition import Entropy
@@ -14,7 +13,7 @@ l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 class EntropyMC(Entropy):
-    def __init__(self, model, X_lower, X_upper, Nb = 50, Nf= 200, sampling_acquisition = None, sampling_acquisition_kw = {"par":2.4}, Np=15, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 50, Nf= 1000, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, Np=300, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb
         self.Nf = Nf

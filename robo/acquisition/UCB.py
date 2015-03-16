@@ -7,6 +7,6 @@ class UCB(AcquisitionFunction):
         self.par = par
     def __call__(self, X, Z=None, **kwargs):
         mean, var = self.model.predict(X, Z)
-        return -mean + self.par * var
+        return -mean + self.par * np.sqrt(var)
     def update(self, model):
         self.model = model

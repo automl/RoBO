@@ -4,7 +4,6 @@ import scipy
 import numpy as np
 import emcee
 import copy
-
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling import sample_from_measure
@@ -13,11 +12,10 @@ from robo.acquisition.base import AcquisitionFunction
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
-
 here = os.path.abspath(os.path.dirname(__file__))
 class Entropy(AcquisitionFunction):
     long_name = "Information gain over p_min(x)" 
-    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, T=200, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb = 100, sampling_acquisition = None, sampling_acquisition_kw = {"par":0.0}, Np=200, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
@@ -30,7 +28,7 @@ class Entropy(AcquisitionFunction):
         if loss_function is None:
             loss_function = logLoss
         self.loss_function = loss_function
-        self.T = T
+        self.Np = Np
     
     def _get_most_probable_minimum(self):
         mi = np.argmax(self.logP)
@@ -61,7 +59,7 @@ class Entropy(AcquisitionFunction):
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
-        self.W = np.random.randn(1, self.T)
+        self.W = np.random.randn(1, self.Np)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
     def _dh_fun(self, x):
@@ -73,11 +71,11 @@ class Entropy(AcquisitionFunction):
         # Innovation function for mean:
         dMdx = Lx
         # Innovation function for covariance:
-        dVdx = -Lx.dot(Lx.T)
+        dVdx = -Lx.dot(Lx.Np)
         # The transpose operator is there to make the array indexing equivalent to matlab's
-        dVdx = dVdx[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
+        dVdx = dVdx[np.triu(np.ones((N,N))).Np.astype(bool), np.newaxis]
 
-        dMM = dMdx.dot(dMdx.T)
+        dMM = dMdx.dot(dMdx.Np)
         trterm = np.sum(np.sum(
             np.multiply(self.dlogPdMudMu, np.reshape(dMM, (1, dMM.shape[0],dMM.shape[1]))),
             2), 1)[:, np.newaxis]
@@ -177,9 +175,9 @@ class Entropy(AcquisitionFunction):
             
             logP[i] = a.next()            
             if with_derivatives:
-                dlogPdMu[i,:] = a.next().T
+                dlogPdMu[i,:] = a.next().Np
                 dlogPdMudMu[i, :, :] = a.next()
-                dlogPdSigma[i,:] = a.next().T
+                dlogPdSigma[i,:] = a.next().Np
             
         logP[np.isinf(logP)] = -500;    
         #re-normalize at the end, to smooth out numerical imbalances:
@@ -206,7 +204,7 @@ class Entropy(AcquisitionFunction):
     
         ff = np.einsum('ki,kj->kij', dlogPdMuold, dlogPdMuold)
         gg   = np.einsum('kij,k->ij',dlogPdMudMuold+ff,np.exp(logPold)) / Z;
-        Zij  = Zm.T * Zm;
+        Zij  = Zm.Np * Zm;
         adds = np.reshape(-gg+Zij,(1,D,D));
         dlogPdMudMu = dlogPdMudMuold + adds
         return logP,dlogPdMu,dlogPdSigma,dlogPdMudMu
@@ -252,45 +250,39 @@ class Entropy(AcquisitionFunction):
             yield dlogZdSigma
             mvmin = [Mu[k],Sigma[k,k]]
             yield mvmin
-            #dMdMu = np.zeros((1,D))
-            #yield dMdMu
-            #dMdSigma = np.zeros((1,0.5*(D*(D+1))))
-            #yield dMdSigma
-            #dVdSigma = np.zeros((1,0.5*(D*(D+1))))
-            #yield dVdSigma
         else:
             #evaluate log Z:
             C = np.eye(D) / sq2 
             C[k,:] = -1/sq2
             C = np.delete(C, k, 1)
             
-            R       = np.sqrt(P.T) * C
-            r       = np.sum(MP.T * C, 1)
+            R       = np.sqrt(P.Np) * C
+            r       = np.sum(MP.Np * C, 1)
             mp_not_zero = np.where(MP !=0)
             mpm = MP[mp_not_zero] * MP[mp_not_zero] / P[mp_not_zero]
             mpm     = sum(mpm);
             
             s       = sum(logS);
-            IRSR    = (np.eye(D-1) + np.dot(np.dot(R.T , Sigma), R));
-            rSr     = np.dot(np.dot(r.T, Sigma) , r);
-            A =  np.dot(R,np.linalg.solve(IRSR,R.T)) 
+            IRSR    = (np.eye(D-1) + np.dot(np.dot(R.Np , Sigma), R));
+            rSr     = np.dot(np.dot(r.Np, Sigma) , r);
+            A =  np.dot(R,np.linalg.solve(IRSR,R.Np)) 
             
-            A       = 0.5 * (A.T + A) # ensure symmetry.
+            A       = 0.5 * (A.Np + A) # ensure symmetry.
             b       = (Mu + np.dot(Sigma,r));
             Ab      = np.dot(A,b);
             dts     = 2 * np.sum(np.log(np.diagonal(np.linalg.cholesky(IRSR))));
-            logZ    = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + np.dot(Mu.T, r) + s - 0.5 * mpm;
+            logZ    = 0.5 * (rSr - np.dot(b.Np, Ab) - dts) + np.dot(Mu.Np, r) + s - 0.5 * mpm;
             yield logZ
-            btA = np.dot(b.T, A)
+            btA = np.dot(b.Np, A)
             
             dlogZdMu    = r - Ab
             yield dlogZdMu
             dlogZdMudMu = -A
             yield dlogZdMudMu
-            dlogZdSigma = -A - 2*np.outer(r,Ab.T) + np.outer(r,r.T) + np.outer(btA.T,Ab.T);
+            dlogZdSigma = -A - 2*np.outer(r,Ab.Np) + np.outer(r,r.Np) + np.outer(btA.Np,Ab.Np);
             _dlogZdSigma = np.zeros_like(dlogZdSigma)
             np.fill_diagonal(_dlogZdSigma, np.diagonal(dlogZdSigma))
-            dlogZdSigma = 0.5*(dlogZdSigma+dlogZdSigma.T-_dlogZdSigma)
+            dlogZdSigma = 0.5*(dlogZdSigma+dlogZdSigma.Np-_dlogZdSigma)
             dlogZdSigma = np.rot90(dlogZdSigma, k=2)[np.triu_indices(D)][::-1];
             yield dlogZdSigma
             
@@ -324,12 +316,7 @@ class Entropy(AcquisitionFunction):
             Vnew  = V -  dp / (1 + dp * cVc) *np.outer(Vc,Vc)
             
             Mnew  = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
-            if np.any(np.isnan(Vnew)): raise Exception("oo")
-            #if np.i Vnew)); keyboard; end
-            #% if z < -30; keyboard; end
-        
-            #% normalization constant
-            #%logS  = lP - 0.5 * (log(beta) - log(pnew)) + (alpha * alpha) / (2*beta);
+            if np.any(np.isnan(Vnew)): raise Exception("an error occurs while running expectation propagation in entropy search. Resulting variance contains NaN")
             #% there is a problem here, when z is very large
             logS  = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic)) + (alpha * alpha) / (2*beta) * cVnic
              
