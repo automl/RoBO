@@ -45,7 +45,6 @@ class Entropy(AcquisitionFunction):
     
     def update_representer_points(self):
         self.sampling_acquisition.update(self.model)
-        #self.zb, self.lmb = sample_from_measure(self.model, self.X_lower, self.X_upper, self.Nb, self.BestGuesses, self.sampling_acquisition)
         
         restarts = np.zeros((self.Nb, self.D))    
         restarts[0:self.Nb, ] = self.X_lower+ (self.X_upper-self.X_lower)* np.random.uniform( size = (self.Nb, self.D))
@@ -65,13 +64,10 @@ class Entropy(AcquisitionFunction):
         self.W = np.random.randn(1, self.T)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
-
     def _dh_fun(self, x):
-            # Number of belief locations:
+        # Number of belief locations:
         N = self.logP.size
-        
-        #T = self.T
-        
+
         # Evaluate innovation
         Lx, _ = self._gp_innovation_local(x)
         # Innovation function for mean:

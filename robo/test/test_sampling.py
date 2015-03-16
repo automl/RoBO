@@ -112,7 +112,7 @@ class SampleFromEI(unittest.TestCase):
         self.fig.clf()
         plt.show() 
       
-@unittest.skip("empty array, sampling from measure \n")
+# @unittest.skip("empty array, sampling from measure \n")
 class FirstIterationTest(unittest.TestCase):
     def setUp(self):
 
@@ -152,7 +152,7 @@ class FirstIterationTest(unittest.TestCase):
         zb, mb = entropy.sample_from_measure(self.xmin, self.xmax, self.n_representers, self.BestGuesses, acquisition_fn)
         print "zb: ", zb
 
-@unittest.skip("skipping second iteration, EI\n")
+# @unittest.skip("skipping second iteration, EI\n")
 class SecondIterationTestEI(unittest.TestCase):
     def setUp(self):
 
@@ -184,7 +184,7 @@ class SecondIterationTestEI(unittest.TestCase):
         print "zb: ", zb
         self.assertTrue(True)
 
-@unittest.skip("second iteration, PI")
+# @unittest.skip("second iteration, PI")
 class SecondIterationTestPI(unittest.TestCase):
     def setUp(self):
 
@@ -206,7 +206,6 @@ class SecondIterationTestPI(unittest.TestCase):
             [-7.9969,    0.4625],
             [-7.1402,   -7.7652]
         ])
-        # fac = 42.9076/68.20017903
 
     def test(self):
         entropy = Entropy(self.model, self.xmin, self.xmax)
@@ -215,8 +214,9 @@ class SecondIterationTestPI(unittest.TestCase):
         print "zb: ", zb
         # self.assertTrue(True)
 
-@unittest.skip("test for nullspace projection method")
+# @unittest.skip("test for nullspace projection method")
 class ProjNullSpaceTests(unittest.TestCase):
+
     def setUp(self):
         self.D = 2 # dimension of input space
         # self.x_prev = np.array([])
@@ -226,7 +226,7 @@ class ProjNullSpaceTests(unittest.TestCase):
 
         self.X = np.array([[6.8165, 15.1224]])
         self.Y = np.array([[213.3935]])
-        self.kernel = GPy.kern.rbf(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
+        self.kernel = GPy.kern.RBF(input_dim = self.D, variance = 13.3440, lengthscale = 4.4958)
         self.model = GPyModel(self.kernel, optimize = False)
         self.model.train(self.X, self.Y)
 
@@ -242,13 +242,14 @@ class ProjNullSpaceTests(unittest.TestCase):
         self.vv = np.array([[-1.4660], [9.0956]])
 
     def test(self):
-        entropy = Entropy(self.model)
-        self.assertEqual(entropy.projNullSpace(self.J, self.v).tolist(),
+        from robo.sampling import projNullSpace
+        entropy = Entropy(self.model, self.xmin, self.xmax)
+        self.assertEqual(projNullSpace(self.J, self.v).tolist(),
                          np.array([[30.7746], [-16.0128]]).tolist())
-        self.assertEqual(entropy.projNullSpace(self.JJ, self.vv).tolist(),
+        self.assertEqual(projNullSpace(self.JJ, self.vv).tolist(),
                          np.array([[2.9283919723599983], [1.7522158685840008]]).tolist())
 
-@unittest.skip("test for montecarlo sampling method")
+# @unittest.skip("test for montecarlo sampling method")
 class MontecarloSamplerTest(unittest.TestCase):
     def setUp(self):
         self.D = 2 # dimension of input space
@@ -275,8 +276,9 @@ class MontecarloSamplerTest(unittest.TestCase):
         self.vv = np.array([[-1.4660], [9.0956]])
 
     def test(self):
+        from robo.sampling import montecarlo_sampler
         entropy = Entropy(self.model, self.xmin, self.xmax, 20)
-        entropy.montecarlo_sampler(self.xmin, self.xmax, Nx = 5, Nf = 10)
+        montecarlo_sampler(self.xmin, self.xmax, Nx = 5, Nf = 10)
 
 
 
