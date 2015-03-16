@@ -37,18 +37,11 @@ class EntropyMC(Entropy):
         self.model = model
         self.sampling_acquisition.update(model)
         self.update_representer_points()
-        
         self.W = np.random.randn(1, self.Np)
         self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True) 
         self.F = np.random.multivariate_normal(mean=np.zeros(self.Nb), cov=np.eye(self.Nb), size=self.Nf)
         self.cVb = np.linalg.cholesky(self.Vb)
-
-        #model_samples = np.add(np.dot(cVar.T, self.W.T).T, mu)
-
-        #self.f = self.model.sample(self.zb, self.Nf)
-        
         self.f = np.add(np.dot(self.cVb, self.F.T).T, self.Mb).T
-        
         self.pmin = self.calc_pmin(self.f)
         self.logP = np.log(self.pmin)
     
@@ -65,12 +58,8 @@ class EntropyMC(Entropy):
 
     def change_pmin_by_innovation(self, x, f):
         Lx, _ = self._gp_innovation_local(x)
-        # Innovation function for mean:
         dMdb = Lx
-        print dMdb.shape
-        # Innovation function for covariance:
         dVdb = -Lx.dot(Lx.T)
-        
         stoch_changes = dMdb.dot(self.W)
         Mb_new = self.Mb[:,None] + stoch_changes
         Vb_new = self.Vb + dVdb
@@ -79,28 +68,19 @@ class EntropyMC(Entropy):
         f_new = f_new[:,:,None]
         Mb_new = Mb_new[:,None, :]
         f_new = Mb_new + f_new
-        
         return self.calc_pmin(f_new)
-        
-        
         
     def dh_fun(self, x):
         # TODO: should this be shape[1] ?
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
-        # print pmin.shape
-        new_pmin  = self.change_pmin_by_innovation(x, self.f) 
-        
-
-        # Calculate the Kullback-Leibler divergence w.r.t. this pmin approximation and return
+        new_pmin  = self.change_pmin_by_innovation(x, self.f)
+        # Calculate the Kullback-Leibler divergence w.r.t. this pmin approximation
         H_old = np.sum(np.multiply(self.pmin, (self.logP + self.lmb)))
-        H_new = np.sum(np.multiply(new_pmin, (np.log(new_pmin) + self.lmb))) 
-        
-
+        H_new = np.sum(np.multiply(new_pmin, (np.log(new_pmin) + self.lmb)))
         return np.array([[ - H_new + H_old]])
     
     def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
-        
         n = len(fig.axes)
         for i in range(n):
             fig.axes[i].change_geometry(n+3, 1, i+1) 
@@ -110,14 +90,11 @@ class EntropyMC(Entropy):
         plotting_range = np.linspace(minx, maxx, num=resolution)
         acq_v =  np.array([ self(np.array([x]), derivative=True)[0][0] for x in plotting_range[:,np.newaxis] ])
         ax.plot(plotting_range, acq_v, **plot_attr)
-        #ax.plot(self.plotting_range, acq_v[:,1])
         zb = self.zb
         bar_ax.plot(zb, np.zeros_like(zb), "g^")
         ax.set_xlim(minx, maxx)
-        
         bar_ax.bar(zb, self.pmin[:,0], width=(maxx - minx)/200, color="yellow")
         bar_ax.set_xlim(minx, maxx)
-        print zb
         other_acq_ax.plot(zb, self.f[:,0], "g+")
         ss = np.empty_like(zb)
         ss.fill(0.2)

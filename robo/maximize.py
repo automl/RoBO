@@ -2,6 +2,7 @@ import sys
 import StringIO
 import numpy as np
 import scipy
+import emcee
 from sampling import slice_ShrinkRank_nolog
 try:
     import DIRECT as _DIRECT
