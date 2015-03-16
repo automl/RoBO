@@ -3,7 +3,7 @@ import StringIO
 import numpy as np
 import scipy
 import emcee
-from sampling import slice_ShrinkRank_nolog
+from robo import BayesianOptimizationError
 try:
     import DIRECT as _DIRECT
     def _DIRECT_acquisition_fkt_wrapper(acq_f):
@@ -53,11 +53,16 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
 def _scipy_optimizer_fkt_wrapper(acq_f, derivative=True):
     def _l(x, *args, **kwargs):
         x = np.array([x])
+        if np.any(np.isnan(x)):
+            print x
+            raise Exception("oO")
         a = acq_f(x, derivative=derivative,*args, **kwargs)
+        
         if derivative:
-            return -a[0], -a[1]
+            return -a[0][0], -a[1][0][:,0]
+           
         else:
-            return -a
+            return -a[0]
     return _l
 
 def stochastic_local_search(acquisition_fkt, X_lower, X_upper, Ne=20):
@@ -91,24 +96,27 @@ def stochastic_local_search(acquisition_fkt, X_lower, X_upper, Ne=20):
     minima = []
     jacobian = True
     i = 0 
+    print restarts, search_cons
     while i < Ne:
-        
         try:
             minima.append(scipy.optimize.minimize(
-               fun=sc_fun, x0=Xstart[i,np.newaxis], jac=jacobian, method='slsqp', constraints=search_cons,
+               fun=sc_fun, x0=Xstart[i,np.newaxis], jac=jacobian, method='L-BFGS-B', constraints=search_cons,
                options={'ftol':np.spacing(1), 'maxiter':20}
             ))
             i += 1
         #no derivatives
-        except IndexError:
-            jacobian = False
-            sc_fun = _scipy_optimizer_fkt_wrapper(acquisition_fkt, False)
+        except BayesianOptimizationError, e:
+            if e.errno == BayesianOptimizationError.NO_DERIVATIVE:
+                jacobian = False
+                sc_fun = _scipy_optimizer_fkt_wrapper(acquisition_fkt, False)
+            else:
+                raise e
     # X points:
     Xend = np.array([res.x for res in minima])
     # Objective function values:
     Xdh = np.array([res.fun for res in minima])
     new_x = Xend[np.argmin(Xdh)]
-    if D == 1:
+    if len(new_x.shape):
         new_x = np.array([new_x])
     
     return new_x

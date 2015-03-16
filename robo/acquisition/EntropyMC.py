@@ -8,6 +8,7 @@ from robo import BayesianOptimizationError
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.base import AcquisitionFunction 
 from robo.acquisition import Entropy
+from robo import BayesianOptimizationError
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
@@ -29,7 +30,10 @@ class EntropyMC(Entropy):
         self.loss_function = loss_function
         self.Np = Np
     
-    def __call__(self, X, Z=None, **kwargs):
+    def __call__(self, X, Z=None, derivative=False, **kwargs):
+        if derivative:
+            raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
+                                            "EntropyMC does not support derivative calculation until now")
         return self.dh_fun(X)
     
     def update(self, model):

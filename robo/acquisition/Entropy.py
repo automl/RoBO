@@ -59,7 +59,7 @@ class Entropy(AcquisitionFunction):
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP,self.dlogPdMu,self.dlogPdSigma,self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
-        self.W = np.random.randn(1, self.Np)
+        self.W = np.random.randn(1, self.Nb)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
     def _dh_fun(self, x):
@@ -71,11 +71,11 @@ class Entropy(AcquisitionFunction):
         # Innovation function for mean:
         dMdx = Lx
         # Innovation function for covariance:
-        dVdx = -Lx.dot(Lx.Np)
+        dVdx = -Lx.dot(Lx.T)
         # The transpose operator is there to make the array indexing equivalent to matlab's
-        dVdx = dVdx[np.triu(np.ones((N,N))).Np.astype(bool), np.newaxis]
+        dVdx = dVdx[np.triu(np.ones((N,N))).T.astype(bool), np.newaxis]
 
-        dMM = dMdx.dot(dMdx.Np)
+        dMM = dMdx.dot(dMdx.T)
         trterm = np.sum(np.sum(
             np.multiply(self.dlogPdMudMu, np.reshape(dMM, (1, dMM.shape[0],dMM.shape[1]))),
             2), 1)[:, np.newaxis]
@@ -175,9 +175,9 @@ class Entropy(AcquisitionFunction):
             
             logP[i] = a.next()            
             if with_derivatives:
-                dlogPdMu[i,:] = a.next().Np
+                dlogPdMu[i,:] = a.next().T
                 dlogPdMudMu[i, :, :] = a.next()
-                dlogPdSigma[i,:] = a.next().Np
+                dlogPdSigma[i,:] = a.next().T
             
         logP[np.isinf(logP)] = -500;    
         #re-normalize at the end, to smooth out numerical imbalances:
@@ -204,7 +204,7 @@ class Entropy(AcquisitionFunction):
     
         ff = np.einsum('ki,kj->kij', dlogPdMuold, dlogPdMuold)
         gg   = np.einsum('kij,k->ij',dlogPdMudMuold+ff,np.exp(logPold)) / Z;
-        Zij  = Zm.Np * Zm;
+        Zij  = Zm.T * Zm;
         adds = np.reshape(-gg+Zij,(1,D,D));
         dlogPdMudMu = dlogPdMudMuold + adds
         return logP,dlogPdMu,dlogPdSigma,dlogPdMudMu
@@ -256,33 +256,33 @@ class Entropy(AcquisitionFunction):
             C[k,:] = -1/sq2
             C = np.delete(C, k, 1)
             
-            R       = np.sqrt(P.Np) * C
-            r       = np.sum(MP.Np * C, 1)
+            R       = np.sqrt(P.T) * C
+            r       = np.sum(MP.T * C, 1)
             mp_not_zero = np.where(MP !=0)
             mpm = MP[mp_not_zero] * MP[mp_not_zero] / P[mp_not_zero]
             mpm     = sum(mpm);
             
             s       = sum(logS);
-            IRSR    = (np.eye(D-1) + np.dot(np.dot(R.Np , Sigma), R));
-            rSr     = np.dot(np.dot(r.Np, Sigma) , r);
-            A =  np.dot(R,np.linalg.solve(IRSR,R.Np)) 
+            IRSR    = (np.eye(D-1) + np.dot(np.dot(R.T , Sigma), R));
+            rSr     = np.dot(np.dot(r.T, Sigma) , r);
+            A =  np.dot(R,np.linalg.solve(IRSR,R.T)) 
             
-            A       = 0.5 * (A.Np + A) # ensure symmetry.
+            A       = 0.5 * (A.T + A) # ensure symmetry.
             b       = (Mu + np.dot(Sigma,r));
             Ab      = np.dot(A,b);
             dts     = 2 * np.sum(np.log(np.diagonal(np.linalg.cholesky(IRSR))));
-            logZ    = 0.5 * (rSr - np.dot(b.Np, Ab) - dts) + np.dot(Mu.Np, r) + s - 0.5 * mpm;
+            logZ    = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + np.dot(Mu.T, r) + s - 0.5 * mpm;
             yield logZ
-            btA = np.dot(b.Np, A)
+            btA = np.dot(b.T, A)
             
             dlogZdMu    = r - Ab
             yield dlogZdMu
             dlogZdMudMu = -A
             yield dlogZdMudMu
-            dlogZdSigma = -A - 2*np.outer(r,Ab.Np) + np.outer(r,r.Np) + np.outer(btA.Np,Ab.Np);
+            dlogZdSigma = -A - 2*np.outer(r,Ab.T) + np.outer(r,r.T) + np.outer(btA.T,Ab.T);
             _dlogZdSigma = np.zeros_like(dlogZdSigma)
             np.fill_diagonal(_dlogZdSigma, np.diagonal(dlogZdSigma))
-            dlogZdSigma = 0.5*(dlogZdSigma+dlogZdSigma.Np-_dlogZdSigma)
+            dlogZdSigma = 0.5*(dlogZdSigma+dlogZdSigma.T-_dlogZdSigma)
             dlogZdSigma = np.rot90(dlogZdSigma, k=2)[np.triu_indices(D)][::-1];
             yield dlogZdSigma
             

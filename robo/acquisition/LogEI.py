@@ -14,8 +14,10 @@ class LogEI(AcquisitionFunction):
         if derivative:
             raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
                                             "LogEI does not support derivative calculation until now")
-        if (X < self.X_lower).any() or (X > self.X_upper).any():
-            return np.array([[- np.inf]])
+        
+        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
+            #print "return -inf"
+            return np.array([[- np.finfo(np.float).max]])
         m, v = self.model.predict(X, Z)
         
         eta = self.model.getCurrentBest()

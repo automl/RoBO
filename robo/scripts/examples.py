@@ -137,15 +137,15 @@ def main(*args, **kwargs):
         
     elif args.acquisition == "Entropy": 
         if len(args.acquisition_parameters): 
-            acquisition_kwargs["Nb"] = float(args.acquisition_parameters[0])
-            acquisition_kwargs["Np"] = float(args.acquisition_parameters[1])
+            acquisition_kwargs["Nb"] = int  (args.acquisition_parameters[0])
+            acquisition_kwargs["Np"] = int(args.acquisition_parameters[1])
         acquisition_fkt = Entropy(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     if args.acquisition == "EntropyMC":
         if len(args.acquisition_parameters): 
-            acquisition_kwargs["Nb"] = float(args.acquisition_parameters[0])
-            acquisition_kwargs["Np"] = float(args.acquisition_parameters[1])
-            acquisition_kwargs["Nf"] = float(args.acquisition_parameters[2])
+            acquisition_kwargs["Nb"] = int(args.acquisition_parameters[0])
+            acquisition_kwargs["Np"] = int(args.acquisition_parameters[1])
+            acquisition_kwargs["Nf"] = int(args.acquisition_parameters[2])
         acquisition_fkt = EntropyMC(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     elif args.acquisition == "UCB":
