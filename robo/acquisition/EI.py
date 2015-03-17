@@ -6,9 +6,24 @@ from robo import BayesianOptimizationError
 from robo.acquisition.base import AcquisitionFunction 
 
 class EI(AcquisitionFunction):
-    
+
+    """
+    When calling this object it will return the expected improvement at a point x, as well as the derivative value
+    of the EI function. It works only for single input points.
+    """
+
     long_name = "Expected Improvement" 
     def __init__(self, model, X_lower, X_upper, par = 0.01,**kwargs):
+        """
+
+        :param model: A GPyModel contatining current data points.
+        :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of search space)
+        :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of search space)
+        :param par: A parameter meant to control the balance between exploration and exploitation of the acquisition
+                    function. Empirical testing determines 0.01 to be a good value in most cases.
+
+        :return: The value of the EI function and its derivative at point x.
+        """
         self.model = model
         self.par = par
         self.X_lower = X_lower
