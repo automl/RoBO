@@ -46,7 +46,7 @@ class GPyModel(object):
     """
     GPyModel is just a wrapper around the GPy Lib
     """
-    def __init__(self, kernel, noise_variance = None, optimize=True, num_restarts=100,  *args, **kwargs):
+    def __init__(self, kernel, noise_variance=None, optimize=True, num_restarts=100, *args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
         self.optimize = optimize
@@ -66,29 +66,29 @@ class GPyModel(object):
         self.likelihood = self.m.likelihood
         self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
-            #self.m['.*Gaussian_noise.variance'].unconstrain()
-            #self.m.constrain_fixed('noise',self.noise_variance)
-            
+            # self.m['.*Gaussian_noise.variance'].unconstrain()
+            # self.m.constrain_fixed('noise',self.noise_variance)
+            print "constraining noise variance to ", self.noise_variance
             self.m['.*Gaussian_noise.variance'] = self.noise_variance
             self.m['.*Gaussian_noise.variance'].fix()
             
         if self.optimize:
             stdout = sys.stdout
             sys.stdout = StringIO.StringIO()
-            self.m.optimize_restarts(num_restarts = self.num_restarts, robust=True)
+            self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
             sys.stdout = stdout
 
         self.observation_means = self.predict(self.X)[0]
         index_min = np.argmin(self.observation_means)
         self.X_star = self.X[index_min]
         self.f_star = self.observation_means[index_min]
-        #self.K = self.kernel.K(X, X) + self.m.likelihood.variance
-        #self.K = self.m.posterior.covariance
-        #self.cK = self.m.posterior.K_chol
-        #self.Sigma_chol = self.m.posterior.K_chol
-        #try:
+        # self.K = self.kernel.K(X, X) + self.m.likelihood.variance
+        # self.K = self.m.posterior.covariance
+        # self.cK = self.m.posterior.K_chol
+        # self.Sigma_chol = self.m.posterior.K_chol
+        # try:
         #    self.cK = np.linalg.cholesky(self.K)
-        #except np.linalg.LinAlgError:
+        # except np.linalg.LinAlgError:
         #    try:
         #        self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
         #    except np.linalg.LinAlgError:
@@ -96,7 +96,7 @@ class GPyModel(object):
         
         
     def update(self, X, Y):
-        #TODO use correct update method
+        # TODO use correct update method
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         self.train(X, Y)
@@ -111,13 +111,13 @@ class GPyModel(object):
         var = Kbx - np.dot(KbX.T, WiKx)
         return var
         
-    def predict(self, X,  projectTo = None,  full_cov=False):
+    def predict(self, X, projectTo=None, full_cov=False):
         mean, var = self.m.predict(X, full_cov=full_cov)    
         if not full_cov:
-            return mean[:,0], np.clip(var[:,0], np.finfo(var.dtype).eps, np.inf)
+            return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
         else:
             var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
-            return mean[:,0], var
+            return mean[:, 0], var
         
         
         
@@ -138,4 +138,4 @@ class GPyModel(object):
     def visualize(self, ax, plot_min, plot_max):
         self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
         
-        #xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()
+        # xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()

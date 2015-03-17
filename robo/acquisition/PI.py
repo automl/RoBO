@@ -13,16 +13,16 @@ class PI(AcquisitionFunction):
 
     def __call__(self, X, Z=None, derivative=False, **kwargs):
         if X.shape[0] > 1 :
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single x inputs")
-        if (X < self.X_lower).any() or (X > self.X_upper).any():
+            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "PI is only for single x inputs")
+        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
                 f = 0
-                df = np.zeros((X.shape[1],1))
-                return np.array([[f]]), np.array([[df]])
+                df = np.zeros((1, X.shape[1]))
+                return np.array([[f]]), np.array([df])
             else:
                 return np.array([[0]])
 
-        alpha = np.linalg.solve(self.model.cK, np.linalg.solve(self.model.cK.transpose(), self.model.Y))
+        
         dim = X.shape[1]
         m, v = self.model.predict(X, Z)
         eta = self.model.getCurrentBest()
@@ -31,9 +31,19 @@ class PI(AcquisitionFunction):
         f = norm.cdf(z)
         if derivative:
             dmdx, ds2dx = self.model.predictive_gradients(X)
-            dsdx = ds2dx / (2*s)
-            df = -(- norm.pdf(z) / s) * (dmdx + dsdx * z)
-        
-            return np.array([f]), np.array([df])
+            dmdx = dmdx[0]
+            ds2dx = ds2dx[0][:, None]
+            dsdx = ds2dx / (2 * s)
+            df = (-(-norm.pdf(z) / s) * (dmdx + dsdx * z)).T
+            
+        if len(f.shape) == 1:
+            return_f = np.array([f])
+        if derivative:
+            if len(df.shape) == 3:
+                return_df = df
+            else:
+                return_df = np.array([df])
+                
+            return return_f, return_df
         else:
-            return np.array([f])
+            return return_f

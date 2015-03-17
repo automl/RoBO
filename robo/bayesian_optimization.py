@@ -113,6 +113,7 @@ class BayesianOptimization(object):
     def choose_next(self, X=None, Y=None):
         if X is not None and Y is not None:
             #try:
+            print X,Y
             self.model.train(X, Y)
             self.model_untrained = False
             self.acquisition_fkt.update(self.model)

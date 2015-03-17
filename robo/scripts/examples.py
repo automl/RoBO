@@ -11,11 +11,21 @@ from robo import BayesianOptimization
 from robo.models import GPyModel 
 from robo.test_functions import one_dim_test, branin, hartmann6, hartmann3, goldstein_price_fkt
 from robo.acquisition import EI, PI, LogEI, Entropy, UCB, EntropyMC
-from robo.maximize import grid_search, DIRECT, cma, sample_optimizer
+from robo.maximize import grid_search, DIRECT, cma, stochastic_local_search
+
+
+class SmartFormatter(argparse.HelpFormatter):
+
+    def _split_lines(self, text, width):
+        # this is the RawTextHelpFormatter._split_lines
+        if text.startswith('R|'):
+            return text[2:].splitlines()  
+        return argparse.HelpFormatter._split_lines(self, text, width)
 
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description='Run robo examples', 
-                                     prog='robo_examples')
+                                     prog='robo_examples', 
+                                     formatter_class=SmartFormatter)
     
     parser.add_argument('save_dir', metavar="DESTINATION_FOLDER", type=str)
     
@@ -32,7 +42,12 @@ def main(*args, **kwargs):
                         dest="acquisition", choices= ("EI", "PI", "LogEI", "Entropy", "EntropyMC", "UCB"))
     
     parser.add_argument('-p', '--acquisition-parameter',  default=[], type=str, nargs="*",
-                        help='Choose the acquisition function parameters', 
+                        help='''R|Choose the acquisition function parameters.
+[float] For EI, PI, LogEI it\'s the minimum improvement. 
+[float] For UCB it\'s the factor the standard deviation is added.
+[int] [int] For Entropy it's the number of representer points and the number of the predictions at an evaluation point 
+[int] [int] [int] For EntropyMC it's the number of representer points, the number of the predictions at an evaluation point
+                  followed by the number of functions drawn from the gp. ''', 
                         dest="acquisition_parameters")
     
     parser.add_argument('-m', '--model',  default="GPy",  type=str,
@@ -41,7 +56,7 @@ def main(*args, **kwargs):
                         dest="model")
     
     parser.add_argument('-e', '--maximizer',  default="",  type=str,
-                        choices = ("grid_search", "DIRECT", "cma", "sample_optimizer"),
+                        choices = ("grid_search", "DIRECT", "cma", "stochastic_local_search"),
                         required = True,
                         help='Choose the acquisition maximizer', 
                         dest="maximizer")
@@ -121,9 +136,16 @@ def main(*args, **kwargs):
         acquisition_fkt = LogEI(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     elif args.acquisition == "Entropy": 
+        if len(args.acquisition_parameters): 
+            acquisition_kwargs["Nb"] = int  (args.acquisition_parameters[0])
+            acquisition_kwargs["Np"] = int(args.acquisition_parameters[1])
         acquisition_fkt = Entropy(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     if args.acquisition == "EntropyMC":
+        if len(args.acquisition_parameters): 
+            acquisition_kwargs["Nb"] = int(args.acquisition_parameters[0])
+            acquisition_kwargs["Np"] = int(args.acquisition_parameters[1])
+            acquisition_kwargs["Nf"] = int(args.acquisition_parameters[2])
         acquisition_fkt = EntropyMC(model, X_upper= X_upper, X_lower=X_lower,  **acquisition_kwargs)
         
     elif args.acquisition == "UCB":
@@ -140,8 +162,8 @@ def main(*args, **kwargs):
     elif args.maximizer == "cma":
         maximize_fkt = cma
         
-    elif args.maximizer == "sample_optimizer":
-        maximize_fkt = sample_optimizer
+    elif args.maximizer == "stochastic_local_search":
+        maximize_fkt = stochastic_local_search
         
     #
     # start the main loop

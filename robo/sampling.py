@@ -123,30 +123,3 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
                     return xx
                 else:
                     return xx
-
-def montecarlo_sampler(model, X_lower, X_upper, zb=None, Nx=20, Nf=10):
-    # zb are the representer points. If they are not supplied sampling is carried out over a regular grid.
-    # Nx is the "grid resolution"
-    # Nf is the number of functions to sample from the gaussian process
-    if zb is not None:
-        xs = zb
-    else:
-        dim = X_lower.size
-        n_bins = Nx*np.ones(dim)
-        bounds = np.empty((dim, 2))
-        bounds[:,0] = X_lower
-        bounds[:,1] = X_upper
-
-        xs = np.mgrid[[slice(row[0], row[1], n*1j) for row, n in zip(bounds, n_bins)]]
-        xs = xs.reshape(dim,-1).T
-
-    ys = model.sample(xs, size=Nf)
-
-    mins = np.argmin(ys, axis=0)
-
-    min_count = np.zeros(ys.shape)
-    min_count[mins, np.arange(0, Nf)] = 1
-    pmin = np.sum(min_count, axis=1) * (1. / Nf)
-    pmin = pmin[np.newaxis,:]
-
-    return xs, pmin
