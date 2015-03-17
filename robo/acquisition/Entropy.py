@@ -1,3 +1,97 @@
+# encoding=utf8
+
+"""
+This module contains the entropy search acquisition function.
+
+class:: Entropy(AcquisitionFunction)
+
+    .. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs)
+
+        :param model: A model should have at least the function getCurrentBest()
+                      and predict(X, Z).
+        :type model: GPyModel
+        :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of search space)
+        :type X_lower: np.ndarray (1,n)
+        :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of search space)
+        :type X_upper: np.ndarray (1,n)
+        :param Nb: Number of representer points for sampling.
+        :type Nb: int
+        :param sampling_acquisition: A function to be used in calculating the density that representer points are to be sampled from.
+        :type samping_acquisition: AcquisitionFunction
+        :param sampling_acquisition_kw: Additional keyword parameters to be passed to sampling_acquisition, if they are required, e.g. \dseta parameter for EI.
+        :type sampling_acquisition_kw: dict
+        :param Np:
+        :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it deafults to log loss (cf. loss_functions module).
+        :param kwargs:
+        :return:
+
+    .. method:: __call__(x, Z=None, derivative=False, **kwargs)
+
+        :param x: The point at which the function is to be evaluated. Its shape is (1,n), where n is the dimension of the search space.
+        :type x: np.ndarray (1, n)
+        :param Z: instance features to evaluate at. Can be None.
+        :param derivative: Controls whether the derivative is calculated and returned.
+        :type derivative: Boolean
+        :returns:
+
+    .. method:: sampling_acquisition_wrapper(x)
+        :param x:
+
+    .. method:: update_representer_points()
+
+    .. method:: update(model)
+        :param model:
+
+    .. method:: _dh_fun(x)
+        :param x:
+
+    .. method:: dh_fun(x, invertsign=True, derivative=False)
+        :param x:
+        :param invertsign:
+        :param derivative:
+        :return:
+
+    .. method:: _gp_innovation_local(self, x)
+        :param x:
+
+    .. method:: _joint_min(self, mu, var, with_derivatives=False, **kwargs)
+        :param mu:
+        :param var:
+        :param with_derivatives:
+        :param kwargs:
+        :return:
+
+    .. method:: _min_faktor(self, Mu, Sigma, k, gamma=1)
+        :param Mu:
+        :param Sigma:
+        :param k:
+        :param gamma:
+        :return:
+
+    .. method:: _lt_factor(self, s, l, M, V, mp, p, gamma)
+        :param s:
+        :param l:
+        :param M:
+        :param V:
+        :param mp:
+        :param p:
+        :param gamma:
+        :return:
+
+    .. method:: _log_relative_gauss(self, z)
+        :param z:
+
+    .. method:: plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000)
+        :param fig:
+        :param minx:
+        :param maxx:
+        :param plot_attr:
+        :param resolution:
+        :return:
+
+
+"""
+
 import sys, os
 from scipy.stats import norm
 import scipy
@@ -13,9 +107,11 @@ sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 here = os.path.abspath(os.path.dirname(__file__))
+
 class Entropy(AcquisitionFunction):
     long_name = "Information gain over p_min(x)" 
     def __init__(self, model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs):
+
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)
@@ -175,6 +271,7 @@ class Entropy(AcquisitionFunction):
         return Lx, dLxdx
     
     def _joint_min(self, mu, var, with_derivatives=False, **kwargs):
+
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
         if with_derivatives:
@@ -223,6 +320,7 @@ class Entropy(AcquisitionFunction):
         return logP, dlogPdMu, dlogPdSigma, dlogPdMudMu
             
     def _min_faktor(self, Mu, Sigma, k, gamma=1):
+
         D = Mu.shape[0]
         logS = np.zeros((D - 1,))
         # mean time first moment
@@ -372,7 +470,7 @@ class Entropy(AcquisitionFunction):
             return e, logPhi, 0
         
     def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
-        
+
         n = len(fig.axes)
         for i in range(n):
             fig.axes[i].change_geometry(n + 3, 1, i + 1) 
