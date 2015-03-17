@@ -72,10 +72,15 @@ def main(*args, **kwargs):
                         help='Choose a kernel for GP based models',
                         choices= ("RBF", ),
                         dest="kernel")
+    parser.add_argument('--seed',  default=None,  type=str,
+                        help='set a random seed', 
+                        dest="seed")
     
     
     args = parser.parse_args()
     
+    if args.seed is not None:
+        random.seed(args.seed)
     # Dimension Space where the 
     # objective function can be evaluated 
     #

@@ -53,11 +53,10 @@ class BayesianOptimization(object):
     def from_iteration(cls, save_dir, i):
         iteration_folder = save_dir + "/%03d" % (i, )
         that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "rb"))
-        
         if not isinstance(that, cls):
             raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR, "not a robo instance")
-        new_x, X, Y = pickle.load(open(iteration_folder+"/observations.pickle", "rb"))
-        return that, new_x, X, Y
+        new_x, X, Y, buest_guess = pickle.load(open(iteration_folder+"/observations.pickle", "rb"))
+        return that, new_x, X, Y, buest_guess
         
     def create_save_dir(self):
         if self.save_dir is not None:
@@ -98,7 +97,7 @@ class BayesianOptimization(object):
         else:        
             if X is None and Y is None and self.save_dir:
                 try:
-                    new_x, X, Y = self.init_last_iteration()
+                    new_x, X, Y, buest_guess = self.init_last_iteration()
                 except IOError as exception:
                     if not self.enough_arguments:
                         raise
@@ -112,15 +111,10 @@ class BayesianOptimization(object):
         
     def choose_next(self, X=None, Y=None):
         if X is not None and Y is not None:
-            #try:
-            print X,Y
             self.model.train(X, Y)
             self.model_untrained = False
             self.acquisition_fkt.update(self.model)
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
-            #except Exception, e:
-            #    print X, Y
-            #    raise e
         else:
             X = np.empty((1, self.dims)) 
             for i in range(self.dims):
@@ -143,6 +137,5 @@ class BayesianOptimization(object):
         max_iteration = self._get_last_iteration_number()
         iteration_folder = self.save_dir + "/%03d" % (max_iteration+1, )
         os.makedirs(iteration_folder)
-        
-        pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
-        pickle.dump([new_x, X, Y], open(iteration_folder+"/observations.pickle", "w"))
+        #pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
+        pickle.dump([new_x, X, Y, self.model.current_best_guess(self.X_lower, self.X_upper)], open(iteration_folder+"/observations.pickle", "w"))

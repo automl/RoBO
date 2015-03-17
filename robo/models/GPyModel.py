@@ -41,6 +41,7 @@ import sys
 import StringIO
 import numpy as np
 import GPy as GPy
+import robo
 
 class GPyModel(object):
     """
@@ -54,6 +55,16 @@ class GPyModel(object):
         self.X_star = None
         self.f_star = None
         self.m = None
+        
+    """def __getstate__(self):
+        return dict(kernel = self.kernel, 
+                    noise_variance = self.noise_variance,
+                    optimize = self.optimize,
+                    num_restarts = self.num_restarts,
+                    X = self.X,
+                    Y = self.Y,
+                    m_gaussian_noise = self.m['.*Gaussian_noise.variance'],
+                    )"""
     
     def train(self, X, Y):
         self.X = X
@@ -94,13 +105,20 @@ class GPyModel(object):
         #    except np.linalg.LinAlgError:
         #        self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
         
+    def current_best_guess(self, X_lower, X_upper):
+        if hasattr(self, "X"): 
+            acq = robo.acquisition.UCB(self, X_lower, X_upper, 0.0)
+            acq.update(self)
+            x = robo.maximize.stochastic_local_search(acq, X_lower, X_upper, Ne=450)
+            print "best guess", x
+            return x[0]
         
     def update(self, X, Y):
         # TODO use correct update method
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         self.train(X, Y)
-
+        
     
     def predict_variance(self, X1, X2):
         kern = self.m.kern

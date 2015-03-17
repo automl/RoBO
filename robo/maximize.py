@@ -11,7 +11,7 @@ try:
             return -acq_f(np.array([x])), 0
         return _l
     def DIRECT(acquisition_fkt, X_lower, X_upper):
-        x, fmin, ierror = _DIRECT.solve(_DIRECT_acquisition_fkt_wrapper(acquisition_fkt), l=[X_lower], u=[X_upper], maxT=2000, maxf=2000)
+        x, fmin, ierror = _DIRECT.solve(_DIRECT_acquisition_fkt_wrapper(acquisition_fkt), l=[X_lower], u=[X_upper], maxT=12000, maxf=12000)
         return np.array([x])
     
 except Exception, e:
