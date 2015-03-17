@@ -13,11 +13,11 @@ class PI(AcquisitionFunction):
 
     def __call__(self, X, Z=None, derivative=False, **kwargs):
         if X.shape[0] > 1 :
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single x inputs")
+            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "PI is only for single x inputs")
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
                 f = 0
-                df = np.zeros((x.shape[1],1))
+                df = np.zeros((1, X.shape[1]))
                 return np.array([[f]]), np.array([df])
             else:
                 return np.array([[0]])
@@ -32,13 +32,14 @@ class PI(AcquisitionFunction):
         if derivative:
             dmdx, ds2dx = self.model.predictive_gradients(X)
             dmdx = dmdx[0]
-            ds2dx = ds2dx[0][:,None]
-            dsdx = ds2dx / (2*s)
-            df = -(- norm.pdf(z) / s) * (dmdx + dsdx * z)
-        if len(f.shape)==1:
+            ds2dx = ds2dx[0][:, None]
+            dsdx = ds2dx / (2 * s)
+            df = (-(-norm.pdf(z) / s) * (dmdx + dsdx * z)).T
+            
+        if len(f.shape) == 1:
             return_f = np.array([f])
         if derivative:
-            if len(df.shape)==3:
+            if len(df.shape) == 3:
                 return_df = df
             else:
                 return_df = np.array([df])
