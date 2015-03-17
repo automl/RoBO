@@ -1,3 +1,41 @@
+"""
+This module contains the asymptotically exact, sampling based variant of the entropy search acquisition function.
+
+class:: EntropyMC(Entropy)
+
+    .. method:: __init__(model, X_lower, X_upper, Nb=50, Nf=1000, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=300, loss_function=None, **kwargs)
+
+        :param model: A model should have at least the function getCurrentBest()
+                      and predict(X, Z).
+        :type model: GPyModel
+        :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of search space)
+        :type X_lower: np.ndarray (1,n)
+        :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of search space)
+        :type X_upper: np.ndarray (1,n)
+        :param Nb: Number of representer points for sampling.
+        :type Nb: int
+        :param Nf: Number of function values to be sampled.
+        :type Nf: int
+        :param sampling_acquisition: A function to be used in calculating the density that representer points are to be sampled from.
+        :type samping_acquisition: AcquisitionFunction
+        :param sampling_acquisition_kw: Additional keyword parameters to be passed to sampling_acquisition, if they are required, e.g. \dseta parameter for EI.
+        :type sampling_acquisition_kw: dict
+        :param Np: Number of samples from standard normal distribution to be used.
+        :type Np: int
+        :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it deafults to log loss (cf. loss_functions module).
+        :param kwargs:
+        :return:
+
+    .. method:: __call__(X, Z=None, derivative=False, **kwargs)
+
+        :param X: The point at which the function is to be evaluated. Its shape is (1,n), where n is the dimension of the search space.
+        :type X: np.ndarray (1, n)
+        :param Z: instance features to evaluate at. Can be None.
+        :param derivative: Controls whether the derivative is calculated and returned.
+        :type derivative: Boolean
+        :returns:
+"""
+
 import sys
 from scipy.stats import norm
 import scipy

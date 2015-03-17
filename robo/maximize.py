@@ -1,3 +1,20 @@
+#encoding=utf8
+"""
+This module contains the optimizers that will be used when looking for the maxima of the acquisition functions.
+
+The following optimizers are currently defined:
+
+* DIRECT: Python wrapper to the DIRECT (DIviding RECTanlges) algorithm.
+* cma: Covariance Matrix Adaptation, a stochastic numerical optimization algorithm for "difficult" optimization
+  problems in Python. This works for problems with dimensionality strictly greater than one only.
+* grid_search: A simple implementation of constrained grid search in 1-D.
+* scipy.optimize.minimize: SciPy's built-in interface to numerous solvers. The ones available for constrained minimization
+  problems are: L-BFGS-B, TNC, COBYLA, SLSQP.
+
+
+"""
+
+
 import sys
 import StringIO
 import numpy as np
