@@ -1,0 +1,342 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[10pt,handout]{beamer}
+% \documentclass[10pt]{beamer}
+
+\usepackage{fouriernc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcase}
+
+
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{progressbar}
+%\progressbaroptions{headline=sections}
+
+
+% \usecolortheme{albatross}
+\usecolortheme{beaver}
+% \usecolortheme{beetle}
+% \usecolortheme{crane}
+% \usecolortheme{dolphin}
+% \usecolortheme{dove}
+% \usecolortheme{fly}
+% \usecolortheme{lily}
+% \usecolortheme{orchid}
+% \usecolortheme{rose}
+% \usecolortheme{seagull}
+% \usecolortheme{seahorse}
+% \usecolortheme{whale}
+% \usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+
+\setbeamercovered{dynamic}
+\definecolor{dgreen}{rgb}{0.,0.6,0.}
+\newcommand{\beispiel}[1]{\textcolor{dgreen}{\textbf {#1}}}
+
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[RoBO]
+{Robust Bayesian Optimization}
+ % The short title appears at the bottom of every slide, the full title is only on the title page
+
+
+\author{Joel Kaiser, José Luis Licón}
+\institute[Uni Freiburg] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
+\medskip
+% \textit{liconj@informatik.uni-freiburg.de} % Your email address
+}
+\date{\today} % Date, can be changed to a custom date
+
+\begin{document}
+\setbeamertemplate{caption}{\insertcaption}
+
+
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+\begin{frame}
+\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+%------------------------------------------------
+\section{Introduction}
+
+%------------------------------------------------
+
+\subsection{Bayesian Optimization}
+
+
+\begin{frame}
+\frametitle{Problem description}
+% \begin{columns}[c]
+  
+% \column{.45\textwidth}
+
+% \column{.6\textwidth}
+% \begin{center}
+% \scalebox{10}{\textbf{*}}
+% \end{center}
+% 
+% \end{columns}
+
+\end{frame}
+
+%------------------------------------------------
+
+%------------------------------------------------
+
+\subsection{Entropy Search}
+
+\begin{frame}
+\frametitle{Problem definition}
+
+Let $I \subset \mathbb R^D$ be a bounded set, and $f : I \rightarrow \mathbb{R}$
+a (possibly unknown) function. A probability measure $p(f)$ over the function
+space $\mathbb{R}^I$ will in turn induce the following probability measure:
+
+\[
+	p_{min}(x) \coloneqq P \left\{ x = \arg\!\min f(x) \right\} = 
+	\int_{f: I \rightarrow \mathbb{R}} p(f) \, 
+		\prod_{\widetilde x \in I} H[f(\widetilde{x} - f(x)] df
+\]
+
+The objective will be to obtain a maximally informative probability measure
+after a number $n$ of function evaluations. This problem is rendered 
+computationally tractable by making several approximations. 
+% \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+
+% \column{.6\textwidth} % Right column and width
+
+% \scalebox{10}{\textbf{*}}
+
+
+\end{frame}
+
+%------------------------------------------------
+ 
+\begin{frame}
+\frametitle{Problem definition}
+
+\begin{itemize}
+	\item $p(f)$ is defined as a Gaussian process
+	\item $p_{min}$ is discretized to a set of representer points chosen from
+	a non-uniform measure
+	\item $p_{min}$ is approximated, either by expectation propagation
+	or a Montecarlo method
+	\item The change in $p(f)$ as a function of the next function evaluation
+	can be predicted using the Gaussian process
+	\item Relative entropy w.r.t. a uniform distribution is chosen as a loss
+	function
+	\item Expected information gain from future evaluations can be 
+	approximated via the loss function
+	\item The locations for new evaluations are evaluated greedily
+\end{itemize}
+
+\end{frame}
+
+%------------------------------------------------
+\section{RoBO}
+
+\subsection{Architecture}
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Algorithm}
+
+
+\end{frame}
+%------------------------------------------------
+
+\subsection{Entropy Search Acquisition Function}
+%------------------------------------------------
+
+%------------------------------------------------
+
+
+
+%------------------------------------------------
+\section{Empirical Findings}
+
+\subsection{Test Functions}			
+
+%------------------------------------------------
+
+\begin{frame}
+\frametitle{Data}
+
+
+\end{frame}
+
+%------------------------------------------------
+\subsection{Testing procedure}
+
+
+%------------------------------------------------
+
+\subsection{Results}
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Results}
+
+
+\end{frame}
+
+
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Results}
+
+\end{frame}
+%------------------------------------------------
+
+
+%------------------------------------------------
+
+\section{Conclusions}
+
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Remarks}
+
+\begin{itemize}[<+->]
+	\item +
+	\item -
+
+\end{itemize}
+
+
+\end{frame}
+
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Future Directions}
+
+\begin{itemize}
+	\item EntropyMC
+\end{itemize}
+
+\end{frame}
+
+
+%------------------------------------------------
+
+\begin{frame}
+\frametitle{References}
+\footnotesize{
+\begin{thebibliography}{99} % Beamer does not support BibTeX so references must be inserted manually as below
+%%%
+\bibitem[Fitzgerald, 2014]{p1} Fitzgerald, T.; Malitsky, Y.; O'Sullivan, B.;
+Tierney, K. (2014)
+\newblock ReACT: Real-Time Algorithm Configuration through Tournaments
+\newblock \emph{Proceedings of the Seventh Annual Symposium on Combinatorial
+Search (SoCS 20104)}.
+%%%
+\bibitem[Leyton-Brown, 2000]{p1} Leyton-Brown, K.;
+Pearson, M.; Shoham, Y. (2000)
+\newblock Towards a universal test suite for combinatorial auction algorithms
+\newblock \emph{Proceedings of the 2nd ACM conference on Electronic commerce,
+66–76. ACM}
+%%%
+\bibitem[birattari, 2010]{p1} Birattari, M. et al (2010)
+\newblock F-race and iterated f-race: An overview.
+\newblock \emph{Experimental Methods for the Analysis of Optimization 
+Algorithms. Springer. 311-336}
+%%%
+\bibitem[battiti, 1994]{p1} Hutter, F.; Hoos, H.; Leyton-Brown, K.; Stuetzle, T.
+(2009)
+\newblock ParamILS: An automatic algorithm configuration framework.
+\newblock \emph{JAIR 36:267-306}
+%%%
+\bibitem[battiti, 1994]{p1} Ansotegui, C.; Sellmann, M.; Tierney, K. (2009)
+\newblock A gender-based genetic algorithm for the automatic configuration of
+algorithms.
+\newblock \emph{CP 36:267-306}
+%%%
+\bibitem[battiti, 1994]{p1} Hutter, F.; Hoos, H.; Leyton-Brown, K. (2011)
+\newblock Sequential model-based optimization for general algorithm 
+configuration.
+\newblock \emph{Learning and Intelligent Optimization. Springer. 507-523}
+%%%
+\bibitem[battiti, 1994]{p1} Roberto Battiti, Giampietro Tecchiolli (1994)
+\newblock The reactive tabu search.
+\newblock \emph{ORSA Journal on Computing 6(2):126-140}
+% %%%
+\bibitem[IBM, 2011]{p1} IBMM (2011)
+\newblock IBM ILOG CPLEX Optimization Studio 12.5
+
+\end{thebibliography}
+}
+\end{frame}
+
+%------------------------------------------------
+
+%------------------------------------------------
+
+%\begin{frame}
+%\begin{center}
+%\scalebox{10}{\textbf{?}}
+%\end{center}
+%\end{frame}
+
+%------------------------------------------------
+
+
+
+\begin{frame}
+\Huge{\centerline{The End}}
+
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+			\end{document}
