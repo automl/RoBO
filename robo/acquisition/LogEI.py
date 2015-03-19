@@ -108,4 +108,8 @@ class LogEI(AcquisitionFunction):
                     else:
                         log_ei[i] = b + np.log(1 - np.exp(a - b))
         return log_ei
-
+    def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
+        
+        ax = AcquisitionFunction.plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000)
+        ax.set_ylim(-30, 0)
+        return ax

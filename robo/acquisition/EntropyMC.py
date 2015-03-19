@@ -81,17 +81,24 @@ class EntropyMC(Entropy):
         self.W = np.random.randn(1, self.Np)
         self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True) 
         self.F = np.random.multivariate_normal(mean=np.zeros(self.Nb), cov=np.eye(self.Nb), size=self.Nf)
+        if np.any(np.isnan(self.Vb)):
+            raise Exception(self.Vb)
         try:
             self.cVb = np.linalg.cholesky(self.Vb)
+            
         except np.linalg.LinAlgError:
             try:
                 self.cVb = np.linalg.cholesky(self.Vb + 1e-10 * np.eye(self.Vb.shape[0]))
             except np.linalg.LinAlgError:
-                self.cVb = np.linalg.cholesky(self.Vb + 1e-6 * np.eye(self.Vb.shape[0]))
+                try:
+                    self.cVb = np.linalg.cholesky(self.Vb + 1e-6 * np.eye(self.Vb.shape[0]))
+                except np.linalg.LinAlgError:
+                    self.cVb = np.linalg.cholesky(self.Vb + 1e-3 * np.eye(self.Vb.shape[0]))
         self.f = np.add(np.dot(self.cVb, self.F.T).T, self.Mb).T
         self.pmin = self.calc_pmin(self.f)
         self.logP = np.log(self.pmin)
-    
+        self.update_buest_guesses()
+        
     def calc_pmin(self, f):
         if len(f.shape) == 3:
             f = f.reshape(f.shape[0], f.shape[1] * f.shape[2])
@@ -109,8 +116,22 @@ class EntropyMC(Entropy):
         dVdb = -Lx.dot(Lx.T)
         stoch_changes = dMdb.dot(self.W)
         Mb_new = self.Mb[:, None] + stoch_changes
+        
         Vb_new = self.Vb + dVdb
-        cVb_new = np.linalg.cholesky(Vb_new)
+        
+        #Vb_new[np.diag_indices(Vb_new.shape[0])] = np.clip(Vb_new[np.diag_indices(Vb_new.shape[0])], np.finfo(Vb_new.dtype).eps, np.inf)
+        
+        #Vb_new[np.where((Vb_new < np.finfo(Vb_new.dtype).eps) & (Vb_new > -np.finfo(Vb_new.dtype).eps))] = 0
+        try:
+            cVb_new = np.linalg.cholesky(Vb_new)
+        except np.linalg.LinAlgError:
+            try:
+                cVb_new = np.linalg.cholesky(Vb_new + 1e-10 * np.eye(Vb_new.shape[0]))
+            except np.linalg.LinAlgError:
+                try:
+                    cVb_new = np.linalg.cholesky(Vb_new + 1e-6 * np.eye(Vb_new.shape[0]))
+                except np.linalg.LinAlgError:
+                    cVb_new = np.linalg.cholesky(Vb_new + 1e-3 * np.eye(Vb_new.shape[0]))
         f_new = np.dot(cVb_new, self.F.T)
         f_new = f_new[:, :, None]
         Mb_new = Mb_new[:, None, :]
@@ -133,21 +154,14 @@ class EntropyMC(Entropy):
             fig.axes[i].change_geometry(n + 3, 1, i + 1) 
         ax = fig.add_subplot(n + 3, 1, n + 1)
         bar_ax = fig.add_subplot(n + 3, 1, n + 2)
-        other_acq_ax = fig.add_subplot(n + 3, 1, n + 3)
         plotting_range = np.linspace(minx, maxx, num=resolution)
-        acq_v = np.array([ self(np.array([x]), derivative=True)[0][0] for x in plotting_range[:, np.newaxis] ])
+        acq_v = np.array([ self(np.array([x]))[0][0] for x in plotting_range[:, np.newaxis] ])
         ax.plot(plotting_range, acq_v, **plot_attr)
         zb = self.zb
         bar_ax.plot(zb, np.zeros_like(zb), "g^")
         ax.set_xlim(minx, maxx)
         bar_ax.bar(zb, self.pmin[:, 0], width=(maxx - minx) / 200, color="yellow")
         bar_ax.set_xlim(minx, maxx)
-        other_acq_ax.plot(zb, self.f[:, 0], "g+")
-        ss = np.empty_like(zb)
-        ss.fill(0.2)
-        bar_ax.plot(self.zb[:, 0], ss, "r." , markeredgewidth=5.0)
         self.change_pmin_by_innovation(np.array([[0.4]]), self.f)
-        # other_acq_ax.set_xlim(minx, maxx)
-        # self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})#, logscale=True)
         ax.set_title(str(self))
         return ax

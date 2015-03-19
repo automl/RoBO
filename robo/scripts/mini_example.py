@@ -2,7 +2,7 @@ import numpy as np
 import GPy
 from robo import BayesianOptimization
 from robo.models import GPyModel 
-from robo.acquisition import Entropy, LogEI, PI, EI
+from robo.acquisition import Entropy, LogEI, PI, EI, EntropyMC
 from robo.maximize import grid_search
 from robo.loss_functions import logLoss
 from robo.visualization import Visualization
@@ -30,12 +30,12 @@ print initial_X, initial_Y
 kernel = GPy.kern.RBF(input_dim=dims)
 maximize_fkt = grid_search
 model = GPyModel(kernel, optimize=True, noise_variance = 1e-4, num_restarts=10)
-entropy = Entropy(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=50, T=200, loss_function = logLoss)
+entropy = Entropy(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=50, Np=200, loss_function = logLoss)
+entropy_mc = EntropyMC(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=200, Np=300, Nf=300, loss_function = logLoss)
 ei = EI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 pi = PI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 
-for acquisition_fkt in [ei, pi, entropy]:
-    
+for acquisition_fkt in [ei, pi, entropy, entropy_mc]:
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, 
                               model=model, 
                               maximize_fkt=maximize_fkt, 
@@ -44,9 +44,7 @@ for acquisition_fkt in [ei, pi, entropy]:
                               dims=dims, 
                               objective_fkt=objective_funktion, 
                               save_dir=None)
-    
     next_x = bo.choose_next(initial_X, initial_Y)
-    
     Visualization(bo, 
                   next_x, 
                   X=initial_X, 

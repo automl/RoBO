@@ -14,7 +14,7 @@ except:
     import pickle
 
 objectives = (("branin", np.array(((-np.pi, 12.275), (np.pi, 2.275), (9.42478, 2.475))), 0.397887),)
-maximizers = ("stochastic_local_search",)
+maximizers = ("DIRECT",)#"stochastic_local_search",)
 n = 200
 folder_prefix = "/tmp/robo_run/"
 
@@ -23,17 +23,24 @@ parameter_setups = {
     #"PI" :         [('0.3',)],
     #"LogEI" :     [('0.0',), ('0.3',), ('1.5',)],
     #"UCB" :        [('1.0',)],
-    "Entropy" :     [('20', '300')],
-    "EntropyMC" :     [('20', '300', '2000')],
+    "Entropy" :     [('50', '70')],
+    "EntropyMC" :     [('50', '70', '1000')],
 }
-
+parameter_setups = {
+    "EI" :         [('0.01',)],
+    "PI" :         [('0.01',)],
+    #"LogEI" :     [('0.0',), ('0.3',), ('1.5',)],
+    #"UCB" :        [('1.0',)],
+    #"Entropy" :     [('20', '200')],
+    #"EntropyMC" :     [('20','200', '2000')],
+}
 colors = ["#000000","#ff0000", "#000077", "#0000ff", "#007700",
           "#00ff00", "#770000",  "#777700",
           "#ffff00", "#770077", "#ff00ff", "#007777",
           "#00ffff", "#ff7700", "#ff0077", "#00ff77"]
 
 seed = random.random()
-cmd_template = "robo_examples --overwrite -a %(acquisition_fkt)s -p %(acq_param)s -m GPy --seed %(seed)s -e %(maximize)s -n %(n)s -o %(objective)s %(target_folder)s  &"
+cmd_template = "robo_examples --noise 1e-4 --overwrite -a %(acquisition_fkt)s -p %(acq_param)s -m GPy --seed %(seed)s -e %(maximize)s -n %(n)s -o %(objective)s %(target_folder)s  &"
 folder_name_layout = "%(acquisition_fkt)s_%(acq_param)s_%(objective)s"
 
 num_runs = reduce(lambda c, l: c + len(l), parameter_setups.values(), 0) * len(objectives) * len(maximizers)
@@ -92,7 +99,13 @@ for objective in objectives:
                             for j in range(objective[1].shape[0]):
                                 if np.linalg.norm(X[-1] - objective[1][j], 2) < inc_x_dist:
                                     inc_x_dist = np.linalg.norm(X[-1] - objective[1][j], 2)
-                                x_dist[j] = np.linalg.norm(best_guess[0] - objective[1][j], 2)
+                                    
+                                x_dist[j] = np.linalg.norm(best_guess - objective[1][j], 2)
+                                print "#"*30
+                                print "buest guess:\n ", best_guess
+                                print "objective:\n ", objective[1][j]
+                                print "x_dist:\N", x_dist[j]
+                                print "#"*30
                             x_dist_min[i - 2] = x_dist.min()
                             y_dist_min[i-2] =  best_guess_y - objective[2]
                             inc_x_dists_min[i - 2] = inc_x_dist
