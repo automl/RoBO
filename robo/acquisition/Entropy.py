@@ -101,7 +101,9 @@ import copy
 from robo.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling import sample_from_measure
+from robo.maximize import _scipy_optimizer_fkt_wrapper
 from robo.acquisition.LogEI import LogEI
+from robo.acquisition.UCB import UCB
 from robo.acquisition.base import AcquisitionFunction 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
@@ -125,11 +127,24 @@ class Entropy(AcquisitionFunction):
             loss_function = logLoss
         self.loss_function = loss_function
         self.Np = Np
+        
     
     def _get_most_probable_minimum(self):
-        mi = np.argmax(self.logP)
-        xx = self.zb[mi, np.newaxis]
-        return xx
+        acq = UCB(self.model, self.X_lower, self.X_upper, 0.0)
+        sc_fun = _scipy_optimizer_fkt_wrapper(acq, derivative=False)
+        minima = []
+        for i in range(self.BestGuesses.shape[0]):
+            xx = self.BestGuesses[i]
+            minima.append(scipy.optimize.minimize(
+                   fun=sc_fun, x0=xx, jac=False, method='L-BFGS-B', constraints=None,
+                   options={'ftol':np.spacing(1), 'maxiter':120}
+                ))
+            
+        Xdh = np.array([res.fun for res in minima])
+        Xend = np.array([res.x for res in minima])
+        new_x = Xend[np.nanargmin(Xdh)]
+        print new_x.shape, new_x
+        return np.array([new_x]) 
         
     def __call__(self, X, Z=None, derivative=False, **kwargs):
         if X.shape[0] > 1 :
@@ -157,6 +172,19 @@ class Entropy(AcquisitionFunction):
         if len(self.lmb.shape) == 1:
             self.lmb = self.lmb[:, None]
             
+    def update_buest_guesses(self):
+        if self.BestGuesses.shape[0] == 0:
+            cmin = np.inf
+        else:
+            m = self.BestGuesses - self.zb[np.argmax(self.logP + self.lmb)]
+            sqm = m * m
+            c = np.sqrt(np.sum(sqm, axis=1))
+            cmin = c.min() 
+        if cmin < 0.25:
+            self.BestGuesses[c.argmin()] = self.zb[np.argmax(self.logP + self.lmb)]
+        else:
+            self.BestGuesses = np.append(self.BestGuesses, np.array([self.zb[np.argmax(self.logP + self.lmb)]]), axis=0)
+            
     def update(self, model):
         self.model = model
         self.update_representer_points()
@@ -164,7 +192,8 @@ class Entropy(AcquisitionFunction):
         self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.W = np.random.randn(1, self.Nb)
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
-
+        self.update_buest_guesses()
+        
     def _dh_fun(self, x):
         # Number of belief locations:
         N = self.logP.size
@@ -471,10 +500,10 @@ class Entropy(AcquisitionFunction):
 
         n = len(fig.axes)
         for i in range(n):
-            fig.axes[i].change_geometry(n + 3, 1, i + 1) 
-        ax = fig.add_subplot(n + 3, 1, n + 1)
-        bar_ax = fig.add_subplot(n + 3, 1, n + 2)
-        other_acq_ax = fig.add_subplot(n + 3, 1, n + 3)
+            fig.axes[i].change_geometry(n + 2, 1, i + 1) 
+        ax = fig.add_subplot(n + 2, 1, n + 1)
+        bar_ax = fig.add_subplot(n + 2, 1, n + 2)
+        #other_acq_ax = fig.add_subplot(n + 3, 1, n + 3)
         plotting_range = np.linspace(minx, maxx, num=resolution)
         acq_v = np.array([ self(np.array([x]), derivative=True)[0][0] for x in plotting_range[:, np.newaxis] ])
         ax.plot(plotting_range, acq_v, **plot_attr)
@@ -484,9 +513,8 @@ class Entropy(AcquisitionFunction):
         ax.set_xlim(minx, maxx)
         bar_ax.bar(zb, pmin, width=(maxx - minx) / (2 * zb.shape[0]), color="yellow")
         bar_ax.set_xlim(minx, maxx)
-        
-        
+        bar_ax.set_ylim(0.0, pmin.max())
+        other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})  # , logscale=True)
         other_acq_ax.set_xlim(minx, maxx)
-        self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})  # , logscale=True)
         ax.set_title(str(self))
         return ax

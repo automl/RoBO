@@ -16,7 +16,7 @@ class UCB(AcquisitionFunction):
             raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
                                             "UCB  does not support derivative calculation until now")
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
-            return np.array([[0]])
+            return np.array([[- np.finfo(np.float).max]])
         mean, var = self.model.predict(X, Z)
         #minimize in f so maximize negative lower bound
         return -(mean - self.par * np.sqrt(var))

@@ -111,7 +111,11 @@ class BayesianOptimization(object):
         
     def choose_next(self, X=None, Y=None):
         if X is not None and Y is not None:
-            self.model.train(X, Y)
+            try:
+                self.model.train(X, Y)
+            except Exception, e:
+                print "could not train",  X, Y
+                raise e
             self.model_untrained = False
             self.acquisition_fkt.update(self.model)
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
@@ -138,4 +142,9 @@ class BayesianOptimization(object):
         iteration_folder = self.save_dir + "/%03d" % (max_iteration+1, )
         os.makedirs(iteration_folder)
         #pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
-        pickle.dump([new_x, X, Y, self.model.current_best_guess(self.X_lower, self.X_upper)], open(iteration_folder+"/observations.pickle", "w"))
+        if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
+            pickle.dump([new_x, X, Y, self.acquisition_fkt._get_most_probable_minimum()[0]], open(iteration_folder+"/observations.pickle", "w"))
+        else:
+            pickle.dump([new_x, X, Y, self.model.getCurrentBestX()], open(iteration_folder+"/observations.pickle", "w"))
+        
+        

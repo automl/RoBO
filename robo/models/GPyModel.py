@@ -105,13 +105,7 @@ class GPyModel(object):
         #    except np.linalg.LinAlgError:
         #        self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
         
-    def current_best_guess(self, X_lower, X_upper):
-        if hasattr(self, "X"): 
-            acq = robo.acquisition.UCB(self, X_lower, X_upper, 0.0)
-            acq.update(self)
-            x = robo.maximize.stochastic_local_search(acq, X_lower, X_upper, Ne=450)
-            print "best guess", x
-            return x[0]
+
         
     def update(self, X, Y):
         # TODO use correct update method
@@ -135,6 +129,7 @@ class GPyModel(object):
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
         else:
             var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
+            var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
             return mean[:, 0], var
         
         
