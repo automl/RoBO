@@ -188,11 +188,9 @@ computationally tractable by making several approximations.
 %------------------------------------------------
 \begin{frame}
 \frametitle{Main modules}
-
-\begin{itemize}
-	\item Models
-	\item Acquisition functions
-\end{itemize}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{robo_framework.png}
+\end{center}
 
 \end{frame}
 %------------------------------------------------
@@ -271,19 +269,41 @@ continuous).
 %------------------------------------------------
 \section{Empirical Findings}
 
-\subsection{Test Functions}			
+%\subsection{Test Functions}			
 
 %------------------------------------------------
 
+
+
+
+%------------------------------------------------
+\subsection{Test Functions}
 \begin{frame}
 \frametitle{Data}
-
-
+\begin{minipage}{0.55\textwidth}
+Objective functions:
+\begin{itemize}
+\item Branin function
+\begin{itemize}
+\item dimensions: 2
+\item global minima: 3
+\item runs: 200
+\end{itemize}
+\item Self constructed test function
+\end{itemize}
+Used different acquisition funktion:
+\begin{itemize}
+\item Expected Improvement
+\item Probability of improvement
+\item Upper confidence bound
+\item Entropy (Expectation Propagation)
+\item Entropy (Monte Carlo)
+\end{itemize}
+\end{minipage}
+\begin{minipage}[t]{0.43\textwidth}
+\includegraphics[width=\textwidth]{branin.png}
+\end{minipage}
 \end{frame}
-
-%------------------------------------------------
-\subsection{Testing procedure}
-
 
 %------------------------------------------------
 
