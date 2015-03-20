@@ -26,7 +26,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{textcase}
-\usepackage{graphicx}
+
 
 \mode<presentation> {
 
@@ -192,6 +192,7 @@ computationally tractable by making several approximations.
 \begin{itemize}
 	\item Models
 	\item Acquisition functions
+	\item Maximizers
 \end{itemize}
 
 \end{frame}
@@ -241,6 +242,30 @@ of the minimum. Not yet stable.
 
 %------------------------------------------------
 \begin{frame}
+\frametitle{Maximizers}
+
+
+
+\begin{itemize}
+
+\item \textit{DIRECT}. Python wrapper to the DIviding RECTangles algorithm.
+\item \textit{cma}. Covariance Matrix Adaptation, a stochastic numerical
+optimization algorithm for "difficult" optimization problems in Python. Only
+for $dim \geq 2$.
+\item \textit{grid\_search}. A trivial optimizer for $1D$.
+\item \textit{scipy.optimize.minimize}. SciPy's built-in interface to numerous
+solvers. The ones available for constrained minimization problems are: %L-BFGS-B, 
+TNC, COBYLA, SLSQP.
+
+
+\end{itemize}
+
+\end{frame}
+%------------------------------------------------
+
+
+%------------------------------------------------
+\begin{frame}
 \frametitle{Other framework features}
 
 \begin{itemize}
@@ -260,6 +285,18 @@ continuous).
 
 \subsection{Entropy Search Acquisition Function}
 %------------------------------------------------
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Discrete representation of continuous distributions}
+
+The integral in the problem definition is approximated by using an irregular
+discretization grid. Its representer points are sampled using an MCMC sampler
+(shrinking rank slice sampling).
+
+\end{frame}
+%------------------------------------------------
+
 
 
 
@@ -292,39 +329,15 @@ continuous).
 %------------------------------------------------
 \begin{frame}
 \frametitle{Results}
-\includegraphics[width=\textwidth]{PI.png}
-\end{frame}
 
-%------------------------------------------------
-\begin{frame}
-\frametitle{Results}
-\includegraphics[width=\textwidth]{EI.png}
-\end{frame}
-%------------------------------------------------
-\begin{frame}
-\frametitle{Results}
-\includegraphics[width=\textwidth]{Entropy.png}
-\end{frame}
-%------------------------------------------------
-\begin{frame}
-\frametitle{Results}
-\includegraphics[width=\textwidth]{EntropyMC.png}
-\end{frame}
-%------------------------------------------------
-\begin{frame}
-\frametitle{Results}
- 
-\includegraphics[width=\textwidth]{plot_branin2.png}
 
 \end{frame}
-%------------------------------------------------
+
 
 
 %------------------------------------------------
 \begin{frame}
 \frametitle{Results}
- 
-\includegraphics[width=\textwidth]{plot_branin1.png}
 
 \end{frame}
 %------------------------------------------------
