@@ -119,9 +119,9 @@ class EntropyMC(Entropy):
         
         Vb_new = self.Vb + dVdb
         
-        #Vb_new[np.diag_indices(Vb_new.shape[0])] = np.clip(Vb_new[np.diag_indices(Vb_new.shape[0])], np.finfo(Vb_new.dtype).eps, np.inf)
+        Vb_new[np.diag_indices(Vb_new.shape[0])] = np.clip(Vb_new[np.diag_indices(Vb_new.shape[0])], np.finfo(Vb_new.dtype).eps, np.inf)
         
-        #Vb_new[np.where((Vb_new < np.finfo(Vb_new.dtype).eps) & (Vb_new > -np.finfo(Vb_new.dtype).eps))] = 0
+        Vb_new[np.where((Vb_new < np.finfo(Vb_new.dtype).eps) & (Vb_new > -np.finfo(Vb_new.dtype).eps))] = 0
         try:
             cVb_new = np.linalg.cholesky(Vb_new)
         except np.linalg.LinAlgError:
@@ -146,22 +146,22 @@ class EntropyMC(Entropy):
         # Calculate the Kullback-Leibler divergence w.r.t. this pmin approximation
         H_old = np.sum(np.multiply(self.pmin, (self.logP + self.lmb)))
         H_new = np.sum(np.multiply(new_pmin, (np.log(new_pmin) + self.lmb)))
-        return np.array([[ -H_new + H_old]])
+        # TODO: do not do the abs
+        return np.array([[ np.abs(-H_new + H_old)]])
     
     def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
         n = len(fig.axes)
         for i in range(n):
-            fig.axes[i].change_geometry(n + 3, 1, i + 1) 
-        ax = fig.add_subplot(n + 3, 1, n + 1)
-        bar_ax = fig.add_subplot(n + 3, 1, n + 2)
+            fig.axes[i].change_geometry(n + 1, 1, i + 1) 
+        ax = fig.add_subplot(n + 1, 1, n + 1)
+        #bar_ax = fig.add_subplot(n + 3, 1, n + 2)
         plotting_range = np.linspace(minx, maxx, num=resolution)
         acq_v = np.array([ self(np.array([x]))[0][0] for x in plotting_range[:, np.newaxis] ])
         ax.plot(plotting_range, acq_v, **plot_attr)
-        zb = self.zb
-        bar_ax.plot(zb, np.zeros_like(zb), "g^")
+        #zb = self.zb
+        #bar_ax.plot(zb, np.zeros_like(zb), "g^")
         ax.set_xlim(minx, maxx)
-        bar_ax.bar(zb, self.pmin[:, 0], width=(maxx - minx) / 200, color="yellow")
-        bar_ax.set_xlim(minx, maxx)
-        self.change_pmin_by_innovation(np.array([[0.4]]), self.f)
+        #bar_ax.bar(zb, self.pmin[:, 0], width=(maxx - minx) / 200, color="yellow")
+        #bar_ax.set_xlim(minx, maxx)
         ax.set_title(str(self))
         return ax

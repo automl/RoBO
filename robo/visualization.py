@@ -37,6 +37,7 @@ class Visualization(object):
       
         self.prefix = prefix
         self.fig = plt.figure()
+        
         self.new_x = new_x
         self.obj_plot_min_y = None
         self.obj_plot_max_y = None
