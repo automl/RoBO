@@ -271,21 +271,21 @@ TNC, COBYLA, SLSQP.
 
 
 %------------------------------------------------
-\begin{frame}
-\frametitle{Other framework features}
-
-\begin{itemize}
-\item Support different kinds of parameters (conditional, categorial, 
-continuous).
-\item Can accept data set size as parameter.
-\item REMBO
-\item Can change model if the current one performs poorly
-\item Chooser: can access history, predictions can be forwarded
-\item Visualization is implemented for models and acquisition functions
-
-\end{itemize}
-
-\end{frame}
+%\begin{frame}
+%\frametitle{Other framework features}
+%
+%\begin{itemize}
+%\item Support different kinds of parameters (conditional, categorial, 
+%continuous).
+%\item Can accept data set size as parameter.
+%\item REMBO
+%\item Can change model if the current one performs poorly
+%\item Chooser: can access history, predictions can be forwarded
+%\item Visualization is implemented for models and acquisition functions
+%
+%\end{itemize}
+%
+%\end{frame}
 %------------------------------------------------
 
 
@@ -322,21 +322,12 @@ discretization grid. Its representer points are sampled using an MCMC sampler
 
 
 %------------------------------------------------
-\subsection{Test Functions}
 \begin{frame}
 \frametitle{Test functions}
 \begin{minipage}{0.55\textwidth}
-Objective functions:
 \begin{itemize}
-\item Branin function
-\begin{itemize}
-\item dimensions: 2
-\item global minima: 3
-\item runs: 200
-\end{itemize}
-\item Self constructed test function
-\end{itemize}
-Used different acquisition funktion:
+\item Some 1D fundction as objective:
+\item Acquisition functions:
 \begin{itemize}
 \item Expected Improvement
 \item Probability of improvement
@@ -344,9 +335,10 @@ Used different acquisition funktion:
 \item Entropy (Expectation Propagation)
 \item Entropy (Monte Carlo)
 \end{itemize}
-\end{minipage}
-\begin{minipage}[t]{0.43\textwidth}
-\includegraphics[width=\textwidth]{branin.png}
+\end{itemize}  
+\end{minipage}%
+\begin{minipage}{0.43\textwidth}
+\includegraphics[width=\textwidth]{self_constructed_oned.png}
 \end{minipage}
 \end{frame}
 
@@ -376,6 +368,33 @@ Used different acquisition funktion:
 \includegraphics[width=\textwidth]{EntropyMC.png}
 \end{frame}
 %------------------------------------------------
+
+\subsection{Test Functions}
+\begin{frame}
+\frametitle{Test functions}
+\begin{minipage}{0.55\textwidth}
+\begin{itemize}
+\item Branin function as objective:
+\begin{itemize}
+\item dimensions: 2
+\item global minima: 3
+\item runs: 200
+\end{itemize}
+\item Acquisition functions:
+\begin{itemize}
+\item Expected Improvement
+\item Probability of improvement
+\item Upper confidence bound
+\item Entropy (Expectation Propagation)
+\item Entropy (Monte Carlo)
+\end{itemize}
+\end{itemize}
+\end{minipage}%
+\begin{minipage}{0.43\textwidth}
+\includegraphics[width=\textwidth]{branin.png}
+\end{minipage}
+\end{frame}
+
 \begin{frame}
 \frametitle{Results}
 
@@ -417,7 +436,11 @@ Used different acquisition funktion:
 \frametitle{Future Directions}
 
 \begin{itemize}
-	\item EntropyMC
+\item Support different kinds of parameters (conditional, categorial, continuous).
+\item Can accept data set size as parameter.
+\item Random Embeddings
+\item Can change model if the current one performs poorly
+\item Chooser: can access history, predictions can be forwarded
 \end{itemize}
 
 \end{frame}
