@@ -106,25 +106,32 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 %------------------------------------------------
 \section{Introduction}
 
+
+
+%------------------------------------------------
+
+%------------------------------------------------
+\section{Theoretical background}
+
 %------------------------------------------------
 
 \subsection{Bayesian Optimization}
 
 
-%\begin{frame}
-%\frametitle{Problem description}
-% \begin{columns}[c]
-  
-% \column{.45\textwidth}
+\begin{frame}
+\frametitle{Problem description}
 
-% \column{.6\textwidth}
-% \begin{center}
-% \scalebox{10}{\textbf{*}}
-% \end{center}
-% 
-% \end{columns}
+In an optimization problem one looks for extrema of the form
 
-%\end{frame}
+\[
+	\max \left\{ f(x) \mid x \in \mathcal A \subset \mathbb{R}^n \right\},
+\]
+subject to various conditions on $f : \mathbb{R}^n \rightarrow \mathbb{R}$ and
+$\mathcal{A} $.
+
+Assume the analytic form of $f$ is unknown.  and few observations of it,
+$f_i = f(x_i)$ are at hand
+\end{frame}
 
 %------------------------------------------------
 
