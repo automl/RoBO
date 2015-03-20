@@ -501,8 +501,8 @@ class Entropy(AcquisitionFunction):
         n = len(fig.axes)
         for i in range(n):
             fig.axes[i].change_geometry(n + 2, 1, i + 1) 
-        ax = fig.add_subplot(n + 2, 1, n + 1)
-        bar_ax = fig.add_subplot(n + 2, 1, n + 2)
+        ax = fig.add_subplot(n + 1, 1, n + 1)
+        #bar_ax = fig.add_subplot(n + 2, 1, n + 2)
         #other_acq_ax = fig.add_subplot(n + 3, 1, n + 3)
         plotting_range = np.linspace(minx, maxx, num=resolution)
         acq_v = np.array([ self(np.array([x]), derivative=True)[0][0] for x in plotting_range[:, np.newaxis] ])
@@ -511,10 +511,10 @@ class Entropy(AcquisitionFunction):
         zb = self.zb
         pmin = np.exp(self.logP)
         ax.set_xlim(minx, maxx)
-        bar_ax.bar(zb, pmin, width=(maxx - minx) / (2 * zb.shape[0]), color="yellow")
-        bar_ax.set_xlim(minx, maxx)
-        bar_ax.set_ylim(0.0, pmin.max())
-        other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})  # , logscale=True)
-        other_acq_ax.set_xlim(minx, maxx)
+        #bar_ax.bar(zb, pmin, width=(maxx - minx) / (2 * zb.shape[0]), color="yellow")
+        #bar_ax.set_xlim(minx, maxx)
+        #bar_ax.set_ylim(0.0, pmin.max())
+        #other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})  # , logscale=True)
+        #other_acq_ax.set_xlim(minx, maxx)
         ax.set_title(str(self))
         return ax
