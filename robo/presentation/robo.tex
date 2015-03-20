@@ -111,8 +111,8 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 \subsection{Bayesian Optimization}
 
 
-\begin{frame}
-\frametitle{Problem description}
+%\begin{frame}
+%\frametitle{Problem description}
 % \begin{columns}[c]
   
 % \column{.45\textwidth}
@@ -124,7 +124,7 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 % 
 % \end{columns}
 
-\end{frame}
+%\end{frame}
 
 %------------------------------------------------
 
@@ -187,14 +187,82 @@ computationally tractable by making several approximations.
 
 %------------------------------------------------
 \begin{frame}
-\frametitle{Algorithm}
+\frametitle{Main modules}
 
+\begin{itemize}
+	\item Models
+	\item Acquisition functions
+\end{itemize}
 
 \end{frame}
 %------------------------------------------------
 
+%------------------------------------------------
+\begin{frame}
+\frametitle{Models}
+
+Models are constructed as a wrapper to the GPy GPRegression class.
+
+\begin{itemize}
+\item Train (X,Z,Y), where Z are the instance features
+\item marginalize features
+\item conditionalize features
+\item predict (X,Z) -> mean/variance
+\item update(X,Z,Y)/downdate()
+\item load / save functionality
+\item Training should support approximations
+\item Training should support an interface for optimizing the hyperparameters of the model
+\item interface to compute the information gain
+\item interface to draw sample from the model
+\item validate()
+\end{itemize}
+
+\end{frame}
+%------------------------------------------------
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Acquisition functions}
+
+\begin{itemize}
+\item \textit{Expected Improvement}. Returns derivatives.
+\item \textit{log(EI)}. Supports only one dimensional inputs, returns derivatives.
+\item \textit{Probability of improvement}. Returns derivatives.
+\item \textit{Upper confidence bound}. Not well tested.
+\item \textit{Entropy Search}. EP-based information gain of the probability distribution
+of the minimum.
+\item \textit{Entropy MC}. Sample-based information gain of the probability distribution
+of the minimum. Not yet stable.
+
+\end{itemize}
+
+\end{frame}
+%------------------------------------------------
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Other framework features}
+
+\begin{itemize}
+\item Support different kinds of parameters (conditional, categorial, 
+continuous).
+\item Can accept data set size as parameter.
+\item REMBO
+\item Can change model if the current one performs poorly
+\item Chooser: can access history, predictions can be forwarded
+\item Visualization is implemented for models and acquisition functions
+
+\end{itemize}
+
+\end{frame}
+%------------------------------------------------
+
+
 \subsection{Entropy Search Acquisition Function}
 %------------------------------------------------
+
+
+
 
 %------------------------------------------------
 
@@ -269,54 +337,27 @@ computationally tractable by making several approximations.
 
 
 %------------------------------------------------
+%
+%\begin{frame}
+%\frametitle{References}
+%\footnotesize{
+%\begin{thebibliography}{99} % Beamer does not support BibTeX so references must be inserted manually as below
+%%%%
+%\bibitem[Hennig, 2011]{p1} Hennig, P.; Schuler, C. (2011)
+%\newblock Entropy Search for Information-Efficient Global Optimization
+%\newblock \emph{Proceedings of the Seventh Annual Symposium on Combinatorial
+%Search (SoCS 20104)}.
+%%%%%
+%%\bibitem[birattari, 2010]{p1} Birattari, M. et al (2010)
+%%\newblock F-race and iterated f-race: An overview.
+%%\newblock \emph{Experimental Methods for the Analysis of Optimization 
+%%Algorithms. Springer. 311-336}
+%%%%%
 
-\begin{frame}
-\frametitle{References}
-\footnotesize{
-\begin{thebibliography}{99} % Beamer does not support BibTeX so references must be inserted manually as below
-%%%
-\bibitem[Fitzgerald, 2014]{p1} Fitzgerald, T.; Malitsky, Y.; O'Sullivan, B.;
-Tierney, K. (2014)
-\newblock ReACT: Real-Time Algorithm Configuration through Tournaments
-\newblock \emph{Proceedings of the Seventh Annual Symposium on Combinatorial
-Search (SoCS 20104)}.
-%%%
-\bibitem[Leyton-Brown, 2000]{p1} Leyton-Brown, K.;
-Pearson, M.; Shoham, Y. (2000)
-\newblock Towards a universal test suite for combinatorial auction algorithms
-\newblock \emph{Proceedings of the 2nd ACM conference on Electronic commerce,
-66–76. ACM}
-%%%
-\bibitem[birattari, 2010]{p1} Birattari, M. et al (2010)
-\newblock F-race and iterated f-race: An overview.
-\newblock \emph{Experimental Methods for the Analysis of Optimization 
-Algorithms. Springer. 311-336}
-%%%
-\bibitem[battiti, 1994]{p1} Hutter, F.; Hoos, H.; Leyton-Brown, K.; Stuetzle, T.
-(2009)
-\newblock ParamILS: An automatic algorithm configuration framework.
-\newblock \emph{JAIR 36:267-306}
-%%%
-\bibitem[battiti, 1994]{p1} Ansotegui, C.; Sellmann, M.; Tierney, K. (2009)
-\newblock A gender-based genetic algorithm for the automatic configuration of
-algorithms.
-\newblock \emph{CP 36:267-306}
-%%%
-\bibitem[battiti, 1994]{p1} Hutter, F.; Hoos, H.; Leyton-Brown, K. (2011)
-\newblock Sequential model-based optimization for general algorithm 
-configuration.
-\newblock \emph{Learning and Intelligent Optimization. Springer. 507-523}
-%%%
-\bibitem[battiti, 1994]{p1} Roberto Battiti, Giampietro Tecchiolli (1994)
-\newblock The reactive tabu search.
-\newblock \emph{ORSA Journal on Computing 6(2):126-140}
-% %%%
-\bibitem[IBM, 2011]{p1} IBMM (2011)
-\newblock IBM ILOG CPLEX Optimization Studio 12.5
-
-\end{thebibliography}
-}
-\end{frame}
+%
+%\end{thebibliography}
+%}
+%\end{frame}
 
 %------------------------------------------------
 
