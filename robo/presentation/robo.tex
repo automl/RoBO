@@ -200,30 +200,34 @@ computationally tractable by making several approximations.
 %------------------------------------------------
 \begin{frame}
 \frametitle{Models}
-
-Models are constructed as a wrapper to the GPy GPRegression class.
-
 \begin{itemize}
-\item Train (X,Z,Y), where Z are the instance features
-\item marginalize features
-\item conditionalize features
-\item predict (X,Z) -> mean/variance
-\item update(X,Z,Y)/downdate()
-\item load / save functionality
-\item Training should support approximations
-\item Training should support an interface for optimizing the hyperparameters of the model
-\item interface to compute the information gain
-\item interface to draw sample from the model
-\item validate()
+\item API
+\begin{itemize}
+\item \textit{train(X, Y)}. Trains model
+\item \textit{update(X, Y)}. Updates the model
+\item \textit{predict(X)}. returns mean and variance
+\item \textit{predict\_variance(X1, X2)}. Returns part of covariance matrix for information gain
+\item \textit{sample(X, size=10)}. Samples at X
 \end{itemize}
-
+\item Implementations:
+\begin{itemize}
+\item \textit{GPyModel} A wrapper to GPy.GPRegression
+\end{itemize} 
+\end{itemize}
 \end{frame}
 %------------------------------------------------
 
 %------------------------------------------------
 \begin{frame}
 \frametitle{Acquisition functions}
-
+\begin{itemize}
+\item API
+\begin{itemize}
+\item \textit{\_\_init\_\_(model, X\_lower, X\_upper)}. As constructor
+\item \textit{\_\_call\_\_(X, derivative=False)}. Returns some real number for all X
+\item \textit{update(model)}. Should be called before getting maximized
+\end{itemize}
+\item Implementations:
 \begin{itemize}
 \item \textit{Expected Improvement}. Returns derivatives.
 \item \textit{log(EI)}. Supports only one dimensional inputs, returns derivatives.
@@ -233,9 +237,8 @@ Models are constructed as a wrapper to the GPy GPRegression class.
 of the minimum.
 \item \textit{Entropy MC}. Sample-based information gain of the probability distribution
 of the minimum. Not yet stable.
-
 \end{itemize}
-
+\end{itemize}
 \end{frame}
 %------------------------------------------------
 
