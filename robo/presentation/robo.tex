@@ -106,27 +106,64 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 %------------------------------------------------
 \section{Introduction}
 
+
+
+%------------------------------------------------
+
+%------------------------------------------------
+\section{Theoretical background}
+
 %------------------------------------------------
 
 \subsection{Bayesian Optimization}
 
 
-%\begin{frame}
-%\frametitle{Problem description}
-% \begin{columns}[c]
-  
-% \column{.45\textwidth}
+\begin{frame}
+\frametitle{Problem description}
 
-% \column{.6\textwidth}
-% \begin{center}
-% \scalebox{10}{\textbf{*}}
-% \end{center}
-% 
-% \end{columns}
+In an optimization problem one looks for extrema of the form
 
-%\end{frame}
+\[
+	\max \left\{ f(x) \mid x \in \mathcal A \subset \mathbb{R}^n \right\},
+\]
+subject to various conditions on $f : \mathbb{R}^n \rightarrow \mathbb{R}$ and
+$\mathcal{A} $.
+
+Assume the analytic form of $f$ is unknown, and our current knowledge
+about it can be described by a probability measure $P(f)$ defined over a 
+suitable function space. 
+
+Furthermore, let 
+\[
+ \mathcal{D}_{1:t} = \left\{ x_1 , \ldots, x_t, f(x_1), \ldots , f(x_t) \right\}
+\]
+be a set of accumulated evaluations of $f$. 
+\end{frame}
 
 %------------------------------------------------
+
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Problem description}
+
+Then our posterior distribution over
+the space of functions will be described by
+\[
+	P(f \mid \mathcal{D}_{1:t}) \propto P( \mathcal{D}_{1:t} \mid f) P(f)
+\]
+
+The cenrtal problem in Bayesian optimization thus becomes using this posterior
+distribution to select a new point $x_{t+1} \in \mathcal{A}$ to sample. To do
+this efficiently, an acquisition function is employed.
+
+Once the new function value is observed, the set $\mathcal{D}_{1:t+1}$ is
+constructed and used to obtain a new posterior distribution. This process 
+can be continued until convergence is achieved.
+\end{frame}
+%------------------------------------------------
+
+
 
 %------------------------------------------------
 
@@ -157,6 +194,8 @@ computationally tractable by making several approximations.
 
 
 \end{frame}
+%------------------------------------------------
+
 
 %------------------------------------------------
  
@@ -179,6 +218,21 @@ computationally tractable by making several approximations.
 \end{itemize}
 
 \end{frame}
+%------------------------------------------------
+
+
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Discrete representation of continuous distributions}
+
+The integral in the problem definition is approximated by using an irregular
+discretization grid. Its representer points are sampled using an MCMC sampler
+(shrinking rank slice sampling).
+
+\end{frame}
+%------------------------------------------------
+
 
 %------------------------------------------------
 \section{RoBO}
@@ -283,23 +337,6 @@ TNC, COBYLA, SLSQP.
 %
 %\end{frame}
 %------------------------------------------------
-
-
-\subsection{Entropy Search Acquisition Function}
-%------------------------------------------------
-
-%------------------------------------------------
-\begin{frame}
-\frametitle{Discrete representation of continuous distributions}
-
-The integral in the problem definition is approximated by using an irregular
-discretization grid. Its representer points are sampled using an MCMC sampler
-(shrinking rank slice sampling).
-
-\end{frame}
-%------------------------------------------------
-
-
 
 
 
