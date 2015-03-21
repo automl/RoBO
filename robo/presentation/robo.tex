@@ -111,63 +111,63 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 %------------------------------------------------
 
 %------------------------------------------------
-\section{Theoretical background}
+% \section{Theoretical background}
+
+%------------------------------------------------
+%
+%\subsection{Bayesian Optimization}
+%
+%
+%\begin{frame}
+%\frametitle{Problem description}
+%
+%In an optimization problem one looks for extrema of the form
+%
+%\[
+%	\max \left\{ f(x) \mid x \in \mathcal A \subset \mathbb{R}^n \right\},
+%\]
+%subject to various conditions on $f : \mathbb{R}^n \rightarrow \mathbb{R}$ and
+%$\mathcal{A} $.
+%
+%Assume the analytic form of $f$ is unknown, and our current knowledge
+%about it can be described by a probability measure $P(f)$ defined over a 
+%suitable function space. 
+%
+%Furthermore, let 
+%\[
+% \mathcal{D}_{1:t} = \left\{ x_1 , \ldots, x_t, f(x_1), \ldots , f(x_t) \right\}
+%\]
+%be a set of accumulated evaluations of $f$. 
+%\end{frame}
 
 %------------------------------------------------
 
-\subsection{Bayesian Optimization}
-
-
-\begin{frame}
-\frametitle{Problem description}
-
-In an optimization problem one looks for extrema of the form
-
-\[
-	\max \left\{ f(x) \mid x \in \mathcal A \subset \mathbb{R}^n \right\},
-\]
-subject to various conditions on $f : \mathbb{R}^n \rightarrow \mathbb{R}$ and
-$\mathcal{A} $.
-
-Assume the analytic form of $f$ is unknown, and our current knowledge
-about it can be described by a probability measure $P(f)$ defined over a 
-suitable function space. 
-
-Furthermore, let 
-\[
- \mathcal{D}_{1:t} = \left\{ x_1 , \ldots, x_t, f(x_1), \ldots , f(x_t) \right\}
-\]
-be a set of accumulated evaluations of $f$. 
-\end{frame}
 
 %------------------------------------------------
-
-
-%------------------------------------------------
-\begin{frame}
-\frametitle{Problem description}
-
-Then our posterior distribution over
-the space of functions will be described by
-\[
-	P(f \mid \mathcal{D}_{1:t}) \propto P( \mathcal{D}_{1:t} \mid f) P(f)
-\]
-
-The cenrtal problem in Bayesian optimization thus becomes using this posterior
-distribution to select a new point $x_{t+1} \in \mathcal{A}$ to sample. To do
-this efficiently, an acquisition function is employed.
-
-Once the new function value is observed, the set $\mathcal{D}_{1:t+1}$ is
-constructed and used to obtain a new posterior distribution. This process 
-can be continued until convergence is achieved.
-\end{frame}
+%\begin{frame}
+%\frametitle{Problem description}
+%
+%Then our posterior distribution over
+%the space of functions will be described by
+%\[
+%	P(f \mid \mathcal{D}_{1:t}) \propto P( \mathcal{D}_{1:t} \mid f) P(f)
+%\]
+%
+%The cenrtal problem in Bayesian optimization thus becomes using this posterior
+%distribution to select a new point $x_{t+1} \in \mathcal{A}$ to sample. To do
+%this efficiently, an acquisition function is employed.
+%
+%Once the new function value is observed, the set $\mathcal{D}_{1:t+1}$ is
+%constructed and used to obtain a new posterior distribution. This process 
+%can be continued until convergence is achieved.
+%\end{frame}
 %------------------------------------------------
 
 
 
 %------------------------------------------------
 
-\subsection{Entropy Search}
+\section{Entropy Search}
 
 \begin{frame}
 \frametitle{Problem definition}
@@ -224,20 +224,62 @@ computationally tractable by making several approximations.
 \begin{frame}
 \frametitle{Discrete representation of continuous distributions}
 
-The integral in the problem definition is approximated by using an irregular
-discretization grid. Its representer points are sampled using an MCMC sampler
-(shrinking rank slice sampling).
+This methods for this are contained in the \emph{sampling} module.
+
+\begin{itemize}
+  \item \emph{sample\_from\_measure}
+  (model, xmin, xmax, n\_representers, BestGuesses, acquisition\_fn). Produces 
+  a set of representer points based on the values of the chosen acquisition 
+  function.
+  
+  \item \emph{slice\_ShrinkRank\_nolog}(xx, P, s0, transpose). An implementation
+  of slice sampling.
+\end{itemize}
+
 
 \end{frame}
 %------------------------------------------------
 
 %------------------------------------------------
 \begin{frame}
-\frametitle{Discrete representation of continuous distributions}
+\frametitle{Expectation Propagation}
 
-The integral in the problem definition is approximated by using an irregular
-discretization grid. Its representer points are sampled using an MCMC sampler
-(shrinking rank slice sampling).
+\begin{itemize}
+  \item 1.
+\end{itemize}
+
+
+\end{frame}
+%------------------------------------------------
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Expected Information Gain}
+
+This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
+
+\begin{itemize}
+  \item \emph{dh\_fun}(self, x, invertsign=True, derivative=False)
+  \item This can supply the numerical derivatives of the entropy function
+
+\end{itemize}
+
+
+\end{frame}
+%------------------------------------------------
+
+
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{EntropyMC}
+
+\begin{itemize}
+  \item \emph{calc\_pmin}(self, f)
+  \item \emph{change\_pmin\_by\_innovation}(self, x, f)
+  \item \emph{dh\_fun}(self, x): calculates the K-L divergence with respect to
+  the approximation of $p_{min}$.
+\end{itemize}
 
 \end{frame}
 %------------------------------------------------
@@ -297,7 +339,7 @@ discretization grid. Its representer points are sampled using an MCMC sampler
 \item \textit{Probability of improvement}. Returns derivatives.
 \item \textit{Upper confidence bound}. Not well tested.
 \item \textit{Entropy Search}. EP-based information gain of the probability distribution
-of the minimum.
+of the minimum. Has a built-in plot method.
 \item \textit{Entropy MC}. Sample-based information gain of the probability distribution
 of the minimum. Not yet stable.
 \end{itemize}
@@ -356,7 +398,30 @@ TNC, COBYLA, SLSQP.
 %------------------------------------------------
 \section{Empirical Findings}
 
-%\subsection{Test Functions}			
+\subsection{Testing}
+%------------------------------------------------
+\begin{frame}
+\frametitle{Testing}
+
+The entropy search acquisition function and its components were tested
+against the output of Phillip Hennig's original code. Individual test suites:
+
+\begin{itemize}
+  \item Expected Improvement
+  \item Entropy Search
+  \item LogEI
+  \item Probability of Improvement
+  \item Sampling methods
+  \item Test functions
+\end{itemize}
+\end{frame}
+%------------------------------------------------
+
+%------------------------------------------------
+
+
+
+\subsection{Test Functions}
 
 %------------------------------------------------
 
