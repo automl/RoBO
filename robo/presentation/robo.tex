@@ -37,9 +37,9 @@
 %\usetheme{progressbar}
 %\progressbaroptions{headline=sections}
 
-
+\usetheme{Darmstadt}
 % \usecolortheme{albatross}
-\usecolortheme{beaver}
+% \usecolortheme{beaver}
 % \usecolortheme{beetle}
 % \usecolortheme{crane}
 % \usecolortheme{dolphin}
@@ -172,19 +172,22 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 \begin{frame}
 \frametitle{Problem definition}
 
-Let $I \subset \mathbb R^D$ be a bounded set, and $f : I \rightarrow \mathbb{R}$
-a (possibly unknown) function. A probability measure $p(f)$ over the function
-space $\mathbb{R}^I$ will in turn induce the following probability measure:
+Main idea: maximize information gain from succesive evaluations of an objective 
+function.
 
-\[
-	p_{min}(x) \coloneqq P \left\{ x = \arg\!\min f(x) \right\} = 
-	\int_{f: I \rightarrow \mathbb{R}} p(f) \, 
-		\prod_{\widetilde x \in I} H[f(\widetilde{x} - f(x)] df
-\]
-
-The objective will be to obtain a maximally informative probability measure
-after a number $n$ of function evaluations. This problem is rendered 
-computationally tractable by making several approximations. 
+% Let $I \subset \mathbb R^D$ be a bounded set, and $f : I \rightarrow \mathbb{R}$
+% a (possibly unknown) function. A probability measure $p(f)$ over the function
+% space $\mathbb{R}^I$ will in turn induce the following probability measure:
+% 
+% \[
+%   p_{min}(x) \coloneqq P \left\{ x = \arg\!\min f(x) \right\} = 
+%   \int_{f: I \rightarrow \mathbb{R}} p(f) \, 
+%     \prod_{\widetilde x \in I} H[f(\widetilde{x} - f(x)] df
+% \]
+% 
+% The objective will be to obtain a maximally informative probability measure
+% after a number $n$ of function evaluations. This problem is rendered 
+% computationally tractable by making several approximations. 
 % \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
 
 
@@ -276,7 +279,8 @@ This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
 
 \begin{itemize}
   \item \emph{calc\_pmin}(self, f)
-  \item \emph{change\_pmin\_by\_innovation}(self, x, f)
+  \item \emph{change\_pmin\_by\_innovation}(self, x, f). The covariance matrices
+  involved quickly become ill-conditioned.
   \item \emph{dh\_fun}(self, x): calculates the K-L divergence with respect to
   the approximation of $p_{min}$.
 \end{itemize}

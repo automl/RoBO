@@ -34,6 +34,26 @@ class:: EntropyMC(Entropy)
         :param derivative: Controls whether the derivative is calculated and returned.
         :type derivative: Boolean
         :returns:
+        
+    .. method:: calc_pmin(f)
+
+        :param f: The function samples over which the distribution for the minimum is to be computed.
+        :type f: np.ndarray (1, n)
+        :returns:
+    
+    .. method:: change_pmin_by_innovation(x, f)
+        
+        :param x: The point at which the innovation is to be computed.
+        :type x: np.ndarray (1, n)
+        :param f: The function samples over which the distribution for the minimum is to be computed.
+        :type f: np.ndarray (1, n)
+        :returns:
+
+    .. method:: dh_fun(x)
+
+        :param x: The point at which the K-L divergence is to be computed.
+        :type x: np.ndarray (1, n)
+        :returns:
 """
 
 import sys
@@ -139,7 +159,6 @@ class EntropyMC(Entropy):
         return self.calc_pmin(f_new)
         
     def dh_fun(self, x):
-        # TODO: should this be shape[1] ?
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
         new_pmin = self.change_pmin_by_innovation(x, self.f)
