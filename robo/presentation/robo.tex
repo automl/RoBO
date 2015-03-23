@@ -404,7 +404,8 @@ This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
 \begin{itemize}
   \item \emph{dh\_fun}(self, x, invertsign=True, derivative=False)
   \item This can supply the numerical derivatives of the entropy function
-
+  \item It internally evaluates the innovation at point $x$ with the following:
+  \item \textit{\_gp\_innovation\_local(self, x)}
 \end{itemize}
 
 
@@ -458,8 +459,6 @@ against the output of Phillip Hennig's original code. Individual test suites:
 \subsection{Test Functions}
 
 %------------------------------------------------
-
-
 
 
 %------------------------------------------------
@@ -563,7 +562,7 @@ against the output of Phillip Hennig's original code. Individual test suites:
 \frametitle{Remarks}
 
 \begin{itemize}[<+->]
-	\item +
+	\item 
 	\item -
 
 \end{itemize}
