@@ -381,7 +381,6 @@ Alternative
 %------------------------------------------------
 \begin{frame}
 \frametitle{Expectation Propagation}
-
 \begin{itemize}
   \item\emph{\_joint\_min(self, mu, var)}
   given a jointly gaussian defined by mean (mu) and  variance (var), it calculates the distribution of $p_\text{min}$ 
@@ -390,8 +389,6 @@ Alternative
   \item\emph{\_lt\_factor(self, s, l, M, V, mp, p, gamma)}
   moment matching between the approximation and the local lesser than distribution to update the approximation
 \end{itemize}
-
-
 \end{frame}
 %------------------------------------------------
 
@@ -410,6 +407,28 @@ This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
 
 \end{frame}
 %------------------------------------------------
+
+\begin{frame}
+\frametitle{Problem definition MC}
+
+%\begin{itemize}
+%       \item $p(f)$ is defined as a Gaussian process
+%       \item $p_{min}$ is discretized to a set of representer points chosen from
+%       a non-uniform measure
+%       \item $p_{min}$ is approximated, either by expectation propagation
+%       or a Montecarlo method
+%       \item The change in $p(f)$ as a function of the next function evaluation
+%       can be predicted using the Gaussian process
+%       \item Relative entropy w.r.t. a uniform distribution is chosen as a loss
+%       function
+%       \item Expected information gain from future evaluations can be 
+%       approximated via the loss function
+%       \item The locations for new evaluations are evaluated greedily
+%\end{itemize}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{robo_entropy2.png}
+\end{center}
+\end{frame}
 
 
 

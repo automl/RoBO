@@ -8,8 +8,8 @@ from robo.loss_functions import logLoss
 from robo.visualization import Visualization
 import matplotlib
 import random
-random.seed(17)
-np.random.seed(17)
+#random.seed(17)
+#np.random.seed(17)
 font = {'family' : 'normal',
         'weight' : 'normal',
         'size'   : 15}
@@ -27,10 +27,6 @@ def objective_funktion(x):
 num_initial = 4
 initial_X = np.empty((num_initial, 1))
 initial_X[0, :] = np.array([0.2])
-#initial_X = np.array([[ 0.2       ],
- #[ 1.76799002],
- #[ 3.18352053],
- #[ 1.14912472]])
 initial_X[1:num_initial, :] = np.random.rand(num_initial-1, dims) * (X_upper - X_lower) + X_lower;
 initial_Y = objective_funktion(initial_X)
 print initial_X, initial_Y
@@ -48,7 +44,7 @@ entropy_mc = EntropyMC(model, X_upper= X_upper, X_lower=X_lower, sampling_acquis
 ei = EI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 pi = PI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 
-for acquisition_fkt in [entropy_mc,ei, pi, entropy]:
+for acquisition_fkt in [ei, pi, entropy, entropy_mc]:
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, 
                               model=model, 
                               maximize_fkt=maximize_fkt, 
@@ -63,10 +59,10 @@ for acquisition_fkt in [entropy_mc,ei, pi, entropy]:
                   next_x, 
                   X=initial_X, 
                   Y=initial_Y, 
-                  dest_folder="./",
-                  prefix =  type(acquisition_fkt).__name__,
+                  #dest_folder="./",
+                  #prefix =  type(acquisition_fkt).__name__,
                   show_acq_method = True, 
                   show_obj_method = True, 
                   show_model_method = True, 
                   resolution=1000, 
-                  interactive=False)
+                  interactive=True)
