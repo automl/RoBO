@@ -623,8 +623,14 @@ against the output of Phillip Hennig's original code. Individual test suites:
 \frametitle{Remarks}
 
 \begin{itemize}[<+->]
+	\item The modular architecture allows for new acquisition functions, 
+	models, etc. to be added easily
+	\item Testing was done by comparing only with the MATLAB code - this
+	is not general enough
+	\item Dependencies on external libraries are kept to a minimum (GPy, NumPY,
+	emcee)
+	\item Model fitting and visualization can be called independently
 	\item 
-	\item -
 
 \end{itemize}
 
