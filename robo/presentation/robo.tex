@@ -298,8 +298,35 @@ BayesianOptimization(self, \\
 %\includegraphics[width=0.9\textwidth]{robo_framework.png}
 %\end{minipage}
 
+
 \end{frame}
 
+
+\begin{frame}
+
+\frametitle{RoBo API}
+%\begin{minipage}{0.\textwidth}
+Visualization(self, \\
+\hspace{1cm} bayesian\_opt,  \\
+\hspace{1cm} new\_x = None, \\
+\hspace{1cm} X=None, \\
+\hspace{1cm} Y=None, \\
+\hspace{1cm} dest\_folder=None, \\
+\hspace{1cm} prefix="", \\
+\hspace{1cm} show\_acq\_method=False, \\
+\hspace{1cm} show\_obj\_method=False, \\
+\hspace{1cm} show\_model\_method=False, \\
+\hspace{1cm} resolution=1000, \\
+\hspace{1cm} interactive=False, \\
+\begin{itemize}
+\item run(self, num\_iterations=10, X=None, Y=None, overwrite=False)
+\item choose\_next(self, X=None, Y=None)
+\end{itemize}
+%\end{minipage}%
+%\begin{minipage}{0.30\textwidth}
+%\includegraphics[width=0.9\textwidth]{robo_framework.png}
+%\end{minipage}
+\end{frame}
 %------------------------------------------------
 
 %\begin{frame}
@@ -394,7 +421,19 @@ function.
 \end{center}
 \end{frame}
 %------------------------------------------------
-
+\begin{frame}
+\frametitle{Entropy}
+\begin{itemize}
+\item Hyperparameters:
+\begin{itemize}
+\item \emph{Nb=50}, amount of representer points
+\item \emph{Np=300}, amount of prediction points
+\item \emph{sampling\_acquisition=LogEI}   
+\item \emph{sampling\_acquisition\_kw=\{"par":0.0\}}
+\item \emph{loss\_function=loss}, defaults to change in entropy
+\end{itemize}
+\end{itemize}
+\end{frame}
 %------------------------------------------------
 \begin{frame}
 \frametitle{Discrete representation of continuous distributions}
@@ -478,15 +517,22 @@ This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
 %------------------------------------------------
 \begin{frame}
 \frametitle{EntropyMC}
-
 \begin{itemize}
+\item Hyperparameters:
+\begin{itemize}
+\item \emph{Nb=50}, amount of representer points 
+\item \emph{Nf=1000}, amount of functions for pmin
+\item \emph{Np=300}, amount of prediction points
+\item \emph{sampling\_acquisition=LogEI} 
+\item \emph{sampling\_acquisition\_kw=\{"par":0.0\}}
+\item \emph{loss\_function=loss}, defaults to change in entropy
+\end{itemize}
   \item \emph{calc\_pmin}(self, f)
   \item \emph{change\_pmin\_by\_innovation}(self, x, f). The covariance matrices
   involved quickly become ill-conditioned.
   \item \emph{dh\_fun}(self, x): calculates the K-L divergence with respect to
   the approximation of $p_{min}$.
 \end{itemize}
-
 \end{frame}
 %------------------------------------------------
 
