@@ -106,6 +106,14 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 %------------------------------------------------
 \section{Introduction}
 
+\begin{frame}
+\frametitle{Problem definition}
+\begin{itemize}
+\item Build a \textbf{RO}bost \textbf{B}aysian \textbf{O}ptimization Tool
+\item Add an implementation of entropy search
+\end{itemize}
+\end{frame}
+
 
 
 %------------------------------------------------
@@ -165,128 +173,8 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 
 
 
-%------------------------------------------------
-
-\section{Entropy Search}
-
-\begin{frame}
-\frametitle{Problem definition}
-
-Main idea: maximize information gain from succesive evaluations of an objective 
-function.
-
-% Let $I \subset \mathbb R^D$ be a bounded set, and $f : I \rightarrow \mathbb{R}$
-% a (possibly unknown) function. A probability measure $p(f)$ over the function
-% space $\mathbb{R}^I$ will in turn induce the following probability measure:
-% 
-% \[
-%   p_{min}(x) \coloneqq P \left\{ x = \arg\!\min f(x) \right\} = 
-%   \int_{f: I \rightarrow \mathbb{R}} p(f) \, 
-%     \prod_{\widetilde x \in I} H[f(\widetilde{x} - f(x)] df
-% \]
-% 
-% The objective will be to obtain a maximally informative probability measure
-% after a number $n$ of function evaluations. This problem is rendered 
-% computationally tractable by making several approximations. 
-% \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
 
 
-% \column{.6\textwidth} % Right column and width
-
-% \scalebox{10}{\textbf{*}}
-
-
-\end{frame}
-%------------------------------------------------
-
-
-%------------------------------------------------
- 
-\begin{frame}
-\frametitle{Problem definition}
-
-\begin{itemize}
-	\item $p(f)$ is defined as a Gaussian process
-	\item $p_{min}$ is discretized to a set of representer points chosen from
-	a non-uniform measure
-	\item $p_{min}$ is approximated, either by expectation propagation
-	or a Montecarlo method
-	\item The change in $p(f)$ as a function of the next function evaluation
-	can be predicted using the Gaussian process
-	\item Relative entropy w.r.t. a uniform distribution is chosen as a loss
-	function
-	\item Expected information gain from future evaluations can be 
-	approximated via the loss function
-	\item The locations for new evaluations are evaluated greedily
-\end{itemize}
-
-\end{frame}
-%------------------------------------------------
-
-%------------------------------------------------
-\begin{frame}
-\frametitle{Discrete representation of continuous distributions}
-
-This methods for this are contained in the \emph{sampling} module.
-
-\begin{itemize}
-  \item \emph{sample\_from\_measure}
-  (model, xmin, xmax, n\_representers, BestGuesses, acquisition\_fn). Produces 
-  a set of representer points based on the values of the chosen acquisition 
-  function.
-  
-  \item \emph{slice\_ShrinkRank\_nolog}(xx, P, s0, transpose). An implementation
-  of slice sampling.
-\end{itemize}
-
-
-\end{frame}
-%------------------------------------------------
-
-%------------------------------------------------
-\begin{frame}
-\frametitle{Expectation Propagation}
-
-\begin{itemize}
-  \item 1.
-\end{itemize}
-
-
-\end{frame}
-%------------------------------------------------
-
-%------------------------------------------------
-\begin{frame}
-\frametitle{Expected Information Gain}
-
-This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
-
-\begin{itemize}
-  \item \emph{dh\_fun}(self, x, invertsign=True, derivative=False)
-  \item This can supply the numerical derivatives of the entropy function
-
-\end{itemize}
-
-
-\end{frame}
-%------------------------------------------------
-
-
-
-%------------------------------------------------
-\begin{frame}
-\frametitle{EntropyMC}
-
-\begin{itemize}
-  \item \emph{calc\_pmin}(self, f)
-  \item \emph{change\_pmin\_by\_innovation}(self, x, f). The covariance matrices
-  involved quickly become ill-conditioned.
-  \item \emph{dh\_fun}(self, x): calculates the K-L divergence with respect to
-  the approximation of $p_{min}$.
-\end{itemize}
-
-\end{frame}
-%------------------------------------------------
 
 
 %------------------------------------------------
@@ -321,6 +209,10 @@ This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
 \item Implementations:
 \begin{itemize}
 \item \textit{GPyModel} A wrapper to GPy.GPRegression
+\begin{itemize}
+ \item contains different kernels
+ \item can optimize it's own hyperparameter
+\end{itemize}
 \end{itemize} 
 \end{itemize}
 \end{frame}
@@ -395,8 +287,146 @@ TNC, COBYLA, SLSQP.
 
 
 
+\begin{frame}
+\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+\end{frame}
+
+
 %------------------------------------------------
 
+\section{Entropy Search}
+
+\begin{frame}
+\frametitle{Problem definition}
+
+Main idea: maximize information gain from succesive evaluations of an objective 
+function.
+
+% Let $I \subset \mathbb R^D$ be a bounded set, and $f : I \rightarrow \mathbb{R}$
+% a (possibly unknown) function. A probability measure $p(f)$ over the function
+% space $\mathbb{R}^I$ will in turn induce the following probability measure:
+% 
+% \[
+%   p_{min}(x) \coloneqq P \left\{ x = \arg\!\min f(x) \right\} = 
+%   \int_{f: I \rightarrow \mathbb{R}} p(f) \, 
+%     \prod_{\widetilde x \in I} H[f(\widetilde{x} - f(x)] df
+% \]
+% 
+% The objective will be to obtain a maximally informative probability measure
+% after a number $n$ of function evaluations. This problem is rendered 
+% computationally tractable by making several approximations. 
+% \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+
+% \column{.6\textwidth} % Right column and width
+
+% \scalebox{10}{\textbf{*}}
+
+
+\end{frame}
+%------------------------------------------------
+%------------------------------------------------
+
+%------------------------------------------------
+ 
+\begin{frame}
+\frametitle{Problem definition}
+
+%\begin{itemize}
+%	\item $p(f)$ is defined as a Gaussian process
+%	\item $p_{min}$ is discretized to a set of representer points chosen from
+%	a non-uniform measure
+%	\item $p_{min}$ is approximated, either by expectation propagation
+%	or a Montecarlo method
+%	\item The change in $p(f)$ as a function of the next function evaluation
+%	can be predicted using the Gaussian process
+%	\item Relative entropy w.r.t. a uniform distribution is chosen as a loss
+%	function
+%	\item Expected information gain from future evaluations can be 
+%	approximated via the loss function
+%	\item The locations for new evaluations are evaluated greedily
+%\end{itemize}
+\begin{center}
+\includegraphics[width=0.7\textwidth]{robo_entropy.png}
+\end{center}
+\end{frame}
+%------------------------------------------------
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Discrete representation of continuous distributions}
+
+This methods for this are contained in the \emph{sampling} module.
+
+\begin{itemize}
+  \item \emph{sample\_from\_measure}
+  (model, xmin, xmax, n\_representers, BestGuesses, acquisition\_fn). Produces 
+  a set of representer points based on the values of the chosen acquisition 
+  function.
+  
+  \item \emph{slice\_ShrinkRank\_nolog}(xx, P, s0, transpose). An implementation
+  of slice sampling.
+\end{itemize}
+
+Alternative 
+
+\begin{itemize}
+\item emcee sampler
+\end{itemize}
+
+\end{frame}
+%------------------------------------------------
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Expectation Propagation}
+
+\begin{itemize}
+  \item\emph{\_joint\_min(self, mu, var)}
+  given a jointly gaussian defined by mean (mu) and  variance (var), it calculates the distribution of $p_\text{min}$ 
+  \item\emph{\_min\_factor(self, Mu, Sigma, k)}
+  calculates the log probability of the $k^\text{th}$ element to be the minimum
+  \item\emph{\_lt\_factor(self, s, l, M, V, mp, p, gamma)}
+  moment matching between the approximation and the local lesser than distribution to update the approximation
+\end{itemize}
+
+
+\end{frame}
+%------------------------------------------------
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{Expected Information Gain}
+
+This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
+
+\begin{itemize}
+  \item \emph{dh\_fun}(self, x, invertsign=True, derivative=False)
+  \item This can supply the numerical derivatives of the entropy function
+
+\end{itemize}
+
+
+\end{frame}
+%------------------------------------------------
+
+
+
+%------------------------------------------------
+\begin{frame}
+\frametitle{EntropyMC}
+
+\begin{itemize}
+  \item \emph{calc\_pmin}(self, f)
+  \item \emph{change\_pmin\_by\_innovation}(self, x, f). The covariance matrices
+  involved quickly become ill-conditioned.
+  \item \emph{dh\_fun}(self, x): calculates the K-L divergence with respect to
+  the approximation of $p_{min}$.
+\end{itemize}
+
+\end{frame}
+%------------------------------------------------
 
 
 %------------------------------------------------
