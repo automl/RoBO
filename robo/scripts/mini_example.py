@@ -36,6 +36,7 @@ print initial_X, initial_Y
 #
 
 kernel = GPy.kern.RBF(input_dim=dims)
+kernel = GPy.kern.Matern52(input_dim=dims)
 maximize_fkt = grid_search
 model = GPyModel(kernel, optimize=True, noise_variance = 1e-4, num_restarts=10)
 

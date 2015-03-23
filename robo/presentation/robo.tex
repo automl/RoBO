@@ -227,6 +227,7 @@ Albert-Ludwigs-Universität Freiburg \\ % Your institution for the title page
 \item \textit{\_\_init\_\_(model, X\_lower, X\_upper)}. As constructor
 \item \textit{\_\_call\_\_(X, derivative=False)}. Returns some real number for all X
 \item \textit{update(model)}. Should be called before getting maximized
+%\item \textit{plot(self, fig, minx, maxx, plot\_attr={"color":"red"}, resolution=1000)}
 \end{itemize}
 \item Implementations:
 \begin{itemize}
@@ -266,6 +267,47 @@ TNC, COBYLA, SLSQP.
 \end{frame}
 %------------------------------------------------
 
+\begin{frame}
+\frametitle{Main modules}
+
+\begin{center}
+\includegraphics[width=0.7\textwidth]{robo_framework.png}
+\end{center}
+
+
+\end{frame}
+\begin{frame}
+
+\frametitle{RoBo API}
+%\begin{minipage}{0.\textwidth}
+BayesianOptimization(self, \\
+\hspace{1cm} acquisition\_fkt=None, \\
+\hspace{1cm} model=None, \\
+\hspace{1cm} maximize\_fkt=None \\
+\hspace{1cm} X\_lower=None, \\
+\hspace{1cm} X\_upper=None, \\
+\hspace{1cm} dims=None, \\
+\hspace{1cm} objective\_fkt=None, \\
+\hspace{1cm} save\_dir=None)
+\begin{itemize}
+\item run(self, num\_iterations=10, X=None, Y=None, overwrite=False)
+\item choose\_next(self, X=None, Y=None)
+\end{itemize}
+%\end{minipage}%
+%\begin{minipage}{0.30\textwidth}
+%\includegraphics[width=0.9\textwidth]{robo_framework.png}
+%\end{minipage}
+
+\end{frame}
+
+%------------------------------------------------
+
+%\begin{frame}
+
+%\frametitle{Visualization}
+
+
+%\end{frame}
 
 %------------------------------------------------
 %\begin{frame}
@@ -474,7 +516,7 @@ against the output of Phillip Hennig's original code. Individual test suites:
 
 
 
-\subsection{Test Functions}
+%\subsection{Test Functions}
 
 %------------------------------------------------
 
