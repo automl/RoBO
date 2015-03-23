@@ -141,7 +141,7 @@ class BayesianOptimization(object):
         max_iteration = self._get_last_iteration_number()
         iteration_folder = self.save_dir + "/%03d" % (max_iteration+1, )
         os.makedirs(iteration_folder)
-        #pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
+        pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
         if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
             pickle.dump([new_x, X, Y, self.acquisition_fkt._get_most_probable_minimum()[0]], open(iteration_folder+"/observations.pickle", "w"))
         else:

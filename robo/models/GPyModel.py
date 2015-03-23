@@ -123,7 +123,7 @@ class GPyModel(object):
         var = Kbx - np.dot(KbX.T, WiKx)
         return var
         
-    def predict(self, X, projectTo=None, full_cov=False):
+    def predict(self, X,  full_cov=False):
         mean, var = self.m.predict(X, full_cov=full_cov)    
         if not full_cov:
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
