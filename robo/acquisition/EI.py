@@ -10,12 +10,12 @@ from robo.acquisition.base import AcquisitionFunction
 
 class EI(AcquisitionFunction):
     r"""
-        Expected Improvemented solves the following equation
+        Expected Improvement solves the following equation
         :math:`\mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, where 
         :math:`f(X^+)` is the best input found so far. 
         
-        
-        :param model: A GPyModel contatining current data points.
+        :param model: A Model that implements at least predict(X) and getCurrentBestX(). If you want to calculate derivatives than it should also support
+                      predictive_gradients(X)  
         :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of input space)
         :type X_lower: np.ndarray (1,n)
         :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of input space)
@@ -39,8 +39,8 @@ class EI(AcquisitionFunction):
         :type X: np.ndarray (1,n)
         :param derivative: This controls whether the derivative is to be returned.
         :type derivative: Boolean
-        :return: The value of EI and its derivative at X.
-        :rtype: np.ndarray(N, 1) or (np.ndarray(N, D)) 
+        :return: The value of EI and optionally its derivative at X.
+        :rtype: np.ndarray(N, 1) or (np.ndarray(N, 1), np.ndarray(N, D))  
         """
         if X.shape[0] > 1 :
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single X inputs")
