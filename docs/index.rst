@@ -10,21 +10,12 @@ Installation
 ============
 
 
-Acquisition functions:
-----------------------
-
-.. autoclass:: robo.acquisition.base.AcquisitionFunction
-   :members: 
-   :private-members: 
-   :special-members: __call__
-
-
-
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   acquisition_func
 
 
 Indices and tables

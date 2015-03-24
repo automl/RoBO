@@ -36,7 +36,7 @@ class AcquisitionFunction(object):
             :param derivative: if a derivative
             :type derivative: Boolean
             :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and acquisition function does not support it 
-            :returns: np.ndarray(N, 1) 
+            :rtype: np.ndarray(N, 1) 
         """
         raise NotImplementedError()
     

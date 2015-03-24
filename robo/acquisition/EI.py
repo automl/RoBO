@@ -1,27 +1,6 @@
 # encoding=utf8
 
-"""
-This module contains the expected improvement acquisition function.
 
-class:: EI(AcquisitionFunction)
-
-    .. method:: __init__(model, X_lower, X_upper, par = 0.01, **kwargs)
-
-        :param model: A model should have at least the function getCurrentBest()
-                      and predict(X, Z).
-
-    .. method:: __call__(x, Z=None, derivative=False, **kwargs)
-
-        :param x: The point at which the function is to be evaluated. Its shape is (1,n), where n is the dimension of the search space.
-        :type x: np.ndarray (1, n)
-        :param Z: instance features to evaluate at. Can be None.
-        :param par: A parameter meant to control the balance between exploration and exploitation of the acquisition
-                    function. Empirical testing determines 0.01 to be a good value in most cases.
-        :param derivative: Controls whether the derivative is calculated and returned.
-        :type derivative: Boolean
-
-        :returns:
-"""
 
 from scipy.stats import norm
 import scipy
@@ -30,50 +9,50 @@ from robo import BayesianOptimizationError
 from robo.acquisition.base import AcquisitionFunction 
 
 class EI(AcquisitionFunction):
-
+    r"""
+        Expected Improvemented solves the following equation
+        :math:`\mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, where 
+        :math:`f(X^+)` is the best input found so far. 
+        
+        
+        :param model: A GPyModel contatining current data points.
+        :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of input space)
+        :type X_lower: np.ndarray (1,n)
+        :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of input space)
+        :type X_upper: np.ndarray (1,n)
+        :param par: A parameter (:math:`\xi`) meant to control the balance between exploration and exploitation of the acquisition
+                    function. Empirical testing determines 0.01 to be a good value in most cases. 
+    """
     long_name = "Expected Improvement" 
 
     def __init__(self, model, X_lower, X_upper, par = 0.01, **kwargs):
-        """
-
-        :param model: A GPyModel contatining current data points.
-        :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of search space)
-        :type X_lower: np.ndarray (1,n)
-        :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of search space)
-        :type X_upper: np.ndarray (1,n)
-        :param par: A parameter meant to control the balance between exploration and exploitation of the acquisition
-                    function. Empirical testing determines 0.01 to be a good value in most cases.
-
-        """
-
         self.model = model
         self.par = par
         self.X_lower = X_lower
         self.X_upper = X_upper
 
-    def __call__(self, x, Z=None, derivative=False, **kwargs):
+    def __call__(self, X, derivative=False, **kwargs):
         """
         A call to the object returns the EI and derivative values.
 
-        :param x: The point at which the function is to be evaluated.
-        :type x: np.ndarray (1,n)
-        :param Z: Instance features to evaluate at. Can be None.
+        :param X: The point at which the function is to be evaluated.
+        :type X: np.ndarray (1,n)
         :param derivative: This controls whether the derivative is to be returned.
         :type derivative: Boolean
-        :param kwargs:
-        :return: The value of EI and its derivative at x.
+        :return: The value of EI and its derivative at X.
+        :rtype: np.ndarray(N, 1) or (np.ndarray(N, D)) 
         """
-        if x.shape[0] > 1 :
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single x inputs")
-        if np.any(x < self.X_lower) or np.any(x > self.X_upper):
+        if X.shape[0] > 1 :
+            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single X inputs")
+        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
                 f = 0
-                df = np.zeros((1, x.shape[1]))
+                df = np.zeros((1, X.shape[1]))
                 return np.array([[f]]), np.array([df])
             else:
                 return np.array([[0]])
 
-        dim = x.shape[-1]
+        dim = X.shape[-1]
         m, v = self.model.predict(x)
         eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
         
@@ -81,7 +60,7 @@ class EI(AcquisitionFunction):
         z = (eta - m - self.par) / s 
         f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)
         if derivative:
-            dmdx, ds2dx = self.model.predictive_gradients(x)
+            dmdx, ds2dx = self.model.predictive_gradients(X)
             dmdx = dmdx[0]
             ds2dx = ds2dx[0][:, None]
             dsdx = ds2dx / (2 * s)
