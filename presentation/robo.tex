@@ -482,7 +482,8 @@ This is evaluated in the \emph{dh\_fun} method within the \emph{Entropy} module:
 \begin{itemize}
   \item \emph{dh\_fun}(self, x, invertsign=True, derivative=False)
   \item This can supply the numerical derivatives of the entropy function
-
+  \item It internally evaluates the innovation at point $x$ with the following:
+  \item \textit{\_gp\_innovation\_local(self, x)}
 \end{itemize}
 
 
@@ -565,8 +566,6 @@ against the output of Phillip Hennig's original code. Individual test suites:
 %\subsection{Test Functions}
 
 %------------------------------------------------
-
-
 
 
 %------------------------------------------------
@@ -670,8 +669,14 @@ against the output of Phillip Hennig's original code. Individual test suites:
 \frametitle{Remarks}
 
 \begin{itemize}[<+->]
-	\item +
-	\item -
+	\item The modular architecture allows for new acquisition functions, 
+	models, etc. to be added easily
+	\item Testing was done by comparing only with the MATLAB code - this
+	is not general enough
+	\item Dependencies on external libraries are kept to a minimum (GPy, NumPY,
+	SciPy, emcee. matplotlib)
+	\item Model fitting and visualization can be called independently
+
 
 \end{itemize}
 
