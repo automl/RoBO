@@ -165,8 +165,8 @@ class EntropyMC(Entropy):
         # Calculate the Kullback-Leibler divergence w.r.t. this pmin approximation
         H_old = np.sum(np.multiply(self.pmin, (self.logP + self.lmb)))
         H_new = np.sum(np.multiply(new_pmin, (np.log(new_pmin) + self.lmb)))
-        # TODO: do not do the abs
-        return np.array([[ np.abs(-H_new + H_old)]])
+        
+        return np.array([[-H_new + H_old]])
     
     def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
         n = len(fig.axes)

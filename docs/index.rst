@@ -10,6 +10,13 @@ Installation
 ============
 
 
+Acquisition functions:
+----------------------
+
+.. autoclass:: robo.acquisition.base.AcquisitionFunction
+   :members: 
+   :private-members: 
+   :special-members: __call__
 
 
 

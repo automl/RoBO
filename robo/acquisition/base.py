@@ -1,54 +1,56 @@
 #encoding=utf8
-"""
-this module contains acquisition functions that should be maximized to find
-the minimum of the objective function.
 
-.. class:: AcquisitionFunction
-
-    An acquisition function is a class that gets instatiated with a model 
-    and optional additional parameters. It then gets called via a maximizer.
-
-    .. method:: __init__(model, X_lower, X_upper **optional_kwargs)
-                
-        :param model: A model should have at least the function getCurrentBest() 
-                      and predict(X, Z).
-
-    .. method:: __call__(X, Z=None, derivative=False)
-               
-        :param X: X values, where to evaluate at. It's shape is of (N, D), where N is the number of points to evaluate at and D is the Dimension of X.
-        :type X: np.ndarray (N, input_dimension)
-        :param Z: instance features to evaluate at. Can be None.
-        :param derivative: if a derivative should be calclualted and returnd
-        :type derivative: Boolean
-        
-        :returns:
-        
-    
-    .. method:: update(model)
-    
-        this method should be called if the model is updated. E.g. the Entropy search needs
-        to update its aproximation about P(x=x_min) 
-"""
 import numpy as np
 from robo import BayesianOptimizationError
 class AcquisitionFunction(object):
+    """
+    An acquisition base class.
+    
+    :param model:
+    :param X_lower: Lower bound of input space
+    :type X_lower: np.ndarray(D, 1)
+    :param X_upper: Upper bound of input space
+    :type X_upper: np.ndarray(D, 1)
+    """
     long_name = ""
     def __str__(self):
         return type(self).__name__ + " (" +self.long_name + ")"
     
     def __init__(self,  model, X_lower, X_upper, **kwargs):
+        
         self.model = model
         self.X_lower = X_lower
         self.X_upper = X_upper
     
     def update(self, model):
+        """
+            this method will be called if the model is updated. E.g. the Entropy search needs
+            to update its aproximation about P(x=x_min)
+        """
         self.model = model
     
-    def __call__(self, x):
+    def __call__(self, X, derivative=False):
+        """ 
+            :param X: X values, where to evaluate at. It's shape is of (N, D), where N is the number of points to evaluate at and D is the Dimension of X.
+            :type X: np.ndarray (N, D)
+            :param derivative: if a derivative
+            :type derivative: Boolean
+            :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and acquisition function does not support it 
+            :returns: np.ndarray(N, 1) 
+        """
         raise NotImplementedError()
     
     def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
-        
+        """
+            Adds the acquisition function a subplot to fig. Can create more than one subplot. It's designed for one dimensional objective functions. 
+             
+            :param fig: the figure where the subplot will be added
+            :type fig: matplotlib.figure.Figure
+            :param minx: Lower plotting bound
+            :type minx: int
+            :param maxx: Upper plotting bound
+            :type maxx: int
+        """
         n = len(fig.axes)
         for i in range(n):
             fig.axes[i].change_geometry(n+1, 1, i+1) 
@@ -60,10 +62,6 @@ class AcquisitionFunction(object):
         except BayesianOptimizationError, e:
             if e.errno ==  BayesianOptimizationError.SINGLE_INPUT_ONLY:
                 acq_v =  np.array([ self(np.array([x]))[0][0] for x in plotting_range[:,np.newaxis] ])
-                #if scale:
-                #    acq_v = acq_v - acq_v.min() 
-                #    acq_v = (scale[1] -scale[0]) * acq_v / acq_v.max() +scale[0]
-                
                 ax.plot(plotting_range, acq_v, **plot_attr)
             else:
                 raise
