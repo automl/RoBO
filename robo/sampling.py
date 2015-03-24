@@ -1,9 +1,28 @@
+"""
+This module contains the functions necessary to perform the sampling in the execution of the entropy search algorithm.
+Alternatively the sampling can be carried out using the emcee Python module.
+"""
+
+
 import numpy as np
 
-# This method corresponds to the function SampleBeliefLocations in the original ES code
-# It is assumed that the GP data structure is a Python dictionary
-# This function calls PI, EI etc and samples them (using their values)
 def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
+    """
+    This method corresponds to the function SampleBeliefLocations in the original ES code.
+
+    :param model: A GP model containing the currently available information.
+    :type model: GPyModel
+    :param xmin: Lower bounds of the search space.
+    :type xmin: np.ndarray((1.n))
+    :param xmax: Upper bounds of the search space.
+    :type xmin: np.ndarray((1.n))
+    :param n_representers: The desired number of representer points to be returned.
+    :type n_representers: int
+    :param BestGuesses: An array containing the current best guesses for the objective function's extremum.
+    :param acquisition_fn: The acquisition function to be used in the sampling of the representer points.
+    :type acquisition_fn: AcquisitionFunction
+    :return:
+    """
 
     # If there are no prior observations, do uniform sampling
     if (model.X.size == 0):
@@ -60,7 +79,10 @@ def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisit
     return zb, mb
 
 def projNullSpace(J, v):
-    # Auxiliary function for the multivariate slice sampler
+    """
+    Auxiliary function for the multivariate slice sampler
+    """
+
     if J.shape[1] > 0:
         return v - J.dot(J.transpose()).dot(v)
     else:
@@ -68,7 +90,16 @@ def projNullSpace(J, v):
 
 
 def slice_ShrinkRank_nolog(xx, P, s0, transpose):
-    # This function is equivalent to the similarly named function in the original ES code
+    """
+    Implementation of the shrinking rank slice sampler.
+
+    :param xx: Initial points for the sampler.
+    :param P: The function that will be used as sampling density.
+    :param s0:
+    :param transpose:
+    :return:
+    """
+
     if transpose:
         xx = xx.transpose()
 
