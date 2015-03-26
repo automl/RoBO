@@ -96,7 +96,7 @@ class Entropy(AcquisitionFunction):
     
     def update_representer_points(self):
         self.sampling_acquisition.update(self.model)
-        restarts = np.zeros((self.Nb, self.D))    
+        restarts = np.zeros((self.Nb, self.D))
         restarts[0:self.Nb, ] = self.X_lower + (self.X_upper - self.X_lower) * np.random.uniform(size=(self.Nb, self.D))
         sampler = emcee.EnsembleSampler(self.Nb, self.D, self.sampling_acquisition_wrapper)
         self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
