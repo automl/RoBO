@@ -34,7 +34,10 @@ extensions = [
     'sphinx.ext.pngmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+    'sphinxcontrib.plantuml'
 ]
+here = os.path.abspath(os.path.dirname(__file__))
+plantuml = 'java -jar %(here)s/plantuml.jar' % {"here":here}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
