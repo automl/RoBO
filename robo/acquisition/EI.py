@@ -11,15 +11,21 @@ from robo.acquisition.base import AcquisitionFunction
 class EI(AcquisitionFunction):
     r"""
         Expected Improvement solves the following equation
-        :math:`\mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, where 
+        :math:`EI(X) := \mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, where 
         :math:`f(X^+)` is the best input found so far. 
         
-        :param model: A Model that implements at least predict(X) and getCurrentBestX(). If you want to calculate derivatives than it should also support
-                      predictive_gradients(X)  
-        :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of input space)
-        :type X_lower: np.ndarray (1,n)
-        :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of input space)
-        :type X_upper: np.ndarray (1,n)
+        :param model: A model that implements at least 
+        
+                 - predict(X) 
+                 - getCurrentBestX(). 
+               
+               If you want to calculate derivatives than it should also support
+               
+                 - predictive_gradients(X)  
+        :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of input space)
+        :type X_lower: np.ndarray (1,D)
+        :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of input space)
+        :type X_upper: np.ndarray (1,D)
         :param par: A parameter (:math:`\xi`) meant to control the balance between exploration and exploitation of the acquisition
                     function. Empirical testing determines 0.01 to be a good value in most cases. 
     """
@@ -36,11 +42,11 @@ class EI(AcquisitionFunction):
         A call to the object returns the EI and derivative values.
 
         :param X: The point at which the function is to be evaluated.
-        :type X: np.ndarray (1,n)
+        :type X: np.ndarray (1,D)
         :param derivative: This controls whether the derivative is to be returned.
         :type derivative: Boolean
         :return: The value of EI and optionally its derivative at X.
-        :rtype: np.ndarray(N, 1) or (np.ndarray(N, 1), np.ndarray(N, D))  
+        :rtype: np.ndarray(1, 1) or (np.ndarray(1, 1), np.ndarray(1, D))  
         """
         if X.shape[0] > 1 :
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single X inputs")

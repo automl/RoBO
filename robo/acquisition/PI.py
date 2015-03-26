@@ -5,9 +5,17 @@ from robo.acquisition.base import AcquisitionFunction
 class PI(AcquisitionFunction):
     r"""
     Probability of Improvement solves the following equation
-        :math:`\mathbb{P}\left( f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) > \xi\right)`, where 
-        :math:`f(X^+)` is the best input found so far. 
-    :param model: A GPyModel contatining current data points.
+    :math:`PI(X) := \mathbb{P}\left( f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) > \xi\right)`, where 
+    :math:`f(X^+)` is the best input found so far. 
+    
+    :param model:  A Model that implements at least 
+        
+                 - predict(X) 
+                 - getCurrentBestX(). 
+               
+               If you want to calculate derivatives than it should also support
+               
+                 - predictive_gradients(X)  
     :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of input space)
     :type X_lower: np.ndarray (1,n)
     :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of input space)
@@ -23,12 +31,12 @@ class PI(AcquisitionFunction):
         self.X_lower = X_lower
         self.X_upper = X_upper
 
-    def __call__(self, X, Z=None, derivative=False, **kwargs):
+    def __call__(self, X, derivative=False, **kwargs):
         """
         A call to the object returns the PI and derivative values.
+        
         :param x: The point at which the function is to be evaluated.
         :type x: np.ndarray (1,n)
-        :param Z: Instance features to evaluate at. Can be None.
         :param derivative: This controls whether the derivative is to be returned.
         :type derivative: Boolean
         :return: The value of PI and its derivative at x.

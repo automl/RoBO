@@ -173,7 +173,7 @@ def main(*args, **kwargs):
     #
     # start the main loop
     #
-    bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=maximize_fkt, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=args.save_dir)
+    bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, model=model, maximize_fkt=maximize_fkt, X_lower=X_lower, X_upper=X_upper, dims=dims, objective_fkt=objective_fkt, save_dir=args.save_dir, num_save= 30)
     bo.run(args.n, overwrite=args.overwrite)
     #bo.run(20.0, overwrite=False)
 

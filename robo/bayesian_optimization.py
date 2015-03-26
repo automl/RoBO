@@ -15,7 +15,7 @@ class BayesianOptimization(object):
         save_dir: 
             save to save_dir after each iteration
     """
-    def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None):
+    def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None, num_save=50):
         self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims])
         if self.enough_arguments:
             self.objective_fkt = objective_fkt
@@ -26,6 +26,7 @@ class BayesianOptimization(object):
             self.X_upper = X_upper
             self.dims = dims
             self.save_dir = save_dir
+            self.num_save = num_save
             if save_dir is not None:
                 self.create_save_dir()
             
@@ -103,7 +104,8 @@ class BayesianOptimization(object):
                         raise
                     new_x = self.choose_next(X, Y)
             
-        if self.save_dir != None:
+        if self.save_dir != None and (num_iterations +1) % self.num_save ==0:
+            
             self.save_iteration(X, Y, new_x);
         
         return new_x, self.model.getCurrentBestX(), self.model.getCurrentBest(), X, Y

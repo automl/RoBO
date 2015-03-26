@@ -17,7 +17,16 @@ Expected Improvement
    :members:
    :private-members: 
    :special-members: __call__
+
+Log Expected Improvement
+========================
+
+.. autoclass:: robo.acquisition.LogEI.LogEI
+   :members:
+   :private-members: 
+   :special-members: __call__
    
+
 Probability of Improvement
 ==========================
 
@@ -30,6 +39,22 @@ Entropy Search
 ==============
 
 .. autoclass:: robo.acquisition.Entropy
+   :members:
+   :private-members: 
+   :special-members: __call__
+ 
+Entropy Search (Monte Carlo)
+============================
+
+.. autoclass:: robo.acquisition.EntropyMC.EntropyMC
+   :members:
+   :private-members: 
+   :special-members: __call__
+
+Upper Confidence Bound
+======================
+
+.. autoclass:: robo.acquisition.UCB.UCB
    :members:
    :private-members: 
    :special-members: __call__
