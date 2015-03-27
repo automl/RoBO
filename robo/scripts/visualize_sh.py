@@ -48,7 +48,7 @@ def main(*args, **kwargs):
     del args_dict["show_incumbent_gap"]
     while True:
         try:
-            bo, new_x, X, Y = robo.BayesianOptimization.from_iteration(source_folder, i)
+            bo, new_x, X, Y, buest_guess = robo.BayesianOptimization.from_iteration(source_folder, i)
             if args.show_incumbent_gap:
                 if not bo.model_untrained:
                     if incumbent_list_x is None:
