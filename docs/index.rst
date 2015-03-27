@@ -3,6 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+Robust Bayesian Optimization
+============================
+
+
+.. toctree::
+   :maxdepth: 2
+
+   acquisition_func
 
 Dependencies
 ============
@@ -163,14 +171,7 @@ In the one dimensional case you can easily plot all the metods used:
     plt.show(block=True)
        
    
-Contents:
-=========
 
-.. toctree::
-   :maxdepth: 2
-
-   acquisition_func
-   
 Indices and tables
 ==================
 
