@@ -17,4 +17,4 @@ Some optional dependencies are the python packages `DIRECT` and `cma`
 Documentation
 -------------
 
-https://github.com/automl/RoBO.git
+http://robust-bayesian-optimization.readthedocs.org/en/latest/
