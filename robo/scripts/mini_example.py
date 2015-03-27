@@ -60,8 +60,6 @@ for acquisition_fkt in [ei, pi, entropy, entropy_mc]:
                   next_x, 
                   X=initial_X, 
                   Y=initial_Y, 
-                  #dest_folder="./",
-                  #prefix =  type(acquisition_fkt).__name__,
                   show_acq_method = True, 
                   show_obj_method = True, 
                   show_model_method = True, 

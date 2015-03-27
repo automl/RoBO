@@ -13,6 +13,8 @@ class TestTestFunction(object):
             for i in range(self.dims):
                 X[j,i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i];
         Y = self.fkt(X)
+        print Y.shape, X.shape
+        #print Y
         assert np.all(Y >= self.Y_star)
         
     def _setUp(self):

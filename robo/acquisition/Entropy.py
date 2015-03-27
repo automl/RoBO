@@ -52,7 +52,7 @@ class Entropy(AcquisitionFunction):
     :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it deafults to log loss (cf. loss_functions module).
     """
     long_name = "Information gain over p_min(x)" 
-    def __init__(self, model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=400, loss_function=None, **kwargs):
         self.model = model
         self.Nb = Nb 
         self.X_lower = np.array(X_lower)

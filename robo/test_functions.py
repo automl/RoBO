@@ -15,8 +15,9 @@ class ObjectiveFkt(object):
 
 def _branin(x):
     one = np.ones((x.shape[0], 1))
-    x1 = x[:, 0]
-    x2 = x[:, 1]
+    x1 = x[:, 0][:,None]
+    x2 = x[:, 1][:,None]
+    
     a = 1
     b = 5.1 / (4 * math.pi ** 2)
     c = 5 / math.pi
@@ -24,7 +25,8 @@ def _branin(x):
     s = 10;
     t = 1 / (8 * math.pi);
     f = (x2 - b * x1 * x1 + c * x1 - r)
-    y = one * a * f * f + s * (1 - t) * np.cos(x1) + s;
+    y = one * a * f * f + s * (1 - t) * np.cos(x1) + s
+    
     return np.array(y)
 
 branin = ObjectiveFkt(2, 
@@ -34,23 +36,13 @@ branin = ObjectiveFkt(2,
                       X_stars=np.array(((-np.pi, 12.275), (np.pi, 2.275), (9.42478, 2.475))),
                       Y_star=0.397887)
 
-def branin2(x):
-    x1 = x[:,0]
-    x2 = 12
-    a = 1
-    b = 5.1/(4*math.pi**2)
-    c = 5/math.pi
-    r = 6;
-    s = 10;
-    t = 1/(8*math.pi);
-    f = (x2-b*x1*x1+c*x1-r)
-    y = a*f*f+s*(1-t)*np.cos(x1)+s;
-    return y        
+
 
 def _one_dim_test(x):
     #return 4 * (3 * (x**2+x-2) * np.cos(3 * x)+(2 * x+1) * np.sin(3 *x))
 
     return  np.sin(3*x) * 4*(x-1)* (x+2)
+
 
 one_dim_test= ObjectiveFkt(1, 
                       X_lower=np.array([-2.1]), 
@@ -82,7 +74,7 @@ def _hartmann6(x, zero_mean=False):
             A_ij.fill(A[i, j])
             P_ij = np.empty((x.shape[0], 1))
             P_ij.fill(P[i, j])
-            internal_sum = internal_sum + A_ij * (x[:, j] - P_ij) * (x[:, j] - P_ij)  
+            internal_sum = internal_sum + A_ij * (x[:, j][:,None] - P_ij) * (x[:, j][:,None] - P_ij)  
         external_sum = external_sum + alpha[i] * np.exp(-internal_sum)
     return np.array(prefactor * external_sum)
 
@@ -92,7 +84,6 @@ hartmann6 = ObjectiveFkt(6,
                          fkt=_hartmann6,
                          X_stars=np.array(((0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573),)),
                          Y_star=-3.32237)
-
 def _hartmann3(x):
     alpha = [1.0, 1.2, 3.0, 3.2]
     A = np.array([[ 3.0, 10.0, 30.0],
@@ -111,10 +102,10 @@ def _hartmann3(x):
             A_ij.fill(A[i, j])
             P_ij = np.empty((x.shape[0], 1))
             P_ij.fill(P[i, j])
-            internal_sum = internal_sum + A_ij * (x[:, j] - P_ij) * (x[:, j] - P_ij)  
+            internal_sum = internal_sum + A_ij * (x[:, j][:,None] - P_ij) * (x[:, j][:,None] - P_ij)  
         external_sum = external_sum + alpha[i] * np.exp(-internal_sum)
     return np.array(-external_sum)
-        
+
 hartmann3 = ObjectiveFkt(3, 
                          X_lower=np.array([0.0, 0.0, 0.0]), 
                          X_upper=np.array([1.0, 1.0, 1.0]), 
@@ -123,8 +114,8 @@ hartmann3 = ObjectiveFkt(3,
                          Y_star=-3.86278)
 
 def _goldstein_price_fkt(x):
-    x1 = x[:, 0]
-    x2 = x[:, 1]
+    x1 = x[:, 0][:,None]
+    x2 = x[:, 1][:,None]
     one = np.ones((x.shape[0], 1))
     factor_1 = 1 + (x1 + x2 + 1) * (x1 + x2 + 1) * (19 - 14 * x1 + 3 * x1 * x1 - 14 * x2 + 6 * x1 * x2 + 3 * x2 * x2)
     factor_2 = 30 + (2 * x1 - 3 * x2) * (2 * x1 - 3 * x2) * (18 - 32 * x1 + 12 * x1 * x1 + 48 * x2 - 36 * x1 * x2 + 27 * x2 * x2)

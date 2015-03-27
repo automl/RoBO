@@ -15,7 +15,7 @@ class BayesianOptimization(object):
         save_dir: 
             save to save_dir after each iteration
     """
-    def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None, num_save=50):
+    def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None, num_save=1):
         self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims])
         if self.enough_arguments:
             self.objective_fkt = objective_fkt
@@ -143,7 +143,7 @@ class BayesianOptimization(object):
         max_iteration = self._get_last_iteration_number()
         iteration_folder = self.save_dir + "/%03d" % (max_iteration+1, )
         os.makedirs(iteration_folder)
-        pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
+        #pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
         if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
             pickle.dump([new_x, X, Y, self.acquisition_fkt._get_most_probable_minimum()[0]], open(iteration_folder+"/observations.pickle", "w"))
         else:
