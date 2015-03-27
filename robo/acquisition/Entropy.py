@@ -82,7 +82,6 @@ class Entropy(AcquisitionFunction):
         Xdh = np.array([res.fun for res in minima])
         Xend = np.array([res.x for res in minima])
         new_x = Xend[np.nanargmin(Xdh)]
-        print new_x.shape, new_x
         return np.array([new_x]) 
 
     def __call__(self, X,  derivative=False, **kwargs):
@@ -354,7 +353,14 @@ class Entropy(AcquisitionFunction):
             A = 0.5 * (A.T + A)  # ensure symmetry.
             b = (Mu + np.dot(Sigma, r));
             Ab = np.dot(A, b);
-            dts = 2 * np.sum(np.log(np.diagonal(np.linalg.cholesky(IRSR))));
+            try:
+                cIRSR =  np.linalg.cholesky(IRSR)   
+            except np.linalg.LinAlgError:
+                try:
+                    cIRSR = np.linalg.cholesky(IRSR + 1e-10 * np.eye(IRSR.shape[0]))
+                except np.linalg.LinAlgError:
+                    cIRSR = np.linalg.cholesky(IRSR + 1e-6 * np.eye(IRSR.shape[0]))
+            dts = 2 * np.sum(np.log(np.diagonal(cIRSR)));
             logZ = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + np.dot(Mu.T, r) + s - 0.5 * mpm;
             yield logZ
             btA = np.dot(b.T, A)
@@ -378,6 +384,8 @@ class Entropy(AcquisitionFunction):
         cVnic = np.max([cVc / (1 - p * cVc), 0])
         cmni = cM + cVnic * (p * cM - mp)
         z = cmni / np.sqrt(cVnic);
+        if np.isnan(z):
+            z = -np.inf
         e, lP, exit_flag = self._log_relative_gauss(z)
         if exit_flag == 0:
             alpha = e / np.sqrt(cVnic)
@@ -407,27 +415,23 @@ class Entropy(AcquisitionFunction):
         elif exit_flag == -1:
             d = np.NAN
             Mnew = 0
-            Vnew = 0;
-            pnew = 0;    
-            mpnew = 0;
-            logS = -np.Infinity;
-            # raise Exception("-----")
+            Vnew = 0
+            pnew = 0    
+            mpnew = 0
+            logS = -np.Infinity
         elif exit_flag == 1:
             d = 0
             # remove message from marginal:
             # new message
             pnew = 0 
             mpnew = 0
-        
             # update terms
             dp = -p  # at worst, remove message
             dmp = -mp
             d = max([dmp, dp]);  # for convergence measures
-        
             # project out to marginal
             Vnew = V - dp / (1 + dp * cVc) * (np.outer(Vc, Vc))
             Mnew = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc;
-        
             logS = 0;
         return Mnew, Vnew, pnew, mpnew, logS, d
     
@@ -448,19 +452,18 @@ class Entropy(AcquisitionFunction):
         for i in range(n):
             fig.axes[i].change_geometry(n + 2, 1, i + 1) 
         ax = fig.add_subplot(n + 1, 1, n + 1)
-        #bar_ax = fig.add_subplot(n + 2, 1, n + 2)
-        #other_acq_ax = fig.add_subplot(n + 3, 1, n + 3)
+        bar_ax = fig.add_subplot(n + 2, 1, n + 2)
         plotting_range = np.linspace(minx, maxx, num=resolution)
         acq_v = np.array([ self(np.array([x]), derivative=True)[0][0] for x in plotting_range[:, np.newaxis] ])
         ax.plot(plotting_range, acq_v, **plot_attr)
-        # ax.plot(self.plotting_range, acq_v[:,1])
+       
         zb = self.zb
         pmin = np.exp(self.logP)
         ax.set_xlim(minx, maxx)
-        #bar_ax.bar(zb, pmin, width=(maxx - minx) / (2 * zb.shape[0]), color="yellow")
-        #bar_ax.set_xlim(minx, maxx)
-        #bar_ax.set_ylim(0.0, pmin.max())
-        #other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})  # , logscale=True)
-        #other_acq_ax.set_xlim(minx, maxx)
+        bar_ax.bar(zb, pmin, width=(maxx - minx) / (2 * zb.shape[0]), color="yellow")
+        bar_ax.set_xlim(minx, maxx)
+        bar_ax.set_ylim(0.0, pmin.max())
+        other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})  # , logscale=True)
+        other_acq_ax.set_xlim(minx, maxx)
         ax.set_title(str(self))
         return ax

@@ -117,7 +117,7 @@ class BayesianOptimization(object):
                 self.model.train(X, Y)
             except Exception, e:
                 print "could not train",  X, Y
-                raise e
+                raise 
             self.model_untrained = False
             self.acquisition_fkt.update(self.model)
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)

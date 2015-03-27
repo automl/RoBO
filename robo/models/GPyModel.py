@@ -93,22 +93,10 @@ class GPyModel(object):
         index_min = np.argmin(self.observation_means)
         self.X_star = self.X[index_min]
         self.f_star = self.observation_means[index_min]
-        # self.K = self.kernel.K(X, X) + self.m.likelihood.variance
-        # self.K = self.m.posterior.covariance
-        # self.cK = self.m.posterior.K_chol
-        # self.Sigma_chol = self.m.posterior.K_chol
-        # try:
-        #    self.cK = np.linalg.cholesky(self.K)
-        # except np.linalg.LinAlgError:
-        #    try:
-        #        self.cK = np.linalg.cholesky(self.K + 1e-10 * np.eye(self.K.shape[0]))
-        #    except np.linalg.LinAlgError:
-        #        self.cK = np.linalg.cholesky(self.K + 1e-6 * np.eye(self.K.shape[0]))
         
 
         
     def update(self, X, Y):
-        # TODO use correct update method
         X = np.append(self.X, X, axis=0)
         Y = np.append(self.Y, Y, axis=0)
         self.train(X, Y)
@@ -137,18 +125,24 @@ class GPyModel(object):
     def predictive_gradients(self, Xnew, X=None):
         if X == None:
             return self.m.predictive_gradients(Xnew)
-        
     
     def sample(self, X, size=10):
+        """
+        samples from the GP at values X size times.
+        """
         return self.m.posterior_samples_f(X, size)
     
     def getCurrentBest(self):
+        """
+        returns the current best mean of observations taken so far 
+        """
         return self.f_star
     
     def getCurrentBestX(self):
+        """
+        returns the X with respect to the current best mean of observations taken so far 
+        """
         return self.X_star
     
     def visualize(self, ax, plot_min, plot_max):
         self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])
-        
-        # xlim_min, xlim_max, ylim_min, ylim_max =  ax.axis()

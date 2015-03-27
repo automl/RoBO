@@ -58,22 +58,6 @@ class PITestCase1(unittest.TestCase):
         value0_noise = out0[:,0]
         derivative0_noise = out0[:,1]
         assert(np.all(np.abs(value0_noise) >= np.abs(value0)))
-        
-        bo_dummy = Dummy()
-        bo_dummy.X_upper = X_upper
-        bo_dummy.X_lower = X_lower
-        bo_dummy.acquisition_fkt = pi_par_1
-        bo_dummy.dims = 1
-        bo_dummy.model = self.model
-        bo_dummy.acquisition_fkt.update( bo_dummy.model)
-        dest_folder =here+"/tmp/test_pi/vis"
-        if dest_folder is not None:
-            try:
-                os.makedirs(dest_folder)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
-        Visualization(bo_dummy, dest_folder=dest_folder, prefix="00", new_x = None, X=self.x, Y=self.y, acq_method = True, obj_method = False, model_method = True, )
 
 
 if __name__=="__main__":

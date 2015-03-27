@@ -53,7 +53,7 @@ class PI(AcquisitionFunction):
 
         
         dim = X.shape[1]
-        m, v = self.model.predict(X, Z)
+        m, v = self.model.predict(X)
         eta = self.model.getCurrentBest()
         s = np.sqrt(v)
         z = (eta - m - self.par) / s 

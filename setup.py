@@ -7,9 +7,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 #CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-	'GPy',
-	'emcee'
+	'GPy==0.6.0',
+	'emcee==2.1.0',
+	'numpy >= 1.7',
+	'scipy >= 0.12',
+	'matplolib >= 1.3'
     ]
+
 
 setup(name='robo',
       version='0.1',

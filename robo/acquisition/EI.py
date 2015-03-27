@@ -59,7 +59,7 @@ class EI(AcquisitionFunction):
                 return np.array([[0]])
 
         dim = X.shape[-1]
-        m, v = self.model.predict(x)
+        m, v = self.model.predict(X)
         eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
         
         s = np.sqrt(v)

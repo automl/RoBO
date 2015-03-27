@@ -40,8 +40,8 @@ kernel = GPy.kern.Matern52(input_dim=dims)
 maximize_fkt = grid_search
 model = GPyModel(kernel, optimize=True, noise_variance = 1e-4, num_restarts=10)
 
-entropy = Entropy(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=50, Np=200, loss_function = logLoss)
-entropy_mc = EntropyMC(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=50, Np=500, Nf=500, loss_function = logLoss)
+entropy = Entropy(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=10, Np=600, loss_function = logLoss)
+entropy_mc = EntropyMC(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=10, Np=300, Nf=3500, loss_function = logLoss)
 ei = EI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 pi = PI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 

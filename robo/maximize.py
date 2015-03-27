@@ -87,7 +87,7 @@ def _scipy_optimizer_fkt_wrapper(acq_f, derivative=True):
     return _l
 
 def stochastic_local_search(acquisition_fkt, X_lower, X_upper, Ne=20, starts=None):
-    if hasattr(acquisition_fkt, "_get_most_probable_minimum"):
+    if hasattr(acquisition_fkt, "_get_most_probable_minimum") :
         xx = acquisition_fkt._get_most_probable_minimum()
     else:
         xx = np.add(np.multiply((X_lower - X_upper), np.random.uniform(size=(1, X_lower.shape[0]))), X_lower)
@@ -102,11 +102,14 @@ def stochastic_local_search(acquisition_fkt, X_lower, X_upper, Ne=20, starts=Non
     Xstart = np.zeros((Ne, D))
     
     restarts = np.zeros((Ne, D))    
+    if starts is None and hasattr(acquisition_fkt, "BestGuesses"):
+        starts = acquisition_fkt.BestGuesses
     if starts != None and Ne > starts.shape[0]:
-        restarts[starts.shape[0]:Ne, ] = X_lower + (X_upper - X_lower) * np.random.uniform(size=(Ne, D))
-    if starts != None:
-        restarts[starts.shape[0]:Ne, : ] = starts
-        
+        restarts[starts.shape[0]:Ne, ] = X_lower + (X_upper - X_lower) * np.random.uniform(size=(Ne-starts.shape[0], D))    
+    elif starts != None:
+        restarts[0:Ne] = starts[0:Ne]
+    else:
+        restarts = X_lower + (X_upper - X_lower) * np.random.uniform(size=(Ne, D))  
     sampler = emcee.EnsembleSampler(Ne, D, fun_p)
     Xstart, logYstart, _ = sampler.run_mcmc(restarts, 20)
     search_cons = []
@@ -142,8 +145,4 @@ def stochastic_local_search(acquisition_fkt, X_lower, X_upper, Ne=20, starts=Non
     new_x = Xend[np.nanargmin(Xdh)]
     if len(new_x.shape):
         new_x = np.array([new_x])
-    if np.any(np.isnan(new_x)):
-        print Xdh, Xstart
-        raise Exception("should not be nonr")
-    
     return new_x

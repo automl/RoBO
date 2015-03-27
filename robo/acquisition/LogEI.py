@@ -46,7 +46,7 @@ class LogEI(AcquisitionFunction):
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             #print "return -inf"
             return np.array([[- np.finfo(np.float).max]])
-        m, v = self.model.predict(X, Z)
+        m, v = self.model.predict(X)
         
         eta = self.model.getCurrentBest()
         s = np.sqrt(v)

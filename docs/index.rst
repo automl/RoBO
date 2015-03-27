@@ -3,6 +3,30 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+
+Dependencies
+============
+
+ - numpy >= 1.7
+ - scipy >= 0.12
+ - 
+
+ 
+Examples
+========
+
+Building a model 
+----------------
+
+GPyModel is the only model implemented so far. You have to specify a kernel to update 
+
+.. code-block:: python
+
+   import Gpy
+
+
+
+
 RoBo Overview
 =============
 
@@ -11,20 +35,15 @@ RoBo Overview
    Test -> Test : uuuuh
 
 
-Installation
-============
- 
-Examples
-========
 
 
-
+   acquisition_func
+   
 Contents:
+=========
 
 .. toctree::
    :maxdepth: 2
-
-   acquisition_func
 
 
 Indices and tables
