@@ -11,7 +11,7 @@ requires = [
 	'emcee==2.1.0',
 	'numpy >= 1.7',
 	'scipy >= 0.12',
-	'matplolib >= 1.3'
+	'matplotlib >= 1.3'
     ]
 
 
