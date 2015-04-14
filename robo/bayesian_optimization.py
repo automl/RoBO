@@ -71,6 +71,11 @@ class BayesianOptimization(object):
                 if exception.errno != errno.EEXIST:
                     raise
 
+    def initialize(self):
+        X = np.array([np.random.randn(self.dims)])
+        Y = self.objective_fkt(X)
+        return X, Y
+
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
         overwrite:
@@ -89,31 +94,22 @@ class BayesianOptimization(object):
             self.create_save_dir()
         else:
             self.create_save_dir()
-        if num_iterations > 1:
-            new_x, old_best_x, old_best_y, X, Y = self.run(num_iterations=num_iterations-1, X=X, Y=Y, overwrite=False) 
-            new_y = np.array(self.objective_fkt(np.array(new_x)))
-            if X is not None and Y is not None:
-                X = np.append(X, np.array([new_x]), axis=0)
-                Y = np.append(Y, np.array([new_y]), axis=0)
-            else:
-                X = new_x
-                Y = new_y
+
+        if X is None and Y is None:
+            # TODO: allow different initialization strategies here
+            X, Y = self.initialize()
+
+        for iter in range(num_iterations):
             new_x = self.choose_next(X, Y)
-        else:
-            if X is None and Y is None and self.save_dir:
-                try:
-                    new_x, X, Y, best_guess = self.init_last_iteration()
-                except IOError as exception:
-                    if not self.enough_arguments:
-                        raise
-            else:
-                new_x = self.choose_next(X, Y)
+            new_y = np.array(self.objective_fkt(np.array(new_x)))
+            X = np.append(X, np.array([new_x]), axis=0)
+            Y = np.append(Y, np.array([new_y]), axis=0)
 
         if self.save_dir is not None and (num_iterations + 1) % self.num_save == 0:
 
             self.save_iteration(X, Y, new_x)
 
-        return new_x, self.model.getCurrentBestX(), self.model.getCurrentBest(), X, Y
+        return self.model.getCurrentBestX(), self.model.getCurrentBest()
 
     def choose_next(self, X=None, Y=None):
         if X is not None and Y is not None:
