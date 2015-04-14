@@ -41,8 +41,10 @@ class BayesianOptimization(object):
 
     def init_last_iteration(self):
         max_iteration = self._get_last_iteration_number()
-        iteration_folder = self.save_dir + "/%03d" % (max_iteration, )
-        that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "rb"))
+
+        iteration_folder = os.path.join(self.save_dir, "%03d" % (max_iteration, ))
+
+        that = pickle.load(open(os.path.join(iteration_folder, "bayesian_opt.pickle"), "rb"))
         self.objective_fkt = that.objective_fkt
         self.acquisition_fkt = that.acquisition_fkt
         self.model = that.model
