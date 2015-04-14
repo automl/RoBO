@@ -33,7 +33,7 @@ class EI(AcquisitionFunction):
         self.X_lower = X_lower
         self.X_upper = X_upper
 
-    def __call__(self, X, derivative=False, **kwargs):
+    def __call__(self, X, incumbent, derivative=False, **kwargs):
         """
         A call to the object returns the EI and derivative values.
 
@@ -56,7 +56,7 @@ class EI(AcquisitionFunction):
                 return np.array([[0]])
 
         m, v = self.model.predict(X)
-        eta, _ = self.model.predict(np.array([self.model.getCurrentBestX()]))
+        eta, _ = self.model.predict(np.array([incumbent]))
 
         s = np.sqrt(v)
         z = (eta - m - self.par) / s

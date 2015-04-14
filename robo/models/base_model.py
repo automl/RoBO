@@ -15,13 +15,3 @@ class BaseModel(object):
 
     def predict(self, X):
         raise NotImplementedError()
-
-    def getCurrentBestX(self):
-        best = np.argmin(self.y)
-        return self.X[best]
-
-    def getCurrentBest(self):
-        """
-            Returns the current best observation so far
-        """
-        return np.min(self.y)

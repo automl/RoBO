@@ -17,7 +17,10 @@ class BayesianOptimization(object):
         save_dir:
             save to save_dir after each iteration
     """
-    def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None, num_save=1):
+    def __init__(self, acquisition_fkt=None, model=None,
+                 maximize_fkt=None, X_lower=None, X_upper=None, dims=None,
+                 objective_fkt=None, save_dir=None, num_save=1):
+
         self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims])
         if self.enough_arguments:
             self.objective_fkt = objective_fkt
@@ -33,6 +36,7 @@ class BayesianOptimization(object):
                 self.create_save_dir()
 
             self.model_untrained = True
+            self.recommendation_strategy = None
 
         elif save_dir is not None:
             self.save_dir = save_dir
@@ -52,14 +56,14 @@ class BayesianOptimization(object):
         self.X_lower = that.X_lower
         self.X_upper = that.X_upper
         self.dims = that.dims
-        return pickle.load(open(iteration_folder+"/observations.pickle", "rb"))        
+        return pickle.load(open(iteration_folder+"/observations.pickle", "rb"))
 
     @classmethod
     def from_iteration(cls, save_dir, i):
         iteration_folder = save_dir + "/%03d" % (i, )
         that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "rb"))
         if not isinstance(that, cls):
-            raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR, "not a robo instance")
+            raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR,"not a robo instance")
         new_x, X, Y, buest_guess = pickle.load(open(iteration_folder+"/observations.pickle", "rb"))
         return that, new_x, X, Y, buest_guess
 
@@ -99,17 +103,20 @@ class BayesianOptimization(object):
             # TODO: allow different initialization strategies here
             X, Y = self.initialize()
 
-        for iter in range(num_iterations):
+        for it in range(num_iterations):
             new_x = self.choose_next(X, Y)
             new_y = np.array(self.objective_fkt(np.array(new_x)))
             X = np.append(X, np.array([new_x]), axis=0)
             Y = np.append(Y, np.array([new_y]), axis=0)
 
-        if self.save_dir is not None and (num_iterations + 1) % self.num_save == 0:
+            if self.save_dir is not None and (it) % self.num_save == 0:
+                self.save_iteration(X, Y, new_x)
 
-            self.save_iteration(X, Y, new_x)
-
-        return self.model.getCurrentBestX(), self.model.getCurrentBest()
+        if self.recommendation_strategy is None:
+            best_idx = np.argmin(Y)
+            return X[best_idx], Y[best_idx]
+        else:
+            return self.recommendation_strategy(self.model, self.acquisition_fkt)
 
     def choose_next(self, X=None, Y=None):
         if X is not None and Y is not None:
