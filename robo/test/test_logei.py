@@ -6,12 +6,9 @@ import errno
 import numpy as np
 import random
 import GPy
-from robo.models import GPyModel
-from robo.acquisition import LogEI, Entropy
-from robo.visualization import Visualization
-import matplotlib.pyplot as plt
-class Dummy(object):
-    pass
+from robo.models.GPyModel import GPyModel
+from robo.acquisition.LogEI import LogEI
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 

@@ -1,7 +1,7 @@
 import random
 import unittest
 import numpy as np
-from robo.test_functions import branin, hartmann6, hartmann3, goldstein_price_fkt
+from robo.benchmarks.test_functions import branin, hartmann6, hartmann3, goldstein_price_fkt
 
 class TestTestFunction(object):
     def test(self):

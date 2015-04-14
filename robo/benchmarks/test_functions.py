@@ -9,24 +9,25 @@ class ObjectiveFkt(object):
         self.fkt = fkt
         self.X_stars = X_stars
         self.Y_star = Y_star
-        
+
     def __call__(self, x, **kwargs):
         return self.fkt(x, **kwargs)
+
 
 def _branin(x):
     one = np.ones((x.shape[0], 1))
     x1 = x[:, 0][:,None]
     x2 = x[:, 1][:,None]
-    
+
     a = 1
     b = 5.1 / (4 * math.pi ** 2)
     c = 5 / math.pi
-    r = 6;
-    s = 10;
-    t = 1 / (8 * math.pi);
+    r = 6
+    s = 10
+    t = 1 / (8 * math.pi)
     f = (x2 - b * x1 * x1 + c * x1 - r)
     y = one * a * f * f + s * (1 - t) * np.cos(x1) + s
-    
+
     return np.array(y)
 
 branin = ObjectiveFkt(2, 

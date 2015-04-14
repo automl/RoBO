@@ -1,11 +1,12 @@
 import numpy as np
 import GPy
 from robo import BayesianOptimization
-from robo.models import GPyModel 
-from robo.acquisition import Entropy, LogEI, PI, EI, EntropyMC
-from robo.maximize import grid_search
-from robo.loss_functions import logLoss
-from robo.visualization import Visualization
+from robo.models.GPyModel import GPyModel 
+from robo.acquisition.EntropyMC import EntropyMC
+from robo.acquisition.LogEI import LogEI
+from robo.maximizers.maximize import grid_search
+from robo.util.loss_functions import logLoss
+from robo.util.visualization import Visualization
 import matplotlib
 import random
 
@@ -39,12 +40,12 @@ kernel = GPy.kern.Matern52(input_dim=dims)
 maximize_fkt = grid_search
 model = GPyModel(kernel, optimize=True, noise_variance = 1e-4, num_restarts=10)
 
-entropy = Entropy(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=10, Np=600, loss_function = logLoss)
+# entropy = Entropy(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=10, Np=600, loss_function = logLoss)
 entropy_mc = EntropyMC(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=10, Np=300, Nf=3500, loss_function = logLoss)
-ei = EI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
-pi = PI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
+# ei = EI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
+# pi = PI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 
-for acquisition_fkt in [ei, pi, entropy, entropy_mc]:
+for acquisition_fkt in [entropy_mc]:
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt, 
                               model=model, 
                               maximize_fkt=maximize_fkt, 

@@ -7,7 +7,7 @@ import errno
 import subprocess
 import random
 import numpy as np
-from robo.test_functions import branin
+from robo.benchmarks.test_functions import branin
 try:
     import cpickle as pickle
 except:

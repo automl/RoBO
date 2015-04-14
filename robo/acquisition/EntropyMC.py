@@ -3,18 +3,18 @@ from scipy.stats import norm
 import scipy
 import numpy as np
 import emcee
-from robo.loss_functions import logLoss
+from robo.util.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.base import AcquisitionFunction 
-from robo.acquisition import Entropy
+from robo.acquisition.Entropy import Entropy
 from robo import BayesianOptimizationError
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 class EntropyMC(Entropy):
-    r"""
+    """
     The EntropyMC contains the asymptotically exact, sampling based variant of the entropy search acquisition function.
     
     :param model: A model should have following methods:
@@ -25,11 +25,11 @@ class EntropyMC(Entropy):
     :type X_lower: np.ndarray (1,D)
     :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of search space)
     :type X_upper: np.ndarray (1,D)
-    :param Nb: Number of representer points to define :math:`p_\text{min}` at.
+    :param Nb: Number of representer points.
     :type Nb: int
     :param sampling_acquisition: A function to be used in calculating the density that representer points are to be sampled from. It uses
     :type samping_acquisition: AcquisitionFunction
-    :param sampling_acquisition_kw: Additional keyword parameters to be passed to sampling_acquisition, if they are required, e.g. :math:`\xi` parameter for LogEI.
+    :param sampling_acquisition_kw: Additional keyword parameters to be passed to sampling_acquisition
     :type sampling_acquisition_kw: dict
     :param Np: Number of prediction points at X to calculate stochastic changes of the mean for the representer points 
     :type Np: int

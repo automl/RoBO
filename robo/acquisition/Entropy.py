@@ -5,10 +5,10 @@ import scipy
 import numpy as np
 import emcee
 import copy
-from robo.loss_functions import logLoss
+from robo.util.loss_functions import logLoss
 from robo import BayesianOptimizationError
-from robo.sampling import sample_from_measure
-from robo.maximize import _scipy_optimizer_fkt_wrapper
+from robo.sampling.sampling import sample_from_measure
+from robo.maximizers.maximize import _scipy_optimizer_fkt_wrapper
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.UCB import UCB
 from robo.acquisition.base import AcquisitionFunction 
@@ -18,34 +18,19 @@ eps = np.finfo(np.float32).eps
 here = os.path.abspath(os.path.dirname(__file__))
 
 class Entropy(AcquisitionFunction):
-    r"""
-    The Entropy Search acquisition function minimize a loss function math:`\mathcal{L}_{KL}` by maximizing its difference after predicting an evaluation at X.
-      
-      .. math::
-    
-        \text{EntropySearch}(X) := \mathcal{L}_{KL}(p_\text{min}, b) - \mathcal{L}_{KL}(p^X_\text{min}, b)
-    
-    Where :math:`\mathcal{L}_{KL}` defines the Kullback-Leibler divergence between the probability measure of the minimum and the uniform pdf (:math:`b`):
-      
-      .. math::
-         
-         \mathcal{L}_{KL}(p, b) :=  - \int p(x)\log\frac{p(x)}{b(x)}dx \\
-         p_\text{min}(X) := \mathbb{P}(X = \arg\limits_{x}\min\limits_{x, f}f(x)) 
-    
-      
-    :param model: A model should have following methods:
-    
+    """
+    The Entropy Search acquisition function
         - predict(X)
         - predict_variance(X1, X2)
     :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of search space)
     :type X_lower: np.ndarray (1,D)
     :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of search space)
     :type X_upper: np.ndarray (1,D)
-    :param Nb: Number of representer points to define :math:`p_\text{min}` at.
+    :param Nb: Number of representer points to define pmin.
     :type Nb: int
     :param sampling_acquisition: A function to be used in calculating the density that representer points are to be sampled from. It uses
     :type samping_acquisition: AcquisitionFunction
-    :param sampling_acquisition_kw: Additional keyword parameters to be passed to sampling_acquisition, if they are required, e.g. :math:`\xi` parameter for LogEI.
+    :param sampling_acquisition_kw: Additional keyword parameters to be passed to sampling_acquisition, if they are required, e.g. xi parameter for LogEI.
     :type sampling_acquisition_kw: dict
     :param Np: Number of prediction points at X to calculate stochastic changes of the mean for the representer points 
     :type Np: int

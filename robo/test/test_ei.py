@@ -6,16 +6,14 @@ import errno
 import numpy as np
 import random
 import GPy
-from robo.models import GPyModel
-from robo.acquisition import EI, Entropy
-from robo.visualization import Visualization
-import matplotlib.pyplot as plt
-class Dummy(object):
-    pass
+from robo.models.GPyModel import GPyModel
+from robo.acquisition.EI import EI
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+
 class EITestCase1(unittest.TestCase):
+
     def setUp(self):
         self.x = np.array([[ 0.62971589], [ 0.63273273], [ 0.17867868], [ 0.17447447], [ 1.88558559]]);
         self.y = np.array([[-3.69925653], [-3.66221988], [-3.65560591], [-3.58907791], [-8.06925984]]);
