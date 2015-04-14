@@ -10,9 +10,11 @@ except:
 from robo.exc import BayesianOptimizationError
 from robo.models import GPyModel
 here = os.path.abspath(os.path.dirname(__file__))
+
+
 class BayesianOptimization(object):
     """
-        save_dir: 
+        save_dir:
             save to save_dir after each iteration
     """
     def __init__(self, acquisition_fkt=None, model=None, maximize_fkt=None, X_lower=None, X_upper=None, dims=None, objective_fkt=None, save_dir=None, num_save=1):
@@ -29,18 +31,20 @@ class BayesianOptimization(object):
             self.num_save = num_save
             if save_dir is not None:
                 self.create_save_dir()
-            
+
             self.model_untrained = True
-        
+
         elif save_dir is not None:
             self.save_dir = save_dir
         else:
             raise ArgumentError()
-        
+
     def init_last_iteration(self):
         max_iteration = self._get_last_iteration_number()
-        iteration_folder = self.save_dir + "/%03d" % (max_iteration, )
-        that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "rb"))
+
+        iteration_folder = os.path.join(self.save_dir, "%03d" % (max_iteration, ))
+
+        that = pickle.load(open(os.path.join(iteration_folder, "bayesian_opt.pickle"), "rb"))
         self.objective_fkt = that.objective_fkt
         self.acquisition_fkt = that.acquisition_fkt
         self.model = that.model
