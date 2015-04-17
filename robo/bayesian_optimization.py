@@ -2,6 +2,7 @@ import random
 import os
 import errno
 import numpy as np
+from functools import partial
 import shutil
 try:
     import cpickle as pickle
@@ -37,6 +38,7 @@ class BayesianOptimization(object):
 
             self.model_untrained = True
             self.recommendation_strategy = None
+            self.incumbent = None
 
         elif save_dir is not None:
             self.save_dir = save_dir
@@ -56,15 +58,15 @@ class BayesianOptimization(object):
         self.X_lower = that.X_lower
         self.X_upper = that.X_upper
         self.dims = that.dims
-        return pickle.load(open(iteration_folder+"/observations.pickle", "rb"))
+        return pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
 
     @classmethod
     def from_iteration(cls, save_dir, i):
         iteration_folder = save_dir + "/%03d" % (i, )
-        that = pickle.load(open(iteration_folder+"/bayesian_opt.pickle", "rb"))
+        that = pickle.load(open(iteration_folder + "/bayesian_opt.pickle", "rb"))
         if not isinstance(that, cls):
-            raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR,"not a robo instance")
-        new_x, X, Y, buest_guess = pickle.load(open(iteration_folder+"/observations.pickle", "rb"))
+            raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR, "not a robo instance")
+        new_x, X, Y, buest_guess = pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
         return that, new_x, X, Y, buest_guess
 
     def create_save_dir(self):
@@ -104,34 +106,48 @@ class BayesianOptimization(object):
             X, Y = self.initialize()
 
         for it in range(num_iterations):
+            print "Choose a new configuration"
             new_x = self.choose_next(X, Y)
-            new_y = np.array(self.objective_fkt(np.array(new_x)))
-            X = np.append(X, np.array([new_x]), axis=0)
-            Y = np.append(Y, np.array([new_y]), axis=0)
+            print "Evaluate candidate %s" % (str(new_x))
+            new_y = self.objective_fkt(np.array(new_x))
+            print "Configuration achieved a performance of %d " % (new_y[0, 0])
+            X = np.append(X, new_x, axis=0)
+            Y = np.append(Y, new_y, axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
                 self.save_iteration(X, Y, new_x)
 
+        # Recompute the incumbent before we return it
         if self.recommendation_strategy is None:
             best_idx = np.argmin(Y)
-            return X[best_idx], Y[best_idx]
+            self.incumbent = X[best_idx]
         else:
-            return self.recommendation_strategy(self.model, self.acquisition_fkt)
+            self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
+
+        print "Return %s as incumbent" % (str(self.incumbent))
+        return self.incumbent
 
     def choose_next(self, X=None, Y=None):
         if X is not None and Y is not None:
             try:
                 self.model.train(X, Y)
             except Exception, e:
-                print "could not train",  X, Y
+                print "Model could not be trained", X, Y
                 raise
             self.model_untrained = False
             self.acquisition_fkt.update(self.model)
+
+            if self.recommendation_strategy is None:
+                best_idx = np.argmin(Y)
+                self.incumbent = X[best_idx]
+            else:
+                self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
+
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
         else:
             X = np.empty((1, self.dims))
             for i in range(self.dims):
-                X[0, i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i];
+                X[0, i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i]
             x = np.array(X)
         return x
 
@@ -145,15 +161,13 @@ class BayesianOptimization(object):
             except Exception, e:
                 print e
         return max_iteration
-    
+
     def save_iteration(self, X, Y, new_x):
         max_iteration = self._get_last_iteration_number()
-        iteration_folder = self.save_dir + "/%03d" % (max_iteration+1, )
+        iteration_folder = self.save_dir + "/%03d" % (max_iteration + 1, )
         #pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
         os.makedirs(iteration_folder)
         if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
-            pickle.dump([new_x, X, Y, self.acquisition_fkt._get_most_probable_minimum()[0]], open(iteration_folder+"/observations.pickle", "w"))
+            pickle.dump([new_x, X, Y, self.acquisition_fkt._get_most_probable_minimum()[0]], open(iteration_folder + "/observations.pickle", "w"))
         else:
-            pickle.dump([new_x, X, Y, self.model.getCurrentBestX()], open(iteration_folder+"/observations.pickle", "w"))
-        
-        
+            pickle.dump([new_x, X, Y, self.model.getCurrentBestX()], open(iteration_folder + "/observations.pickle", "w"))

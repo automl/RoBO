@@ -1,16 +1,13 @@
 import os
 import random
 import argparse
-import errno
-import GPy
-import pylab as pb
+import imp
 import numpy as np
 
 from robo import BayesianOptimization
-from robo.models import GPyModel
-from robo.test_functions import one_dim_test, branin, hartmann6, hartmann3, goldstein_price_fkt
-from robo.acquisition import EI, PI, LogEI, Entropy, UCB, EntropyMC
-from robo.maximize import grid_search, DIRECT, cma, stochastic_local_search
+from robo.models.GPyModel import GPyModel, GPy
+from robo.acquisition import *
+from robo.maximizers.maximize import grid_search, DIRECT, cma, stochastic_local_search
 
 
 class SmartFormatter(argparse.HelpFormatter):
@@ -20,6 +17,22 @@ class SmartFormatter(argparse.HelpFormatter):
         if text.startswith('R|'):
             return text[2:].splitlines()
         return argparse.HelpFormatter._split_lines(self, text, width)
+
+
+def load_module_file(filepath):
+
+    mod_name, file_ext = os.path.splitext(os.path.split(filepath)[-1])
+
+    if file_ext.lower() == '.py':
+        py_mod = imp.load_source(mod_name, filepath)
+
+    elif file_ext.lower() == '.pyc':
+        py_mod = imp.load_compiled(mod_name, filepath)
+
+    if hasattr(py_mod, main):
+        objective_function = getattr(py_mod, main)()
+
+    return objective_function
 
 
 def main(*args, **kwargs):
@@ -75,12 +88,7 @@ def main(*args, **kwargs):
     parser.add_argument('--seed', default=None, type=str,
                         help='set a random seed',
                         dest="seed")
-    parser.add_argument('--pcs_file',
-                        default=[],
-                        type=str,
-                        help='Parameter configuration space file (in SMAC format)',
-                        required=True,
-                        dest="pcs_file")
+
     args = parser.parse_args()
 
     if args.seed is not None:
@@ -115,17 +123,17 @@ def main(*args, **kwargs):
         model = GPyModel(kernel, optimize=True, **model_kwargs)
 
     #
-    # creating an acquisition function
+    # Creating the acquisition function
     #
     acquisition_kwargs = {}
     if args.acquisition == "EI":
         if len(args.acquisition_parameters):
             acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
-        acquisition_fkt = EI(model, X_upper=X_upper, X_lower=X_lower, **acquisition_kwargs)
+        acquisition_fkt = EI.EI(model, X_upper=X_upper, X_lower=X_lower, **acquisition_kwargs)
     elif args.acquisition == "PI":
         if len(args.acquisition_parameters):
             acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
-        acquisition_fkt = PI(model, X_upper=X_upper, X_lower=X_lower, **acquisition_kwargs)
+        acquisition_fkt = PI.PI(model, X_upper=X_upper, X_lower=X_lower, **acquisition_kwargs)
     elif args.acquisition == "LogEI":
         if len(args.acquisition_parameters):
             acquisition_kwargs["par"] = float(args.acquisition_parameters[0])
@@ -154,13 +162,15 @@ def main(*args, **kwargs):
     elif args.maximizer == "stochastic_local_search":
         maximize_fkt = stochastic_local_search
 
+    objective_function = load_module_file(args.objective_function)
+
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt,
                               model=model,
                               maximize_fkt=maximize_fkt,
                               X_lower=X_lower,
                               X_upper=X_upper,
                               dims=dims,
-                              objective_fkt=objective_fkt,
+                              objective_fkt=objective_function,
                               save_dir=args.save_dir,
                               num_save=30)
 

@@ -7,7 +7,7 @@ from robo.acquisition.base import AcquisitionFunction
 
 
 class EI(AcquisitionFunction):
-    """
+    r"""
         Expected Improvement acquisition function
 
         :param model: A model that implements at least
@@ -27,13 +27,14 @@ class EI(AcquisitionFunction):
     """
     long_name = "Expected Improvement"
 
-    def __init__(self, model, X_lower, X_upper, par=0.01, **kwargs):
+    def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):
         self.model = model
         self.par = par
         self.X_lower = X_lower
         self.X_upper = X_upper
+        self.compute_incumbent = compute_incumbent
 
-    def __call__(self, X, incumbent, derivative=False, **kwargs):
+    def __call__(self, X, derivative=False, **kwargs):
         """
         A call to the object returns the EI and derivative values.
 
@@ -56,6 +57,7 @@ class EI(AcquisitionFunction):
                 return np.array([[0]])
 
         m, v = self.model.predict(X)
+        incumbent = self.compute_incumbent(self.model)
         eta, _ = self.model.predict(np.array([incumbent]))
 
         s = np.sqrt(v)
