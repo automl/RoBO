@@ -93,17 +93,17 @@ class GPyModel(object):
         """
         return self.m.posterior_samples_f(X, size)
     
-    def getCurrentBest(self):
-        """
-        returns the current best mean of observations taken so far 
-        """
-        return self.f_star
-    
-    def getCurrentBestX(self):
-        """
-        returns the X with respect to the current best mean of observations taken so far 
-        """
-        return self.X_star
-    
+#     def getCurrentBest(self):
+#         """
+#         returns the current best mean of observations taken so far 
+#         """
+#         return self.f_star
+#     
+#     def getCurrentBestX(self):
+#         """
+#         returns the X with respect to the current best mean of observations taken so far 
+#         """
+#         return self.X_star
+#     
     def visualize(self, ax, plot_min, plot_max):
         self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])

@@ -5,7 +5,7 @@ import copy
 
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt;
-from robo.visualization import Visualization
+from robo.util.visualization import Visualization
 import robo
 import numpy as np
 

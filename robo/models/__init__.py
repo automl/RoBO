@@ -1,2 +1,0 @@
-from .GPyModel import GPyModel
-  

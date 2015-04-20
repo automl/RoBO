@@ -6,9 +6,9 @@ import errno
 import numpy as np
 import random
 import GPy
-from robo.models import GPyModel
-from robo.acquisition import PI, Entropy
-from robo.visualization import Visualization
+from robo.models.GPyModel import GPyModel
+from robo.acquisition.PI import PI
+from robo.util.visualization import Visualization
 import matplotlib.pyplot as plt
 class Dummy(object):
     pass
