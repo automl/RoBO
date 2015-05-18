@@ -53,22 +53,25 @@ class LogEI(AcquisitionFunction):
             return np.array([[- np.finfo(np.float).max]])
         m, v = self.model.predict(X)
 
-        eta = self.model.predict(self.compute_incumbent(self.model))
+        eta = self.model.predict(np.array([self.compute_incumbent(self.model)]))
         s = np.sqrt(v)
         z = (eta - m) / s - self.par
         log_ei = np.zeros((m.size, 1))
         for i in range(0, m.size):
             mu, sigma = m[i], s[i]
+
             par_s = self.par * sigma
+
             # Degenerate case 1: first term vanishes
-            if abs(eta - mu - par_s) == 0:
+
+            if np.any(abs(eta - mu - par_s)) == 0:
                 if sigma > 0:
                     log_ei[i] = np.log(sigma) + norm.logpdf(z[i])
                 else:
                     log_ei[i] = -float('Inf')
             # Degenerate case 2: second term vanishes and first term has a special form.
             elif sigma == 0:
-                if mu < eta - par_s:
+                if mu < np.any(eta - par_s):
                     log_ei[i] = np.log(eta - mu - par_s)
                 else:
                     log_ei[i] = -float('Inf')
@@ -76,7 +79,7 @@ class LogEI(AcquisitionFunction):
             else:
                 b = np.log(sigma) + norm.logpdf(z[i])
                 # log(y+z) is tricky, we distinguish two cases:
-                if eta - par_s > mu:
+                if np.any(eta - par_s) > mu:
                     # When y>0, z>0, we define a=ln(y), b=ln(z).
                     # Then y+z = exp[ max(a,b) + ln(1 + exp(-|b-a|)) ],
                     # and thus log(y+z) = max(a,b) + ln(1 + exp(-|b-a|))

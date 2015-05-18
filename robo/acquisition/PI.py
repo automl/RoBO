@@ -57,7 +57,7 @@ class PI(AcquisitionFunction):
 
         dim = X.shape[1]
         m, v = self.model.predict(X)
-        eta = self.model.predict(incumbent)
+        eta = self.model.predict(np.array([incumbent]))
         s = np.sqrt(v)
         z = (eta - m - self.par) / s
         f = norm.cdf(z)
@@ -70,6 +70,8 @@ class PI(AcquisitionFunction):
 
         if len(f.shape) == 1:
             return_f = np.array([f])
+        else:
+            return_f = f
         if derivative:
             if len(df.shape) == 3:
                 return_df = df
