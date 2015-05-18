@@ -22,6 +22,7 @@ class EI(AcquisitionFunction):
         :type X_lower: np.ndarray (1,D)
         :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of input space)
         :type X_upper: np.ndarray (1,D)
+        :param compute_incumbent: A python function that takes as input a model and returns a np.array as incumbent
         :param par: Controls the balance between exploration and exploitation of the acquisition
                     function. Normally set to 0.01
     """
