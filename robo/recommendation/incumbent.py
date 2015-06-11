@@ -3,6 +3,6 @@ import numpy as np
 
 
 def compute_incumbent(model):
-    best = np.argmax(model.Y)
+    best = np.argmin(model.Y)
     incumbent = model.X[best]
     return incumbent

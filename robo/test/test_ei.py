@@ -27,7 +27,7 @@ class EITestCase1(unittest.TestCase):
         X_upper = np.array([2.1])
         X_lower = np.array([-2.1])
 
-        best = np.argmax(self.y)
+        best = np.argmin(self.y)
         incumbent = self.x[best]
 
         ei_par = EI(self.model, X_upper=X_upper, X_lower=X_lower, compute_incumbent=compute_incumbent, par=0.0)
