@@ -8,7 +8,9 @@ from robo.acquisition.base import AcquisitionFunction
 
 class EI(AcquisitionFunction):
     r"""
-        Expected Improvement acquisition function
+        Expected Improvement computes for a given x the acquisition value by
+        :math:`EI(X) := \mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, with
+        :math:`f(X^+)` as the incumbent.
 
         :param model: A model that implements at least
 
@@ -18,7 +20,7 @@ class EI(AcquisitionFunction):
                If you want to calculate derivatives than it should also support
 
                  - predictive_gradients(X)
-        :param X_lower: Lower bounds for the search, its shape should be 1xD (D=dimension of input space)
+        :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of input space)
         :type X_lower: np.ndarray (1,D)
         :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of input space)
         :type X_upper: np.ndarray (1,D)
@@ -26,6 +28,7 @@ class EI(AcquisitionFunction):
         :param par: Controls the balance between exploration and exploitation of the acquisition
                     function. Normally set to 0.01
     """
+
     long_name = "Expected Improvement"
 
     def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):

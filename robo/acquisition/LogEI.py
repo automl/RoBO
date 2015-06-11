@@ -9,16 +9,19 @@ class LogEI(AcquisitionFunction):
 
     :param model: A model that implements at least
 
-                 - predict(X).
+                 - predict(X)
+                 - getCurrentBestX().
 
     :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of search space)
     :type X_lower: np.ndarray (1,D)
     :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of search space)
     :type X_upper: np.ndarray (1,D)
+    :param compute_incumbent: A python function that takes as input a model and returns a np.array as incumbent
     :param par: A parameter meant to control the balance between exploration and exploitation of the acquisition
                 function. Empirical testing determines 0.01 to be a good value in most cases.
 
     """
+
     long_name = "Logarithm  of Expected Improvement"
 
     def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):

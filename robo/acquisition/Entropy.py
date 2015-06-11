@@ -39,9 +39,9 @@ class Entropy(AcquisitionFunction):
     """
     long_name = "Information gain over p_min(x)"
 
-    def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=400, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, loss_function=None, **kwargs):
         self.model = model
-        self.Nb = Nb 
+        self.Nb = Nb
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
         self.D = self.X_lower.shape[0]
@@ -63,7 +63,7 @@ class Entropy(AcquisitionFunction):
             xx = self.BestGuesses[i]
             minima.append(scipy.optimize.minimize(
                    fun=sc_fun, x0=xx, jac=False, method='L-BFGS-B', constraints=None,
-                   options={'ftol':np.spacing(1), 'maxiter':120}
+                   options={'ftol': np.spacing(1), 'maxiter': 120}
                 ))
 
         Xdh = np.array([res.fun for res in minima])
@@ -233,9 +233,9 @@ class Entropy(AcquisitionFunction):
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
         if with_derivatives:
-            dlogPdMu = np.zeros((D, D));
-            dlogPdSigma = np.zeros((D, 0.5 * D * (D + 1)));
-            dlogPdMudMu = np.zeros((D, D, D));
+            dlogPdMu = np.zeros((D, D))
+            dlogPdSigma = np.zeros((D, 0.5 * D * (D + 1)))
+            dlogPdMudMu = np.zeros((D, D, D))
         for i in xrange(mu.shape[0]):
 
             # logP[k] ) self._min_faktor(mu, var, 0)
@@ -295,7 +295,7 @@ class Entropy(AcquisitionFunction):
                 l = i if  i < k else i + 1
                 try:
                     M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, M, V, MP[i], P[i], gamma)
-                except Exception, e:
+                except Exception as e:
                     raise
 
                 if np.isnan(d):
@@ -393,7 +393,8 @@ class Entropy(AcquisitionFunction):
             Vnew = V - dp / (1 + dp * cVc) * np.outer(Vc, Vc)
 
             Mnew = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
-            if np.any(np.isnan(Vnew)): raise Exception("an error occurs while running expectation propagation in entropy search. Resulting variance contains NaN")
+            if np.any(np.isnan(Vnew)):
+                raise Exception("an error occurs while running expectation propagation in entropy search. Resulting variance contains NaN")
             # % there is a problem here, when z is very large
             logS = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic)) + (alpha * alpha) / (2 * beta) * cVnic
 
@@ -431,7 +432,7 @@ class Entropy(AcquisitionFunction):
             e = np.exp(logphi - logPhi)
             return e, logPhi, 0
 
-    def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
+    def plot(self, fig, minx, maxx, plot_attr={"color": "red"}, resolution=1000):
 
         n = len(fig.axes)
         for i in range(n):
@@ -448,7 +449,7 @@ class Entropy(AcquisitionFunction):
         bar_ax.bar(zb, pmin, width=(maxx - minx) / (2 * zb.shape[0]), color="yellow")
         bar_ax.set_xlim(minx, maxx)
         bar_ax.set_ylim(0.0, pmin.max())
-        other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color":"orange"})  # , logscale=True)
+        other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color": "orange"})  # , logscale=True)
         other_acq_ax.set_xlim(minx, maxx)
         ax.set_title(str(self))
         return ax

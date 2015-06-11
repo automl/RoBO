@@ -8,8 +8,9 @@ from robo.acquisition.EI import EI
 from robo.maximizers.maximize import grid_search
 from robo.util.loss_functions import logLoss
 from robo.util.visualization import Visualization
+from robo.recommendation.incumbent import compute_incumbent
 import matplotlib
-import random
+
 
 font = {'family' : 'normal',
         'weight' : 'normal',
@@ -44,11 +45,11 @@ maximize_fkt = grid_search
 model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 
 # entropy = Entropy(model, X_upper= X_upper, X_lower=X_lower, sampling_acquisition= LogEI, Nb=10, Np=600, loss_function = logLoss)
-# entropy_mc = EntropyMC(model, X_upper=X_upper, X_lower=X_lower, sampling_acquisition=LogEI, Nb=10, Np=300, Nf=3500, loss_function=logLoss)
-ei = EI(model, X_upper=X_upper, X_lower=X_lower, par=0.3)
+entropy_mc = EntropyMC(model, X_upper=X_upper, X_lower=X_lower, compute_incumbent=compute_incumbent, sampling_acquisition=LogEI, Nb=10, Np=300, Nf=3500, loss_function=logLoss)
+#ei = EI(model, X_upper=X_upper, X_lower=X_lower, par=0.3)
 # pi = PI(model, X_upper= X_upper, X_lower=X_lower, par =0.3)
 
-for acquisition_fkt in [ei]:
+for acquisition_fkt in [entropy_mc]:
     bo = BayesianOptimization(acquisition_fkt=acquisition_fkt,
                               model=model,
                               maximize_fkt=maximize_fkt,

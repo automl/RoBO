@@ -74,7 +74,7 @@ Creating the Acquisition Function
 After we defined a model we can define an acquisition function as a surrogate function that is used to pick the next point to evaluate. RoBO offers the following acquisition
 functions in the acquisition package:
  .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    acquisition_func
 
