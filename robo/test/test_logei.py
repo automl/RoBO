@@ -30,11 +30,11 @@ class LogEITestCase1(unittest.TestCase):
         x_test = np.array([[1.7], [2.0]])
         log_ei_estimator = LogEI(self.model, X_lower, X_upper, compute_incumbent=compute_incumbent)
 
-        print log_ei_estimator(x_test[0, np.newaxis])[0]
-        assert log_ei_estimator(x_test[1, np.newaxis])[0] > 0.0
+        assert log_ei_estimator(x_test[0, np.newaxis])[0] > -np.Infinity
+        assert log_ei_estimator(x_test[1, np.newaxis])[0] > -np.Infinity
 
-        self.assertAlmostEqual(log_ei_estimator(self.x[-1, np.newaxis], incumbent=np.array([1.88558559]))[0], 0.0, delta=10E-5)
+        assert(log_ei_estimator(self.x[-1, np.newaxis])[0]) == -np.Infinity
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     unittest.main()

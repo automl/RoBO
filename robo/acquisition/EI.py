@@ -49,6 +49,10 @@ class EI(AcquisitionFunction):
 
         if X.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single X inputs")
+
+        if len(X.shape) == 1:
+            X = X[:, np.newaxis]
+
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
                 f = 0
@@ -57,7 +61,7 @@ class EI(AcquisitionFunction):
             else:
                 return np.array([[0]])
 
-        m, v = self.model.predict(X)
+        m, v = self.model.predict(X, full_cov=True)
         incumbent = self.compute_incumbent(self.model)
         eta, _ = self.model.predict(np.array([incumbent]))
 
@@ -77,12 +81,12 @@ class EI(AcquisitionFunction):
         if (f < 0).any():
             raise Exception
         if len(f.shape) == 1:
-            return_f = np.array([f])
+            f = np.array([f])
         if derivative:
             if len(df.shape) == 3:
                 return_df = df
             else:
                 return_df = np.array([df])
-            return return_f, return_df
+            return f, return_df
         else:
-            return return_f
+            return f
