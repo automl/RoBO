@@ -12,12 +12,12 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1):
     X = np.arange(X_lower[0], X_upper[0], resolution)
 
     mean = np.zeros([X.shape[0]])
-    std = np.zeros([X.shape[0]])
+    var = np.zeros([X.shape[0]])
     for i in xrange(X.shape[0]):
-        mean[i], std[i] = model.predict(X[i, np.newaxis, np.newaxis])
+        mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
 
     ax.plot(X, mean, "b", label="Model")
-    ax.fill_between(X, mean +  std, mean - std, facecolor='blue', alpha=0.2)
+    ax.fill_between(X, mean + 3 * np.sqrt(var), mean - 3 * np.sqrt(var), facecolor='blue', alpha=0.2)
     return ax
 
 
@@ -41,5 +41,4 @@ def plot_acquisition_function(acquisition_function, X_lower, X_upper, ax, resolu
         grid_values[i] = acquisition_function(grid[i, np.newaxis])
 
     ax.plot(grid, grid_values, "g", label="AcquisitionFunction")
-    #ax.plot(X, y, "ro")
     return ax

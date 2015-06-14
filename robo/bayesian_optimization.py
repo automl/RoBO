@@ -92,6 +92,8 @@ class BayesianOptimization(object):
         return self.X, self.Y
 
     def get_model(self):
+        if self.model is None:
+            print "No model trained yet!"
         return self.model
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
