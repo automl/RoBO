@@ -31,6 +31,10 @@ class BayesianOptimization(object):
             self.X_lower = X_lower
             self.X_upper = X_upper
             self.dims = dims
+
+            self.X = None
+            self.Y = None
+
             self.save_dir = save_dir
             self.num_save = num_save
             if save_dir is not None:
@@ -78,9 +82,17 @@ class BayesianOptimization(object):
                     raise
 
     def initialize(self):
-        X = np.array([np.random.randn(self.dims)])
-        Y = self.objective_fkt(X)
-        return X, Y
+        # Draw one random configuration
+        self.X = np.array([np.random.uniform(self.X_lower, self.X_upper, self.dims)])
+        print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
+        self.Y = self.objective_fkt(self.X)
+        print "Configuration achieved a performance of %f " % (self.Y[0])
+
+    def get_observations(self):
+        return self.X, self.Y
+
+    def get_model(self):
+        return self.model
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
@@ -103,24 +115,28 @@ class BayesianOptimization(object):
 
         if X is None and Y is None:
             # TODO: allow different initialization strategies here
-            X, Y = self.initialize()
+            self.initialize()
+            num_iterations = num_iterations - 1
+        else:
+            self.X = X
+            self.Y = Y
 
         for it in range(num_iterations):
             print "Choose a new configuration"
-            new_x = self.choose_next(X, Y)
+            new_x = self.choose_next(self.X, self.Y)
             print "Evaluate candidate %s" % (str(new_x))
             new_y = self.objective_fkt(np.array(new_x))
             print "Configuration achieved a performance of %d " % (new_y[0, 0])
-            X = np.append(X, new_x, axis=0)
-            Y = np.append(Y, new_y, axis=0)
+            self.X = np.append(self.X, new_x, axis=0)
+            self.Y = np.append(self.Y, new_y, axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                self.save_iteration(X, Y, new_x)
+                self.save_iteration(self.X, self.Y, new_x)
 
         # Recompute the incumbent before we return it
         if self.recommendation_strategy is None:
-            best_idx = np.argmin(Y)
-            self.incumbent = X[best_idx]
+            best_idx = np.argmin(self.Y)
+            self.incumbent = self.X[best_idx]
         else:
             self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
