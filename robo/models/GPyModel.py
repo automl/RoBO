@@ -18,7 +18,7 @@ class GPyModel(object):
         self.m = None
 
     """def __getstate__(self):
-        return dict(kernel = self.kernel, 
+        return dict(kernel = self.kernel,
                     noise_variance = self.noise_variance,
                     optimize = self.optimize,
                     num_restarts = self.num_restarts,

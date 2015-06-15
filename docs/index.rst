@@ -152,9 +152,10 @@ In the one dimensional case you can easily plot all the methods used:
     import numpy as np
     import random
 
-    from robo.models import GPyModel
-    from robo.acquisition import EI
-    from robo.maximize import stochastic_local_search
+    from robo.models.GPyModel import GPyModel
+    from robo.acquisition.EI import EI
+    from robo.maximizers.maximize import stochastic_local_search
+    from robo.recommendation.incumbent import compute_incumbent
 
     def objective_function(x):
         return  np.sin(3*x) * 4*(x-1)* (x+2)
@@ -166,7 +167,7 @@ In the one dimensional case you can easily plot all the methods used:
 
     kernel = GPy.kern.Matern52(input_dim=dims)
     model = GPyModel(kernel, optimize=True, noise_variance = 1e-4, num_restarts=10)
-    acquisition_func = EI(model, X_upper= X_upper, X_lower=X_lower, par =0.1) #par is the minimum improvement
+    acquisition_func = EI(model, X_upper=X_upper, X_lower=X_lower, compute_incumbent=compute_incumbent, par=0.1) #par is the minimum improvement
 
 
     X = np.empty((1, dims))

@@ -17,16 +17,18 @@ from robo.visualization.plotting import plot_model, plot_objective_function, plo
 from robo import BayesianOptimization
 
 
+# def objective_function(x):
+#         return np.sin(x) + 0.1 * np.cos(10 * x)
 def objective_function(x):
-        return np.sin(x) + 0.1 * np.cos(10 * x)
+        return  np.sin(3 * x) * 4 * (x - 1) * (x + 2)
 
 X_lower = np.array([0])
 X_upper = np.array([6])
 
 dims = 1
 
-kernel = GPy.kern.Matern52(input_dim=dims)
-model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+kernel = GPy.kern.Matern52(input_dim=dims, lengthscale=0.01)
+model = GPyModel(kernel, optimize=True, noise_variance=1e-8, num_restarts=10)
 acquisition_func = EI(model, X_upper=X_upper, X_lower=X_lower, compute_incumbent=compute_incumbent, par=0.1)
 maximizer = DIRECT
 
@@ -38,7 +40,7 @@ bo = BayesianOptimization(acquisition_fkt=acquisition_func,
                           dims=dims,
                           objective_fkt=objective_function)
 
-bo.run(num_iterations=3)
+bo.run(num_iterations=5)
 
 X, Y = bo.get_observations()
 X = X[:-1]
@@ -49,6 +51,8 @@ f, (ax1, ax2) = plt.subplots(2, sharex=True)
 ax1 = plot_model(model, X_lower, X_upper, ax1)
 ax1 = plot_objective_function(objective_function, X_lower, X_upper, X, Y, ax1)
 ax1.legend()
+
+acquisition_func = EI(model, X_upper=X_upper, X_lower=X_lower, compute_incumbent=compute_incumbent, par=0.1)
 ax2 = plot_acquisition_function(acquisition_func, X_lower, X_upper, ax2)
 
 plt.legend()
