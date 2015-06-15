@@ -113,7 +113,7 @@ Here we will use a simple grid search to determine the configuration with the hi
     from robo.maximizers.maximize import grid_search
     maximizer = grid_search
     
-Implementing a main loop
+Putting it all together
 ------------------------
 
 Now we have all the ingredients to optimize our objective function. We can put all the above described components in the BayesianOptimization class
