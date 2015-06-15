@@ -150,6 +150,7 @@ If you want to implement the main Bayesian optimization loop by yourself because
 In the one dimensional case you can easily plot all the methods used:
 
 .. code-block:: python
+
     import GPy
     import matplotlib; matplotlib.use('GTKAgg')
     import matplotlib.pyplot as plt
