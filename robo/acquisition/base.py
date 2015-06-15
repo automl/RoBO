@@ -7,12 +7,6 @@ from robo import BayesianOptimizationError
 class AcquisitionFunction(object):
     """
     A base class for acquisition functions.
-
-    :param model:
-    :param X_lower: Lower bound of input space
-    :type X_lower: np.ndarray(D, 1)
-    :param X_upper: Upper bound of input space
-    :type X_upper: np.ndarray(D, 1)
     """
     long_name = ""
 
@@ -20,6 +14,16 @@ class AcquisitionFunction(object):
         return type(self).__name__ + " (" + self.long_name + ")"
 
     def __init__(self, model, X_lower, X_upper, **kwargs):
+        """
+        Initializes the acquisition function
+
+        :param model: Model that captures our current belief of the objective function
+        :param X_lower: Lower bound of input space
+        :type X_lower: np.ndarray(D, 1)
+        :param X_upper: Upper bound of input space
+        :type X_upper: np.ndarray(D, 1)
+
+        """
 
         self.model = model
         self.X_lower = X_lower

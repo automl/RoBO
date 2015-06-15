@@ -8,7 +8,7 @@ Installation
 
 ```
 git clone https://github.com/automl/RoBO.git
-cd robo
+cd RoBO
 pip install .
 ```
 
