@@ -58,7 +58,7 @@ shows how to use a GPy model via RoBO:
 .. code-block:: python
 
    import GPy
-   from robo.models import GPyModel
+   from robo.models.GPyModel import GPyModel
    
    kernel = GPy.kern.Matern52(input_dim=dims)
    model = GPyModel(kernel, optimize=True, noise_variance = 1e-4, num_restarts=10)
@@ -84,7 +84,8 @@ In order to use an acquisition function (in this case Expected Improvement) you 
 
 .. code-block:: python
 	
-    from robo.acquisition import EI
+    from robo.acquisition.EI import EI
+    from robo.recommendation.incumbent import compute_incumbent
     acquisition_func = EI(model, X_upper=X_upper, X_lower=X_lower, compute_incumbent=compute_incumbent, par=0.1)
 
 
@@ -108,7 +109,7 @@ Here we will use a simple grid search to determine the configuration with the hi
 
 .. code-block:: python
 
-    from robo.maximize import grid_search
+    from robo.maximizers.maximize import grid_search
     maximizer = grid_search
     
 Implementing a main loop
@@ -118,7 +119,9 @@ Now we have all the ingredients to optimize our objective function. We can put a
 
 .. code-block:: python
 
-	bo = BayesianOptimization(acquisition_fkt=acquisition_func,
+   from robo import BayesianOptimization
+
+   bo = BayesianOptimization(acquisition_fkt=acquisition_func,
 	                          model=model,
 	                          maximize_fkt=maximizer,
 	                          X_lower=X_lower,
