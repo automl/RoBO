@@ -133,7 +133,7 @@ class BayesianOptimization(object):
             print "Choose a new configuration"
             new_x = self.choose_next(self.X, self.Y)
             print "Evaluate candidate %s" % (str(new_x))
-            new_y = self.objective_fkt(np.array(new_x))
+            new_y = self.objective_fkt(new_x)
             print "Configuration achieved a performance of %d " % (new_y[0, 0])
             self.X = np.append(self.X, new_x, axis=0)
             self.Y = np.append(self.Y, new_y, axis=0)
@@ -151,28 +151,22 @@ class BayesianOptimization(object):
         print "Return %s as incumbent" % (str(self.incumbent))
         return self.incumbent
 
-    def choose_next(self, X=None, Y=None):
-        if X is not None and Y is not None:
-            try:
-                self.model.train(X, Y)
-            except Exception, e:
-                print "Model could not be trained", X, Y
-                raise
-            self.model_untrained = False
-            self.acquisition_fkt.update(self.model)
+    def choose_next(self, X, Y):
+        try:
+            self.model.train(X, Y)
+        except Exception, e:
+            print "Model could not be trained", X, Y
+            raise
+        self.model_untrained = False
+        self.acquisition_fkt.update(self.model)
 
-            if self.recommendation_strategy is None:
-                best_idx = np.argmin(Y)
-                self.incumbent = X[best_idx]
-            else:
-                self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
-
-            x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
+        if self.recommendation_strategy is None:
+            best_idx = np.argmin(Y)
+            self.incumbent = X[best_idx]
         else:
-            X = np.empty((1, self.dims))
-            for i in range(self.dims):
-                X[0, i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i]
-            x = np.array(X)
+            self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
+
+        x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
         return x
 
     def _get_last_iteration_number(self):
