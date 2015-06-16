@@ -20,7 +20,7 @@ class BayesianOptimization(object):
     """
     def __init__(self, acquisition_fkt=None, model=None,
                  maximize_fkt=None, X_lower=None, X_upper=None, dims=None,
-                 objective_fkt=None, save_dir=None, num_save=1):
+                 objective_fkt=None, save_dir=None, num_save=1, initialization=None):
 
         self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims])
         if self.enough_arguments:
@@ -31,6 +31,8 @@ class BayesianOptimization(object):
             self.X_lower = X_lower
             self.X_upper = X_upper
             self.dims = dims
+
+            self.initialization = initialization
 
             self.X = None
             self.Y = None
@@ -82,11 +84,15 @@ class BayesianOptimization(object):
                     raise
 
     def initialize(self):
-        # Draw one random configuration
-        self.X = np.array([np.random.uniform(self.X_lower, self.X_upper, self.dims)])
-        print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
+        if self.initialization is None:
+            # Draw one random configuration
+            self.X = np.array([np.random.uniform(self.X_lower, self.X_upper, self.dims)])
+            print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
+        else:
+            print "Initialize ..."
+            self.X = self.initialization()
+
         self.Y = self.objective_fkt(self.X)
-        print "Configuration achieved a performance of %f " % (self.Y[0])
 
     def get_observations(self):
         return self.X, self.Y
