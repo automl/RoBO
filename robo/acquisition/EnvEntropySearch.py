@@ -16,7 +16,7 @@ class EnvEntropySearch(Entropy):
     classdocs
     '''
 
-    def __init__(self, model, cost_model, n_representer, n_hals_vals, n_func_samples, X_lower, X_upper, compute_incumbent, **kwargs):
+    def __init__(self, model, cost_model, X_lower, X_upper, is_env_variable, n_representer, n_hals_vals, n_func_samples, X_lower, X_upper, compute_incumbent, **kwargs):
 
         self.model = model
         self.cost_model = cost_model
@@ -47,7 +47,8 @@ class EnvEntropySearch(Entropy):
     def __call__(self, X, derivative=False):
 
         # Compute kl divergence between the updated pmin and the uniform distribution
-        pmin = self._compute_pmin(self.model, self.representers)
+        #TODO: Fantasize the change of the model for X
+        pmin = self._compute_pmin(inovated_model, self.representers)
 
         # Predict the costs for this configuration
         cost = self.cost_model.predict(X)
@@ -68,6 +69,8 @@ class EnvEntropySearch(Entropy):
         sampler.reset()
         sampler.run_mcmc(pos, mcmc_steps)
         representers = sampler.chain[:, -1, :]
+
+        #TODO: project representer to subspace
         return representers
 
     def _compute_pmin(self, model, representers, num_func_samples=1000):
@@ -82,6 +85,7 @@ class EnvEntropySearch(Entropy):
         return pmin
 
     def _compute_kl_divergence(self, pmin, log_proposal_vals):
+        #TODO: Write unit test
         entropy_pmin = -np.dot(pmin, np.log(pmin + 1e-50))
         log_proposal = np.dot(log_proposal_vals, pmin)
         kl_divergence = (entropy_pmin - log_proposal)
