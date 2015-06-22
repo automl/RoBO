@@ -9,6 +9,7 @@ try:
 except:
     import pickle
 from robo.util.exc import BayesianOptimizationError
+from argparse import ArgumentError
 
 here = os.path.abspath(os.path.dirname(__file__))
 
