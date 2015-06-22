@@ -2,9 +2,10 @@ import sys
 import StringIO
 import numpy as np
 import GPy
+from robo.models.base_model import BaseModel
 
 
-class GPyModel(object):
+class GPyModel(BaseModel):
     """
     GPyModel is just a wrapper around the GPy Lib
     """
@@ -86,7 +87,7 @@ class GPyModel(object):
             #return mean, var
 
     def predictive_gradients(self, Xnew, X=None):
-        if X == None:
+        if X is None:
             return self.m.predictive_gradients(Xnew)
 
     def sample(self, X, size=10):
