@@ -137,8 +137,14 @@ class BayesianOptimization(object):
         print "Evaluate candidate %s" % (str(new_x))
         new_y = self.objective_fkt(np.array(new_x))
         print "Configuration achieved a performance of %d " % (new_y[0, 0])
-        self.X = np.append(self.X, new_x, axis=0)
-        self.Y = np.append(self.Y, new_y, axis=0)
+        if self.X is None:
+            self.X = new_x
+        else:
+            self.X = np.append(self.X, new_x, axis=0)
+        if self.Y is None:
+            self.Y = new_y
+        else:
+            self.Y = np.append(self.Y, new_y, axis=0)
 
         if self.save_dir is not None and save_it:
             self.save_iteration(self.X, self.Y, new_x)
