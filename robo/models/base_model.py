@@ -27,3 +27,30 @@ class BaseModel(object):
             :return The mean and variance of the testdatapoints.
         """
         raise NotImplementedError()
+
+    def predict_variance(self, X1, X2):
+        raise NotImplementedError()
+
+    def predictive_gradients(self, Xnew, X=None):
+        """
+        Calculates the predictive gradients (gradient of the prediction)
+        :param Xnew: The points to predict the gradient for
+        :param X: TODO: Not implemented yet
+        :return: Gradients(?)
+        """
+        raise NotImplementedError()
+
+    def predict(self, X, full_cov=False):
+        """
+        Predicts the mean and variance.
+        :param X: X values to predict for
+        :param full_cov: If true, the full covariance is returned
+        :return: (mean, variance) tuple
+        """
+        raise NotImplementedError()
+
+    def sample(self, X, size=10):
+        """
+        Samples from the GP at values X size times.
+        """
+        raise NotImplementedError()
