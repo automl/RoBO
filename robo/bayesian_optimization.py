@@ -1,8 +1,8 @@
-import random
+
 import os
 import errno
 import numpy as np
-from functools import partial
+
 import shutil
 try:
     import cpickle as pickle
