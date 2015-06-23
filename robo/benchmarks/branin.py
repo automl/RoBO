@@ -11,9 +11,9 @@ def branin(x):
     Return: y value
     """
 
-    y = (x[1] - (5.1 / (4 * np.pi ** 2)) * x[0] ** 2 + 5 * x[0] / np.pi - 6) ** 2
-    y += 10 * (1 - 1 / (8 * np.pi)) * np.cos(x[0]) + 10
-    return y
+    y = (x[0, 1] - (5.1 / (4 * np.pi ** 2)) * x[0, 0] ** 2 + 5 * x[0, 0] / np.pi - 6) ** 2
+    y += 10 * (1 - 1 / (8 * np.pi)) * np.cos(x[0, 0]) + 10
+    return np.array([[y]])
 
 
 def get_branin_bounds():

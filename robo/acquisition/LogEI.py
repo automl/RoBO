@@ -58,7 +58,8 @@ class LogEI(AcquisitionFunction):
             return np.array([[- np.finfo(np.float).max]])
         m, v = self.model.predict(X)
 
-        eta, _ = self.model.predict(np.array([self.compute_incumbent(self.model)]))
+        incumbent, _ = self.compute_incumbent(self.model)
+        eta, _ = self.model.predict(np.array([incumbent]))
 
         f_min = eta - self.par
 

@@ -48,7 +48,7 @@ class AcquisitionFunction(object):
         """
         raise NotImplementedError()
 
-    def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
+    def plot(self, fig, minx, maxx, plot_attr={"color": "red"}, resolution=1000):
         """
             Adds for the acquisition function a subplot to fig. It can create more than one subplot. It's designed for one dimensional objective functions.
 

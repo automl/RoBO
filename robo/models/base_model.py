@@ -39,18 +39,3 @@ class BaseModel(object):
         :return: Gradients(?)
         """
         raise NotImplementedError()
-
-    def predict(self, X, full_cov=False):
-        """
-        Predicts the mean and variance.
-        :param X: X values to predict for
-        :param full_cov: If true, the full covariance is returned
-        :return: (mean, variance) tuple
-        """
-        raise NotImplementedError()
-
-    def sample(self, X, size=10):
-        """
-        Samples from the GP at values X size times.
-        """
-        raise NotImplementedError()

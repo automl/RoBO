@@ -4,14 +4,16 @@ from scipy.stats import norm
 import scipy
 import numpy as np
 import emcee
-import copy
+
 from robo.util.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling.sampling import sample_from_measure
 from robo.maximizers.maximize import _scipy_optimizer_fkt_wrapper
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.UCB import UCB
-from robo.acquisition.base import AcquisitionFunction 
+from robo.acquisition.base import AcquisitionFunction
+from robo.recommendation.incumbent import compute_incumbent
+
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
@@ -48,8 +50,7 @@ class Entropy(AcquisitionFunction):
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
-        else:
-            self.sampling_acquisition = sampling_acquisition
+        self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, compute_incumbent, **sampling_acquisition_kw)
         if loss_function is None:
             loss_function = logLoss
         self.loss_function = loss_function
