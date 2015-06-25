@@ -13,6 +13,7 @@ from robo.models import GPyModel
 from robo.solver.env_bayesian_optimization import EnvBayesianOptimization
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
 from robo.maximizers import maximize
+from robo.recommendation.incumbent import compute_incumbent
 
 from ParameterConfigSpace.config_space import ConfigSpace
 
