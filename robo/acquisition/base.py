@@ -2,6 +2,7 @@
 
 import numpy as np
 from robo import BayesianOptimizationError
+from robo.models.GPyModelMCMC import GPyModelMCMC
 
 
 class AcquisitionFunction(object):
@@ -24,8 +25,12 @@ class AcquisitionFunction(object):
         :type X_upper: np.ndarray(D, 1)
 
         """
-
-        self.model = model
+        if isinstance(model, GPyModelMCMC):
+            self.mcmc_model = model
+            self.model = None
+        else:
+            self.model = model
+            self.mcmc_model = None
         self.X_lower = X_lower
         self.X_upper = X_upper
 
@@ -34,7 +39,12 @@ class AcquisitionFunction(object):
             This method will be called if the model is updated. E.g. the Entropy search uses it
             to update it's approximation of P(x=x_min)
         """
-        self.model = model
+        if isinstance(model, GPyModelMCMC):
+            self.mcmc_model = model
+            self.model = None
+        else:
+            self.model = model
+            self.mcmc_model = None
 
     def __call__(self, X, derivative=False):
         """
@@ -46,6 +56,15 @@ class AcquisitionFunction(object):
             :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and the acquisition function does not allow to compute the gradients
             :rtype: np.ndarray(N, 1)
         """
+        if self.mcmc_model != None:
+            acq_val = np.zeros([len(self.mcmc_model.models)])
+            for i, model in enumerate(self.mcmc_model.models):
+                self.model = model
+                acq_val[i] = self.compute(X, derivative)
+        elif self.model != None:
+            return self.compute(X, derivative)
+
+    def compute(self, X, derivative=False):
         raise NotImplementedError()
 
     def plot(self, fig, minx, maxx, plot_attr={"color": "red"}, resolution=1000):

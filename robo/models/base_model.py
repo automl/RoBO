@@ -1,4 +1,6 @@
 
+import numpy as np
+
 
 class BaseModel(object):
     """
@@ -18,6 +20,11 @@ class BaseModel(object):
         """
         self.X = X
         self.y = y
+
+    def update(self, X, y):
+        X = np.append(self.X, X, axis=0)
+        y = np.append(self.Y, y, axis=0)
+        self.train(X, y)
 
     def predict(self, X):
         """

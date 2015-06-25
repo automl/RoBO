@@ -56,11 +56,6 @@ class GPyModel(BaseModel):
         self.X_star = self.X[index_min]
         self.f_star = self.observation_means[index_min]
 
-    def update(self, X, Y):
-        X = np.append(self.X, X, axis=0)
-        Y = np.append(self.Y, Y, axis=0)
-        self.train(X, Y)
-
     def predict_variance(self, X1, X2):
         kern = self.m.kern
         KbX = kern.K(X2, self.m.X).T
@@ -72,19 +67,18 @@ class GPyModel(BaseModel):
 
     def predict(self, X, full_cov=False):
         if self.m == None:
-            print "ERROR: Model needs to be trained first."
+            print "ERROR: Model has to be trained first."
             return None
 
         mean, var = self.m.predict(X, full_cov=full_cov)
 
         if not full_cov:
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
-            #return mean
+
         else:
             var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
             var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
             return mean[:, 0], var
-            #return mean, var
 
     def predictive_gradients(self, Xnew, X=None):
         if X is None:
