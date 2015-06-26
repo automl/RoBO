@@ -2,8 +2,12 @@ language: python
 python:
   - "2.7"
 
+
+before_install:
+  - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
+
 install:
-  - pip install .
+  - python setup.py install
 
 # command to run tests, e.g. python setup.py test
 script:  python -m unittest discover robo/test -v
