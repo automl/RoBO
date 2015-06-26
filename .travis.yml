@@ -7,7 +7,7 @@ before_install:
   - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
 
 install:
+  - pip install git+https://github.com/SheffieldML/GPy.git
   - python setup.py install
-
 # command to run tests, e.g. python setup.py test
 script:  python -m unittest discover robo/test -v

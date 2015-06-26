@@ -5,7 +5,6 @@ Created on Jun 15, 2015
 '''
 
 import GPy
-import matplotlib; matplotlib.use('GTKAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -46,7 +45,7 @@ for i in xrange(10):
     # Update the acquisition function model with the retrained model
     acquisition_func.update(model)
 
-    # Optimize the acquisition function to obtain a new point 
+    # Optimize the acquisition function to obtain a new point
     new_x = maximizer(acquisition_func, X_lower, X_upper)
 
     # Evaluate the point and add the new observation to our set of previous seen points
