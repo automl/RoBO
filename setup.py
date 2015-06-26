@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 #CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-	'GPy==0.6.0',
+	'GPy',
 	'emcee==2.1.0',
 	'numpy >= 1.7',
 	'scipy >= 0.12',
@@ -32,6 +32,7 @@ setup(name='robo',
       zip_safe=False,
       test_suite='robo',
       install_requires=requires,
+      dependency_links=['https://github.com/SheffieldML/GPy/archive/master.zip'],
       entry_points=dict(
       		console_scripts = [
 		'robo_visualize = robo.scripts.visualize_sh:main',
