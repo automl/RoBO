@@ -25,12 +25,10 @@ class UCB(AcquisitionFunction):
     long_name = "Upper Confidence Bound"
 
     def __init__(self, model, X_lower, X_upper, par=1.0, **kwargs):
-        self.model = model
         self.par = par
-        self.X_lower = np.array(X_lower)
-        self.X_upper = np.array(X_upper)
+        super(UCB, self).__init__(model, X_lower, X_upper)
 
-    def __call__(self, X, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, **kwargs):
 
         if derivative:
             raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,

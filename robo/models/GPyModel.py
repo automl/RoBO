@@ -7,7 +7,7 @@ from robo.models.base_model import BaseModel
 
 class GPyModel(BaseModel):
     """
-    GPyModel is just a wrapper around the GPy Lib
+     Wraps the standard Gaussian process for regression from the GPy library
     """
     def __init__(self, kernel, noise_variance=None, optimize=True, num_restarts=100, *args, **kwargs):
         self.kernel = kernel

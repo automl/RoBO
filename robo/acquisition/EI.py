@@ -26,21 +26,22 @@ class EI(AcquisitionFunction):
         :type X_upper: np.ndarray (1,D)
         :param compute_incumbent: A python function that takes as input a model and returns a np.array as incumbent
         :param par: Controls the balance between exploration and exploitation of the acquisition
-                    function. Normally set to 0.01
+                    function. Default is 0.01
     """
 
     long_name = "Expected Improvement"
 
     def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):
-        self.model = model
+        #self.model = model
         self.par = par
-        self.X_lower = X_lower
-        self.X_upper = X_upper
+        #self.X_lower = X_lower
+        #self.X_upper = X_upper
         self.compute_incumbent = compute_incumbent
+        super(EI, self).__init__(model, X_lower, X_upper)
 
-    def __call__(self, X, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, **kwargs):
         """
-        A call to the object returns the EI and derivative values.
+        Computes the EI value and its derivatives.
 
         :param X: The point at which the function is to be evaluated.
         :type X: np.ndarray (1,D)

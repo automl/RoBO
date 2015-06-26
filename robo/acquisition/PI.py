@@ -28,13 +28,11 @@ class PI(AcquisitionFunction):
 
     def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.1, **kwargs):
 
-        self.model = model
         self.par = par
-        self.X_lower = X_lower
-        self.X_upper = X_upper
         self.compute_incumbent = compute_incumbent
+        super(PI, self).__init__(model, X_lower, X_upper)
 
-    def __call__(self, X, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, **kwargs):
         """
         A call to the object returns the PI and derivative values.
 

@@ -25,13 +25,12 @@ class LogEI(AcquisitionFunction):
     long_name = "Logarithm  of Expected Improvement"
 
     def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):
-        self.model = model
         self.par = par
-        self.X_lower = X_lower
-        self.X_upper = X_upper
         self.compute_incumbent = compute_incumbent
 
-    def __call__(self, X, derivative=False, **kwargs):
+        super(LogEI, self).__init__(model, X_lower, X_upper)
+
+    def compute(self, X, derivative=False, **kwargs):
 
         """
         A call to the object returns the log(EI) and derivative values.
@@ -108,9 +107,3 @@ class LogEI(AcquisitionFunction):
                         log_ei[i] = b + np.log(1 - np.exp(a - b))
 
         return log_ei
-
-    def plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000):
-
-        ax = AcquisitionFunction.plot(self, fig, minx, maxx, plot_attr={"color":"red"}, resolution=1000)
-        ax.set_ylim(-30, 0)
-        return ax
