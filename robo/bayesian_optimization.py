@@ -137,7 +137,7 @@ class BayesianOptimization(object):
         new_x = self.choose_next(self.X, self.Y)
         print "Evaluate candidate %s" % (str(new_x))
         new_y = self.objective_fkt(np.array(new_x))
-        print "Configuration achieved a performance of %d " % (new_y[0, 0])
+        print "Configuration achieved a performance of %f " % (new_y[0, 0])
         if self.X is None:
             self.X = new_x
         else:
