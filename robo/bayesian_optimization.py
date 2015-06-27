@@ -131,6 +131,7 @@ class BayesianOptimization(object):
         """
         Performs one iteration
         :param save_it: If true, the iteration is saved (only if the save_dir is configured)
+        :return: tuple (x, y) of the new obtained data point
         """
         print "Choose a new configuration"
         new_x = self.choose_next(self.X, self.Y)
@@ -148,6 +149,8 @@ class BayesianOptimization(object):
 
         if self.save_dir is not None and save_it:
             self.save_iteration(self.X, self.Y, new_x)
+
+        return new_x, new_y
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
