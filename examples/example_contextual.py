@@ -21,6 +21,12 @@ _branin_k1 = 5.1/(4*np.pi*np.pi)  # ~0.129185
 _branin_k2 = 5 / np.pi  # ~1.591549
 _branin_k3 = 10 * (1-1/(8*np.pi))  # ~9.602113
 def branin(u, v):
+    """
+    The branin function.
+    :param u: limits: [-5, 10]
+    :param v: limits: [0, 15]
+    :return:
+    """
     w = (v - _branin_k1 * u * u + _branin_k2 * u - 6)
     return w * w + _branin_k3 * np.cos(u) + 10
 
@@ -82,6 +88,9 @@ def objective0_plot(Z, S):
 S_lower = np.array([0])
 S_upper = np.array([1])
 
+X_lower = np.array([-np.inf, 0])
+X_upper = np.array([np.inf, 1])
+
 dims_Z = 1
 dims_S = 1
 
@@ -93,7 +102,7 @@ kernel = GPy.kern.Matern52(input_dim=dims_Z + dims_S)
 model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10)
 
 # The acquisition function that we optimize in order to pick a new x
-acquisition_func = UCB(model, X_upper=S_upper, X_lower=S_lower, par=1.0)
+acquisition_func = UCB(model, X_lower=X_lower, X_upper=X_upper, par=1.0)
 
 # Context function acquires random values
 def context_fkt():
