@@ -182,6 +182,9 @@ regret = pred_data - real_data
 cum_regret = np.cumsum(regret)
 contextual_regret = cum_regret / np.arange(1, len(cum_regret) + 1)
 
+ax3.set_title('regret')
+ax3.set_xlabel('time')
+ax3.set_ylabel('regret')
 plt1, = ax3.plot(regret, label='Regret')
 plt2, = ax3.plot(contextual_regret, label='Contextual Regret')
 ax3.legend(handles=(plt1, plt2))
