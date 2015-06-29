@@ -93,12 +93,14 @@ X_upper = np.array([np.inf, 1])
 
 dims_Z = 1
 dims_S = 1
+dims_X = dims_Z + dims_S
 
 # Set the method that we will use to optimize the acquisition function
 maximizer = stochastic_local_search
 
+kernel = GPy.kern.Matern52(input_dim=dims_Z, active_dims=list(range(dims_Z))) \
+    * GPy.kern.Matern52(input_dim=dims_S, active_dims=list(range(dims_Z, dims_X)))
 # Defining the method to model the objective function
-kernel = GPy.kern.Matern52(input_dim=dims_Z + dims_S)
 model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10)
 
 # The acquisition function that we optimize in order to pick a new x
