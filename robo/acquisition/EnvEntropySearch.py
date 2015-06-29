@@ -16,7 +16,7 @@ class EnvEntropySearch(Entropy):
     classdocs
     '''
 
-    def __init__(self, model, cost_model, X_lower, X_upper, is_env_variable, n_representer, n_hals_vals, n_func_samples, X_lower, X_upper, compute_incumbent, **kwargs):
+    def __init__(self, model, cost_model, X_lower, X_upper, compute_incumbent, is_env_variable, n_representer, n_hals_vals, n_func_samples, **kwargs):
 
         self.model = model
         self.cost_model = cost_model

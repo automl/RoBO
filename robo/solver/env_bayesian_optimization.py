@@ -15,25 +15,35 @@ from robo.bayesian_optimization import BayesianOptimization
 class EnvBayesianOptimization(BayesianOptimization):
 
     def __init__(self, acquisition_fkt=None, model=None, cost_model=None,
-                 maximize_fkt=None, dims=None,
-                 objective_fkt=None, save_dir=None, num_save=1):
+                 maximize_fkt=None, X_lower=None, X_upper=None, dims=None,
+                 objective_fkt=None, save_dir=None, initialization=None, num_save=1):
 
         # Initialize all members
+        self.initialization = initialization
         self.objective_fkt = objective_fkt
         self.acquisition_fkt = acquisition_fkt
         self.model = model
         self.cost_model = cost_model
         self.maximize_fkt = maximize_fkt
-
+        self.X_lower = X_lower
+        self.X_upper = X_upper
         self.dims = dims
         self.save_dir = save_dir
         self.num_save = num_save
         if save_dir is not None:
             self.create_save_dir()
 
+        self.X = None
+        self.Y = None
+        self.Costs = None
         self.model_untrained = True
         self.recommendation_strategy = None
         self.incumbent = None
+
+    def initialize(self):
+        start_time = time.time()
+        super(EnvBayesianOptimization, self).initialize()
+        self.Costs = np.array([[time.time() - start_time]])
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
@@ -55,12 +65,17 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.create_save_dir()
 
         if X is None and Y is None:
+            self.initialize()
+            num_iterations = num_iterations - 1
+        else:
+            self.X = X
+            self.Y = Y
             # TODO: allow different initialization strategies here
-            X, Y, Costs = self.initialize()
+            self.initialize()
 
         for it in range(num_iterations):
             print "Choose a new configuration"
-            new_x = self.choose_next(X, Y)
+            new_x = self.choose_next(self.X, self.Y, self.Costs)
             print "Evaluate candidate %s" % (str(new_x))
 
             start = time.time()
@@ -68,9 +83,9 @@ class EnvBayesianOptimization(BayesianOptimization):
             new_cost = np.array([time.time() - start])
 
             print "Configuration achieved a performance of %d in %s seconds" % (new_y[0, 0], new_cost[0])
-            X = np.append(X, new_x, axis=0)
-            Y = np.append(Y, new_y, axis=0)
-            Costs = np.append(Costs, new_cost, axis=0)
+            self.X = np.append(X, new_x, axis=0)
+            self.Y = np.append(Y, new_y, axis=0)
+            self.Costs = np.append(self.Costs, new_cost, axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
                 self.save_iteration(X, Y, new_x)
