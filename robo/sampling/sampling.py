@@ -5,6 +5,7 @@ Alternatively the sampling can be carried out using the emcee Python module.
 
 import numpy as np
 
+
 def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
     """
     This method corresponds to the function SampleBeliefLocations in the original ES code.

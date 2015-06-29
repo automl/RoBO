@@ -26,21 +26,20 @@ class PI(AcquisitionFunction):
     """
     long_name = "Probability of Improvement"
 
-    def __init__(self, model, X_lower, X_upper, par=0.1, **kwargs):
+    def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.1, **kwargs):
 
-        self.model = model
         self.par = par
-        self.X_lower = X_lower
-        self.X_upper = X_upper
+        self.compute_incumbent = compute_incumbent
+        super(PI, self).__init__(model, X_lower, X_upper)
 
-    def __call__(self, X, incumbent, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, **kwargs):
         """
         A call to the object returns the PI and derivative values.
 
         :param x: The point at which the function is to be evaluated.
         :type x: np.ndarray (1,n)
-        :param incumbent: The current incumbent
-        :type incumbent: np.ndarray (1,D)
+        :param compute_incumbent: Recommendation strategy that computes the incumbent
+        :type function:
         :param derivative: This controls whether the derivative is to be returned.
         :type derivative: Boolean
         :return: The value of PI and its derivative at x.
@@ -55,9 +54,9 @@ class PI(AcquisitionFunction):
             else:
                 return np.array([[0]])
 
-        dim = X.shape[1]
         m, v = self.model.predict(X)
-        eta = self.model.predict(np.array([incumbent]))
+        incumbent, _ = self.compute_incumbent(self.model)
+        eta, _ = self.model.predict(np.array([incumbent]))
         s = np.sqrt(v)
         z = (eta - m - self.par) / s
         f = norm.cdf(z)

@@ -2,11 +2,12 @@ import sys
 import StringIO
 import numpy as np
 import GPy
+from robo.models.base_model import BaseModel
 
 
-class GPyModel(object):
+class GPyModel(BaseModel):
     """
-    GPyModel is just a wrapper around the GPy Lib
+     Wraps the standard Gaussian process for regression from the GPy library
     """
     def __init__(self, kernel, noise_variance=None, optimize=True, num_restarts=100, *args, **kwargs):
         self.kernel = kernel
@@ -18,7 +19,7 @@ class GPyModel(object):
         self.m = None
 
     """def __getstate__(self):
-        return dict(kernel = self.kernel, 
+        return dict(kernel = self.kernel,
                     noise_variance = self.noise_variance,
                     optimize = self.optimize,
                     num_restarts = self.num_restarts,
@@ -55,11 +56,6 @@ class GPyModel(object):
         self.X_star = self.X[index_min]
         self.f_star = self.observation_means[index_min]
 
-    def update(self, X, Y):
-        X = np.append(self.X, X, axis=0)
-        Y = np.append(self.Y, Y, axis=0)
-        self.train(X, Y)
-
     def predict_variance(self, X1, X2):
         kern = self.m.kern
         KbX = kern.K(X2, self.m.X).T
@@ -71,22 +67,21 @@ class GPyModel(object):
 
     def predict(self, X, full_cov=False):
         if self.m == None:
-            print "ERROR: Model needs to be trained first."
+            print "ERROR: Model has to be trained first."
             return None
 
         mean, var = self.m.predict(X, full_cov=full_cov)
 
         if not full_cov:
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
-            #return mean
+
         else:
             var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
             var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
             return mean[:, 0], var
-            #return mean, var
 
     def predictive_gradients(self, Xnew, X=None):
-        if X == None:
+        if X is None:
             return self.m.predictive_gradients(Xnew)
 
     def sample(self, X, size=10):
@@ -94,17 +89,6 @@ class GPyModel(object):
         samples from the GP at values X size times.
         """
         return self.m.posterior_samples_f(X, size)
-
-#     def getCurrentBest(self):
-#         """
-#         returns the current best mean of observations taken so far 
-#         """
-#         return self.f_star
-#     def getCurrentBestX(self):
-#         """
-#         returns the X with respect to the current best mean of observations taken so far 
-#         """
-#         return self.X_star
 
     def visualize(self, ax, plot_min, plot_max):
         self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])

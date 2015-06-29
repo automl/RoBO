@@ -1,26 +1,43 @@
-import random
+
 import os
+import time
 import errno
 import numpy as np
-from functools import partial
+
 import shutil
 try:
-    import cpickle as pickle
+    import cPickle as pickle
 except:
     import pickle
 from robo.util.exc import BayesianOptimizationError
+from argparse import ArgumentError
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 
 class BayesianOptimization(object):
     """
-        save_dir:
-            save to save_dir after each iteration
+    Class implementing general Bayesian optimization.
     """
     def __init__(self, acquisition_fkt=None, model=None,
                  maximize_fkt=None, X_lower=None, X_upper=None, dims=None,
-                 objective_fkt=None, save_dir=None, num_save=1):
+                 objective_fkt=None, save_dir=None, initialization=None, num_save=1):
+        """
+        Initializes the Bayesian optimization.
+        Either acquisition function, model, maximization function, bounds, dimensions and objective function are
+        specified or an existing run can be continued by specifying only save_dir.
+
+        :param acquisition_fkt: Any acquisition function
+        :param model: A model
+        :param maximize_fkt: The function for maximizing the acquisition function
+        :param initialization: The initialization strategy that to find some starting points in order to train the model
+        :param X_lower: Lower bounds (tuple of minimums)
+        :param X_upper: Upper bounds (tuple of maximums)
+        :param dims: Dimension of the input
+        :param objective_fkt: The objective function to execute in each step
+        :param save_dir: The directory to save the iterations to (or to load an existing run from)
+        :param num_save: A number specifying the n-th iteration to be saved
+        """
 
         self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims])
         if self.enough_arguments:
@@ -31,6 +48,14 @@ class BayesianOptimization(object):
             self.X_lower = X_lower
             self.X_upper = X_upper
             self.dims = dims
+
+            self.initialization = initialization
+
+            self.X = None
+            self.Y = None
+            self.time_func_eval = None
+            self.time_optimization_overhead = None
+
             self.save_dir = save_dir
             self.num_save = num_save
             if save_dir is not None:
@@ -42,10 +67,18 @@ class BayesianOptimization(object):
 
         elif save_dir is not None:
             self.save_dir = save_dir
+            try:
+                os.mkdir(self.save_dir)
+            except:
+                pass
         else:
             raise ArgumentError()
 
     def init_last_iteration(self):
+        """
+        Loads the last iteration from a previously stored run
+        :return: the previous observations
+        """
         max_iteration = self._get_last_iteration_number()
 
         iteration_folder = os.path.join(self.save_dir, "%03d" % (max_iteration, ))
@@ -62,14 +95,23 @@ class BayesianOptimization(object):
 
     @classmethod
     def from_iteration(cls, save_dir, i):
+        """
+        Loads the data from a previous run
+        :param save_dir: directory for the data
+        :param i: index of iteration
+        :return:
+        """
         iteration_folder = save_dir + "/%03d" % (i, )
         that = pickle.load(open(iteration_folder + "/bayesian_opt.pickle", "rb"))
         if not isinstance(that, cls):
             raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR, "not a robo instance")
-        new_x, X, Y, buest_guess = pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
-        return that, new_x, X, Y, buest_guess
+        new_x, X, Y, best_guess = pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
+        return that, new_x, X, Y, best_guess
 
     def create_save_dir(self):
+        """
+        Creates the save directory to store the runs
+        """
         if self.save_dir is not None:
             try:
                 os.makedirs(self.save_dir)
@@ -78,18 +120,63 @@ class BayesianOptimization(object):
                     raise
 
     def initialize(self):
-        X = np.array([np.random.randn(self.dims)])
-        Y = self.objective_fkt(X)
-        return X, Y
+        """
+        Draws a random configuration and initializes the first data point
+        """
+        start_time = time.time()
+        if self.initialization is None:
+            # Draw one random configuration
+            self.X = np.array([np.random.uniform(self.X_lower, self.X_upper, self.dims)])
+            print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
+        else:
+            print "Initialize ..."
+            self.X = self.initialization()
+        self.time_optimization_overhead = np.array([time.time() - start_time])
+
+        start_time = time.time()
+        self.Y = self.objective_fkt(self.X)
+        self.time_func_eval = np.array([time.time() - start_time])
+        print "Configuration achieved a performance of %f " % (self.Y[0])
+
+    def get_observations(self):
+        return self.X, self.Y
+
+    def get_model(self):
+        if self.model is None:
+            print "No model trained yet!"
+        return self.model
+
+#     def iterate(self, save_it=False):
+#         """
+#         Performs one iteration
+#         :param save_it: If true, the iteration is saved (only if the save_dir is configured)
+#         """
+#         print "Choose a new configuration"
+#         new_x = self.choose_next(self.X, self.Y)
+#         print "Evaluate candidate %s" % (str(new_x))
+#         new_y = self.objective_fkt(new_x)
+#         print "Configuration achieved a performance of %d " % (new_y[0, 0])
+#         if self.X is None:
+#             self.X = new_x
+#         else:
+#             self.X = np.append(self.X, new_x, axis=0)
+#         if self.Y is None:
+#             self.Y = new_y
+#         else:
+#             self.Y = np.append(self.Y, new_y, axis=0)
+# 
+#         if self.save_dir is not None and save_it:
+#             self.save_iteration(self.X, self.Y, new_x)
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
-        overwrite:
-            True: data present in save_dir will be deleted.
-            False: data present will be loaded an the run will continue
-        X, Y:
-            Initial observations. They are optional. If a run continues
-            these observations will be overwritten by the load
+        Runs iterations.
+
+        :param num_iterations: number of iterations to perform
+        :param X: (optional) Initial observations. If a run continues these observations will be overwritten by the load
+        :param Y: (optional) Initial observations. If a run continues these observations will be overwritten by the load
+        :param overwrite: data present in save_dir will be deleted and overwritten, otherwise the run will be continued.
+        :return: the incumbent
         """
         def _onerror(dirs, path, info):
             if info[1].errno != errno.ENOENT:
@@ -102,32 +189,59 @@ class BayesianOptimization(object):
             self.create_save_dir()
 
         if X is None and Y is None:
-            # TODO: allow different initialization strategies here
-            X, Y = self.initialize()
+            self.initialize()
+            num_iterations = num_iterations - 1
+        else:
+            self.X = X
+            self.Y = Y
+            self.time_func_eval = np.zeros([self.X.shape[0]])
+            self.time_optimization_overhead = np.zeros([self.X.shape[0]])
 
         for it in range(num_iterations):
             print "Choose a new configuration"
-            new_x = self.choose_next(X, Y)
+            start_time = time.time()
+            new_x = self.choose_next(self.X, self.Y)
+            time_optimization_overhead = time.time() - start_time
+            self.time_optimization_overhead = np.append(self.time_func_eval, np.array([time_optimization_overhead]))
+
             print "Evaluate candidate %s" % (str(new_x))
-            new_y = self.objective_fkt(np.array(new_x))
+            start_time = time.time()
+            new_y = self.objective_fkt(new_x)
+            time_func_eval = time.time() - start_time
+            self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
             print "Configuration achieved a performance of %d " % (new_y[0, 0])
-            X = np.append(X, new_x, axis=0)
-            Y = np.append(Y, new_y, axis=0)
+
+            if self.X is None:
+                self.X = new_x
+            else:
+                self.X = np.append(self.X, new_x, axis=0)
+            if self.Y is None:
+                self.Y = new_y
+            else:
+                self.Y = np.append(self.Y, new_y, axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                self.save_iteration(X, Y, new_x)
+                self.save_iteration(it)
 
         # Recompute the incumbent before we return it
         if self.recommendation_strategy is None:
-            best_idx = np.argmin(Y)
-            self.incumbent = X[best_idx]
+            best_idx = np.argmin(self.Y)
+            self.incumbent = self.X[best_idx]
+            self.incumbent_value = self.Y[best_idx]
         else:
-            self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
+            self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
-        print "Return %s as incumbent" % (str(self.incumbent))
+        print "Return %s as incumbent with performance %f" % (str(self.incumbent), self.incumbent_value)
         return self.incumbent
 
     def choose_next(self, X=None, Y=None):
+        """
+        Chooses the next configuration by optimizing the acquisition function.
+
+        :param X: The X for the model
+        :param Y: The Y for the model
+        :return: The next desired configuration
+        """
         if X is not None and Y is not None:
             try:
                 self.model.train(X, Y)
@@ -140,34 +254,40 @@ class BayesianOptimization(object):
             if self.recommendation_strategy is None:
                 best_idx = np.argmin(Y)
                 self.incumbent = X[best_idx]
+                self.incumbent_value = Y[best_idx]
             else:
-                self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
+                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
         else:
-            X = np.empty((1, self.dims))
-            for i in range(self.dims):
-                X[0, i] = random.random() * (self.X_upper[i] - self.X_lower[i]) + self.X_lower[i]
-            x = np.array(X)
+            self.initialize()
+            x = self.X
         return x
 
-    def _get_last_iteration_number(self):
-        max_iteration = 0
-        for i in os.listdir(self.save_dir):
-            try:
-                it_num = int(i)
-                if it_num > max_iteration:
-                    max_iteration = it_num
-            except Exception, e:
-                print e
-        return max_iteration
+#     def _get_last_iteration_number(self):
+#         max_iteration = 0
+#         for i in os.listdir(self.save_dir):
+#             try:
+#                 it_num = int(i)
+#                 if it_num > max_iteration:
+#                     max_iteration = it_num
+#             except Exception, e:
+#                 print e
+#         return max_iteration
 
-    def save_iteration(self, X, Y, new_x):
-        max_iteration = self._get_last_iteration_number()
-        iteration_folder = self.save_dir + "/%03d" % (max_iteration + 1, )
-        #pickle.dump(self, open(iteration_folder+"/bayesian_opt.pickle", "w"))
-        os.makedirs(iteration_folder)
-        if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
-            pickle.dump([new_x, X, Y, self.acquisition_fkt._get_most_probable_minimum()[0]], open(iteration_folder + "/observations.pickle", "w"))
-        else:
-            pickle.dump([new_x, X, Y, self.model.getCurrentBestX()], open(iteration_folder + "/observations.pickle", "w"))
+    def save_iteration(self, it):
+        """
+        Saves an iteration.
+
+        :param X: Data for the model (including the new observation)
+        :param Y: Data for the model (including the new observation)
+        """
+        file_name = "iteration_%03d.pkl" % (it)
+
+        file_name = os.path.join(self.save_dir, file_name)
+        #os.makedirs(iteration_folder)
+        #FIXME What does Entropy return as incumbent?
+        #if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
+        #    pickle.dump([self.X, self.Y, self.acquisition_fkt._get_most_probable_minimum()[0], self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
+        #else:
+        pickle.dump([self.X, self.Y, self.incumbent, self.incumbent_value, self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
