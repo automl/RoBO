@@ -286,7 +286,8 @@ class BayesianOptimization(object):
 
         file_name = os.path.join(self.save_dir, file_name)
         #os.makedirs(iteration_folder)
-        if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
-            pickle.dump([self.X, self.Y, self.acquisition_fkt._get_most_probable_minimum()[0], self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
-        else:
-            pickle.dump([self.X, self.Y, self.incumbent, self.incumbent_value, self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
+        #FIXME What does Entropy return as incumbent?
+        #if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
+        #    pickle.dump([self.X, self.Y, self.acquisition_fkt._get_most_probable_minimum()[0], self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
+        #else:
+        pickle.dump([self.X, self.Y, self.incumbent, self.incumbent_value, self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))

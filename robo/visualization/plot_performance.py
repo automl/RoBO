@@ -29,9 +29,12 @@ def main(names, dirs):
 
     ax1.set_title("Performance")
     ax2.set_title("Optimization Overhead")
+    ax1.set_ylabel('fmin')
+    ax2.set_ylabel('Seconds')
+    ax2.set_xlabel('Number of function evaluations')
 
     plt.legend()
-    plt.savefig("performance_over_iterations.png")
+    plt.savefig("performance_over_iterations_pi.png")
 
 if __name__ == '__main__':
     args = sys.argv[1:]
