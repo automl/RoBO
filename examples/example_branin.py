@@ -7,7 +7,7 @@ Created on Jun 23, 2015
 import GPy
 from robo.models.GPyModel import GPyModel
 from robo.acquisition.EntropyMC import EntropyMC
-from robo.maximizers.maximize import stochastic_local_search
+from robo.maximizers.maximize import cmaes
 from robo.recommendation.incumbent import compute_incumbent
 from robo.benchmarks.branin import branin, get_branin_bounds
 from robo.bayesian_optimization import BayesianOptimization
@@ -15,7 +15,7 @@ from robo.bayesian_optimization import BayesianOptimization
 
 X_lower, X_upper, dims = get_branin_bounds()
 
-maximizer = stochastic_local_search
+maximizer = cmaes
 
 kernel = GPy.kern.Matern52(input_dim=dims)
 model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
