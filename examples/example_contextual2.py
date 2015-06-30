@@ -102,15 +102,6 @@ def objective1_min(Z):
     v2 = 15*x4
     return branin(u1, branin_min_u(u1)) * branin(branin_min_v(v2), v2)
 
-# Create figure
-fig = plt.figure(figsize=(15, 10))
-plt.hold(True)
-ax1 = plt.gca()
-
-############################################
-# Objective 1: Product of Branin functions #
-############################################
-
 # Defining the bounds and dimensions of the input space
 S_lower = np.array([0, 0])
 S_upper = np.array([1, 1])
@@ -120,46 +111,72 @@ X_upper = np.array([np.inf, np.inf, 1, 1])
 
 dims_Z = 2
 dims_S = 2
+dims_X = dims_Z + dims_S
 
 # Set the method that we will use to optimize the acquisition function
 maximizer = stochastic_local_search
 
-# Defining the method to model the objective function
-kernel = GPy.kern.Matern52(input_dim=dims_Z + dims_S)
-model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10)
+# Kernel combinations
+kernelpairs = [(GPy.kern.Matern32, GPy.kern.Matern32),
+           (GPy.kern.Matern52, GPy.kern.Matern52),
+           (GPy.kern.RBF, GPy.kern.RBF),
+           (GPy.kern.Matern32, GPy.kern.Matern52), (GPy.kern.Matern52, GPy.kern.Matern32),
+           (GPy.kern.Matern32, GPy.kern.RBF), (GPy.kern.RBF, GPy.kern.Matern32),
+           (GPy.kern.Matern52, GPy.kern.RBF), (GPy.kern.RBF, GPy.kern.Matern52),]
 
-# The acquisition function that we optimize in order to pick a new x
-acquisition_func = UCB(model, X_lower=X_lower, X_upper=X_upper, par=1.0)
+kernels = [GPy.kern.Matern32,
+           GPy.kern.Matern52,
+           GPy.kern.RBF,]
+
 
 # Context function acquires random values
 def context_fkt():
     return np.random.uniform(size=(1,2))
 
-bo = ContextualBayesianOptimization(acquisition_fkt=acquisition_func,
-                                    model=model,
-                                    maximize_fkt=maximizer,
-                                    S_lower=S_lower,
-                                    S_upper=S_upper,
-                                    dims_Z=dims_Z,
-                                    dims_S=dims_S,
-                                    objective_fkt=objective1,
-                                    context_fkt=context_fkt)
 
-print "Result:", bo.run(num_iterations=25)
+for kernelpair in kernelpairs:
+    kernel = kernelpair[0](input_dim=dims_Z, active_dims=list(range(dims_Z))) * \
+        kernelpair[1](input_dim=dims_S, active_dims=list(range(dims_Z, dims_X)))
+    #kernel = kernelpair(input_dim=dims_X)
 
-# Calculate regret
-real_data = objective1_min(Z=bo.X[:, :bo.dims_S]).flatten()
-pred_data = bo.Y.flatten()
-regret = pred_data - real_data
-cum_regret = np.cumsum(regret)
-contextual_regret = cum_regret / np.arange(1, len(cum_regret) + 1)
 
-ax1.set_title('Regret of product of Branin functions')
-ax1.set_title('regret')
-ax1.set_xlabel('time')
-ax1.set_ylabel('regret')
-plt1, = ax1.plot(regret, label='Regret')
-plt2, = ax1.plot(contextual_regret, label='Contextual Regret')
-ax1.legend(handles=(plt1, plt2))
+    # Defining the method to model the objective function
+    model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10)
+
+    # The acquisition function that we optimize in order to pick a new x
+    acquisition_func = UCB(model, X_lower=X_lower, X_upper=X_upper, par=1.0)
+
+    bo = ContextualBayesianOptimization(acquisition_fkt=acquisition_func,
+                                        model=model,
+                                        maximize_fkt=maximizer,
+                                        S_lower=S_lower,
+                                        S_upper=S_upper,
+                                        dims_Z=dims_Z,
+                                        dims_S=dims_S,
+                                        objective_fkt=objective1,
+                                        context_fkt=context_fkt)
+
+    print "Result:", bo.run(num_iterations=25)
+
+    # Calculate regret
+    real_data = objective1_min(Z=bo.X[:, :bo.dims_S]).flatten()
+    pred_data = bo.Y.flatten()
+    regret = np.maximum(pred_data - real_data, 0)
+    cum_regret = np.cumsum(regret)
+    contextual_regret = cum_regret / np.arange(1, len(cum_regret) + 1)
+
+    # Create figure
+    fig = plt.figure(figsize=(15, 10))
+    plt.hold(True)
+    ax1 = plt.gca()
+
+    ax1.set_title('Regret of product of Branin functions')
+    ax1.set_xlabel('time')
+    ax1.set_ylabel('regret')
+    plt1, = ax1.plot(regret, label='Regret')
+    plt2, = ax1.plot(contextual_regret, label='Contextual Regret')
+    ax1.legend(handles=(plt1, plt2))
+    plt.suptitle('Context kernel %s, Action kernel %s' % (str(kernelpair[0](input_dim=1).name), str(kernelpair[1](input_dim=1).name)))
+    #plt.suptitle('Context kernel %s' % (str(kernelpair(input_dim=1).name),))
 
 plt.show(block=True)
