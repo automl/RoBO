@@ -56,6 +56,10 @@ class AcquisitionFunction(object):
             :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and the acquisition function does not allow to compute the gradients
             :rtype: np.ndarray(N, 1)
         """
+
+        if len(X.shape) == 1:
+            X = X[np.newaxis, :]
+
         if self.mcmc_model != None:
             acq_val = np.zeros([len(self.mcmc_model.models)])
             for i, model in enumerate(self.mcmc_model.models):
