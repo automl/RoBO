@@ -28,14 +28,16 @@ class GPyModelMCMC(BaseModel):
 
         m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
         hmc = GPy.inference.mcmc.hmc.HMC(m, stepsize=5e-2)
-        s = hmc.sample(num_samples=(self.burnin + self.chain_length))
-        self.hypers = s[range(self.burnin, self.burnin + self.chain_length, self.chain_length / self.n_hypers)]
+        self.mcmc_chain = hmc.sample(num_samples=(self.burnin + self.chain_length))
+        self.samples = self.mcmc_chain[range(self.burnin, self.burnin + self.chain_length, self.chain_length / self.n_hypers)]
 
         self.models = []
-        for hyper in self.hypers:
-            m = GPyModel(self.kernel, optimization=False)
-            m.param_array = hyper
-            m.train(self.X, self.Y)
+        for sample in self.samples:
+            kernel = self.kernel
+            for i in range(len(sample) - 1):
+                kernel.parameters[i][0] = sample[i]
+            model = GPyModel(kernel, noise_variance=sample[-1], optimization=False)
+            model.train(self.X, self.Y)
             self.models.append(m)
 
     def predict(self, X, full_cov=False):
@@ -47,5 +49,8 @@ class GPyModelMCMC(BaseModel):
         var = np.zeros([self.n_hypers, X.shape[0]])
 
         for i, model in enumerate(self.models):
-                mean[i], var[i] = model.predict(X, full_cov)
+            m, v = model.predict(X, full_cov)
+            mean[i, :] = m[:, 0]
+            var[i, :] = v[:, 0]
+
         return mean, var

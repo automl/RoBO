@@ -257,7 +257,6 @@ class BayesianOptimization(object):
                 self.incumbent_value = Y[best_idx]
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
-
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
         else:
             self.initialize()
