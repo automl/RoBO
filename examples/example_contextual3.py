@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 import GPy
 import scipy
+import scipy.optimize
 from robo.contextual_bayesian_optimization import ContextualBayesianOptimization
 from robo.models.GPyModel import GPyModel
 from robo.acquisition.UCB import UCB
@@ -44,8 +45,14 @@ def hartman6_dx(x, ix):
         sum2 = 0
         for j in range(6):
             sum2 -= _hartman6_alpha[i][j] * (x[j] - _hartman6_p[i][j]) ** 2
-        sum1 -= _hartman6_c[i] * np.exp(sum2) * 2 * _hartman6_alpha[i][ix] * (x[ix] - _hartman6_p[i][ix])
+        sum1 += _hartman6_c[i] * np.exp(sum2) * 2 * _hartman6_alpha[i][ix] * (x[ix] - _hartman6_p[i][ix])
     return sum1
+
+_objective2_min_start = [[0.1312, 0.1696, 0.0124, 0.5886],
+                         [0.2329, 0.4135, 0.3736, 0.9991],
+                         [0.2348, 0.1451, 0.2883, 0.6650],
+                         [0.4047, 0.8828, 0.5743, 0.0381]]
+
 
 def objective2(Z, S):
     """
@@ -72,13 +79,27 @@ def objective2_min_action(Z):
     :param Z: context
     :return: locations of minimums
     """
-    S = np.zeros((Z.shape[0], 2))
+    S = np.zeros((Z.shape[0], 4))
     for i in range(Z.shape[0]):
         z = Z[i, :].flatten()
 
         def minfn(s):
             return objective2(z[np.newaxis, :], s[np.newaxis, :]).flatten(), objective2_grad(z, s)
-        S[i, :] = scipy.optimize.minimize(fun=minfn, x0=np.array((0.5, 0.5, 0.5, 0.5)), jac=True, bounds=((0,1),)*4).x[0]
+        res = np.random.uniform(size=4)
+        fun = np.Inf
+        for x0 in _objective2_min_start:
+            resi = scipy.optimize.minimize(fun=minfn, x0=x0, jac=True, bounds=((0,1),)*4)
+            if resi.fun[0] < fun:
+                res = resi.x
+                fun = resi.fun[0]
+        # This won't improve the performance
+        #for _ in range(1000):
+        #    resi = scipy.optimize.minimize(fun=minfn, x0=np.random.uniform(size=4), jac=True, bounds=((0,1),)*4)
+        #    if resi.fun[0] < fun:
+        #        print "found better: ", resi.fun[0], " < ", fun
+        #        res = resi.x
+        #        fun = resi.fun[0]
+        S[i, :] = res
     return S
 
 def objective2_min(Z):
@@ -110,6 +131,7 @@ X_upper = np.array([np.inf, np.inf, 1, 1, 1, 1])
 
 dims_Z = 2
 dims_S = 4
+dims_X = dims_Z + dims_S
 
 # Set the method that we will use to optimize the acquisition function
 maximizer = stochastic_local_search
