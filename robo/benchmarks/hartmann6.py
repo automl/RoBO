@@ -23,13 +23,14 @@ def hartmann6(x):
                            [2348, 1451, 3522, 2883, 3047, 6650],
                            [4047, 8828, 8732, 5743, 1091, 381]])
 
-    external_sum = np.zeros((x.shape[0], 1))
+    external_sum = 0
     for i in range(4):
         internal_sum = 0
         for j in range(6):
             internal_sum = internal_sum + A[i, j] * (x[:, j] - P[i, j]) ** 2
         external_sum = external_sum + alpha[i] * np.exp(-internal_sum)
-    return np.array(-external_sum)
+
+    return -external_sum[:, np.newaxis]
 
 
 def get_hartmann6_bounds():
