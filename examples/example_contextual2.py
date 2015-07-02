@@ -11,7 +11,9 @@ import scipy
 from robo.contextual_bayesian_optimization import ContextualBayesianOptimization
 from robo.models.GPyModel import GPyModel
 from robo.acquisition.UCB import UCB
-from robo.maximizers.maximize import stochastic_local_search
+#from robo.maximizers.maximize import stochastic_local_search
+from robo.maximizers.maximize import cma as maximizer
+#from robo.maximizers.maximize import grid_search as maximizer
 
 _branin_k1 = 5.1/(4*np.pi*np.pi)
 _branin_k2 = 5 / np.pi
@@ -113,9 +115,6 @@ dims_Z = 2
 dims_S = 2
 dims_X = dims_Z + dims_S
 
-# Set the method that we will use to optimize the acquisition function
-maximizer = stochastic_local_search
-
 # Kernel combinations
 kernelpairs = [(GPy.kern.Matern32, GPy.kern.Matern32),
            (GPy.kern.Matern52, GPy.kern.Matern52),
@@ -123,11 +122,6 @@ kernelpairs = [(GPy.kern.Matern32, GPy.kern.Matern32),
            (GPy.kern.Matern32, GPy.kern.Matern52), (GPy.kern.Matern52, GPy.kern.Matern32),
            (GPy.kern.Matern32, GPy.kern.RBF), (GPy.kern.RBF, GPy.kern.Matern32),
            (GPy.kern.Matern52, GPy.kern.RBF), (GPy.kern.RBF, GPy.kern.Matern52),]
-
-kernels = [GPy.kern.Matern32,
-           GPy.kern.Matern52,
-           GPy.kern.RBF,]
-
 
 # Context function acquires random values
 def context_fkt():
@@ -137,11 +131,9 @@ def context_fkt():
 for kernelpair in kernelpairs:
     kernel = kernelpair[0](input_dim=dims_Z, active_dims=list(range(dims_Z))) * \
         kernelpair[1](input_dim=dims_S, active_dims=list(range(dims_Z, dims_X)))
-    #kernel = kernelpair(input_dim=dims_X)
-
 
     # Defining the method to model the objective function
-    model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10)
+    model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10, optimize_args={'optimizer': 'tnc'})
 
     # The acquisition function that we optimize in order to pick a new x
     acquisition_func = UCB(model, X_lower=X_lower, X_upper=X_upper, par=1.0)
@@ -177,6 +169,6 @@ for kernelpair in kernelpairs:
     plt2, = ax1.plot(contextual_regret, label='Contextual Regret')
     ax1.legend(handles=(plt1, plt2))
     plt.suptitle('Context kernel %s, Action kernel %s' % (str(kernelpair[0](input_dim=1).name), str(kernelpair[1](input_dim=1).name)))
-    #plt.suptitle('Context kernel %s' % (str(kernelpair(input_dim=1).name),))
+    plt.savefig('%s_%s.svg' % (str(kernelpair[0](input_dim=1).name), str(kernelpair[1](input_dim=1).name)))
 
 plt.show(block=True)
