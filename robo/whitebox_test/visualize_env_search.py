@@ -50,15 +50,15 @@ plt.clf()
 is_env = np.array([0, 1])
 
 env_es = EnvEntropySearch(model, cost_model, X_lower, X_upper, compute_incumbent, is_env)
-
-rep = env_es.representers
+env_es.update(model, cost_model)
+rep = env_es.zb
 
 xaxis = np.arange(X_lower[0], X_upper[0], 0.1)
 yaxis = np.arange(X_lower[1], X_upper[1], 0.1)
 grid_log_ei = np.zeros([xaxis.shape[0], yaxis.shape[0]])
 for i, x in enumerate(xaxis):
     for j, y in enumerate(yaxis):
-        grid_log_ei[i, j] = env_es.proposal_measure(np.array([xaxis[i], yaxis[j]]))
+        grid_log_ei[i, j] = env_es.sampling_acquisition(np.array([xaxis[i], yaxis[j]]))
 
 plt.plot(rep[:, 0], rep[:, 1], "bo")
 cs = plt.contour(xaxis, yaxis, grid_log_ei)
@@ -67,7 +67,7 @@ plt.clf()
 
 #TODO:Plot current pmin
 plt.plot(rep[:, 0], np.zeros(rep.shape[0]), "bo")
-plt.bar(rep[:, 0], env_es._current_pmin, 0.05, color="green")
+plt.bar(rep[:, 0], env_es.pmin, 0.05, color="orange")
 plt.savefig("robo/whitebox_test/plots_env_search/pmin.png")
 plt.clf()
 #TODO:Plot innovated model

@@ -36,12 +36,9 @@ def plot_projected_model(model, X_lower, X_upper, ax, projection, resolution=0.1
 
 def plot_objective_function(objective_function, X_lower, X_upper, X, Y, ax, resolution=0.1):
     grid = np.arange(X_lower[0], X_upper[0], resolution)
+    grid_values = objective_function(grid[:, np.newaxis])
 
-    grid_values = np.zeros([grid.shape[0]])
-    for i in xrange(grid.shape[0]):
-        grid_values[i] = objective_function(grid[i])
-
-    ax.plot(grid, grid_values, "r", label="ObjectiveFunction")
+    ax.plot(grid, grid_values[:, 0], "r", label="ObjectiveFunction")
     ax.plot(X, Y, "ro")
     return ax
 

@@ -9,7 +9,7 @@ import GPy
 from robo.models.GPyModel import GPyModel
 from robo.solver.env_bayesian_optimization import EnvBayesianOptimization
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
-from robo.maximizers.maximize import grid_search
+from robo.maximizers.maximize import direct
 from robo.recommendation.incumbent import compute_incumbent
 from robo.benchmarks.branin_with_costs import branin_with_costs, get_branin_with_costs_bounds
 
@@ -31,7 +31,7 @@ n_func_samples = 200
 acquisition_func = EnvEntropySearch(model, cost_model, X_lower=X_lower, X_upper=X_upper,
                                     is_env_variable=is_env_variable, n_representer=n_representer,
                                     n_hals_vals=n_hals_vals, n_func_samples=n_func_samples, compute_incumbent=compute_incumbent)
-maximizer = grid_search
+maximizer = direct
 
 bo = EnvBayesianOptimization(acquisition_fkt=acquisition_func,
                           model=model,
@@ -40,6 +40,8 @@ bo = EnvBayesianOptimization(acquisition_fkt=acquisition_func,
                           X_lower=X_lower,
                           X_upper=X_upper,
                           dims=n_dims,
-                          objective_fkt=branin_with_costs)
+                          objective_fkt=branin_with_costs,
+                          save_dir="./out_env_search",
+                          num_save=1)
 
 bo.run(num_iterations=10)

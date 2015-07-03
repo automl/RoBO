@@ -66,6 +66,7 @@ class EnvBayesianOptimization(BayesianOptimization):
 
         if X is None and Y is None:
             self.initialize()
+
             num_iterations = num_iterations - 1
         else:
             self.X = X
@@ -83,15 +84,16 @@ class EnvBayesianOptimization(BayesianOptimization):
             new_cost = np.array([time.time() - start])
 
             print "Configuration achieved a performance of %d in %s seconds" % (new_y[0, 0], new_cost[0])
-            self.X = np.append(X, new_x, axis=0)
-            self.Y = np.append(Y, new_y, axis=0)
-            self.Costs = np.append(self.Costs, new_cost, axis=0)
+
+            self.X = np.append(self.X, new_x, axis=0)
+            self.Y = np.append(self.Y, new_y, axis=0)
+            self.Costs = np.append(self.Costs, new_cost[:, np.newaxis], axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
                 self.save_iteration(X, Y, new_x)
 
         # Recompute the incumbent before we return it
-        if self.recommendation_strategy is None:
+        if self.recommendation_strategy == None:
             best_idx = np.argmin(Y)
             self.incumbent = X[best_idx]
         else:
@@ -112,7 +114,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.acquisition_fkt.update(self.model, self.cost_model)
 
             #TODO: change default strategy
-            if self.recommendation_strategy is None:
+            if self.recommendation_strategy == None:
                 best_idx = np.argmin(Y)
                 self.incumbent = X[best_idx]
             else:
