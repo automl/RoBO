@@ -5,6 +5,7 @@ Created on Jul 3, 2015
 '''
 
 import numpy as np
+
 from robo.fmin import fmin
 
 
