@@ -71,8 +71,10 @@ class EntropyMC(Entropy):
         self.model = model
         self.sampling_acquisition.update(model)
         self.update_representer_points()
+        # Omega values which are needed for the innovations
         self.W = np.random.randn(1, self.Np)
         self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True)
+        # Draw random number for the hallucinated values they have to be the same for each innovation
         self.F = np.random.multivariate_normal(mean=np.zeros(self.Nb), cov=np.eye(self.Nb), size=self.Nf)
         if np.any(np.isnan(self.Vb)):
             raise Exception(self.Vb)
@@ -87,7 +89,9 @@ class EntropyMC(Entropy):
                     self.cVb = np.linalg.cholesky(self.Vb + 1e-6 * np.eye(self.Vb.shape[0]))
                 except np.linalg.LinAlgError:
                     self.cVb = np.linalg.cholesky(self.Vb + 1e-3 * np.eye(self.Vb.shape[0]))
+        # Draw function values on the representer points based on the current mean / variance of the GP and the random numbers from above
         self.f = np.add(np.dot(self.cVb, self.F.T).T, self.Mb).T
+        # Compute the current pmin
         self.pmin = self.calc_pmin(self.f)
         self.logP = np.log(self.pmin)
         self.update_best_guesses()
@@ -95,8 +99,10 @@ class EntropyMC(Entropy):
     def calc_pmin(self, f):
         if len(f.shape) == 3:
             f = f.reshape(f.shape[0], f.shape[1] * f.shape[2])
+        # Determine the minima for each function sample
         mins = np.argmin(f, axis=0)
         c = np.bincount(mins)
+        # Count how often each representer point was the minimum
         min_count = np.zeros((self.Nb,))
         min_count[:len(c)] += c
         pmin = (min_count / f.shape[1])[:, None]
@@ -107,9 +113,10 @@ class EntropyMC(Entropy):
         Lx, _ = self._gp_innovation_local(x)
         dMdb = Lx
         dVdb = -Lx.dot(Lx.T)
+        # The innovations
         stoch_changes = dMdb.dot(self.W)
+        # Update mean and variance by the innovations
         Mb_new = self.Mb[:, None] + stoch_changes
-
         Vb_new = self.Vb + dVdb
 
         Vb_new[np.diag_indices(Vb_new.shape[0])] = np.clip(Vb_new[np.diag_indices(Vb_new.shape[0])], np.finfo(Vb_new.dtype).eps, np.inf)
@@ -125,10 +132,12 @@ class EntropyMC(Entropy):
                     cVb_new = np.linalg.cholesky(Vb_new + 1e-6 * np.eye(Vb_new.shape[0]))
                 except np.linalg.LinAlgError:
                     cVb_new = np.linalg.cholesky(Vb_new + 1e-3 * np.eye(Vb_new.shape[0]))
+        # Draw new function samples from the innovated GP on the representer points
         f_new = np.dot(cVb_new, self.F.T)
         f_new = f_new[:, :, None]
         Mb_new = Mb_new[:, None, :]
         f_new = Mb_new + f_new
+        # Return the fantasized pmin
         return self.calc_pmin(f_new)
 
     def dh_fun(self, x):

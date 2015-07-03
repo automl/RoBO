@@ -276,10 +276,7 @@ class BayesianOptimization(object):
 
     def save_iteration(self, it):
         """
-        Saves an iteration.
-
-        :param X: Data for the model (including the new observation)
-        :param Y: Data for the model (including the new observation)
+            Saves an iteration.
         """
         file_name = "iteration_%03d.pkl" % (it)
 

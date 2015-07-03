@@ -4,10 +4,16 @@ Created on Jun 11, 2015
 @author: Aaron Klein
 '''
 
+import os
 import time
 import shutil
 import errno
 import numpy as np
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 from robo.bayesian_optimization import BayesianOptimization
 
@@ -90,14 +96,15 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.Costs = np.append(self.Costs, new_cost[:, np.newaxis], axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                self.save_iteration(X, Y, new_x)
+                self.save_iteration(it)
 
         # Recompute the incumbent before we return it
         if self.recommendation_strategy == None:
-            best_idx = np.argmin(Y)
-            self.incumbent = X[best_idx]
+            best_idx = np.argmin(self.Y)
+            self.incumbent = self.X[best_idx]
+            self.incumbent_value = self.Y[best_idx]
         else:
-            self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
+            self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
         print "Return %s as incumbent" % (str(self.incumbent))
         return self.incumbent
@@ -115,13 +122,28 @@ class EnvBayesianOptimization(BayesianOptimization):
 
             #TODO: change default strategy
             if self.recommendation_strategy == None:
-                best_idx = np.argmin(Y)
-                self.incumbent = X[best_idx]
+                best_idx = np.argmin(self.Y)
+                self.incumbent = self.X[best_idx]
+                self.incumbent_value = self.Y[best_idx]
             else:
-                self.incumbent = self.recommendation_strategy(self.model, self.acquisition_fkt)
+                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
         else:
             self.initialize()
             x = self.X
         return x
+
+    def save_iteration(self, it):
+        """
+            Saves an iteration.
+        """
+        file_name = "iteration_%03d.pkl" % (it)
+
+        file_name = os.path.join(self.save_dir, file_name)
+        #os.makedirs(iteration_folder)
+        #FIXME What does Entropy return as incumbent?
+        #if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
+        #    pickle.dump([self.X, self.Y, self.acquisition_fkt._get_most_probable_minimum()[0], self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
+        #else:
+        pickle.dump([self.X, self.Y, self.Costs, self.incumbent, self.incumbent_value, self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
