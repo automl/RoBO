@@ -1,0 +1,7 @@
+network/base_lr [0.000001, 1] [0.00001]l
+network/momentum [0.1, 0.99] [0.5]l
+network/power [0.6, 0.9999] [0.7]l
+network/weight_decay [0.00000001, 0.01] [0.001]l
+conv1/convolution_param/num_output [32, 256] [32]il
+conv2/convolution_param/num_output [32, 256] [32]il
+ip1/inner_product_param/num_output [64, 1024] [64]il
