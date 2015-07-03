@@ -34,7 +34,7 @@ def main(names, dirs):
     ax2.set_xlabel('Number of function evaluations')
 
     plt.legend()
-    plt.savefig("performance_over_iterations_pi.png")
+    plt.savefig("performance_over_iterations_ucb.png")
 
 if __name__ == '__main__':
     args = sys.argv[1:]

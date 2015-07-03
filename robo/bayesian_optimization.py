@@ -232,7 +232,7 @@ class BayesianOptimization(object):
             self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
         print "Return %s as incumbent with performance %f" % (str(self.incumbent), self.incumbent_value)
-        return self.incumbent
+        return self.incumbent, self.incumbent_value
 
     def choose_next(self, X=None, Y=None):
         """
@@ -257,7 +257,6 @@ class BayesianOptimization(object):
                 self.incumbent_value = Y[best_idx]
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
-
             x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
         else:
             self.initialize()

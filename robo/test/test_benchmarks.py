@@ -18,6 +18,7 @@ class TestBenchmarks(unittest.TestCase):
         X[:, 1] = X[:, 1].dot(X_upper[1] - X_lower[1]) + X_lower[1]
         y = branin(X)
         assert y.shape[0] == n_points
+        assert y.shape[1] == 1
 
         # Check single computation
         X = np.array([np.random.rand(n_dims)])
@@ -42,6 +43,7 @@ class TestBenchmarks(unittest.TestCase):
         X = np.random.rand(n_points, n_dims)
         y = hartmann6(X)
 
+        assert y.shape[1] == 1
         assert y.shape[0] == n_points
 
         # Check single computation
@@ -67,6 +69,7 @@ class TestBenchmarks(unittest.TestCase):
         X[:, 1] = X[:, 1].dot(X_upper[1] - X_lower[1]) + X_lower[1]
         y = goldstein_price(X)
         assert y.shape[0] == n_points
+        assert y.shape[1] == 1
 
         # Check single computation
         X = np.array([np.random.rand(n_dims)])

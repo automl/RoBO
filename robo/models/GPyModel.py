@@ -35,7 +35,7 @@ class GPyModel(BaseModel):
             return
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
         self.m.constrain_positive('')
-
+        self.log_likelihood = self.m.log_likelihood()
         self.likelihood = self.m.likelihood
         self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
