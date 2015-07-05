@@ -87,7 +87,7 @@ def objective2_min_action(Z):
         res = np.random.uniform(size=4)
         fun = np.Inf
         for x0 in _objective2_min_start:
-            resi = scipy.optimize.minimize(fun=minfn, x0=x0, method='L-BFGS-S', jac=True, bounds=((0,1),)*4)
+            resi = scipy.optimize.minimize(fun=minfn, x0=x0, method='L-BFGS-B', jac=True, bounds=((0,1),)*4)
             if resi.fun[0] < fun:
                 res = resi.x
                 fun = resi.fun[0]

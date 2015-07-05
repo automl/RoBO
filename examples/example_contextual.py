@@ -121,10 +121,10 @@ bo = ContextualBayesianOptimization(acquisition_fkt=acquisition_func,
                                     objective_fkt=objective0,
                                     context_fkt=context_fkt)
 
-print "Result:", bo.run(num_iterations=25)
+print "Result:", bo.run(num_iterations=32)
 
 print "Finding optima"
-xactions = np.linspace(0, 1, num=25)
+xactions = np.linspace(0, 1, num=32)
 yactions = np.array([bo.predict(np.array(xeval, ndmin=2)).flatten()[1] for xeval in xactions])
 yactions_exact = np.array([objective0_min_action(Z=np.reshape(xeval, (1, 1))).flatten() for xeval in xactions])
 
@@ -196,5 +196,6 @@ plt1, = ax3.plot(regret, label='Regret')
 plt2, = ax3.plot(contextual_regret, label='Contextual Regret')
 ax3.legend(handles=(plt1, plt2))
 
+plt.savefig('contextual_branin.svg')
 
-plt.show(block=True)
+#plt.show(block=True)
