@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 import GPy
 import scipy
+import scipy.optimize
 from robo.contextual_bayesian_optimization import ContextualBayesianOptimization
 from robo.models.GPyModel import GPyModel
 from robo.acquisition.UCB import UCB
@@ -68,7 +69,7 @@ def branin_min_v(v):
     for i, v_ in enumerate(v):
         def minfn(x):
             return branin(x, v_), branin_grad_u(x, v_)
-        res[i, :] = scipy.optimize.minimize(fun=minfn, x0=np.array((0.5,)), jac=True, bounds=((-5,10),)).x[0]
+        res[i, :] = scipy.optimize.minimize(fun=minfn, x0=np.array((0.5,)), method='L-BFGS-S', jac=True, bounds=((-5,10),)).x[0]
     return res
 
 def objective1(Z, S):
@@ -123,15 +124,21 @@ kernelpairs = [(GPy.kern.Matern32, GPy.kern.Matern32),
            (GPy.kern.Matern32, GPy.kern.RBF), (GPy.kern.RBF, GPy.kern.Matern32),
            (GPy.kern.Matern52, GPy.kern.RBF), (GPy.kern.RBF, GPy.kern.Matern52),]
 
+kernels = [(opsign, opname, kernelpair[0](input_dim=1).name, kernelpair[1](input_dim=1).name, op[0](kernelpair[0], kernelpair[1])) for kernelpair in kernelpairs for op, opsign, opname in [
+    (lambda x, y: x(input_dim=dims_Z, active_dims=list(range(dims_Z))) *
+                  y(input_dim=dims_S, active_dims=list(range(dims_Z, dims_X))),
+     '*', 'mul'
+     ),
+    (lambda x, y: x(input_dim=dims_Z, active_dims=list(range(dims_Z))) +
+                  y(input_dim=dims_S, active_dims=list(range(dims_Z, dims_X))),
+     '+', 'add')]]
+
 # Context function acquires random values
 def context_fkt():
     return np.random.uniform(size=(1,2))
 
 
-for kernelpair in kernelpairs:
-    kernel = kernelpair[0](input_dim=dims_Z, active_dims=list(range(dims_Z))) * \
-        kernelpair[1](input_dim=dims_S, active_dims=list(range(dims_Z, dims_X)))
-
+for opsign, opname, kernel1name, kernel2name, kernel in kernels:
     # Defining the method to model the objective function
     model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10, optimize_args={'optimizer': 'tnc'})
 
@@ -168,7 +175,9 @@ for kernelpair in kernelpairs:
     plt1, = ax1.plot(regret, label='Regret')
     plt2, = ax1.plot(contextual_regret, label='Contextual Regret')
     ax1.legend(handles=(plt1, plt2))
-    plt.suptitle('Context kernel %s, Action kernel %s' % (str(kernelpair[0](input_dim=1).name), str(kernelpair[1](input_dim=1).name)))
-    plt.savefig('%s_%s.svg' % (str(kernelpair[0](input_dim=1).name), str(kernelpair[1](input_dim=1).name)))
+    plt.suptitle('Context kernel %s %s Action kernel %s' % (kernel1name, opsign, kernel2name))
+    plt.savefig('%s_%s_%s.svg' % (opname, kernel1name, kernel2name))
+
+    break
 
 plt.show(block=True)

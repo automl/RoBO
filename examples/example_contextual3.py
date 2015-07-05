@@ -53,7 +53,6 @@ _objective2_min_start = [[0.1312, 0.1696, 0.0124, 0.5886],
                          [0.2348, 0.1451, 0.2883, 0.6650],
                          [0.4047, 0.8828, 0.5743, 0.0381]]
 
-
 def objective2(Z, S):
     """
     Second objective function
@@ -88,11 +87,11 @@ def objective2_min_action(Z):
         res = np.random.uniform(size=4)
         fun = np.Inf
         for x0 in _objective2_min_start:
-            resi = scipy.optimize.minimize(fun=minfn, x0=x0, jac=True, bounds=((0,1),)*4)
+            resi = scipy.optimize.minimize(fun=minfn, x0=x0, method='L-BFGS-S', jac=True, bounds=((0,1),)*4)
             if resi.fun[0] < fun:
                 res = resi.x
                 fun = resi.fun[0]
-        # This won't improve the performance
+        # This won't improve the result significantly
         #for _ in range(1000):
         #    resi = scipy.optimize.minimize(fun=minfn, x0=np.random.uniform(size=4), jac=True, bounds=((0,1),)*4)
         #    if resi.fun[0] < fun:

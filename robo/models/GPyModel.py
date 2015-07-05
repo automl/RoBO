@@ -9,10 +9,11 @@ class GPyModel(BaseModel):
     """
     GPyModel is just a wrapper around the GPy Lib
     """
-    def __init__(self, kernel, noise_variance=None, optimize=True, num_restarts=100, *args, **kwargs):
+    def __init__(self, kernel, noise_variance=None, optimize=True, num_restarts=100, optimize_args={}, *args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
         self.optimize = optimize
+        self.optimize_args = optimize_args
         self.num_restarts = num_restarts
         self.X_star = None
         self.f_star = None
@@ -48,7 +49,7 @@ class GPyModel(BaseModel):
         if self.optimize:
             stdout = sys.stdout
             sys.stdout = StringIO.StringIO()
-            self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
+            self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True, **self.optimize_args)
             sys.stdout = stdout
 
         self.observation_means = self.predict(self.X)[0]
