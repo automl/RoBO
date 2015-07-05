@@ -85,7 +85,7 @@ for objective, context_fkt, name_short, obj_name, objective_min, S_lower, S_uppe
                                             objective_fkt=objective,
                                             context_fkt=context_fkt)
 
-        print "Result:", bo.run(num_iterations=5)
+        print "Result:", bo.run(num_iterations=32)
 
         # Calculate regret
         real_data = objective_min(Z=bo.X[:, :bo.dims_S]).flatten()
