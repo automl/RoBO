@@ -103,7 +103,9 @@ for objective, context_fkt, name_short, obj_name, objective_min, S_lower, S_uppe
             cum_regret = np.cumsum(regret)
             contextual_regret = cum_regret / np.arange(1, len(cum_regret) + 1)
 
-            data.append(regret, contextual_regret)
+            # Save the data
+            data.append(regret)
+            data.append(contextual_regret)
 
             # Plot data
             ax.set_xlabel('iterations')
