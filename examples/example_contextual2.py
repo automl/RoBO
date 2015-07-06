@@ -51,29 +51,29 @@ objectives = [(objective1, context_fkt, 'bran', 'product of two Branin function'
               (objective2, context_fkt, 'hart', 'Hartmann 6 function', objective2_min, objective2_S_lower, objective2_S_upper, objective2_dims_Z, objective2_dims_S)]
 
 num_iterations = 32
-num_retries = 4
+num_retries = 16
 
+# data: [experiments...]
+# experiments: (obj_name, opsign, opname, kernel1name, kernel2name, regret_retries, contextual_regret_retries)
+# regret_retries: np.array (shape: num_iterations, num_retries)
+# contextual_regret_retries: np.array (shape: num_iterations, num_retries)
 data = []
 
 for objective, context_fkt, name_short, obj_name, objective_min, S_lower, S_upper, dims_Z, dims_S in objectives:
-    f1, axes1 = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(17.5, 10))
-    axes1 = [ax for ax in axes1[0]] + [ax for ax in axes1[1]] + [ax for ax in axes1[2]]
-
-    f2, axes2 = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(17.5, 10))
-    axes2 = [ax for ax in axes2[0]] + [ax for ax in axes2[1]] + [ax for ax in axes2[2]]
-
-    kernels = [(opsign, opname, kernel1name, kernel2name, kernel1, kernel2, kernelop, axes[kernelid])
+    kernels = [(opsign, opname, kernel1name, kernel2name, kernel1, kernel2, kernelop)
                for kernelid, (kernel1, kernel2, kernel1name, kernel2name) in enumerate(kernelpairs)
-               for kernelop, opsign, opname, axes in [
+               for kernelop, opsign, opname in [
                    (lambda kernel1, kernel2, dims_Z, dims_X: kernel1(input_dim=dims_Z, active_dims=list(range(dims_Z))) *
                                                              kernel2(input_dim=dims_S, active_dims=list(range(dims_Z, dims_X))),
-                    '$\\cdot$', 'mul', axes1),
+                    '$\\cdot$', 'mul'),
                    (lambda kernel1, kernel2, dims_Z, dims_X: kernel1(input_dim=dims_Z, active_dims=list(range(dims_Z))) +
                                                              kernel2(input_dim=dims_S, active_dims=list(range(dims_Z, dims_X))),
-                    '+', 'add', axes2)]]
+                    '+', 'add')]]
 
-    for opsign, opname, kernel1name, kernel2name, kernel1, kernel2, kernelop, ax in kernels:
-        for _ in range(num_retries):
+    for opsign, opname, kernel1name, kernel2name, kernel1, kernel2, kernelop in kernels:
+        regret_retries = np.zeros(shape=(num_iterations, num_retries))
+        contextual_regret_retries = np.zeros(shape=(num_iterations, num_retries))
+        for i in range(num_retries):
             kernel = kernelop(kernel1, kernel2, dims_Z, dims_Z + dims_S)
             X_lower = np.concatenate((np.tile(np.array([-np.inf]), (dims_Z,)), S_lower))
             X_upper = np.concatenate((np.tile(np.array([np.inf]), (dims_Z,)), S_upper))
@@ -104,27 +104,10 @@ for objective, context_fkt, name_short, obj_name, objective_min, S_lower, S_uppe
             contextual_regret = cum_regret / np.arange(1, len(cum_regret) + 1)
 
             # Save the data
-            data.append(regret)
-            data.append(contextual_regret)
-
-            # Plot data
-            ax.set_xlabel('iterations')
-            ax.set_ylabel('regret')
-            ax.set_title('Context kernel %s %s\nAction kernel %s' % (kernel1name, opsign, kernel2name))
-            plt1, = ax.plot(regret, 'r^--', label='Regret')
-            plt2, = ax.plot(contextual_regret, 'bo--', label='Contextual Regret')
-            #ax.get_xaxis().set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
-            ax.set_xticks(list(range(num_iterations)))
-            #ax.legend(handles=(plt1, plt2))
-        ax.legend(handles=(plt1, plt2))
+            regret_retries[..., i] = regret
+            contextual_regret_retries[..., i] = contextual_regret
+        data.append((obj_name, opsign, opname, kernel1name, kernel2name, regret_retries, contextual_regret_retries))
         break
-    #fig.suptitle('Regret of %s' % obj_name)
-    f1.tight_layout()
-    f1.savefig('%s_mul.svg' % name_short)
-    f2.tight_layout()
-    f2.savefig('%s_add.svg' % name_short)
 
-with open('example_contextual.pkl', 'wb') as outputf:
+with open('example_contextual2.pkl', 'wb') as outputf:
     pickle.dump(data, outputf, -1)
-
-plt.show(block=True)
