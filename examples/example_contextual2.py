@@ -4,10 +4,7 @@ Contextual Bayesian optimization, example
 
 import pickle
 
-import matplotlib
-import matplotlib.ticker
 import numpy as np
-import matplotlib.pyplot as plt
 
 import GPy
 from robo.contextual_bayesian_optimization import ContextualBayesianOptimization
@@ -107,7 +104,6 @@ for objective, context_fkt, name_short, obj_name, objective_min, S_lower, S_uppe
             regret_retries[..., i] = regret
             contextual_regret_retries[..., i] = contextual_regret
         data.append((obj_name, opsign, opname, kernel1name, kernel2name, regret_retries, contextual_regret_retries))
-        break
 
 with open('example_contextual2.pkl', 'wb') as outputf:
     pickle.dump(data, outputf, -1)
