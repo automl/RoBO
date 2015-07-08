@@ -124,7 +124,7 @@ bo = ContextualBayesianOptimization(acquisition_fkt=acquisition_func,
 print "Result:", bo.run(num_iterations=32)
 
 print "Finding optima"
-xactions = np.linspace(0, 1, num=32)
+xactions = np.linspace(0, 1, num=64)
 yactions = np.array([bo.predict(np.array(xeval, ndmin=2)).flatten()[1] for xeval in xactions])
 yactions_exact = np.array([objective0_min_action(Z=np.reshape(xeval, (1, 1))).flatten() for xeval in xactions])
 
@@ -189,14 +189,15 @@ regret = pred_data - real_data
 cum_regret = np.cumsum(regret)
 contextual_regret = cum_regret / np.arange(1, len(cum_regret) + 1)
 
-ax3.set_title('regret')
+ax3.set_title('(contextual) regret')
 ax3.set_xlabel('iteration')
-ax3.set_ylabel('regret')
-plt1, = ax3.plot(regret, label='Regret')
-plt2, = ax3.plot(contextual_regret, label='Contextual Regret')
+ax3.set_ylabel('(contextual) regret')
+plt1, = ax3.plot(np.arange(1, 33), regret, "^", label='Regret')
+plt2, = ax3.plot(np.arange(1, 33), contextual_regret, "o", label='Contextual Regret')
 ax3.legend(handles=(plt1, plt2))
+ax3.set_xlim(xmin=1, xmax=32)
 
 plt.tight_layout()
 plt.savefig('contextual_branin.svg')
 
-#plt.show(block=True)
+plt.show(block=True)
