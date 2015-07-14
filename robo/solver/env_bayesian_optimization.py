@@ -20,20 +20,16 @@ from robo.bayesian_optimization import BayesianOptimization
 
 class EnvBayesianOptimization(BayesianOptimization):
 
-    def __init__(self, acquisition_fkt=None, model=None, cost_model=None,
-                 maximize_fkt=None, X_lower=None, X_upper=None, dims=None,
-                 objective_fkt=None, save_dir=None, initialization=None, num_save=1):
+    def __init__(self, acquisition_fkt=None, model=None, cost_model=None, maximize_fkt=None,
+                 task=None, save_dir=None, initialization=None, num_save=1):
 
         # Initialize all members
         self.initialization = initialization
-        self.objective_fkt = objective_fkt
+        self.task = task
         self.acquisition_fkt = acquisition_fkt
         self.model = model
         self.cost_model = cost_model
         self.maximize_fkt = maximize_fkt
-        self.X_lower = X_lower
-        self.X_upper = X_upper
-        self.dims = dims
         self.save_dir = save_dir
         self.num_save = num_save
         if save_dir is not None:
@@ -86,10 +82,10 @@ class EnvBayesianOptimization(BayesianOptimization):
             print "Evaluate candidate %s" % (str(new_x))
 
             start = time.time()
-            new_y = self.objective_fkt(np.array(new_x))
+            new_y = self.task.evaluate(np.array(new_x))
             new_cost = np.array([time.time() - start])
 
-            print "Configuration achieved a performance of %d in %s seconds" % (new_y[0, 0], new_cost[0])
+            print "Configuration achieved a performance of %f in %s seconds" % (new_y[0, 0], new_cost[0])
 
             self.X = np.append(self.X, new_x, axis=0)
             self.Y = np.append(self.Y, new_y, axis=0)
@@ -128,7 +124,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
-            x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
+            x = self.maximize_fkt(self.acquisition_fkt, self.task.X_lower, self.task.X_upper)
         else:
             self.initialize()
             x = self.X
