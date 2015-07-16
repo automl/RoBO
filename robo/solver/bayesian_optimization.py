@@ -20,8 +20,7 @@ class BayesianOptimization(object):
     Class implementing general Bayesian optimization.
     """
     def __init__(self, acquisition_fkt=None, model=None,
-                 maximize_fkt=None, X_lower=None, X_upper=None, dims=None,
-                 objective_fkt=None, save_dir=None, initialization=None, num_save=1):
+                 maximize_fkt=None, task=None, save_dir=None, initialization=None, num_save=1):
         """
         Initializes the Bayesian optimization.
         Either acquisition function, model, maximization function, bounds, dimensions and objective function are
@@ -31,23 +30,18 @@ class BayesianOptimization(object):
         :param model: A model
         :param maximize_fkt: The function for maximizing the acquisition function
         :param initialization: The initialization strategy that to find some starting points in order to train the model
-        :param X_lower: Lower bounds (tuple of minimums)
-        :param X_upper: Upper bounds (tuple of maximums)
-        :param dims: Dimension of the input
+        :param task: The task (derived from BaseTask) that should be optimized
         :param objective_fkt: The objective function to execute in each step
         :param save_dir: The directory to save the iterations to (or to load an existing run from)
         :param num_save: A number specifying the n-th iteration to be saved
         """
 
-        self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, X_lower, X_upper, dims])
+        self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, task])
         if self.enough_arguments:
-            self.objective_fkt = objective_fkt
+            self.task = task
             self.acquisition_fkt = acquisition_fkt
             self.model = model
             self.maximize_fkt = maximize_fkt
-            self.X_lower = X_lower
-            self.X_upper = X_upper
-            self.dims = dims
 
             self.initialization = initialization
 
@@ -84,13 +78,10 @@ class BayesianOptimization(object):
         iteration_folder = os.path.join(self.save_dir, "%03d" % (max_iteration, ))
 
         that = pickle.load(open(os.path.join(iteration_folder, "bayesian_opt.pickle"), "rb"))
-        self.objective_fkt = that.objective_fkt
+        self.task = that.task
         self.acquisition_fkt = that.acquisition_fkt
         self.model = that.model
         self.maximize_fkt = that.maximize_fkt
-        self.X_lower = that.X_lower
-        self.X_upper = that.X_upper
-        self.dims = that.dims
         return pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
 
     @classmethod
@@ -126,7 +117,7 @@ class BayesianOptimization(object):
         start_time = time.time()
         if self.initialization is None:
             # Draw one random configuration
-            self.X = np.array([np.random.uniform(self.X_lower, self.X_upper, self.dims)])
+            self.X = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.dims)])
             print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
         else:
             print "Initialize ..."
@@ -257,7 +248,7 @@ class BayesianOptimization(object):
                 self.incumbent_value = Y[best_idx]
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
-            x = self.maximize_fkt(self.acquisition_fkt, self.X_lower, self.X_upper)
+            x = self.maximize_fkt(self.acquisition_fkt, self.task.X_lower, self.task.X_upper)
         else:
             self.initialize()
             x = self.X

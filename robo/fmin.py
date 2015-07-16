@@ -15,7 +15,7 @@ from robo.acquisition.UCB import UCB
 from robo.acquisition.PI import PI
 from robo.maximizers.maximize import cmaes, direct, stochastic_local_search, grid_search
 from robo.recommendation.incumbent import compute_incumbent
-from robo.bayesian_optimization import BayesianOptimization
+from robo.solver.bayesian_optimization import BayesianOptimization
 
 
 def fmin(objective_fkt, X_lower, X_upper, num_iterations=30, model="GPy", maximizer="direct", kernel="Matern52", acquisition_fkt="EI"):

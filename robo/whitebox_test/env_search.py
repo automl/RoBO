@@ -15,7 +15,7 @@ from robo.maximizers.maximize import direct
 from robo.recommendation.incumbent import compute_incumbent
 from robo.benchmarks.synthetic_test_env_search import synthetic_fkt, get_bounds
 from robo.acquisition.EntropyMC import EntropyMC
-from robo.bayesian_optimization import BayesianOptimization
+from robo.solver.bayesian_optimization import BayesianOptimization
 from copy import deepcopy
 
 import matplotlib.pyplot as plt
