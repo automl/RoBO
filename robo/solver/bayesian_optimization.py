@@ -31,7 +31,6 @@ class BayesianOptimization(object):
         :param maximize_fkt: The function for maximizing the acquisition function
         :param initialization: The initialization strategy that to find some starting points in order to train the model
         :param task: The task (derived from BaseTask) that should be optimized
-        :param objective_fkt: The objective function to execute in each step
         :param save_dir: The directory to save the iterations to (or to load an existing run from)
         :param num_save: A number specifying the n-th iteration to be saved
         """
@@ -117,7 +116,7 @@ class BayesianOptimization(object):
         start_time = time.time()
         if self.initialization is None:
             # Draw one random configuration
-            self.X = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.dims)])
+            self.X = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
         else:
             print "Initialize ..."
@@ -125,7 +124,7 @@ class BayesianOptimization(object):
         self.time_optimization_overhead = np.array([time.time() - start_time])
 
         start_time = time.time()
-        self.Y = self.objective_fkt(self.X)
+        self.Y = self.task.evaluate(self.X)
         self.time_func_eval = np.array([time.time() - start_time])
         print "Configuration achieved a performance of %f " % (self.Y[0])
 
@@ -197,10 +196,10 @@ class BayesianOptimization(object):
 
             print "Evaluate candidate %s" % (str(new_x))
             start_time = time.time()
-            new_y = self.objective_fkt(new_x)
+            new_y = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
             self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
-            print "Configuration achieved a performance of %d " % (new_y[0, 0])
+            print "Configuration achieved a performance of %f " % (new_y[0, 0])
 
             if self.X is None:
                 self.X = new_x
@@ -248,7 +247,7 @@ class BayesianOptimization(object):
                 self.incumbent_value = Y[best_idx]
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
-            x = self.maximize_fkt(self.acquisition_fkt, self.task.X_lower, self.task.X_upper)
+            x = self.maximize_fkt.maximize()
         else:
             self.initialize()
             x = self.X
