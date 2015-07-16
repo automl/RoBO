@@ -45,13 +45,9 @@ class LogEI(AcquisitionFunction):
         :rtype: np.ndarray(1, 1)
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
-
         if derivative:
             raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
                                             "LogEI does not support derivative calculation until now")
-
-        if len(X.shape) == 1:
-            X = X[:, np.newaxis]
 
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             return np.array([[- np.finfo(np.float).max]])
