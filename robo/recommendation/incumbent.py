@@ -8,8 +8,9 @@ def compute_incumbent(model):
     """
     best = np.argmin(model.Y)
     incumbent = model.X[best]
+    incumbent_value = model.Y[best]
 
-    return incumbent, best
+    return incumbent, incumbent_value
 
 
 
