@@ -42,11 +42,12 @@ class Entropy(AcquisitionFunction):
     long_name = "Information gain over p_min(x)"
 
     def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, loss_function=None, **kwargs):
-        self.model = model
         self.Nb = Nb
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
         self.D = self.X_lower.shape[0]
+        self.model = model
+        self.sn2 = self._get_noise()
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
@@ -55,6 +56,18 @@ class Entropy(AcquisitionFunction):
             loss_function = logLoss
         self.loss_function = loss_function
         self.Np = Np
+
+
+    def _get_noise(self):
+        """
+        A little hack to determine the noise in the GPy model.
+        :return: the noise
+        :rtype: np.ndarray(1,1)
+        """
+        x = np.zeros((1, self.D))
+        m, v = self.model.predict(x)
+        return v - self.model.predict_variance(x, x)
+    
 
     def _get_most_probable_minimum(self):
         acq = UCB(self.model, self.X_lower, self.X_upper, 0.0)
@@ -123,6 +136,7 @@ class Entropy(AcquisitionFunction):
 
     def update(self, model):
         self.model = model
+        self.sn2 = self._get_noise()
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
@@ -219,16 +233,21 @@ class Entropy(AcquisitionFunction):
         return np.array([[dH]])
 
     def _gp_innovation_local(self, x):
-
+        """
+        :param x: The point at which the function is to be evaluated. Its shape is (1,D), where D is the dimension of the search space.
+        :type x: np.ndarray (1, D)
+        :return: A vector that contains ..., the standard deviation at x (WITHOUT noise) and the variance at x (PLUS noise).
+        :rtype: (np.ndarray(1, Nb), np.ndarray(1, 1), np.ndarray(1, 1)).
+        :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
+        """
         if x.shape[0] > 1:
             raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
 
         m, v = self.model.predict(x)
-        s = np.sqrt(v)
+        s = np.sqrt(v - self.sn2)
         v_projected = self.model.predict_variance(x, self.zb)
         Lx = v_projected / s
-        dLxdx = None
-        return Lx, dLxdx
+        return Lx, s, v
 
     def _joint_min(self, mu, var, with_derivatives=False, **kwargs):
 
