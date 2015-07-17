@@ -37,19 +37,8 @@ class EntropyMC(Entropy):
 
     """
     def __init__(self, model, X_lower, X_upper, compute_incumbent, Nb=50, Nf=1000, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=300, loss_function=None, **kwargs):
-        self.model = model
-        self.Nb = Nb
+        super(EntropyMC, self).__init__(model, X_lower, X_upper, Nb, sampling_acquisition, sampling_acquisition_kw, Np, loss_function, **kwargs)
         self.Nf = Nf
-        self.X_lower = np.array(X_lower)
-        self.X_upper = np.array(X_upper)
-        self.D = self.X_lower.shape[0]
-        self.BestGuesses = np.zeros((0, X_lower.shape[0]))
-        if sampling_acquisition is None:
-            sampling_acquisition = LogEI
-        self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, compute_incumbent, **sampling_acquisition_kw)
-        if loss_function is None:
-            loss_function = logLoss
-        self.loss_function = loss_function
         self.Np = Np
 
     def __call__(self, X, derivative=False, **kwargs):
@@ -70,10 +59,12 @@ class EntropyMC(Entropy):
     def update(self, model):
         self.model = model
         self.sampling_acquisition.update(model)
-        # TODO: Implement
         self.update_representer_points()
         # Omega values which are needed for the innovations
-        self.W = np.random.randn(1, self.Np)
+        #self.W = np.random.randn(1, self.Np)
+        self.W = norm.ppf(np.linspace(1. / (self.Np + 1),
+                                    1 - 1. / (self.Np + 1),
+                                    self.Np))
         self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True)
         # Draw random number for the hallucinated values they have to be the same for each innovation
         self.F = np.random.multivariate_normal(mean=np.zeros(self.Nb), cov=np.eye(self.Nb), size=self.Nf)
