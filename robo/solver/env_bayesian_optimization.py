@@ -15,7 +15,7 @@ try:
 except:
     import pickle
 
-from robo.bayesian_optimization import BayesianOptimization
+from robo.solver.bayesian_optimization import BayesianOptimization
 
 
 class EnvBayesianOptimization(BayesianOptimization):
