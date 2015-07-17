@@ -1,10 +1,13 @@
 
-Acquisition functions:
-=====================
+Modules
+=======
+
+Acquisition functions
+---------------------
 
 
-Acquisition functions that are implemented in RoBO:
----------------------------------------------------
+Acquisition functions that are implemented in RoBO
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The role of an acquisition function in Bayesian optimization is to compute how useful it is to evaluate a candidate x. In each iteration RoBO maximizes the acquisition function in
 order to pick a new configuration which will be then evaluated. The following acquisition functions are implemented in RoBO and each of them has its own properties.
@@ -59,8 +62,8 @@ Upper Confidence Bound
    :special-members: __call__
 
 
-How to implement your own acquisition function:
------------------------------------------------
+How to implement your own acquisition function
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you want to implement your own acquisition function such that it can be used in RoBO you have to derive it from the base class and implement its abstract functions.
 
@@ -71,3 +74,12 @@ Base class
    :private-members: 
    :special-members: __call__
    
+Maximizers
+----------
+
+different maximizers
+
+Models
+------
+
+different modules 

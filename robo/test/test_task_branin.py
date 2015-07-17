@@ -37,7 +37,7 @@ class TestTaskBranin(unittest.TestCase):
         X = branin.opt
         y = branin.evaluate(X)
 
-        assert np.all(np.round(y, 6) == branin.fopt) is True
+        assert np.all(np.round(y, 6) == np.array([branin.fopt]))
 
 if __name__ == "__main__":
     unittest.main()

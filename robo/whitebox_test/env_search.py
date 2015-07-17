@@ -13,25 +13,21 @@ from robo.solver.env_bayesian_optimization import EnvBayesianOptimization
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
 from robo.maximizers.maximize import direct
 from robo.recommendation.incumbent import compute_incumbent
-from robo.benchmarks.synthetic_test_env_search import synthetic_fkt, get_bounds
+from robo.task.synthetic_test_env_search import SyntheticFktEnvSearch
 from robo.acquisition.EntropyMC import EntropyMC
-from robo.bayesian_optimization import BayesianOptimization
+from robo.solver.bayesian_optimization import BayesianOptimization
 from copy import deepcopy
-
-import matplotlib.pyplot as plt
-
-from robo.visualization.plotting import plot_objective_function_2d
 
 from IPython import embed
 
-X_lower, X_upper, n_dims, is_env_variable = get_bounds()
+task = SyntheticFktEnvSearch()
 
 
-kernel = GPy.kern.Matern52(input_dim=n_dims)
+kernel = GPy.kern.Matern52(input_dim=task.n_dims)
 env_es_model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 es_model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 
-cost_kernel = GPy.kern.Matern52(input_dim=n_dims)
+cost_kernel = GPy.kern.Matern52(input_dim=task.n_dims)
 cost_model = GPyModel(cost_kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 
 n_representer = 10
@@ -39,11 +35,11 @@ n_hals_vals = 100
 n_func_samples = 200
 
 
-env_es = EnvEntropySearch(env_es_model, cost_model, X_lower=X_lower, X_upper=X_upper,
-                                    is_env_variable=is_env_variable, n_representer=n_representer,
+env_es = EnvEntropySearch(env_es_model, cost_model, X_lower=task.X_lower, X_upper=task.X_upper,
+                                    is_env_variable=task.is_env, n_representer=n_representer,
                                     n_hals_vals=n_hals_vals, n_func_samples=n_func_samples, compute_incumbent=compute_incumbent)
 
-es = EntropyMC(es_model, X_lower, X_upper, compute_incumbent, Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
+es = EntropyMC(es_model, task.X_lower, task.X_upper, compute_incumbent, Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
 
 maximizer = direct
 
@@ -51,22 +47,16 @@ env_bo = EnvBayesianOptimization(acquisition_fkt=env_es,
                           model=env_es_model,
                           cost_model=cost_model,
                           maximize_fkt=maximizer,
-                          X_lower=X_lower,
-                          X_upper=X_upper,
-                          dims=n_dims,
-                          objective_fkt=synthetic_fkt)
+                          task=task)
 
 bo = BayesianOptimization(acquisition_fkt=es,
                           model=es_model,
                           maximize_fkt=maximizer,
-                          X_lower=X_lower,
-                          X_upper=X_upper,
-                          dims=n_dims,
-                          objective_fkt=synthetic_fkt)
+                          task=task)
 
-es_X = np.array([np.random.uniform(X_lower, X_upper, n_dims)])
+es_X = np.array([np.random.uniform(task.X_lower, task.X_upper, task.n_dims)])
 env_es_X = deepcopy(es_X)
-es_Y = synthetic_fkt(es_X)
+es_Y = task.objective_function(es_X)
 env_es_Y = deepcopy(es_Y)
 env_bo.run(5)
 # embed()

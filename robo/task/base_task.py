@@ -29,10 +29,7 @@ class BaseTask(object):
     def evaluate(self, x):
         assert len(x.shape) == 2
         assert x.shape[1] == self.n_dims
-        assert np.all(x[:, 0] >= self.X_lower[0])
-        assert np.all(x[:, 1] >= self.X_lower[1])
-        assert np.all(x[:, 0] <= self.X_upper[0])
-        assert np.all(x[:, 1] <= self.X_upper[1])
-        assert np.all(x < self.X_upper)
+        assert np.all(x >= self.X_lower)
+        assert np.all(x <= self.X_upper)
 
         return self.objective_function(x)
