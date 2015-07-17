@@ -1,7 +1,6 @@
 import numpy as np
 import emcee
-from robo.util.loss_functions import logLoss
-
+from scipy.stats import norm
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.Entropy import Entropy
 from robo import BayesianOptimizationError
@@ -36,8 +35,8 @@ class EntropyMC(Entropy):
     :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it deafults to log loss (cf. loss_functions module).
 
     """
-    def __init__(self, model, X_lower, X_upper, compute_incumbent, Nb=50, Nf=1000, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=300, loss_function=None, **kwargs):
-        super(EntropyMC, self).__init__(model, X_lower, X_upper, Nb, sampling_acquisition, sampling_acquisition_kw, Np, loss_function, **kwargs)
+    def __init__(self, model, X_lower, X_upper, compute_incumbent, Nb=50, Nf=1000, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=300, **kwargs):
+        super(EntropyMC, self).__init__(model, X_lower, X_upper, Nb, sampling_acquisition, sampling_acquisition_kw, Np, **kwargs)
         self.Nf = Nf
         self.Np = Np
 
@@ -58,13 +57,19 @@ class EntropyMC(Entropy):
 
     def update(self, model):
         self.model = model
+        self.sn2 = self._get_noise()
+
         self.sampling_acquisition.update(model)
         self.update_representer_points()
         # Omega values which are needed for the innovations
-        #self.W = np.random.randn(1, self.Np)
+	# Draw W from a normal distribution
+        self.W = np.random.randn(1, self.Np)
+
+	# Estimate W by a uniform grid
         self.W = norm.ppf(np.linspace(1. / (self.Np + 1),
                                     1 - 1. / (self.Np + 1),
-                                    self.Np))
+                                    self.Np))[np.newaxis, :]
+
         self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True)
         # Draw random number for the hallucinated values they have to be the same for each innovation
         self.F = np.random.multivariate_normal(mean=np.zeros(self.Nb), cov=np.eye(self.Nb), size=self.Nf)

@@ -59,7 +59,7 @@ env_es_X = deepcopy(es_X)
 es_Y = task.objective_function(es_X)
 env_es_Y = deepcopy(es_Y)
 env_bo.run(5)
-# embed()
+embed()
 # 
 # f = plt.figure()
 # input

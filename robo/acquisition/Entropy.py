@@ -5,7 +5,6 @@ import scipy
 import numpy as np
 import emcee
 
-from robo.util.loss_functions import logLoss
 from robo import BayesianOptimizationError
 from robo.sampling.sampling import sample_from_measure
 from robo.maximizers.maximize import _scipy_optimizer_fkt_wrapper
@@ -41,22 +40,39 @@ class Entropy(AcquisitionFunction):
     """
     long_name = "Information gain over p_min(x)"
 
-    def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, loss_function=None, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, **kwargs):
         self.Nb = Nb
         self.X_lower = np.array(X_lower)
         self.X_upper = np.array(X_upper)
         self.D = self.X_lower.shape[0]
         self.model = model
-        self.sn2 = self._get_noise()
+        self.sn2 = None
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
         self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, compute_incumbent, **sampling_acquisition_kw)
-        if loss_function is None:
-            loss_function = logLoss
-        self.loss_function = loss_function
+
         self.Np = Np
 
+    def loss_function(self, logP, lmb, lPred, *args):
+	"""
+	This module contains the loss functions used in the calculation of the expected information gain.
+	For the moment only the logloss function is implemented.
+	.. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs)
+	:param logP: Log-probability values.
+	:param lmb: Log values of acquisition function at belief points.
+	:param lPred: Log of the predictive distribution
+	:param args: Additional parameters
+	:return:
+	"""
+
+
+        H =   - np.sum(np.multiply(np.exp(logP), (logP + lmb))) # current entropy
+
+
+	dHp = - np.sum(np.multiply(np.exp(lPred), np.add(lPred, lmb)), axis=0) - H # @minus? If you change it, change it above in H, too!
+
+	return np.array([dHp])
 
     def _get_noise(self):
         """
@@ -65,6 +81,7 @@ class Entropy(AcquisitionFunction):
         :rtype: np.ndarray(1,1)
         """
         x = np.zeros((1, self.D))
+	print x.shape
         m, v = self.model.predict(x)
         return v - self.model.predict_variance(x, x)
     
