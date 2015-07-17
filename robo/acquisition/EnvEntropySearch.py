@@ -31,10 +31,10 @@ class EnvEntropySearch(EntropyMC):
         self.cost_model = cost_model
         super(EnvEntropySearch, self).update(model)
 
-    def compute(self, X, derivative=False):
+    def __call__(self, X, derivative=False):
 
         # Predict the costs for this configuration
-        cost = self.cost_model.predict(X)
+        cost = self.cost_model.predict(X)[0]
 
         # Compute fantasized pmin
         new_pmin = self.change_pmin_by_innovation(X, self.f)
@@ -44,6 +44,7 @@ class EnvEntropySearch(EntropyMC):
         H_new = np.sum(np.multiply(new_pmin, (np.log(new_pmin) + self.lmb)))
 
         loss = np.array([[-H_new + H_old]])
+
         acquisition_value = loss / cost
 
         return acquisition_value
@@ -55,4 +56,3 @@ class EnvEntropySearch(EntropyMC):
 
         # Project representer points to subspace
         self.zb[:, self.is_env_variable == 1] = self.X_upper[self.is_env_variable == 1]
-

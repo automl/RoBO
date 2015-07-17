@@ -33,4 +33,4 @@ bo = BayesianOptimization(acquisition_fkt=acquisition_func,
                           save_dir="./test_output",
                           num_save=1)
 
-bo.run(10)
+bo.run(50)
