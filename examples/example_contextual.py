@@ -196,6 +196,7 @@ plt1, = ax3.plot(np.arange(1, 33), regret, "^", label='Regret')
 plt2, = ax3.plot(np.arange(1, 33), contextual_regret, "o", label='Contextual Regret')
 ax3.legend(handles=(plt1, plt2))
 ax3.set_xlim(xmin=1, xmax=32)
+ax3.set_ylim(ymin=-2)
 
 plt.tight_layout()
 plt.savefig('contextual_branin.svg')

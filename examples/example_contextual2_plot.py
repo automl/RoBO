@@ -16,7 +16,7 @@ with open("example_contextual2.pkl", "rb") as f:
 
 
 objectives = [('bran', 'product of two Branin function', (0, 20000)),
-              ('hart', 'Hartmann 6 function', (0, 5))]
+              ('hart', 'Hartmann 6 function', (0, 4))]
 
 num_iterations = 32
 num_retries = 4
@@ -41,11 +41,12 @@ for obj_id, obj_name, y_limits in objectives:
         #plt2 = ax.bar(np.arange(1, 1+num_iterations) + 0.33, contextual_regret_mean, 0.33, color='b', yerr=contextual_regret_std, label='Contextual Regret')
         #plt1 = ax.boxplot(regret_retries.transpose(), widths=0.25)
         plt2 = ax.boxplot(contextual_regret_retries.transpose(), showmeans=True)
-        ax.get_xaxis().set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+        #ax.get_xaxis().set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
         #ax.set_yscale("log", nonposy='clip')
         ax.set_ylim(ymin=y_limits[0], ymax=y_limits[1])
-        #ax.set_xlim(xmin=1, xmax=num_iterations)
-        #ax.set_xticks(list(range(num_iterations)))
+        ax.set_xlim(xmin=0, xmax=num_iterations+1)
+        ax.set_xticks([1] + list(range(4, num_iterations+1, 4)))
+        ax.set_xticklabels([1] + list(range(4, num_iterations+1, 4)))
         #ax.legend(handles=[plt1, plt2])
         print "Last mean of %s (%s %s %s): %f" %(obj_id_chk, kernel1name, opname, kernel2name, contextual_regret_mean[len(contextual_regret_mean) - 1])
     f1.tight_layout()
