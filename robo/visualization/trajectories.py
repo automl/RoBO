@@ -48,7 +48,7 @@ def get_mean_and_var_performance_over_iterations(paths):
             print "ERROR: %s is not a directory!" % (path)
             return
         iters, perf = get_performance_over_iterations(path)
-        if (np.any(iterations) == None):
+        if (np.any(iterations is None)):
             iterations = iters
         else:
             assert iterations.shape == iters.shape
@@ -111,7 +111,7 @@ def get_mean_and_var_optimization_overhead_over_iterations(paths):
             print "ERROR: %s is not a directory!" % (path)
             return
         iters, t = get_optimization_overhead_over_iteration(path)
-        if (np.any(iterations) == None):
+        if (np.any(iterations is None)):
             iterations = iters
         else:
             assert iterations.shape == iters.shape

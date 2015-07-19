@@ -23,8 +23,6 @@ import emcee
 import cma
 import DIRECT
 
-from robo import BayesianOptimizationError
-
 
 def _direct_acquisition_fkt_wrapper(acq_f):
     def _l(x, user_data):

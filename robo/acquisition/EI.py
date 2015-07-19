@@ -2,7 +2,6 @@
 from scipy.stats import norm
 import numpy as np
 
-from robo import BayesianOptimizationError
 from robo.acquisition.base import AcquisitionFunction
 
 

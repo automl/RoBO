@@ -1,7 +1,7 @@
 #encoding=utf8
 
 import numpy as np
-from robo import BayesianOptimizationError
+
 from robo.models.GPyModelMCMC import GPyModelMCMC
 
 

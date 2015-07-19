@@ -3,7 +3,6 @@ import emcee
 from scipy.stats import norm
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.Entropy import Entropy
-from robo import BayesianOptimizationError
 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
@@ -40,7 +39,7 @@ class EntropyMC(Entropy):
         self.Nf = Nf
         self.Np = Np
 
-    def __call__(self, X, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, **kwargs):
         """
         :param X: The point at which the function is to be evaluated. Its shape is (1,D), where n is the dimension of the search space.
         :type X: np.ndarray (1, n)
@@ -51,8 +50,8 @@ class EntropyMC(Entropy):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if derivative:
-            raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
-                                            "EntropyMC does not support derivative calculation until now")
+            print "EntropyMC does not support derivative calculation until now"
+            return
         return self.dh_fun(X)
 
     def update(self, model):
@@ -62,10 +61,10 @@ class EntropyMC(Entropy):
         self.sampling_acquisition.update(model)
         self.update_representer_points()
         # Omega values which are needed for the innovations
-	# Draw W from a normal distribution
-        self.W = np.random.randn(1, self.Np)
+        # Draw W from a normal distribution
+        #self.W = np.random.randn(1, self.Np)
 
-	# Estimate W by a uniform grid
+        # Estimate W by a uniform grid
         self.W = norm.ppf(np.linspace(1. / (self.Np + 1),
                                     1 - 1. / (self.Np + 1),
                                     self.Np))[np.newaxis, :]

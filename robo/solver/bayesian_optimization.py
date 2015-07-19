@@ -9,7 +9,6 @@ try:
     import cPickle as pickle
 except:
     import pickle
-from robo.util.exc import BayesianOptimizationError
 from argparse import ArgumentError
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -94,7 +93,8 @@ class BayesianOptimization(object):
         iteration_folder = save_dir + "/%03d" % (i, )
         that = pickle.load(open(iteration_folder + "/bayesian_opt.pickle", "rb"))
         if not isinstance(that, cls):
-            raise BayesianOptimizationError(BayesianOptimizationError.LOAD_ERROR, "not a robo instance")
+            print  "not a robo instance"
+            exit()
         new_x, X, Y, best_guess = pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
         return that, new_x, X, Y, best_guess
 

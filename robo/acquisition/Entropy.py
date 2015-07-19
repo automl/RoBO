@@ -5,9 +5,6 @@ import scipy
 import numpy as np
 import emcee
 
-from robo import BayesianOptimizationError
-from robo.sampling.sampling import sample_from_measure
-from robo.maximizers.maximize import _scipy_optimizer_fkt_wrapper
 from robo.acquisition.LogEI import LogEI
 from robo.acquisition.UCB import UCB
 from robo.acquisition.base import AcquisitionFunction
@@ -42,10 +39,9 @@ class Entropy(AcquisitionFunction):
 
     def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, **kwargs):
         self.Nb = Nb
-        self.X_lower = np.array(X_lower)
-        self.X_upper = np.array(X_upper)
+        super(Entropy, self).__init__(model, X_lower, X_upper)
+
         self.D = self.X_lower.shape[0]
-        self.model = model
         self.sn2 = None
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
@@ -55,24 +51,19 @@ class Entropy(AcquisitionFunction):
         self.Np = Np
 
     def loss_function(self, logP, lmb, lPred, *args):
-	"""
-	This module contains the loss functions used in the calculation of the expected information gain.
-	For the moment only the logloss function is implemented.
-	.. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs)
-	:param logP: Log-probability values.
-	:param lmb: Log values of acquisition function at belief points.
-	:param lPred: Log of the predictive distribution
-	:param args: Additional parameters
-	:return:
-	"""
-
-
-        H =   - np.sum(np.multiply(np.exp(logP), (logP + lmb))) # current entropy
-
-
-	dHp = - np.sum(np.multiply(np.exp(lPred), np.add(lPred, lmb)), axis=0) - H # @minus? If you change it, change it above in H, too!
-
-	return np.array([dHp])
+        """
+        	This module contains the loss functions used in the calculation of the expected information gain.
+        	For the moment only the logloss function is implemented.
+        	.. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs)
+        	:param logP: Log-probability values.
+        	:param lmb: Log values of acquisition function at belief points.
+        	:param lPred: Log of the predictive distribution
+        	:param args: Additional parameters
+        	:return:
+        """
+        H = - np.sum(np.multiply(np.exp(logP), (logP + lmb))) # current entropy
+        dHp = - np.sum(np.multiply(np.exp(lPred), np.add(lPred, lmb)), axis=0) - H # @minus? If you change it, change it above in H, too!
+        return np.array([dHp])
 
     def _get_noise(self):
         """
@@ -81,14 +72,30 @@ class Entropy(AcquisitionFunction):
         :rtype: np.ndarray(1,1)
         """
         x = np.zeros((1, self.D))
-	print x.shape
         m, v = self.model.predict(x)
         return v - self.model.predict_variance(x, x)
-    
+
+    def _scipy_optimizer_fkt_wrapper(self, acq_f, derivative=True):
+        def _l(x, *args, **kwargs):
+            x = np.array([x])
+            if np.any(np.isnan(x)):
+                #raise Exception("oO")
+                if derivative:
+                    return np.inf, np.zero_like(x)
+                else:
+                    return np.inf
+            a = acq_f(x, derivative=derivative, *args, **kwargs)
+            if derivative:
+                #print -a[0][0], -a[1][0][0, :]
+                return -a[0][0], -a[1][0][0, :]
+
+            else:
+                return -a[0]
+        return _l
 
     def _get_most_probable_minimum(self):
         acq = UCB(self.model, self.X_lower, self.X_upper, 0.0)
-        sc_fun = _scipy_optimizer_fkt_wrapper(acq, derivative=False)
+        sc_fun = self._scipy_optimizer_fkt_wrapper(acq, derivative=False)
         minima = []
         for i in range(self.BestGuesses.shape[0]):
             xx = self.BestGuesses[i]
@@ -102,7 +109,7 @@ class Entropy(AcquisitionFunction):
         new_x = Xend[np.nanargmin(Xdh)]
         return np.array([new_x])
 
-    def __call__(self, X, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, **kwargs):
         """
         :param x: The point at which the function is to be evaluated. Its shape is (1,D), where D is the dimension of the search space.
         :type x: np.ndarray (1, D)
@@ -113,7 +120,8 @@ class Entropy(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if X.shape[0] > 1:
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "Entropy is only for single X inputs")
+            print "Entropy is only for single X inputs"
+            return
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
                 f = 0
@@ -166,7 +174,7 @@ class Entropy(AcquisitionFunction):
         N = self.logP.size
 
         # Evaluate innovation
-        Lx, _ = self._gp_innovation_local(x)
+        Lx, _, _ = self._gp_innovation_local(x)
         # Innovation function for mean:
         dMdx = Lx
         # Innovation function for covariance:
@@ -258,7 +266,8 @@ class Entropy(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if x.shape[0] > 1:
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "single inputs please")
+            print "Expects single points as input"
+            return
 
         m, v = self.model.predict(x)
         s = np.sqrt(v - self.sn2)

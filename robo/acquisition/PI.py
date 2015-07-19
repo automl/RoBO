@@ -1,6 +1,6 @@
 from scipy.stats import norm
 import numpy as np
-from robo import BayesianOptimizationError
+
 from robo.acquisition.base import AcquisitionFunction
 
 
@@ -45,7 +45,8 @@ class PI(AcquisitionFunction):
         :return: The value of PI and its derivative at x.
         """
         if X.shape[0] > 1:
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "PI is only for single x inputs")
+            print "PI is only for single x inputs"
+            return
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
                 f = 0

@@ -1,7 +1,6 @@
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
-from robo import BayesianOptimizationError
 
 
 class UCB(AcquisitionFunction):
@@ -31,8 +30,8 @@ class UCB(AcquisitionFunction):
     def compute(self, X, derivative=False, **kwargs):
 
         if derivative:
-            raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
-                                            "UCB  does not support derivative calculation until now")
+            print "UCB  does not support derivative calculation until now"
+            return
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             return np.array([[- np.finfo(np.float).max]])
         mean, var = self.model.predict(X)

@@ -11,7 +11,7 @@ import numpy as np
 from robo.models.GPyModel import GPyModel
 from robo.solver.env_bayesian_optimization import EnvBayesianOptimization
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
-from robo.maximizers.maximize import direct
+from robo.maximizers.direct import Direct
 from robo.recommendation.incumbent import compute_incumbent
 from robo.task.synthetic_test_env_search import SyntheticFktEnvSearch
 from robo.acquisition.EntropyMC import EntropyMC
@@ -41,13 +41,15 @@ env_es = EnvEntropySearch(env_es_model, cost_model, X_lower=task.X_lower, X_uppe
 
 es = EntropyMC(es_model, task.X_lower, task.X_upper, compute_incumbent, Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
 
-maximizer = direct
+maximizer_env = Direct(env_es, task.X_lower, task.X_upper)
 
 env_bo = EnvBayesianOptimization(acquisition_fkt=env_es,
                           model=env_es_model,
                           cost_model=cost_model,
-                          maximize_fkt=maximizer,
+                          maximize_fkt=maximizer_env,
                           task=task)
+
+maximizer = Direct(es, task.X_lower, task.X_upper)
 
 bo = BayesianOptimization(acquisition_fkt=es,
                           model=es_model,
@@ -58,7 +60,8 @@ es_X = np.array([np.random.uniform(task.X_lower, task.X_upper, task.n_dims)])
 env_es_X = deepcopy(es_X)
 es_Y = task.objective_function(es_X)
 env_es_Y = deepcopy(es_Y)
-env_bo.run(5)
+env_bo.run(10)
+bo.run(10)
 embed()
 # 
 # f = plt.figure()

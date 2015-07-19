@@ -124,7 +124,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
-            x = self.maximize_fkt(self.acquisition_fkt, self.task.X_lower, self.task.X_upper)
+            x = self.maximize_fkt.maximize()
         else:
             self.initialize()
             x = self.X

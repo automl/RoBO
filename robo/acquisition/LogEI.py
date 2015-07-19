@@ -1,6 +1,6 @@
 from scipy.stats import norm
 import numpy as np
-from robo import BayesianOptimizationError
+
 from robo.acquisition.base import AcquisitionFunction
 
 
@@ -46,8 +46,8 @@ class LogEI(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if derivative:
-            raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
-                                            "LogEI does not support derivative calculation until now")
+            print "LogEI does not support derivative calculation until now"
+            return
 
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             return np.array([[- np.finfo(np.float).max]])
