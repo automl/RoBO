@@ -9,9 +9,6 @@ from robo.task.base_task import BaseTask
 
 
 class Branin(BaseTask):
-    '''
-    classdocs
-    '''
 
     def __init__(self):
         self.X_lower = np.array([-5, 0])
