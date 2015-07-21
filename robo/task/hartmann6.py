@@ -15,11 +15,12 @@ class Hartmann6(BaseTask):
     '''
 
     def __init__(self):
-        self.X_lower = np.array([0, 0, 0, 0, 0, 0])
-        self.X_upper = np.array([1, 1, 1, 1, 1, 1])
-        self.n_dims = 6
-        self.opt = np.array([[0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573]])
-        self.fopt = np.array([[-3.32237]])
+        X_lower = np.array([0, 0, 0, 0, 0, 0])
+        X_upper = np.array([1, 1, 1, 1, 1, 1])
+        opt = np.array([[0.20169, 0.150011, 0.476874, 0.275332, 0.311652, 0.6573]])
+        fopt = np.array([[-3.32237]])
+
+        super(Hartmann6, self).__init__(X_lower, X_upper, opt, fopt)
 
         self.alpha = [1.00, 1.20, 3.00, 3.20]
         self.A = np.array([[10.00, 3.00, 17.00, 3.50, 1.70, 8.00],

@@ -15,11 +15,11 @@ class GoldsteinPrice(BaseTask):
     '''
 
     def __init__(self):
-        self.X_lower = np.array([-2, -2])
-        self.X_upper = np.array([2, 2])
-        self.n_dims = 2
-        self.opt = np.array([[0, -1]])
-        self.fopt = 3
+        X_lower = np.array([-2, -2])
+        X_upper = np.array([2, 2])
+        opt = np.array([[0, -1]])
+        fopt = 3
+        super(GoldsteinPrice, self).__init__(X_lower, X_upper, opt, fopt)
 
     def objective_function(self, x):
         '''

@@ -36,6 +36,6 @@ class CMAES(BaseMaximizer):
                            options={"bounds": [self.X_lower, self.X_upper], "verbose": 0, "verb_log": sys.maxint})
             sys.stdout = stdout
         else:
-            res = cma.fmin(self._cma_fkt_wrapper(self.objective_func), (self.X_upper + self.X_lower) * 0.5, 
+            res = cma.fmin(self._cma_fkt_wrapper(self.objective_func), (self.X_upper + self.X_lower) * 0.5,
                            0.6, options={"bounds": [self.X_lower, self.X_upper], "verbose": 0, "verb_log": sys.maxint})
         return np.array([res[0]])

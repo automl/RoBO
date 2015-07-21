@@ -12,7 +12,7 @@ class BaseTask(object):
     classdocs
     '''
 
-    def __init__(self, X_lower, X_upper, opt=None, fopt=None):
+    def __init__(self, X_lower, X_upper, opt=None, fopt=None, do_scaling=True):
         '''
         Constructor
         '''
@@ -23,6 +23,13 @@ class BaseTask(object):
         self.opt = opt
         self.fopt = fopt
 
+        if do_scaling:
+            self.original_X_lower = self.X_lower
+            self.original_X_upper = self.X_upper
+            self.X_lower = -1 * np.ones(self.original_X_lower.shape)
+            self.X_upper = 1 * np.ones(self.original_X_upper.shape)
+            self.do_scaling = True
+
     def objective_function(self, x):
         pass
 
@@ -32,4 +39,6 @@ class BaseTask(object):
         assert np.all(x >= self.X_lower)
         assert np.all(x <= self.X_upper)
 
+        if self.do_scaling:
+            x = (self.original_X_upper - self.original_X_lower) * (x - self.X_lower) / (self.X_upper - self.X_lower) + self.original_X_lower
         return self.objective_function(x)
