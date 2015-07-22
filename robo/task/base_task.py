@@ -12,7 +12,7 @@ class BaseTask(object):
     classdocs
     '''
 
-    def __init__(self, X_lower, X_upper, opt=None, fopt=None, do_scaling=True):
+    def __init__(self, X_lower, X_upper, opt=None, fopt=None, do_scaling=False):
         '''
         Constructor
         '''
