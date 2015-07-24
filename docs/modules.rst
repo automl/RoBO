@@ -33,7 +33,7 @@ the well-known synthetic benchmark function Branin would look like:
 	
 	        return y[:, np.newaxis]
 
-In this case we can also set the known global optimas and the best function value. This allows to plot the distance between the best found function value and the global optimum (see here).
+In this case we can also set the known global optimas and the best function value. This allows to plot the distance between the best found function value and the global optimum.
 However, of course for real world benchmark we do not have this information so you can just drop them.
  
 Note that the method objective_function(self, x) expects a 2 dimensional numpy array and also returns a two dimension numpy array. Furthermore bounds are also specified as

@@ -25,23 +25,18 @@ The you can start RoBO with the following command and it will return the best co
 
 	x_best, fval = fmin(objective_function, X_lower, X_upper)
 
-Look here how you can change RoBO's default configuration.
-
 
 Bayesian optimization with RoBO
 -------------------------------
 
 RoBO is a flexible modular framework for Bayesian optimization. It distinguishes between different components 
-that are necessary for Bayesian optimization and  treats all of those components as modules:
+that are necessary for Bayesian optimization and  treats all of those components as modules which allows us to easily switch between different modules and add new-modules:
 
 * :ref:`task`: This module contains the necessary information that RoBO needs to optimize the objective function (for example an interface for the objective function the input bounds and the dimensionality of the objective function) 
-* :ref:`models`: This is the regression model that RoBO uses to model its believe of the objective function 
-* :ref:`acquisitionfunctions`: This module represents the acquisition function which acts as a surrogate that determines which configuration will be evaluated next.
+* :ref:`models`: This is the regression method to model the current believe of the objective function 
+* :ref:`acquisitionfunctions`: This module represents the acquisition function which acts as a surrogate that determines which configuration will be evaluated in the next step.
 * :ref:`maximizers` This module is used to optimize the acquisition function to pick the next configuration
 
-
-RoBO treats all of those components as separate modules, which allows us to easily switch between different modules and add :ref:`new-modules`.
- 
 
 
 Defining an objective function
@@ -188,8 +183,7 @@ RoBO will save then the following information:
 Implementing the Bayesian optimization loop
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you want to implement the main Bayesian optimization loop by yourself because for instance you want to have a more detail look in what's going you can easily do it
-In the one dimensional case you can easily plot all the methods used:
+This example illustrates how you can implement the main Bayesian optimization loop by yourself:
 
 .. code-block:: python
 

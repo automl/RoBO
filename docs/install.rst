@@ -20,13 +20,11 @@ How to install RoBO
 
 You can install RoBO by cloning the repository and executing the setup script:
 
-	:bash:`https://github.com/automl/RoBO`
+	:bash:`git clone https://github.com/automl/RoBO`
 
 	:bash:`cd RoBO/`
 
-	:bash:`python setup.py install`
-
-Alternatively if you just want to install the dependencies without installing RoBO you can do that with:
-
 	:bash:`for req in $(cat requirements.txt); do pip install $req; done`
+
+	:bash:`python setup.py install`
  

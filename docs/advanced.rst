@@ -6,8 +6,10 @@ REMBO
 -----
 
 Random EMbedding  Bayesian Optimization (REMBO) tackles the problem of high dimensional input spaces with low effective dimensionality. It creates a random matrix to perform a random
-projection from a high dimensional space into a smaller embedded subspace (see paper for more details).
+projection from a high dimensional space into a smaller embedded subspace (`rembo-paper`_).
 If you want to use REMBO for you objective function you just have to derive from the REMBO task an call its __init__() function in the constructor:
+
+.. _rembo-paper: http://www.cs.ubc.ca/~hutter/papers/13-IJCAI-BO-highdim.pdf
 
 .. code-block:: python
 
@@ -63,5 +65,4 @@ It used the HMC method implemented in GPy to sample the marginal loglikelihood. 
 
 	bo.run(10)
 
-RoBO will then compute an marginalised acquistion value by computing the acquisition value based on each single GP and sum over all of them:
-:math:`a_mcmc(x) \rightarrow \Sum_a(x, \theta)`
+RoBO will then compute an marginalised acquistion value by computing the acquisition value based on each single GP and sum over all of them.
