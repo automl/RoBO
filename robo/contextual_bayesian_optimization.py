@@ -53,6 +53,37 @@ class _ContextualAcquisitionFunction(AcquisitionFunction):
         return type(self).__name__ + " (Wraps " + self.acquisition_fkt + ")"
 
 
+class MeanAcquisitionFunction(AcquisitionFunction):
+    """
+    Returns the mean of the model
+
+    :param model: A model that implements at least
+
+                 - predict(X)
+    :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of search space)
+    :type X_lower: np.ndarray (1,D)
+    :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of search space)
+    :type X_upper: np.ndarray (1,D)
+    """
+    long_name = "Mean"
+
+    def __init__(self, model, X_lower, X_upper, **kwargs):
+        self.model = model
+        self.X_lower = np.array(X_lower)
+        self.X_upper = np.array(X_upper)
+
+    def __call__(self, X, derivative=False, **kwargs):
+        if derivative:
+            raise BayesianOptimizationError(BayesianOptimizationError.NO_DERIVATIVE,
+                                            "Mean  does not support derivative calculation until now")
+        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
+            return np.array([[- np.finfo(np.float).max]])
+        mean, _ = self.model.predict(X)
+        return -mean
+
+    def update(self, model):
+        self.model = model
+
 class ContextualBayesianOptimization(BayesianOptimization):
     """
     Class for contextual Bayesian optimization. Adds an context function, which obtains a context vector Z before each
@@ -82,35 +113,56 @@ class ContextualBayesianOptimization(BayesianOptimization):
         :param num_save: (optional) A number specifying the n-th iteration to be saved (required if save_dir is specified)
         :return:
         """
-        # TODO/voegtlel: Saving the prickle won't work here
+        # TODO/voegtlel: Saving the pickle won't work here
         if context_fkt is None:
             raise ArgumentError(context_fkt, "Context function missing")
+        # Store
+        self.S_lower = S_lower
+        self.S_upper = S_upper
+        self.dims_Z = dims_Z
+        self.dims_S = dims_S
         # Total dimensions
         dims = dims_Z + dims_S
         self.Z = None
         # Prepend zeros to the limits
-        X_lower = np.concatenate((np.zeros(dims_Z), S_lower))
-        X_upper = np.concatenate((np.zeros(dims_Z), S_upper))
+        X_lower = np.concatenate((np.tile(-np.inf, dims_Z), S_lower))
+        X_upper = np.concatenate((np.tile(np.inf, dims_Z), S_upper))
         # Wrap the maximize function (removes the context from the maximize function and prepends it)
         maximize_fkt_new = lambda acquisition_fkt, X_lower, X_upper: np.concatenate((self.Z, maximize_fkt(acquisition_fkt, X_lower[dims_Z:], X_upper[dims_Z:])), axis=1)
         self.context_fkt = context_fkt
         # Wrap the acquisition function (prepends the fixed context)
         acquisition_fkt_new = _ContextualAcquisitionFunction(acquisition_fkt, model, X_lower, X_upper)
         objective_fkt_new = lambda X: objective_fkt(X[:, :dims_Z], X[:, dims_Z:])
+        # For prediction (without exploration)
+        self.predict_acquisition_fkt = _ContextualAcquisitionFunction(MeanAcquisitionFunction(model, S_lower, S_upper),
+                                                                      model, X_lower, X_upper)
+
+        # Forward arguments to super constructor
         super(ContextualBayesianOptimization, self).__init__(acquisition_fkt_new, model, maximize_fkt_new, X_lower,
                                                              X_upper, dims, objective_fkt_new, save_dir, num_save)
+        self.recommendation_strategy = lambda model, acquisition_fkt: None
 
     def initialize(self):
-        # There is no initialization available, since we require a context first
-        pass
+        self.Z = self.context_fkt()
+        # Draw one random configuration
+        self.X = np.concatenate((self.Z, np.array([np.random.uniform(self.S_lower, self.S_upper, self.dims_S)])), 1)
+        print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
+        self.Y = self.objective_fkt(self.X)
+        print "Configuration achieved a performance of %f " % (self.Y[0])
 
-    def predict_next(self, Z=None):
+    def predict(self, Z=None):
         """
-        Chooses the next point to evaluate
+        Chooses the optimum of the model (approx. incumbent for a context)
         :param Z: context, may be none (then the context_fkt is questioned)
         :return: the next point where to evaluate as concatenated context x action
         """
-        return self.choose_next(self.X, self.Y, Z)
+        if Z:
+            self.Z = Z
+        else:
+            self.Z = self.context_fkt()
+        self.predict_acquisition_fkt.set_context(self.Z)
+        # Optimize using the mean
+        return self.maximize_fkt(self.predict_acquisition_fkt, self.X_lower, self.X_upper)
 
     def choose_next(self, X=None, Y=None, Z=None):
         """
