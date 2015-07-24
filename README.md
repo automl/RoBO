@@ -3,5 +3,5 @@ RoBO - a Robust Bayesian Optimization framework.
 
 Documentation
 -------------
+http://robo-fork.readthedocs.org/en/latest/
 
-http://robust-bayesian-optimization.readthedocs.org/en/latest/
