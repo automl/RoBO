@@ -22,13 +22,13 @@ class BaseTask(object):
         assert self.n_dims == self.X_upper.shape[0]
         self.opt = opt
         self.fopt = fopt
+        self.do_scaling = do_scaling
 
         if do_scaling:
             self.original_X_lower = self.X_lower
             self.original_X_upper = self.X_upper
             self.X_lower = -1 * np.ones(self.original_X_lower.shape)
             self.X_upper = 1 * np.ones(self.original_X_upper.shape)
-            self.do_scaling = True
 
     def objective_function(self, x):
         pass

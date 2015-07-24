@@ -2,6 +2,7 @@
 import os
 import time
 import errno
+import logging
 import numpy as np
 
 import shutil
@@ -19,7 +20,8 @@ class BayesianOptimization(object):
     Class implementing general Bayesian optimization.
     """
     def __init__(self, acquisition_fkt=None, model=None,
-                 maximize_fkt=None, task=None, save_dir=None, initialization=None, num_save=1):
+                 maximize_fkt=None, task=None, save_dir=None,
+                 initialization=None, recommendation_strategy=None, num_save=1):
         """
         Initializes the Bayesian optimization.
         Either acquisition function, model, maximization function, bounds, dimensions and objective function are
@@ -30,9 +32,12 @@ class BayesianOptimization(object):
         :param maximize_fkt: The function for maximizing the acquisition function
         :param initialization: The initialization strategy that to find some starting points in order to train the model
         :param task: The task (derived from BaseTask) that should be optimized
+        :param recommendation_strategy: A function that recommends which configuration should be return at the end
         :param save_dir: The directory to save the iterations to (or to load an existing run from)
         :param num_save: A number specifying the n-th iteration to be saved
         """
+
+        logging.basicConfig(level=logging.DEBUG)
 
         self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, task])
         if self.enough_arguments:
@@ -54,7 +59,7 @@ class BayesianOptimization(object):
                 self.create_save_dir()
 
             self.model_untrained = True
-            self.recommendation_strategy = None
+            self.recommendation_strategy = recommendation_strategy
             self.incumbent = None
 
         elif save_dir is not None:
@@ -82,6 +87,7 @@ class BayesianOptimization(object):
         self.maximize_fkt = that.maximize_fkt
         return pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
 
+    #FIXME: Update to new interface
     @classmethod
     def from_iteration(cls, save_dir, i):
         """
@@ -117,50 +123,29 @@ class BayesianOptimization(object):
         if self.initialization is None:
             # Draw one random configuration
             self.X = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
-            print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
+            logging.info("Evaluate randomly chosen candidate %s" % (str(self.X[0])))
         else:
-            print "Initialize ..."
+            logging.info("Initialize ...")
             self.X = self.initialization()
         self.time_optimization_overhead = np.array([time.time() - start_time])
 
         start_time = time.time()
         self.Y = self.task.evaluate(self.X)
         self.time_func_eval = np.array([time.time() - start_time])
-        print "Configuration achieved a performance of %f " % (self.Y[0])
+        logging.info("Configuration achieved a performance of %f " % (self.Y[0]))
+        logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[0]))
 
     def get_observations(self):
         return self.X, self.Y
 
     def get_model(self):
         if self.model is None:
-            print "No model trained yet!"
+            logging.info("No model trained yet!")
         return self.model
-
-#     def iterate(self, save_it=False):
-#         """
-#         Performs one iteration
-#         :param save_it: If true, the iteration is saved (only if the save_dir is configured)
-#         """
-#         print "Choose a new configuration"
-#         new_x = self.choose_next(self.X, self.Y)
-#         print "Evaluate candidate %s" % (str(new_x))
-#         new_y = self.objective_fkt(new_x)
-#         print "Configuration achieved a performance of %d " % (new_y[0, 0])
-#         if self.X is None:
-#             self.X = new_x
-#         else:
-#             self.X = np.append(self.X, new_x, axis=0)
-#         if self.Y is None:
-#             self.Y = new_y
-#         else:
-#             self.Y = np.append(self.Y, new_y, axis=0)
-# 
-#         if self.save_dir is not None and save_it:
-#             self.save_iteration(self.X, self.Y, new_x)
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
-        Runs iterations.
+        The main Bayesian optimization loop
 
         :param num_iterations: number of iterations to perform
         :param X: (optional) Initial observations. If a run continues these observations will be overwritten by the load
@@ -188,18 +173,19 @@ class BayesianOptimization(object):
             self.time_optimization_overhead = np.zeros([self.X.shape[0]])
 
         for it in range(num_iterations):
-            print "Choose a new configuration"
+            logging.info("Choose a new configuration")
             start_time = time.time()
             new_x = self.choose_next(self.X, self.Y)
             time_optimization_overhead = time.time() - start_time
-            self.time_optimization_overhead = np.append(self.time_func_eval, np.array([time_optimization_overhead]))
-
-            print "Evaluate candidate %s" % (str(new_x))
+            self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
+            logging.info("Optimization overhead was %f seconds" % (self.time_optimization_overhead[-1]))
+            logging.info("Evaluate candidate %s" % (str(new_x)))
             start_time = time.time()
             new_y = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
             self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
-            print "Configuration achieved a performance of %f " % (new_y[0, 0])
+            logging.info("Configuration achieved a performance of %f " % (new_y[0, 0]))
+            logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[-1]))
 
             if self.X is None:
                 self.X = new_x
@@ -221,7 +207,7 @@ class BayesianOptimization(object):
         else:
             self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
 
-        print "Return %s as incumbent with performance %f" % (str(self.incumbent), self.incumbent_value)
+        logging.info("Return %s as incumbent with performance %f" % (str(self.incumbent), self.incumbent_value))
         return self.incumbent, self.incumbent_value
 
     def choose_next(self, X=None, Y=None):
@@ -234,9 +220,11 @@ class BayesianOptimization(object):
         """
         if X is not None and Y is not None:
             try:
+                t = time.time()
                 self.model.train(X, Y)
+                logging.info("Time to train the model: %f", (time.time() - t))
             except Exception, e:
-                print "Model could not be trained", X, Y
+                logging.info("Model could not be trained", X, Y)
                 raise
             self.model_untrained = False
             self.acquisition_fkt.update(self.model)
@@ -247,22 +235,13 @@ class BayesianOptimization(object):
                 self.incumbent_value = Y[best_idx]
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
+            t = time.time()
             x = self.maximize_fkt.maximize()
+            logging.info("Time to maximze the acquisition function: %f", (time.time() - t))
         else:
             self.initialize()
             x = self.X
         return x
-
-#     def _get_last_iteration_number(self):
-#         max_iteration = 0
-#         for i in os.listdir(self.save_dir):
-#             try:
-#                 it_num = int(i)
-#                 if it_num > max_iteration:
-#                     max_iteration = it_num
-#             except Exception, e:
-#                 print e
-#         return max_iteration
 
     def save_iteration(self, it):
         """

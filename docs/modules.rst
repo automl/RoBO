@@ -113,72 +113,6 @@ If you updated your model with new data you also have to update you acquisition 
 
 	acquisition_func.update(model)
 
-
-    
-..
-
-	
-	Expected Improvement
-	""""""""""""""""""""
-	.. autoclass:: robo.acquisition.EI.EI
-	   :members:
-	   :private-members: 
-	   :special-members: __call__
-	
-	Log Expected Improvement
-	""""""""""""""""""""""""
-	
-	.. autoclass:: robo.acquisition.LogEI.LogEI
-	   :members:
-	   :private-members: 
-	   :special-members: __call__
-	   
-	
-	Probability of Improvement
-	""""""""""""""""""""""""""
-	
-	.. autoclass:: robo.acquisition.PI.PI
-	   :members:
-	   :private-members: 
-	   :special-members: __call__
-	
-	Entropy Search
-	""""""""""""""
-	
-	.. autoclass:: robo.acquisition.Entropy
-	   :members:
-	   :private-members: 
-	   :special-members: __call__
-	 
-	Entropy Search (Monte Carlo)
-	""""""""""""""""""""""""""""
-	
-	.. autoclass:: robo.acquisition.EntropyMC.EntropyMC
-	   :members:
-	   :private-members: 
-	   :special-members: __call__
-	
-	Upper Confidence Bound
-	""""""""""""""""""""""
-	
-	.. autoclass:: robo.acquisition.UCB.UCB
-	   :members:
-	   :private-members: 
-	   :special-members: __call__
-	
-
-	How to implement your own acquisition function
-	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	
-	If you want to implement your own acquisition function such that it can be used in RoBO you have to derive it from the base class and implement its abstract functions.
-	
-	Base class
-	""""""""""
-	.. autoclass:: robo.acquisition.base.AcquisitionFunction
-	   :members: 
-	   :private-members: 
-	   :special-members: __call__
-	
 	
 .. _maximizers:
 
@@ -204,3 +138,25 @@ Afterwards you can easily optimize the acquisition function by:
 
 Solver
 ------
+
+The solver module represents the actual Bayesian optimizer. The standard module is BayesianOptimization which implements the vanilla BO procedure. 
+
+.. code-block:: python
+
+    bo = BayesianOptimization(acquisition_fkt=acquisition_func,
+                      model=model,
+                      maximize_fkt=maximizer,
+                      task=task,
+                      save_dir=os.path.join(save_dir, acq_method + "_" + max_method, "run_" + str(run_id)),
+                      num_save=1)
+
+    bo.run(num_iterations)
+    
+If you just want to perform one single iteration based on some given data to get a new configuration you can call:
+
+.. code-block:: python
+
+	new_x = bo.choose_next(X, Y)
+
+It also offers functions to save the output and measure the time of each function evaluation and the optimization overhead. If you develop a new BO strategy it might be a good idea to derive from this class and uses those functionalities to be 
+compatible with RoBO's tools.

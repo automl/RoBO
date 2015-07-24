@@ -8,7 +8,6 @@ import emcee
 import numpy as np
 
 from robo.maximizers.base_maximizer import BaseMaximizer
-from robo import BayesianOptimizationError
 
 
 class StochasticLocalSearch(BaseMaximizer):
@@ -84,21 +83,21 @@ class StochasticLocalSearch(BaseMaximizer):
         jacobian = False
         i = 0 
         while i < self.Ne:
-            try:
-                minima.append(scipy.optimize.minimize(fun=sc_fun,
+            #try:
+            minima.append(scipy.optimize.minimize(fun=sc_fun,
                                                       x0=Xstart[i, np.newaxis],
                                                       jac=jacobian,
                                                       method='L-BFGS-B',
                                                       constraints=search_cons,
                                                       options={'ftol':np.spacing(1), 'maxiter':20}))
-                i += 1
+            i += 1
                 # no derivatives
-            except BayesianOptimizationError, e:
-                if e.errno == BayesianOptimizationError.NO_DERIVATIVE:
-                    jacobian = False
-                    sc_fun = self._scipy_optimizer_fkt_wrapper(self.objective_func, False)
-                else:
-                    raise e
+            #except BayesianOptimizationError, e:
+            #    if e.errno == BayesianOptimizationError.NO_DERIVATIVE:
+            #        jacobian = False
+            #        sc_fun = self._scipy_optimizer_fkt_wrapper(self.objective_func, False)
+            #    else:
+            #        raise e
         # X points:
         Xend = np.array([res.x for res in minima])
         # Objective function values:

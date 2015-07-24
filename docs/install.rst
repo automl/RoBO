@@ -26,7 +26,7 @@ You can install RoBO by cloning the repository and executing the setup script:
 
 	:bash:`python setup.py install`
 
-Alternatively if you just want to install the dependencies with installing RoBO you can do that with:
+Alternatively if you just want to install the dependencies without installing RoBO you can do that with:
 
 	:bash:`for req in $(cat requirements.txt); do pip install $req; done`
  

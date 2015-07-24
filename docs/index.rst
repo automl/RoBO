@@ -15,9 +15,9 @@ Contents:
    install
    basics
    modules
-   examples
-   visualization
-   contribute
+   advanced
+..   visualization
+..   contribute
 
 Indices and tables
 ==================

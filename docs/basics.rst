@@ -163,6 +163,27 @@ Afterwards we can run it by:
 Saving output
 ^^^^^^^^^^^^^
 
+You can save RoBO's output by passing the parameters 'save_dir' and 'num_save'. The first parameter 'save_dir' specifies where the results will be saved and
+the second parameter 'num_save' after how many iterations the output should be saved. 
+
+.. code-block:: python
+
+	bo = BayesianOptimization(acquisition_fkt=acquisition_func,
+	                          model=model,
+	                          maximize_fkt=maximizer,
+	                          task=task)
+                      		  save_dir="path_to_directory",
+                      		  num_save=1)
+
+RoBO will save then the following information:
+
+ - X: The configuration it evaluated so far
+ - y: Their corresponding function values
+ - incumbent: The best configuration it found so far
+ - incumbent_value: Its function value 
+ - time_function: The time each function evaluation took
+ - optimizer_overhead: The time RoBO needed to pick a new configuration
+
     
 Implementing the Bayesian optimization loop
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
