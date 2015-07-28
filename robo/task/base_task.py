@@ -42,3 +42,6 @@ class BaseTask(object):
         if self.do_scaling:
             x = (self.original_X_upper - self.original_X_lower) * (x - self.X_lower) / (self.X_upper - self.X_lower) + self.original_X_lower
         return self.objective_function(x)
+
+    def evaluate_test(self, x):
+        pass
