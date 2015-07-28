@@ -16,9 +16,9 @@ class SyntheticFktEnvSearch(BaseTask):
     '''
 
     def __init__(self):
-        self.X_lower = np.array([0.0, 0.01])
-        self.X_upper = np.array([1, 1])
-        self.n_dims = 2
+        X_lower = np.array([0.0, 0.01])
+        X_upper = np.array([1, 1])
+        super(SyntheticFktEnvSearch, self).__init__(X_lower, X_upper)
         self.is_env = np.array([0, 1])
 
     def objective_function(self, x):

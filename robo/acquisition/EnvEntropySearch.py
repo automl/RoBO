@@ -7,10 +7,7 @@ Created on Jun 8, 2015
 import emcee
 import numpy as np
 
-from robo.acquisition.LogEI import LogEI
 from robo.acquisition.EntropyMC import EntropyMC
-
-from scipy import stats
 
 
 class EnvEntropySearch(EntropyMC):
@@ -45,7 +42,7 @@ class EnvEntropySearch(EntropyMC):
 
         loss = np.array([[-H_new + H_old]])
 
-        acquisition_value = loss / cost
+        acquisition_value = loss / np.log(cost + 1e-8)
 
         return acquisition_value
 

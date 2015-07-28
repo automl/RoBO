@@ -31,8 +31,10 @@ class CMAES(BaseMaximizer):
         if not verbose:
             stdout = sys.stdout
             sys.stdout = StringIO.StringIO()
+            #start_point = (self.X_upper + self.X_lower) * 0.5
+            start_point = np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])
             res = cma.fmin(self._cma_fkt_wrapper(self.objective_func),
-                           (self.X_upper + self.X_lower) * 0.5, 0.6,
+                           start_point, 0.6,
                            options={"bounds": [self.X_lower, self.X_upper], "verbose": 0, "verb_log": sys.maxint})
             sys.stdout = stdout
         else:

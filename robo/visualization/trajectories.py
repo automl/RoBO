@@ -28,8 +28,13 @@ def get_performance_over_iterations(path):
         file_name = "iteration_%03d.pkl" % (i)
         if not os.path.isfile(os.path.join(path, file_name)):
             print "ERROR: File $s does not exists!" % (file_name)
-        _, _, _, incumbent_value, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
-        performance[i] = incumbent_value[0]
+        if len( pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
+            _, _, _, _, incumbent_value, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
+        else:
+            _, _, _, incumbent_value, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
+
+        if type(incumbent_value) == np.ndarray:
+            performance[i] = incumbent_value[0]
 
     return iterations, performance
 
@@ -74,7 +79,11 @@ def get_performance_over_time(path):
         file_name = "iteration_%03d.pkl" % (i)
         if not os.path.isfile(os.path.join(path, file_name)):
             print "ERROR: File $s does not exists!" % (file_name)
-        _, _, _, incumbent_value, time_func_eval, _ = pickle.load(open(os.path.join(path, file_name), "r"))
+        if len( pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
+            _, _, _, _, incumbent_value, time_func_eval, _ = pickle.load(open(os.path.join(path, file_name), "r"))
+        else:
+            _, _, _, incumbent_value, time_func_eval, _ = pickle.load(open(os.path.join(path, file_name), "r"))
+
         performance[i] = incumbent_value[0]
         time[i] = time_func_eval
 
@@ -91,7 +100,12 @@ def get_optimization_overhead_over_iteration(path):
         file_name = "iteration_%03d.pkl" % (i)
         if not os.path.isfile(os.path.join(path, file_name)):
             print "ERROR: File $s does not exists!" % (file_name)
-        _, _, _, _, _, time_optimization_overhead = pickle.load(open(os.path.join(path, file_name), "r"))
+
+        if len( pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
+            _, _, _, _, _, _, time_optimization_overhead = pickle.load(open(os.path.join(path, file_name), "r"))
+        else:
+            _, _, _, _, _, time_optimization_overhead = pickle.load(open(os.path.join(path, file_name), "r"))
+
         optimization_overhead[i] = time_optimization_overhead[0]
 
     return iterations, optimization_overhead

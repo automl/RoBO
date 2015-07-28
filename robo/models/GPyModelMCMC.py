@@ -54,3 +54,10 @@ class GPyModelMCMC(BaseModel):
             var[i, :] = v[:, 0]
 
         return mean, var
+
+    def predict_variance(self, X1, X2):
+        var = []
+        for m in self.models:
+            var.append(m.predict_variance(X1, X2))
+
+        return np.array(var)

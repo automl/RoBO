@@ -16,12 +16,13 @@ except:
     import pickle
 
 from robo.solver.bayesian_optimization import BayesianOptimization
+from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
 
 
 class EnvBayesianOptimization(BayesianOptimization):
 
     def __init__(self, acquisition_fkt=None, model=None, cost_model=None, maximize_fkt=None,
-                 task=None, save_dir=None, initialization=None, num_save=1):
+                 task=None, save_dir=None, initialization=None, recommendation_strategy=None, num_save=1):
 
         # Initialize all members
         self.initialization = initialization
@@ -39,7 +40,7 @@ class EnvBayesianOptimization(BayesianOptimization):
         self.Y = None
         self.Costs = None
         self.model_untrained = True
-        self.recommendation_strategy = None
+        self.recommendation_strategy = recommendation_strategy
         self.incumbent = None
 
     def initialize(self):
@@ -100,7 +101,19 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.incumbent = self.X[best_idx]
             self.incumbent_value = self.Y[best_idx]
         else:
-            self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
+            if self.recommendation_strategy is env_optimize_posterior_mean_and_std:
+                    startpoint = np.array([np.random.uniform(self.task.X_lower[self.task.is_env == 0],
+                                                             self.task.X_upper[self.task.is_env == 0],
+                                                             self.task.X_lower[self.task.is_env == 0].shape[0])])
+                    print "Use startpoint %s" % (startpoint)
+                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model,
+                                                                                        self.task.X_lower[self.task.is_env == 0],
+                                                                                        self.task.X_upper[self.task.is_env == 0],
+                                                                                        self.task.is_env,
+                                                                                        self.task.X_upper[self.task.is_env == 1],
+                                                                                        inc=startpoint)
+            else:
+                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper)
 
         print "Return %s as incumbent" % (str(self.incumbent))
         return self.incumbent
@@ -110,8 +123,9 @@ class EnvBayesianOptimization(BayesianOptimization):
             try:
                 self.model.train(X, Y)
                 self.cost_model.train(X, Costs)
+                print "Trained"
             except Exception, e:
-                print "Model could not be trained with data:", X, Y
+                print "Model could not be trained with data:", X, Y, Costs
                 raise
             self.model_untrained = False
             self.acquisition_fkt.update(self.model, self.cost_model)
@@ -122,7 +136,19 @@ class EnvBayesianOptimization(BayesianOptimization):
                 self.incumbent = self.X[best_idx]
                 self.incumbent_value = self.Y[best_idx]
             else:
-                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
+                if self.recommendation_strategy is env_optimize_posterior_mean_and_std:
+                    startpoint = np.array([np.random.uniform(self.task.X_lower[self.task.is_env == 0],
+                                                             self.task.X_upper[self.task.is_env == 0],
+                                                             self.task.X_lower[self.task.is_env == 0].shape[0])])
+                    print "Use startpoint %s" % (startpoint)
+                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model,
+                                                                                        self.task.X_lower[self.task.is_env == 0],
+                                                                                        self.task.X_upper[self.task.is_env == 0],
+                                                                                        self.task.is_env,
+                                                                                        self.task.X_upper[self.task.is_env == 1],
+                                                                                        inc=startpoint)
+                else:
+                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper)
 
             x = self.maximize_fkt.maximize()
         else:

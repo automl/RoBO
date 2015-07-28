@@ -14,7 +14,7 @@ from robo.visualization.trajectories import get_mean_and_var_optimization_overhe
 
 
 def main(names, dirs):
-    f, (ax1, ax2) = plt.subplots(2, sharex=True)
+    f, (ax1, ax2) = plt.subplots(2)
     n_curves = len(names)
     color = ["blue", "green", "red", "yellow", "black", "purple", "orange", "cyan", "magenta", "brown"]
 
@@ -22,18 +22,18 @@ def main(names, dirs):
         paths = glob.glob(os.path.join(dirs[i], "run_*"))
 
         iterations, mean, var = get_mean_and_var_performance_over_iterations(paths)
-        ax1.errorbar(iterations, mean, np.sqrt(var), fmt=color[i % len(color)], label=names[i])
+        ax1.errorbar(iterations[:20], np.log(mean[:20]), np.sqrt(var[:20]), fmt=color[i % len(color)], label=names[i])
 
         iterations, mean, var = get_mean_and_var_optimization_overhead_over_iterations(paths)
         ax2.errorbar(iterations, mean, np.sqrt(var), fmt=color[i % len(color)], label=names[i])
 
     ax1.set_title("Performance")
     ax2.set_title("Optimization Overhead")
-    ax1.set_ylabel('fmin')
+    ax1.set_ylabel('log fmin')
     ax2.set_ylabel('Seconds')
     ax2.set_xlabel('Number of function evaluations')
 
-    plt.legend()
+    # plt.legend()
     plt.savefig("performance_over_iterations_branin.png")
 
 if __name__ == '__main__':

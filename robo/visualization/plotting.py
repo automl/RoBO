@@ -74,6 +74,7 @@ def plot_objective_function_2d(objective_function, X_lower, X_upper, ax, resolut
 
     return ax
 
+
 def plot_acquisition_function_2d(acq_fkt, X_lower, X_upper, ax, resolution=0.1):
     X1 = np.arange(X_lower[0], X_upper[0], resolution)
     X2 = np.arange(X_lower[1], X_upper[1], resolution)

@@ -9,6 +9,7 @@ from robo.acquisition.LogEI import LogEI
 from robo.acquisition.UCB import UCB
 from robo.acquisition.base import AcquisitionFunction
 from robo.recommendation.incumbent import compute_incumbent
+from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
@@ -37,10 +38,10 @@ class Entropy(AcquisitionFunction):
     """
     long_name = "Information gain over p_min(x)"
 
-    def __init__(self, model, X_lower, X_upper, Nb=10, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, **kwargs):
+    def __init__(self, model, X_lower, X_upper, Nb=10, compute_inc=optimize_posterior_mean_and_std, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, **kwargs):
         self.Nb = Nb
         super(Entropy, self).__init__(model, X_lower, X_upper)
-
+        self.compute_incumbent = compute_inc
         self.D = self.X_lower.shape[0]
         self.sn2 = None
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
@@ -52,14 +53,14 @@ class Entropy(AcquisitionFunction):
 
     def loss_function(self, logP, lmb, lPred, *args):
         """
-        	This module contains the loss functions used in the calculation of the expected information gain.
-        	For the moment only the logloss function is implemented.
-        	.. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs)
-        	:param logP: Log-probability values.
-        	:param lmb: Log values of acquisition function at belief points.
-        	:param lPred: Log of the predictive distribution
-        	:param args: Additional parameters
-        	:return:
+            This module contains the loss functions used in the calculation of the expected information gain.
+            For the moment only the logloss function is implemented.
+            .. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs)
+            :param logP: Log-probability values.
+            :param lmb: Log values of acquisition function at belief points.
+            :param lPred: Log of the predictive distribution
+            :param args: Additional parameters
+            :return:
         """
         H = - np.sum(np.multiply(np.exp(logP), (logP + lmb))) # current entropy
         dHp = - np.sum(np.multiply(np.exp(lPred), np.add(lPred, lmb)), axis=0) - H # @minus? If you change it, change it above in H, too!
@@ -71,9 +72,10 @@ class Entropy(AcquisitionFunction):
         :return: the noise
         :rtype: np.ndarray(1,1)
         """
-        x = np.zeros((1, self.D))
-        m, v = self.model.predict(x)
-        return v - self.model.predict_variance(x, x)
+        #x = np.zeros((1, self.D))
+        #m, v = self.model.predict(x)
+        #return v - self.model.predict_variance(x, x)
+        return self.model.m.Gaussian_noise.variance[0]
 
     def _scipy_optimizer_fkt_wrapper(self, acq_f, derivative=True):
         def _l(x, *args, **kwargs):
@@ -146,6 +148,16 @@ class Entropy(AcquisitionFunction):
         if len(self.lmb.shape) == 1:
             self.lmb = self.lmb[:, None]
 
+        # Add incumbent to the representer points
+        inc, _ = self.compute_incumbent(self.model, self.X_lower, self.X_upper)
+        print "Add incumbent %s to representer points" % (inc)
+        #self.zb = np.concatenate((self.zb, inc[np.newaxis, :]), axis=0)
+        self.zb[0] = inc
+        print self.zb
+        #self.lmb = np.concatenate((self.lmb, self.sampling_acquisition_wrapper(inc)[np.newaxis, :]))
+        self.lmb[0] = self.sampling_acquisition_wrapper(inc)
+        print self.lmb
+
     def update_best_guesses(self):
         if self.BestGuesses.shape[0] == 0:
             cmin = np.inf
@@ -165,7 +177,7 @@ class Entropy(AcquisitionFunction):
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
         self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
-        self.W = np.random.randn(1, self.Nb)
+        self.W = np.random.randn(1, self.zb.shape[0])
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
         self.update_best_guesses()
 
