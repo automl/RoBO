@@ -135,3 +135,12 @@ def get_mean_and_var_optimization_overhead_over_iterations(paths):
 
     return iterations, np.mean(optimization_overhead, axis=0), np.var(optimization_overhead, axis=0)
 
+
+def evaluate_test_performance(task, trajectory, save_name=None):
+    trajectory_test_perf = np.zeros([trajectory.shape[0]])
+    for idx, config in enumerate(trajectory):
+        trajectory_test_perf[idx] = task.evaluate_test(config)
+    if save_name is not None:
+        np.save(save_name, trajectory_test_perf)
+    return trajectory_test_perf
+
