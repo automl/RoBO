@@ -6,6 +6,7 @@ Created on Jun 11, 2015
 
 import os
 import time
+import logging
 import shutil
 import errno
 import numpy as np
@@ -78,15 +79,15 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.initialize()
 
         for it in range(num_iterations):
-            print "Choose a new configuration"
+            logging.info("Choose a new configuration")
             new_x = self.choose_next(self.X, self.Y, self.Costs)
-            print "Evaluate candidate %s" % (str(new_x))
+            logging.info("Evaluate candidate %s" % (str(new_x)))
 
             start = time.time()
             new_y = self.task.evaluate(np.array(new_x))
             new_cost = np.array([time.time() - start])
 
-            print "Configuration achieved a performance of %f in %s seconds" % (new_y[0, 0], new_cost[0])
+            logging.info("Configuration achieved a performance of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
 
             self.X = np.append(self.X, new_x, axis=0)
             self.Y = np.append(self.Y, new_y, axis=0)
@@ -102,10 +103,9 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.incumbent_value = self.Y[best_idx]
         else:
             if self.recommendation_strategy is env_optimize_posterior_mean_and_std:
-                    startpoint = np.array([np.random.uniform(self.task.X_lower[self.task.is_env == 0],
-                                                             self.task.X_upper[self.task.is_env == 0],
-                                                             self.task.X_lower[self.task.is_env == 0].shape[0])])
-                    print "Use startpoint %s" % (startpoint)
+                    best_idx = np.argmin(self.Y)
+                    startpoint = self.X[best_idx]
+
                     self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model,
                                                                                         self.task.X_lower[self.task.is_env == 0],
                                                                                         self.task.X_upper[self.task.is_env == 0],
@@ -115,7 +115,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper)
 
-        print "Return %s as incumbent" % (str(self.incumbent))
+        logging.info("Return %s as incumbent" % (str(self.incumbent)))
         return self.incumbent
 
     def choose_next(self, X=None, Y=None, Costs=None):
@@ -123,9 +123,8 @@ class EnvBayesianOptimization(BayesianOptimization):
             try:
                 self.model.train(X, Y)
                 self.cost_model.train(X, Costs)
-                print "Trained"
             except Exception, e:
-                print "Model could not be trained with data:", X, Y, Costs
+                logging.error("Model could not be trained with data:", X, Y, Costs)
                 raise
             self.model_untrained = False
             self.acquisition_fkt.update(self.model, self.cost_model)
@@ -140,7 +139,7 @@ class EnvBayesianOptimization(BayesianOptimization):
                     startpoint = np.array([np.random.uniform(self.task.X_lower[self.task.is_env == 0],
                                                              self.task.X_upper[self.task.is_env == 0],
                                                              self.task.X_lower[self.task.is_env == 0].shape[0])])
-                    print "Use startpoint %s" % (startpoint)
+
                     self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model,
                                                                                         self.task.X_lower[self.task.is_env == 0],
                                                                                         self.task.X_upper[self.task.is_env == 0],
@@ -158,14 +157,12 @@ class EnvBayesianOptimization(BayesianOptimization):
 
     def save_iteration(self, it):
         """
-            Saves an iteration.
+            Save the X, y, costs, incumbent, incumbent_value, time of the function evaluation and the time of the optimizer of this iteration
         """
         file_name = "iteration_%03d.pkl" % (it)
 
         file_name = os.path.join(self.save_dir, file_name)
-        #os.makedirs(iteration_folder)
-        #FIXME What does Entropy return as incumbent?
-        #if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
-        #    pickle.dump([self.X, self.Y, self.acquisition_fkt._get_most_probable_minimum()[0], self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
-        #else:
+
+        logging.info("Save iteration %d in %s", it, file_name)
+
         pickle.dump([self.X, self.Y, self.Costs, self.incumbent, self.incumbent_value, self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))

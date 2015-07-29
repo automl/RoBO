@@ -165,14 +165,18 @@ class BayesianOptimization(object):
 
         if X is None and Y is None:
             self.initialize()
-            num_iterations = num_iterations - 1
+            #num_iterations = num_iterations - 1
+            self.incumbent = self.X[0]
+            self.incumbent_value = self.Y[0]
+            if self.save_dir is not None and (0) % self.num_save == 0:
+                self.save_iteration(0)
         else:
             self.X = X
             self.Y = Y
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_optimization_overhead = np.zeros([self.X.shape[0]])
 
-        for it in range(num_iterations):
+        for it in range(1, num_iterations):
             logging.info("Choose a new configuration")
             start_time = time.time()
             new_x = self.choose_next(self.X, self.Y)
@@ -205,7 +209,9 @@ class BayesianOptimization(object):
             self.incumbent = self.X[best_idx]
             self.incumbent_value = self.Y[best_idx]
         else:
-            self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
+            best_idx = np.argmin(self.Y)
+            startpoint = self.X[best_idx]
+            self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
 
         logging.info("Return %s as incumbent with performance %f" % (str(self.incumbent), self.incumbent_value))
         return self.incumbent, self.incumbent_value
@@ -234,7 +240,10 @@ class BayesianOptimization(object):
                 self.incumbent = X[best_idx]
                 self.incumbent_value = Y[best_idx]
             else:
-                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.acquisition_fkt)
+                best_idx = np.argmin(self.Y)
+                startpoint = self.X[best_idx]
+                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
+
             t = time.time()
             x = self.maximize_fkt.maximize()
             logging.info("Time to maximze the acquisition function: %f", (time.time() - t))

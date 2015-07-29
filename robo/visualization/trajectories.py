@@ -41,7 +41,7 @@ def get_performance_over_iterations(path):
 
 def get_mean_and_var_performance_over_iterations(paths):
     """
-        Returns the mean and variance of the performances for different runs. Note: the number of iterations of each runs has to be the same.
+        Returns the mean and variance of the performances for different runs. Note: the number of iterations of each run has to be the same.
 
     :param paths: A list of paths to the output of the different runs
     """
@@ -135,11 +135,34 @@ def get_mean_and_var_optimization_overhead_over_iterations(paths):
 
     return iterations, np.mean(optimization_overhead, axis=0), np.var(optimization_overhead, axis=0)
 
+#TODO: It might be smarter to have only one function that reads out everything...
+
+
+def get_incumbents_over_iterations(path):
+    num_iters = len(glob.glob(os.path.join(path, "iteration_*")))
+
+    iterations = np.arange(0, num_iters)
+    incumbents = []
+
+    for i in range(num_iters):
+        file_name = "iteration_%03d.pkl" % (i)
+        if not os.path.isfile(os.path.join(path, file_name)):
+            print "ERROR: File $s does not exists!" % (file_name)
+
+        if len(pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
+            _, _, _, inc, _, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
+        else:
+            _, _, inc, _, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
+
+        incumbents.append(inc)
+
+    return iterations, np.array(incumbents)
+
 
 def evaluate_test_performance(task, trajectory, save_name=None):
     trajectory_test_perf = np.zeros([trajectory.shape[0]])
     for idx, config in enumerate(trajectory):
-        trajectory_test_perf[idx] = task.evaluate_test(config)
+        trajectory_test_perf[idx] = task.evaluate_test(config[np.newaxis, :])
     if save_name is not None:
         np.save(save_name, trajectory_test_perf)
     return trajectory_test_perf

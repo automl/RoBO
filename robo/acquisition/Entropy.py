@@ -1,5 +1,7 @@
 # encoding=utf8
-import sys, os
+import os
+import sys
+import logging
 from scipy.stats import norm
 import scipy
 import numpy as np
@@ -122,7 +124,7 @@ class Entropy(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if X.shape[0] > 1:
-            print "Entropy is only for single X inputs"
+            logging.error("Entropy is only for single X inputs")
             return
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
@@ -150,13 +152,11 @@ class Entropy(AcquisitionFunction):
 
         # Add incumbent to the representer points
         inc, _ = self.compute_incumbent(self.model, self.X_lower, self.X_upper)
-        print "Add incumbent %s to representer points" % (inc)
+
         #self.zb = np.concatenate((self.zb, inc[np.newaxis, :]), axis=0)
         self.zb[0] = inc
-        print self.zb
         #self.lmb = np.concatenate((self.lmb, self.sampling_acquisition_wrapper(inc)[np.newaxis, :]))
         self.lmb[0] = self.sampling_acquisition_wrapper(inc)
-        print self.lmb
 
     def update_best_guesses(self):
         if self.BestGuesses.shape[0] == 0:
@@ -225,7 +225,7 @@ class Entropy(AcquisitionFunction):
     def dh_fun(self, x, invertsign=True, derivative=False):
 
         if not (np.all(np.isfinite(self.lmb))):
-            print self.zb[np.where(np.isinf(self.lmb))], self.lmb[np.where(np.isinf(self.lmb))]
+            logging.debug(self.zb[np.where(np.isinf(self.lmb))], self.lmb[np.where(np.isinf(self.lmb))])
             raise Exception("lmb should not be infinite. This is not allowed to be sampled")
 
         D = x.shape[1]
@@ -278,7 +278,7 @@ class Entropy(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if x.shape[0] > 1:
-            print "Expects single points as input"
+            logging.error("Expects single points as input")
             return
 
         m, v = self.model.predict(x)
