@@ -54,8 +54,10 @@ def optimize_posterior_mean_and_std(model, X_lower, X_upper, inc=None, with_grad
 
 def env_optimize_posterior_mean_and_std(model, sub_X_lower, sub_X_upper, is_env, env_values, inc=None, with_gradients=False):
     def f(x):
+
         x_ = np.zeros([is_env.shape[0]])
         x_[is_env == 1] = env_values
+
         x_[is_env == 0] = x
         mu, var = model.predict(x_[np.newaxis, :])
         return (mu + np.sqrt(var))
@@ -74,10 +76,14 @@ def env_optimize_posterior_mean_and_std(model, sub_X_lower, sub_X_upper, is_env,
 
     if inc is None:
         inc, _ = compute_incumbent(model)
+        inc = inc[np.newaxis, :]
 
     if with_gradients:
-        res = optimize.minimize(f, inc, bounds=zip(sub_X_lower, sub_X_upper), jac=df)
+        res = optimize.minimize(f, inc[:, is_env == 0], bounds=zip(sub_X_lower, sub_X_upper), jac=df)
     else:
-        res = optimize.minimize(f, inc, bounds=zip(sub_X_lower, sub_X_upper))
+        res = optimize.minimize(f, inc[:, is_env == 0], bounds=zip(sub_X_lower, sub_X_upper))
 
-    return res["x"], res["fun"]
+    x_ = np.zeros([is_env.shape[0]])
+    x_[is_env == 1] = env_values
+    x_[is_env == 0] = res["x"]
+    return x_, res["fun"]
