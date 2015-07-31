@@ -151,12 +151,12 @@ class Entropy(AcquisitionFunction):
             self.lmb = self.lmb[:, None]
 
         # Add incumbent to the representer points
-        inc, _ = self.compute_incumbent(self.model, self.X_lower, self.X_upper)
+        #inc, _ = self.compute_incumbent(self.model, self.X_lower, self.X_upper)
 
         #self.zb = np.concatenate((self.zb, inc[np.newaxis, :]), axis=0)
-        self.zb[0] = inc
+        #self.zb[0] = inc
         #self.lmb = np.concatenate((self.lmb, self.sampling_acquisition_wrapper(inc)[np.newaxis, :]))
-        self.lmb[0] = self.sampling_acquisition_wrapper(inc)
+        #self.lmb[0] = self.sampling_acquisition_wrapper(inc)
 
     def update_best_guesses(self):
         if self.BestGuesses.shape[0] == 0:

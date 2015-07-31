@@ -180,7 +180,7 @@ class BayesianOptimization(object):
             self.time_optimization_overhead = np.zeros([self.X.shape[0]])
 
         for it in range(1, num_iterations):
-            logging.info("Choose a new configuration")
+            logging.info("Start iteration %d ... ", it)
             start_time = time.time()
             new_x = self.choose_next(self.X, self.Y)
             time_optimization_overhead = time.time() - start_time
@@ -229,6 +229,7 @@ class BayesianOptimization(object):
         """
         if X is not None and Y is not None:
             try:
+                logging.info("Train model...")
                 t = time.time()
                 self.model.train(X, Y)
                 logging.info("Time to train the model: %f", (time.time() - t))
@@ -238,6 +239,7 @@ class BayesianOptimization(object):
             self.model_untrained = False
             self.acquisition_fkt.update(self.model)
 
+            logging.info("Determine new incumbent")
             if self.recommendation_strategy is None:
                 best_idx = np.argmin(Y)
                 self.incumbent = X[best_idx]
@@ -246,7 +248,9 @@ class BayesianOptimization(object):
                 best_idx = np.argmin(Y)
                 startpoint = X[best_idx]
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
+            logging.info("New incumbent is %s", str(self.incumbent))
 
+            logging.info("Maximize acquistion function...")
             t = time.time()
             x = self.maximize_fkt.maximize()
             logging.info("Time to maximze the acquisition function: %f", (time.time() - t))

@@ -14,7 +14,7 @@ from robo.maximizers.cmaes import CMAES
 from robo.maximizers.direct import Direct
 from robo.maximizers.stochastic_local_search import StochasticLocalSearch
 from robo.recommendation.incumbent import compute_incumbent
-from robo.task.lenet_mnist import LeNetMnist, EnvLeNetMnist
+from robo.task.surrogate_lenet_mnist import SurrogateLeNetMnist, SurrogateEnvLeNetMnist
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
 from robo.acquisition.EI import EI
@@ -30,8 +30,8 @@ ex = Experiment('lenet_on_mnist')
 
 @ex.config
 def default_config():
-    num_iterations = 10
-    save_dir = "/home/kleinaa/experiments/entropy_search/benchmarks/lenet_on_mnist"
+    num_iterations = 50
+    save_dir = "/home/kleinaa/experiments/entropy_search/benchmarks/surrogate_lenet_on_mnist"
     num_restarts = 10
     Nb = 1000
     Nf = 1000
@@ -88,7 +88,7 @@ def main(max_method, method, num_iterations, save_dir, num_restarts, Nb, Nf, Np,
     output_dir = os.path.join(save_dir, method + "_" + max_method, "run_" + str(run_id))
 
     if method == "EntropyMC":
-        task = LeNetMnist()
+        task = SurrogateLeNetMnist()
         kernel = GPy.kern.Matern52(input_dim=task.n_dims)
         model = GPyModel(kernel, optimize=True, num_restarts=num_restarts)
 
@@ -112,7 +112,7 @@ def main(max_method, method, num_iterations, save_dir, num_restarts, Nb, Nf, Np,
         bo.run(num_iterations)
 
     elif method == "EnvEntropy":
-        task = EnvLeNetMnist()
+        task = SurrogateEnvLeNetMnist()
         kernel = GPy.kern.Matern52(input_dim=task.n_dims)
         model = GPyModel(kernel, optimize=True, num_restarts=num_restarts)
 
@@ -140,7 +140,7 @@ def main(max_method, method, num_iterations, save_dir, num_restarts, Nb, Nf, Np,
         bo.run(num_iterations)
 
     if method == "EI":
-        task = LeNetMnist()
+        task = SurrogateLeNetMnist()
         kernel = GPy.kern.Matern52(input_dim=task.n_dims)
         model = GPyModel(kernel, optimize=True, num_restarts=num_restarts)
 

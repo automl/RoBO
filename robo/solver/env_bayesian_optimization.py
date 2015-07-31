@@ -25,6 +25,7 @@ class EnvBayesianOptimization(BayesianOptimization):
     def __init__(self, acquisition_fkt=None, model=None, cost_model=None, maximize_fkt=None,
                  task=None, save_dir=None, initialization=None, recommendation_strategy=None, num_save=1):
 
+        logging.basicConfig(level=logging.DEBUG)
         # Initialize all members
         self.initialization = initialization
         self.task = task

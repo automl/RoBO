@@ -3,7 +3,7 @@ Created on Jul 28, 2015
 
 @author: Aaron Klein
 '''
-
+import time
 import cPickle
 import numpy as np
 from copy import deepcopy
@@ -12,8 +12,6 @@ from robo.task.base_task import BaseTask
 
 from deep_nets.conv_nets.lenet import LeNet
 from deep_nets.evaluation import train, test
-
-from sklearn.ensemble import RandomForestRegressor
 
 
 class LeNetMnist(BaseTask):
@@ -70,33 +68,3 @@ class EnvLeNetMnist(LeNetMnist):
         self.y_train = self.y
 
         return super(EnvLeNetMnist, self).evaluate_test(x)
-
-
-class SurrogateLeNetMnist(BaseTask):
-
-    def __init__(self):
-
-        X_lower = np.array([0.0, 0.0, 0.00001, 0.5])
-        X_upper = np.array([0.9, 0.9, 0.1, 0.9])
-        super(SurrogateLeNetMnist, self).__init__(X_lower, X_upper)
-
-    def objective_function(self, x):
-
-        rf = cPickle.load(open("/mhome/kleinaa/experiments/entropy_search/surrogates/lenet/rf.pkl", "r"))
-        validation_error = rf.predict(x)
-        return np.array([[validation_error]])
-
-
-class SurrogateEnvLeNetMnist(BaseTask):
-
-    def __init__(self):
-
-        X_lower = np.array([0.0, 0.0, 0.00001, 0.5, 6.91])
-        X_upper = np.array([0.9, 0.9, 0.1, 0.9, 10.81978])
-        super(SurrogateEnvLeNetMnist, self).__init__(X_lower, X_upper)
-
-    def objective_function(self, x):
-
-        rf = cPickle.load(open("/mhome/kleinaa/experiments/entropy_search/surrogates/env_lenet/rf.pkl", "r"))
-        validation_error = rf.predict(x)
-        return np.array([[validation_error]])
