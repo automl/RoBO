@@ -22,7 +22,7 @@ def main(names, dirs):
         paths = glob.glob(os.path.join(dirs[i], "run_*"))
 
         iterations, mean, var = get_mean_and_var_performance_over_iterations(paths)
-        ax1.errorbar(iterations[:20], np.log(mean[:20]), np.sqrt(var[:20]), fmt=color[i % len(color)], label=names[i])
+        ax1.errorbar(iterations, (mean), np.sqrt(var), fmt=color[i % len(color)], label=names[i])
 
         iterations, mean, var = get_mean_and_var_optimization_overhead_over_iterations(paths)
         ax2.errorbar(iterations, mean, np.sqrt(var), fmt=color[i % len(color)], label=names[i])

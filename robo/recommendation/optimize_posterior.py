@@ -52,9 +52,13 @@ def optimize_posterior_mean_and_std(model, X_lower, X_upper, inc=None, with_grad
     return res["x"], res["fun"]
 
 
-def env_optimize_posterior_mean_and_std(model, sub_X_lower, sub_X_upper, is_env, env_values, inc=None, with_gradients=False):
-    def f(x):
+def env_optimize_posterior_mean_and_std(model, X_lower, X_upper, is_env, inc=None, with_gradients=False):
 
+    env_values = X_upper[is_env == 1]
+    sub_X_lower = X_lower[is_env == 0]
+    sub_X_upper = X_upper[is_env == 0]
+
+    def f(x):
         x_ = np.zeros([is_env.shape[0]])
         x_[is_env == 1] = env_values
 
@@ -81,7 +85,7 @@ def env_optimize_posterior_mean_and_std(model, sub_X_lower, sub_X_upper, is_env,
     if with_gradients:
         res = optimize.minimize(f, inc[:, is_env == 0], bounds=zip(sub_X_lower, sub_X_upper), jac=df)
     else:
-        res = optimize.minimize(f, inc[:, is_env == 0], bounds=zip(sub_X_lower, sub_X_upper))
+        res = optimize.minimize(f, inc[:, is_env == 0], bounds=zip(sub_X_lower, sub_X_upper), options={"disp": True})
 
     x_ = np.zeros([is_env.shape[0]])
     x_[is_env == 1] = env_values

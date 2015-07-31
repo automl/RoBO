@@ -28,7 +28,7 @@ def get_performance_over_iterations(path):
         file_name = "iteration_%03d.pkl" % (i)
         if not os.path.isfile(os.path.join(path, file_name)):
             print "ERROR: File $s does not exists!" % (file_name)
-        if len( pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
+        if len(pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
             _, _, _, _, incumbent_value, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
         else:
             _, _, _, incumbent_value, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
@@ -79,7 +79,7 @@ def get_performance_over_time(path):
         file_name = "iteration_%03d.pkl" % (i)
         if not os.path.isfile(os.path.join(path, file_name)):
             print "ERROR: File $s does not exists!" % (file_name)
-        if len( pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
+        if len(pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
             _, _, _, _, incumbent_value, time_func_eval, _ = pickle.load(open(os.path.join(path, file_name), "r"))
         else:
             _, _, _, incumbent_value, time_func_eval, _ = pickle.load(open(os.path.join(path, file_name), "r"))
@@ -101,7 +101,7 @@ def get_optimization_overhead_over_iteration(path):
         if not os.path.isfile(os.path.join(path, file_name)):
             print "ERROR: File $s does not exists!" % (file_name)
 
-        if len( pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
+        if len(pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
             _, _, _, _, _, _, time_optimization_overhead = pickle.load(open(os.path.join(path, file_name), "r"))
         else:
             _, _, _, _, _, time_optimization_overhead = pickle.load(open(os.path.join(path, file_name), "r"))
@@ -149,12 +149,9 @@ def get_incumbents_over_iterations(path):
         if not os.path.isfile(os.path.join(path, file_name)):
             print "ERROR: File $s does not exists!" % (file_name)
 
-        if len(pickle.load(open(os.path.join(path, file_name), "r"))) == 7:
-            _, _, _, inc, _, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
-        else:
-            _, _, inc, _, _, _ = pickle.load(open(os.path.join(path, file_name), "r"))
-
-        incumbents.append(inc)
+        d = pickle.load(open(os.path.join(path, file_name), "r"))
+        incumbents.append(d["incumbent"])
+        print incumbents
 
     return iterations, np.array(incumbents)
 

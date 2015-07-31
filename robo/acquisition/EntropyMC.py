@@ -56,7 +56,7 @@ class EntropyMC(Entropy):
         return self.dh_fun(X)
 
     def update(self, model):
-        self.model = model
+        super(EntropyMC, self).update(model)
         self.sn2 = self._get_noise()
 
         self.sampling_acquisition.update(model)

@@ -58,6 +58,10 @@ class EnvBayesianOptimization(BayesianOptimization):
             Initial observations. They are optional. If a run continues
             these observations will be overwritten by the load
         """
+
+        # Save the time where we start the Bayesian optimization procedure
+        self.time_start = time.time()
+
         def _onerror(dirs, path, info):
             if info[1].errno != errno.ENOENT:
                 raise
@@ -70,15 +74,18 @@ class EnvBayesianOptimization(BayesianOptimization):
 
         if X is None and Y is None:
             self.initialize()
-
-            num_iterations = num_iterations - 1
+            #num_iterations = num_iterations - 1
+            self.incumbent = self.X[0]
+            self.incumbent_value = self.Y[0]
+            if self.save_dir is not None and (0) % self.num_save == 0:
+                self.save_iteration(0)
         else:
             self.X = X
             self.Y = Y
             # TODO: allow different initialization strategies here
             self.initialize()
 
-        for it in range(num_iterations):
+        for it in range(1, num_iterations):
             logging.info("Choose a new configuration")
             new_x = self.choose_next(self.X, self.Y, self.Costs)
             logging.info("Evaluate candidate %s" % (str(new_x)))
@@ -103,15 +110,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.incumbent_value = self.Y[best_idx]
         else:
             if self.recommendation_strategy is env_optimize_posterior_mean_and_std:
-                    best_idx = np.argmin(self.Y)
-                    startpoint = self.X[best_idx]
-
-                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model,
-                                                                                        self.task.X_lower[self.task.is_env == 0],
-                                                                                        self.task.X_upper[self.task.is_env == 0],
-                                                                                        self.task.is_env,
-                                                                                        self.task.X_upper[self.task.is_env == 1],
-                                                                                        inc=startpoint)
+                    self._estimate_incumbent()
             else:
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper)
 
@@ -129,23 +128,14 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.model_untrained = False
             self.acquisition_fkt.update(self.model, self.cost_model)
 
-            #TODO: change default strategy
             if self.recommendation_strategy == None:
                 best_idx = np.argmin(self.Y)
                 self.incumbent = self.X[best_idx]
                 self.incumbent_value = self.Y[best_idx]
             else:
+                logging.info("Start local search to find the current incumbent")
                 if self.recommendation_strategy is env_optimize_posterior_mean_and_std:
-                    startpoint = np.array([np.random.uniform(self.task.X_lower[self.task.is_env == 0],
-                                                             self.task.X_upper[self.task.is_env == 0],
-                                                             self.task.X_lower[self.task.is_env == 0].shape[0])])
-
-                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model,
-                                                                                        self.task.X_lower[self.task.is_env == 0],
-                                                                                        self.task.X_upper[self.task.is_env == 0],
-                                                                                        self.task.is_env,
-                                                                                        self.task.X_upper[self.task.is_env == 1],
-                                                                                        inc=startpoint)
+                    self._estimate_incumbent()
                 else:
                     self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper)
 
@@ -154,6 +144,20 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.initialize()
             x = self.X
         return x
+
+    def _estimate_incumbent(self):
+        """
+            Starts a local search from each representer point in the configuration subspace and returns the best found point as incumbent
+        """
+        incs = np.zeros([self.acquisition_fkt.Nb, self.task.n_dims])
+        inc_vals = np.zeros([self.acquisition_fkt.Nb])
+        for i, representer in enumerate(self.acquisition_fkt.zb):
+            startpoint = representer[np.newaxis, :]
+            incs[i], inc_vals[i] = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, self.task.is_env, inc=startpoint)
+
+        best = np.argmin(inc_vals)
+        self.incumbent = incs[best]
+        self.incumbent_value = inc_vals[best]
 
     def save_iteration(self, it):
         """
@@ -165,4 +169,13 @@ class EnvBayesianOptimization(BayesianOptimization):
 
         logging.info("Save iteration %d in %s", it, file_name)
 
-        pickle.dump([self.X, self.Y, self.Costs, self.incumbent, self.incumbent_value, self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
+        d = dict()
+        d['X'] = self.X
+        d['Y'] = self.Y
+        d['Costs'] = self.Costs
+        d['incumbent'] = self.incumbent
+        d['incumbent_value'] = self.incumbent_value
+        d['time_function_eval'] = self.time_func_eval
+        d['time_optimization_overhead'] = self.time_optimization_overhead
+        d['all_time'] = time.time() - self.time_start
+        pickle.dump(d, open(file_name, "w"))

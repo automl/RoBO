@@ -71,6 +71,7 @@ class GPyModel(BaseModel):
             return None
 
         mean, var = self.m.predict(X, full_cov=full_cov)
+        print mean, var
 
         if not full_cov:
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)

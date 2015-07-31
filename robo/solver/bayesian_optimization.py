@@ -153,6 +153,9 @@ class BayesianOptimization(object):
         :param overwrite: data present in save_dir will be deleted and overwritten, otherwise the run will be continued.
         :return: the incumbent
         """
+        # Save the time where we start the Bayesian optimization procedure
+        self.time_start = time.time()
+
         def _onerror(dirs, path, info):
             if info[1].errno != errno.ENOENT:
                 raise
@@ -220,9 +223,9 @@ class BayesianOptimization(object):
         """
         Chooses the next configuration by optimizing the acquisition function.
 
-        :param X: The X for the model
-        :param Y: The Y for the model
-        :return: The next desired configuration
+        :param X: The point that have been where the objective function has been evaluated
+        :param Y: The function values of the evaluated points
+        :return: The next promising configuration
         """
         if X is not None and Y is not None:
             try:
@@ -240,8 +243,8 @@ class BayesianOptimization(object):
                 self.incumbent = X[best_idx]
                 self.incumbent_value = Y[best_idx]
             else:
-                best_idx = np.argmin(self.Y)
-                startpoint = self.X[best_idx]
+                best_idx = np.argmin(Y)
+                startpoint = X[best_idx]
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
 
             t = time.time()
@@ -264,4 +267,12 @@ class BayesianOptimization(object):
         #if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
         #    pickle.dump([self.X, self.Y, self.acquisition_fkt._get_most_probable_minimum()[0], self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
         #else:
-        pickle.dump([self.X, self.Y, self.incumbent, self.incumbent_value, self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
+        d = dict()
+        d['X'] = self.X
+        d['Y'] = self.Y
+        d['incumbent'] = self.incumbent
+        d['incumbent_value'] = self.incumbent_value
+        d['time_function_eval'] = self.time_func_eval
+        d['time_optimization_overhead'] = self.time_optimization_overhead
+        d['all_time'] = time.time() - self.time_start
+        pickle.dump(d, open(file_name, "w"))
