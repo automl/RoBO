@@ -201,9 +201,9 @@ This example illustrates how you can implement the main Bayesian optimization lo
 	# The optimization function that we want to optimize. It gets a numpy array with shape (N,D) where N >= 1 are the number of datapoints and D are the number of features
 	class ExampleTask(BaseTask):
 	    def __init__(self):
-	        self.X_lower = np.array([0])
-	        self.X_upper = np.array([6])
-	        self.n_dims = 1
+	        X_lower = np.array([0])
+	        X_upper = np.array([6])
+	        super(ExampleTask, self).__init__(X_lower, X_upper)
 	
 	    def objective_function(self, x):
 	        return np.sin(3 * x) * 4 * (x - 1) * (x + 2)
@@ -224,7 +224,7 @@ This example illustrates how you can implement the main Bayesian optimization lo
 	
 	# Draw one random point and evaluate it to initialize BO
 	X = np.array([np.random.uniform(task.X_lower, task.X_upper, task.n_dims)])
-	Y = task.objective_function(X)
+	Y = task.evaluate(X)
 	
 	# This is the main Bayesian optimization loop
 	for i in xrange(10):
