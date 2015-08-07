@@ -9,6 +9,8 @@ import GPy
 import logging
 
 from robo.models.GPyModel import GPyModel
+from robo.models.hmc_gp import HMCGP
+from robo.models.GPyModelMCMC import GPyModelMCMC
 from robo.acquisition.EntropyMC import EntropyMC
 from robo.maximizers.cmaes import CMAES
 from robo.maximizers.direct import Direct
@@ -21,8 +23,10 @@ from robo.acquisition.EI import EI
 from robo.solver.env_bayesian_optimization import EnvBayesianOptimization
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std, env_optimize_posterior_mean_and_std
 from robo.visualization.trajectories import get_incumbents_over_iterations, evaluate_test_performance
+from robo.acquisition.mcmc_entropy import MarginalisingHyperparameters, MarginalisingHyperparametersWithCosts
 
 from sacred import Experiment
+
 
 
 ex = Experiment('lenet_on_mnist')
@@ -30,16 +34,18 @@ ex = Experiment('lenet_on_mnist')
 
 @ex.config
 def default_config():
-    num_iterations = 10
+    num_iterations = 20
     save_dir = "/home/kleinaa/experiments/entropy_search/benchmarks/lenet_on_mnist"
     num_restarts = 10
     Nb = 1000
-    Nf = 1000
+    Nf = 500
     Np = 100
     method = "EntropyMC"
     run_id = 0
     max_method = "CMAES"
-    rec_strategy=None
+    model_method = "GPyModel"
+    environment_search = False
+    mcmc = False
 
 
 @ex.named_config
@@ -48,8 +54,23 @@ def entropy_config():
 
 
 @ex.named_config
+def hmc_config():
+    model_method = "HMCGP"
+
+
+@ex.named_config
+def mcmc_config():
+    model_method = "GPyModelMCMC"
+    burnin = 200
+    chain_length = 100
+    n_hypers = 10
+    mcmc = True
+
+
+@ex.named_config
 def env_entropy_config():
     method = "EnvEntropy"
+    environment_search = True
 
 
 @ex.named_config
@@ -72,95 +93,101 @@ def stls_config():
     max_method = "StLS"
 
 
-# @ex.named_config
-# def optimize_posterior_config():
-#     rec_strategy = "optimize_posterior"
-#
-#
-# @ex.named_config
-# def env_optimize_posterior_config():
-#     rec_strategy = "env_optimize_posterior"
+@ex.capture
+def capture_mcmc(burnin, chain_length, n_hypers):
+    return burnin, chain_length, n_hypers
 
 
 @ex.automain
-def main(max_method, method, num_iterations, save_dir, num_restarts, Nb, Nf, Np, run_id):
+def main(max_method, model_method, method, num_iterations, save_dir, num_restarts, mcmc, Nb, Nf, Np, run_id, environment_search):
 
-    output_dir = os.path.join(save_dir, method + "_" + max_method, "run_" + str(run_id))
+    output_dir = os.path.join(save_dir, method + "_" + max_method + "_" + model_method, "run_" + str(run_id))
 
-    if method == "EntropyMC":
-        task = LeNetMnist()
-        kernel = GPy.kern.Matern52(input_dim=task.n_dims)
-        model = GPyModel(kernel, optimize=True, num_restarts=num_restarts)
+    acquisition_func = None
+    task = None
+    model = None
+    recommendation_strategy = None
+    cost_model = None
+    maximizer = None
 
-        acquisition_func = EntropyMC(model, task.X_lower, task.X_upper, optimize_posterior_mean_and_std, Nb=Nb, Nf=Nf, Np=Np)
-
-        if max_method == "CMAES":
-            maximizer = CMAES(acquisition_func, task.X_lower, task.X_upper)
-        elif max_method == "Direct":
-            maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
-        elif max_method == "StLS":
-            maximizer = StochasticLocalSearch(acquisition_func, task.X_lower, task.X_upper)
-
-        bo = BayesianOptimization(acquisition_fkt=acquisition_func,
-                          model=model,
-                          maximize_fkt=maximizer,
-                          task=task,
-                          recommendation_strategy=optimize_posterior_mean_and_std,
-                          save_dir=output_dir,
-                          num_save=1)
-
-        bo.run(num_iterations)
-
-    elif method == "EnvEntropy":
+    # Define task
+    if environment_search:
         task = EnvLeNetMnist()
-        kernel = GPy.kern.Matern52(input_dim=task.n_dims)
-        model = GPyModel(kernel, optimize=True, num_restarts=num_restarts)
-
-        cost_kernel = GPy.kern.Matern52(input_dim=task.n_dims)
-        cost_model = GPyModel(cost_kernel, optimize=True, num_restarts=num_restarts)
-
-        acquisition_func = EnvEntropySearch(model, cost_model, task.X_lower, task.X_upper, env_optimize_posterior_mean_and_std, task.is_env, Nb=Nb, Nf=Nf, Np=Np)
-
-        if max_method == "CMAES":
-            maximizer = CMAES(acquisition_func, task.X_lower, task.X_upper)
-        elif max_method == "Direct":
-            maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
-        elif max_method == "StLS":
-            maximizer = StochasticLocalSearch(acquisition_func, task.X_lower, task.X_upper)
-
-        bo = EnvBayesianOptimization(acquisition_fkt=acquisition_func,
-                          model=model,
-                          cost_model=cost_model,
-                          maximize_fkt=maximizer,
-                          task=task,
-                          recommendation_strategy=env_optimize_posterior_mean_and_std,
-                          save_dir=output_dir,
-                          num_save=1)
-
-        bo.run(num_iterations)
-
-    if method == "EI":
+    else:
         task = LeNetMnist()
-        kernel = GPy.kern.Matern52(input_dim=task.n_dims)
+
+    # Define model
+    kernel = GPy.kern.Matern52(input_dim=task.n_dims)
+    if model_method == "HMCGP":
+        burnin, chain_length, n_hypers = capture_mcmc()
+        model = HMCGP(kernel, burnin=burnin, chain_length=chain_length, n_hypers=n_hypers)
+    elif model_method == "GPyModel":
         model = GPyModel(kernel, optimize=True, num_restarts=num_restarts)
+    elif model_method == "GPyModelMCMC":
+        burnin, chain_length, n_hypers = capture_mcmc()
+        model = GPyModelMCMC(kernel, burnin=burnin, chain_length=chain_length, n_hypers=n_hypers)
 
+    # Define cost model if we perform an environmental search
+    if environment_search:
+        cost_kernel = GPy.kern.Matern52(input_dim=task.n_dims)
+        if model_method == "HMCGP":
+            burnin, chain_length, n_hypers = capture_mcmc()
+            cost_model = HMCGP(cost_kernel, burnin=burnin, chain_length=chain_length, n_hypers=n_hypers)
+        elif model_method == "GPyModel":
+            cost_model = GPyModel(cost_kernel, optimize=True, num_restarts=num_restarts)
+        elif model_method == "GPyModelMCMC":
+            burnin, chain_length, n_hypers = capture_mcmc()
+            cost_model = GPyModelMCMC(cost_kernel, burnin=burnin, chain_length=chain_length, n_hypers=n_hypers)
+
+    # Define acquisition function
+    if method == "EntropyMC":
+        acquisition_func = EntropyMC(model, task.X_lower, task.X_upper, optimize_posterior_mean_and_std, Nb=Nb, Nf=Nf, Np=Np)
+        recommendation_strategy = optimize_posterior_mean_and_std
+    elif method == "EnvEntropy":
+        acquisition_func = EnvEntropySearch(model, cost_model, task.X_lower, task.X_upper, env_optimize_posterior_mean_and_std, task.is_env, Nb, Np, Nf)
+    elif method == "EI":
         acquisition_func = EI(model, task.X_lower, task.X_upper, compute_incumbent)
+        recommendation_strategy = compute_incumbent
 
-        if max_method == "CMAES":
-            maximizer = CMAES(acquisition_func, task.X_lower, task.X_upper)
-        elif max_method == "Direct":
-            maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
-        elif max_method == "StLS":
-            maximizer = StochasticLocalSearch(acquisition_func, task.X_lower, task.X_upper)
+    # If we perform mcmc sampling over the GPs hyperparamter we have to specify the meta acquisition function here
+    if mcmc:
+        if method == "EnvEntropy":
+            acquisition_func = MarginalisingHyperparametersWithCosts(acquisition_func, model, cost_model)
+        else:
+            acquisition_func = MarginalisingHyperparameters(acquisition_func, model)
+
+    # Define maximization function
+    if max_method == "CMAES":
+        maximizer = CMAES(acquisition_func, task.X_lower, task.X_upper)
+    elif max_method == "Direct":
+        maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
+    elif max_method == "StLS":
+        maximizer = StochasticLocalSearch(acquisition_func, task.X_lower, task.X_upper)
+
+    # Define solver
+    if environment_search:
+        bo = EnvBayesianOptimization(acquisition_fkt=acquisition_func,
+                  model=model,
+                  cost_model=cost_model,
+                  maximize_fkt=maximizer,
+                  task=task,
+                  recommendation_strategy=env_optimize_posterior_mean_and_std,
+                  save_dir=output_dir,
+                  num_save=1)
+
+    else:
         bo = BayesianOptimization(acquisition_fkt=acquisition_func,
                           model=model,
                           maximize_fkt=maximizer,
                           task=task,
+                          recommendation_strategy=recommendation_strategy,
                           save_dir=output_dir,
                           num_save=1)
 
-        bo.run(num_iterations)
+    # Start the experiment
+    bo.run(num_iterations)
 
+    # Compute and save test performance
     logging.info("Compute test performance...")
-    iter, inc = get_incumbents_over_iterations(output_dir)
+    _, inc = get_incumbents_over_iterations(output_dir)
     evaluate_test_performance(task, inc, os.path.join(output_dir, "test_error.npy"))

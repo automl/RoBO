@@ -22,7 +22,7 @@ class SurrogateLeNetMnist(BaseTask):
 
     def objective_function(self, x):
 
-        rf = cPickle.load(open("/home/kleinaa/experiments/entropy_search/surrogates/lenet/rf.pkl", "r"))
+        rf = cPickle.load(open("/mhome/kleinaa/experiments/entropy_search/surrogates/lenet/rf.pkl", "r"))
 
         validation_error = rf.predict(x)
         return validation_error[:, np.newaxis]
@@ -42,7 +42,7 @@ class SurrogateEnvLeNetMnist(BaseTask):
 
     def objective_function(self, x):
 
-        rf = cPickle.load(open("/home/kleinaa/experiments/entropy_search/surrogates/env_lenet/rf.pkl", "r"))
+        rf = cPickle.load(open("/mhome/kleinaa/experiments/entropy_search/surrogates/env_lenet/rf.pkl", "r"))
         validation_error = rf.predict(x)
         time.sleep(x[0, -1])
         return validation_error[:, np.newaxis]

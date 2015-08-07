@@ -73,9 +73,11 @@ class GPyModel(BaseModel):
         mean, var = self.m.predict(X, full_cov=full_cov)
 
         if not full_cov:
+            # GPy sometimes returns negative variance if the noise level is too low, clip them to be in the interval between the smallest positive number and inf
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
 
         else:
+            # If we compute the full covariance matrix only clip the values on the diagonal
             var[np.diag_indices(var.shape[0])] = np.clip(var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
             var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
             return mean[:, 0], var

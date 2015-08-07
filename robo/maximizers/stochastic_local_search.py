@@ -62,7 +62,7 @@ class StochasticLocalSearch(BaseMaximizer):
         if self.starts is None and hasattr(self.objective_func, "BestGuesses"):
             self.starts = self.objective_func.BestGuesses
         if self.starts != None and self.Ne > self.starts.shape[0]:
-            restarts[self.starts.shape[0]:self.Ne, ] = self.X_lower + (self.X_upper - self.X_lower) * np.random.uniform(size=(Ne - starts.shape[0], D))
+            restarts[self.starts.shape[0]:self.Ne, ] = self.X_lower + (self.X_upper - self.X_lower) * np.random.uniform(size=(self.Ne - self.starts.shape[0], D))
         elif self.starts != None:
             restarts[0:self.Ne] = self.starts[0:self.Ne]
         else:

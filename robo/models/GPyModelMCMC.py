@@ -1,5 +1,6 @@
 import numpy as np
 import GPy
+from copy import deepcopy
 
 from robo.models.base_model import BaseModel
 from robo.models.GPyModel import GPyModel
@@ -33,12 +34,12 @@ class GPyModelMCMC(BaseModel):
 
         self.models = []
         for sample in self.samples:
-            kernel = self.kernel
+            kernel = deepcopy(self.kernel)
             for i in range(len(sample) - 1):
                 kernel.parameters[i][0] = sample[i]
             model = GPyModel(kernel, noise_variance=sample[-1], optimization=False)
             model.train(self.X, self.Y)
-            self.models.append(m)
+            self.models.append(model)
 
     def predict(self, X, full_cov=False):
         if self.models == None:
