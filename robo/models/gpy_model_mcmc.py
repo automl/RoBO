@@ -37,7 +37,7 @@ class GPyModelMCMC(BaseModel):
             kernel = deepcopy(self.kernel)
             for i in range(len(sample) - 1):
                 kernel.parameters[i][0] = sample[i]
-            model = gpy_model(kernel, noise_variance=sample[-1], optimization=False)
+            model = GPyModel(kernel, noise_variance=sample[-1], optimization=False)
             model.train(self.X, self.Y)
             self.models.append(model)
 

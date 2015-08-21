@@ -7,9 +7,9 @@ import unittest
 import numpy as np
 
 import GPy
-from robo.models import gpy_model.GPyModel
-from robo.acquisition.LogEI import LogEI
-from robo.acquisition.EnvEntropySearch import EnvEntropySearch
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.log_ei import LogEI
+from robo.acquisition.env_entropy_search import EnvEntropySearch
 from robo.recommendation.incumbent import compute_incumbent
 
 
@@ -23,7 +23,7 @@ class TestEnvEntropySearch(unittest.TestCase):
         self.X = np.random.randn(n_points, n_feat)
         self.y = np.random.randn(n_points)[:, np.newaxis]
         self.kernel = GPy.kern.RBF(input_dim=n_feat)
-        self.model = gpy_model(self.kernel, optimize=False)
+        self.model = GPyModel(self.kernel, optimize=False)
         self.model.train(self.X, self.y)
         self.is_env = np.array([0, 0, 1])
         self.env_es = EnvEntropySearch(self.model, self.model, self.X_lower, self.X_upper, compute_incumbent, self.is_env)

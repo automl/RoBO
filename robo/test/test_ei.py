@@ -1,16 +1,10 @@
-import sys
-import os
-#sys.path.insert(0, '../')
-import unittest
-import errno
-import numpy as np
-import random
 import GPy
-from robo.models import gpy_model.GPyModel
-from robo.acquisition.EI import EI
-from robo.recommendation.incumbent import compute_incumbent
+import unittest
+import numpy as np
 
-here = os.path.abspath(os.path.dirname(__file__))
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.ei import EI
+from robo.recommendation.incumbent import compute_incumbent
 
 
 class EITestCase1(unittest.TestCase):
@@ -20,7 +14,7 @@ class EITestCase1(unittest.TestCase):
         self.y = np.array([[-3.69925653], [-3.66221988], [-3.65560591], [-3.58907791], [-8.06925984]])
         self.kernel = GPy.kern.RBF(input_dim=1, variance=30.1646253727, lengthscale=0.435343653946)
         self.noise = 1e-20
-        self.model = gpy_model(self.kernel, noise_variance=self.noise, optimize=False)
+        self.model = GPyModel(self.kernel, noise_variance=self.noise, optimize=False)
         self.model.train(self.x, self.y)
 
     def test(self):

@@ -25,9 +25,9 @@ class EnvEntropySearch(EntropyMC):
         self.is_env_variable = is_env_variable
 
         if compute_incumbent is env_optimize_posterior_mean_and_std:
-            compute_inc = partial(compute_incumbent, is_env=is_env_variable)
+            compute_incumbent = partial(compute_incumbent, is_env=is_env_variable)
 
-        super(EnvEntropySearch, self).__init__(model, X_lower, X_upper, compute_inc, Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
+        super(EnvEntropySearch, self).__init__(model, X_lower, X_upper, compute_incumbent, Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
 
     def update(self, model, cost_model):
         self.cost_model = cost_model

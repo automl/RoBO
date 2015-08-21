@@ -8,7 +8,7 @@ import GPy
 import unittest
 import numpy as np
 
-from robo.models import gpy_model.GPyModel
+from robo.models.gpy_model import GPyModel
 from robo.recommendation.incumbent import compute_incumbent
 from robo.recommendation.optimize_posterior import optimize_posterior_mean,\
     optimize_posterior_mean_and_std
@@ -17,14 +17,14 @@ from robo.recommendation.optimize_posterior import optimize_posterior_mean,\
 class Test(unittest.TestCase):
 
     def func(self, x):
-        return x**x + 0.5
+        return x ** x + 0.5
 
     def setUp(self):
         X = np.array([[0.0, 0.25, 0.75, 1.0]])
         X = X.T
         y = self.func(X)
         k = GPy.kern.RBF(input_dim=1)
-        self.m = gpy_model(k, noise_variance=1e-3)
+        self.m = GPyModel(k, noise_variance=1e-3)
         self.m.train(X, y)
         self.X_lower = np.array([0])
         self.X_upper = np.array([1.0])
