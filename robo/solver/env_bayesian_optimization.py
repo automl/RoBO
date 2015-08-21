@@ -78,7 +78,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.incumbent = self.X[0]
             self.incumbent_value = self.Y[0]
             if self.save_dir is not None and (0) % self.num_save == 0:
-                self.save_iteration(0)
+                self.save_iteration(0, costs=self.Costs)
         else:
             self.X = X
             self.Y = Y
@@ -101,7 +101,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             self.Costs = np.append(self.Costs, new_cost[:, np.newaxis], axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                self.save_iteration(it)
+                self.save_iteration(it, costs=self.Costs)
 
         # Recompute the incumbent before we return it
         if self.recommendation_strategy == None:
@@ -163,23 +163,3 @@ class EnvBayesianOptimization(BayesianOptimization):
         self.incumbent = incs[best]
         self.incumbent_value = inc_vals[best]
 
-    def save_iteration(self, it):
-        """
-            Save the X, y, costs, incumbent, incumbent_value, time of the function evaluation and the time of the optimizer of this iteration
-        """
-        file_name = "iteration_%03d.pkl" % (it)
-
-        file_name = os.path.join(self.save_dir, file_name)
-
-        logging.info("Save iteration %d in %s", it, file_name)
-
-        d = dict()
-        d['X'] = self.X
-        d['Y'] = self.Y
-        d['Costs'] = self.Costs
-        d['incumbent'] = self.incumbent
-        d['incumbent_value'] = self.incumbent_value
-        d['time_function_eval'] = self.time_func_eval
-        d['time_optimization_overhead'] = self.time_optimization_overhead
-        d['all_time'] = time.time() - self.time_start
-        pickle.dump(d, open(file_name, "w"))

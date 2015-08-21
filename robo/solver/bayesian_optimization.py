@@ -1,14 +1,12 @@
 
-import os
 import time
-import errno
 import logging
 import numpy as np
-import shutil
 
 from robo.models.GPyModelMCMC import GPyModelMCMC
 from robo.models.hmc_gp import HMCGP
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
+from robo.solver.base_solver import BaseSolver
 
 try:
     import cPickle as pickle
@@ -18,10 +16,7 @@ except:
 from argparse import ArgumentError
 
 
-here = os.path.abspath(os.path.dirname(__file__))
-
-
-class BayesianOptimization(object):
+class BayesianOptimization(BaseSolver):
     """
     Class implementing general Bayesian optimization.
     """
@@ -47,10 +42,7 @@ class BayesianOptimization(object):
 
         self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, task])
         if self.enough_arguments:
-            self.task = task
-            self.acquisition_fkt = acquisition_fkt
-            self.model = model
-            self.maximize_fkt = maximize_fkt
+            super(BayesianOptimization, self).__init__(acquisition_fkt, model, maximize_fkt, task, save_dir)
 
             self.initialization = initialization
 
@@ -67,59 +59,8 @@ class BayesianOptimization(object):
             self.model_untrained = True
             self.recommendation_strategy = recommendation_strategy
             self.incumbent = None
-
-        elif save_dir is not None:
-            self.save_dir = save_dir
-            try:
-                os.mkdir(self.save_dir)
-            except:
-                pass
         else:
             raise ArgumentError()
-
-    def init_last_iteration(self):
-        """
-        Loads the last iteration from a previously stored run
-        :return: the previous observations
-        """
-        max_iteration = self._get_last_iteration_number()
-
-        iteration_folder = os.path.join(self.save_dir, "%03d" % (max_iteration, ))
-
-        that = pickle.load(open(os.path.join(iteration_folder, "bayesian_opt.pickle"), "rb"))
-        self.task = that.task
-        self.acquisition_fkt = that.acquisition_fkt
-        self.model = that.model
-        self.maximize_fkt = that.maximize_fkt
-        return pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
-
-    #FIXME: Update to new interface
-    @classmethod
-    def from_iteration(cls, save_dir, i):
-        """
-        Loads the data from a previous run
-        :param save_dir: directory for the data
-        :param i: index of iteration
-        :return:
-        """
-        iteration_folder = save_dir + "/%03d" % (i, )
-        that = pickle.load(open(iteration_folder + "/bayesian_opt.pickle", "rb"))
-        if not isinstance(that, cls):
-            print  "not a robo instance"
-            exit()
-        new_x, X, Y, best_guess = pickle.load(open(iteration_folder + "/observations.pickle", "rb"))
-        return that, new_x, X, Y, best_guess
-
-    def create_save_dir(self):
-        """
-        Creates the save directory to store the runs
-        """
-        if self.save_dir is not None:
-            try:
-                os.makedirs(self.save_dir)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
 
     def initialize(self):
         """
@@ -141,15 +82,7 @@ class BayesianOptimization(object):
         logging.info("Configuration achieved a performance of %f " % (self.Y[0]))
         logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[0]))
 
-    def get_observations(self):
-        return self.X, self.Y
-
-    def get_model(self):
-        if self.model is None:
-            logging.info("No model trained yet!")
-        return self.model
-
-    def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
+    def run(self, num_iterations=10, X=None, Y=None):
         """
         The main Bayesian optimization loop
 
@@ -162,21 +95,11 @@ class BayesianOptimization(object):
         # Save the time where we start the Bayesian optimization procedure
         self.time_start = time.time()
 
-        def _onerror(dirs, path, info):
-            if info[1].errno != errno.ENOENT:
-                raise
-
-        if overwrite and self.save_dir:
-            shutil.rmtree(self.save_dir, onerror=_onerror)
-            self.create_save_dir()
-        else:
-            self.create_save_dir()
-
         if X is None and Y is None:
             self.initialize()
-            #num_iterations = num_iterations - 1
             self.incumbent = self.X[0]
             self.incumbent_value = self.Y[0]
+
             if self.save_dir is not None and (0) % self.num_save == 0:
                 self.save_iteration(0)
         else:
@@ -187,17 +110,22 @@ class BayesianOptimization(object):
 
         for it in range(1, num_iterations):
             logging.info("Start iteration %d ... ", it)
+
             start_time = time.time()
             new_x = self.choose_next(self.X, self.Y)
             time_optimization_overhead = time.time() - start_time
             self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
+
             logging.info("Optimization overhead was %f seconds" % (self.time_optimization_overhead[-1]))
+
             logging.info("Evaluate candidate %s" % (str(new_x)))
             start_time = time.time()
             new_y = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
             self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
+
             logging.info("Configuration achieved a performance of %f " % (new_y[0, 0]))
+
             logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[-1]))
 
             if self.X is None:
@@ -279,33 +207,11 @@ class BayesianOptimization(object):
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
             logging.info("New incumbent is %s", str(self.incumbent))
 
-            logging.info("Maximize acquistion function...")
+            logging.info("Maximize acquisition function...")
             t = time.time()
             x = self.maximize_fkt.maximize()
-            logging.info("Time to maximze the acquisition function: %f", (time.time() - t))
+            logging.info("Time to maximize the acquisition function: %f", (time.time() - t))
         else:
             self.initialize()
             x = self.X
         return x
-
-    def save_iteration(self, it):
-        """
-            Saves an iteration.
-        """
-        file_name = "iteration_%03d.pkl" % (it)
-
-        file_name = os.path.join(self.save_dir, file_name)
-        #os.makedirs(iteration_folder)
-        #FIXME What does Entropy return as incumbent?
-        #if hasattr(self.acquisition_fkt, "_get_most_probable_minimum") and not self.model_untrained:
-        #    pickle.dump([self.X, self.Y, self.acquisition_fkt._get_most_probable_minimum()[0], self.time_func_eval, self.time_optimization_overhead], open(file_name, "w"))
-        #else:
-        d = dict()
-        d['X'] = self.X
-        d['Y'] = self.Y
-        d['incumbent'] = self.incumbent
-        d['incumbent_value'] = self.incumbent_value
-        d['time_function_eval'] = self.time_func_eval
-        d['time_optimization_overhead'] = self.time_optimization_overhead
-        d['all_time'] = time.time() - self.time_start
-        pickle.dump(d, open(file_name, "w"))
