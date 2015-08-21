@@ -7,9 +7,9 @@ import unittest
 import numpy as np
 
 import GPy
-from robo.models.GPyModel import GPyModel
-from robo.acquisition.LogEI import LogEI
-from robo.acquisition.EnvEntropySearch import EnvEntropySearch
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.log_ei import LogEI
+from robo.acquisition.env_entropy_search import EnvEntropySearch
 from robo.recommendation.incumbent import compute_incumbent
 
 

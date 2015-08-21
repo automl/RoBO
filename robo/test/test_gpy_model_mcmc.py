@@ -8,7 +8,7 @@ import unittest
 import GPy
 import numpy as np
 
-from robo.models.GPyModelMCMC import GPyModelMCMC
+from robo.models.gpy_model_mcmc import GPyModelMCMC
 
 
 class TestGPyModelMCMC(unittest.TestCase):

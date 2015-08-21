@@ -4,8 +4,8 @@ import numpy as np
 
 import GPy
 
-from robo.models.GPyModel import GPyModel
-from robo.acquisition.PI import PI
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.pi import PI
 from robo.recommendation.incumbent import compute_incumbent
 
 

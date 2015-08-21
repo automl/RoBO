@@ -8,12 +8,12 @@ import GPy
 import unittest
 import numpy as np
 
-from robo.models.GPyModel import GPyModel
+from robo.models.gpy_model import GPyModel
 from robo.maximizers.cmaes import CMAES
 from robo.maximizers.direct import Direct
 from robo.maximizers.grid_search import GridSearch
 from robo.maximizers.stochastic_local_search import StochasticLocalSearch
-from robo.acquisition.EI import EI
+from robo.acquisition.ei import EI
 from robo.recommendation.incumbent import compute_incumbent
 from robo.task.branin import Branin
 

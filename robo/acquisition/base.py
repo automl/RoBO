@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from robo.models.GPyModelMCMC import GPyModelMCMC
+from robo.models.gpy_model_mcmc import GPyModelMCMC
 
 
 class AcquisitionFunction(object):
@@ -60,14 +60,14 @@ class AcquisitionFunction(object):
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
 
-        if self.mcmc_model != None:
-            acq_val = np.zeros([len(self.mcmc_model.models)])
-            for i, model in enumerate(self.mcmc_model.models):
-                self.model = model
-                acq_val[i] = self.compute(X, derivative)
-            return np.array([acq_val.sum()])
-        elif self.model != None:
-            return self.compute(X, derivative)
+#         if self.mcmc_model != None:
+#             acq_val = np.zeros([len(self.mcmc_model.models)])
+#             for i, model in enumerate(self.mcmc_model.models):
+#                 self.model = model
+#                 acq_val[i] = self.compute(X, derivative)
+#             return np.array([acq_val.sum()])
+#         elif self.model != None:
+        return self.compute(X, derivative)
 
     def compute(self, X, derivative=False):
         """

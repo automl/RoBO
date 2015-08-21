@@ -1,16 +1,10 @@
-import sys
-import os
-#sys.path.insert(0, '../')
-import unittest
-import errno
-import numpy as np
-import random
 import GPy
-from robo.models.GPyModel import GPyModel
-from robo.acquisition.EI import EI
-from robo.recommendation.incumbent import compute_incumbent
+import unittest
+import numpy as np
 
-here = os.path.abspath(os.path.dirname(__file__))
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.ei import EI
+from robo.recommendation.incumbent import compute_incumbent
 
 
 class EITestCase1(unittest.TestCase):

@@ -1,8 +1,9 @@
 import numpy as np
 import emcee
 from scipy.stats import norm
-from robo.acquisition.LogEI import LogEI
-from robo.acquisition.Entropy import Entropy
+from robo.acquisition.log_ei import LogEI
+from robo.acquisition.entropy import Entropy
+from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
@@ -34,8 +35,8 @@ class EntropyMC(Entropy):
     :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it deafults to log loss (cf. loss_functions module).
 
     """
-    def __init__(self, model, X_lower, X_upper, compute_incumbent, Nb=50, Nf=1000, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=300, **kwargs):
-        super(EntropyMC, self).__init__(model, X_lower, X_upper, Nb, sampling_acquisition, sampling_acquisition_kw, Np, **kwargs)
+    def __init__(self, model, X_lower, X_upper, compute_inc=optimize_posterior_mean_and_std, Nb=50, Nf=1000, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=300, **kwargs):
+        super(EntropyMC, self).__init__(model, X_lower, X_upper, Nb, compute_inc, sampling_acquisition, sampling_acquisition_kw, Np, **kwargs)
         self.Nf = Nf
         self.Np = Np
 
@@ -55,7 +56,7 @@ class EntropyMC(Entropy):
         return self.dh_fun(X)
 
     def update(self, model):
-        self.model = model
+        super(EntropyMC, self).update(model)
         self.sn2 = self._get_noise()
 
         self.sampling_acquisition.update(model)
@@ -105,7 +106,7 @@ class EntropyMC(Entropy):
         dMdb = Lx / s * np.sqrt(v)
         dVdb = -Lx.dot(Lx.T)
         # The innovations
-        stoch_changes = dMdb.dot(self.W) # This W is a vector ...
+        stoch_changes = dMdb.dot(self.W)  # This W is a vector ...
         # Update mean and variance by the innovations
         Mb_new = self.Mb[:, None] + stoch_changes
         Vb_new = self.Vb + dVdb
@@ -116,6 +117,8 @@ class EntropyMC(Entropy):
         try:
             cVb_new = np.linalg.cholesky(Vb_new)
         except np.linalg.LinAlgError:
+            from IPython import embed
+            embed()
             cVb_new = np.linalg.cholesky(Vb_new + 1e-10 * np.eye(Vb_new.shape[0]))
         # Draw new function samples from the innovated GP on the representer points
         f_new = np.dot(cVb_new, self.F.T)

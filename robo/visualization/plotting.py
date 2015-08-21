@@ -74,6 +74,7 @@ def plot_objective_function_2d(objective_function, X_lower, X_upper, ax, resolut
 
     return ax
 
+
 def plot_acquisition_function_2d(acq_fkt, X_lower, X_upper, ax, resolution=0.1):
     X1 = np.arange(X_lower[0], X_upper[0], resolution)
     X2 = np.arange(X_lower[1], X_upper[1], resolution)
@@ -91,12 +92,12 @@ def plot_acquisition_function_2d(acq_fkt, X_lower, X_upper, ax, resolution=0.1):
     return ax
 
 
-def plot_acquisition_function(acquisition_function, X_lower, X_upper, ax, resolution=0.1, color="g"):
+def plot_acquisition_function(acquisition_function, X_lower, X_upper, ax, resolution=0.1, color="g", label="AcquisitionFunction"):
     grid = np.arange(X_lower[0], X_upper[0], resolution)
 
     grid_values = np.zeros([grid.shape[0]])
     for i in xrange(grid.shape[0]):
         grid_values[i] = acquisition_function(grid[i, np.newaxis])
 
-    ax.plot(grid, grid_values, color, label="AcquisitionFunction")
+    ax.plot(grid, grid_values, color, label=label)
     return ax
