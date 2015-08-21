@@ -8,7 +8,7 @@ import GPy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.acquisition.EntropyMC import EntropyMC
 from robo.recommendation.incumbent import compute_incumbent
 from robo.visualization.plotting import plot_model, plot_projected_model,\
@@ -33,7 +33,7 @@ X = np.random.rand(5, 1) * X_upper
 y = objective_function(X)
 
 kernel = GPy.kern.Matern52(input_dim=dims)
-model = GPyModel(kernel, optimize=True)
+model = gpy_model(kernel, optimize=True)
 model.train(X, y)
 
 es = EntropyMC(model, X_lower, X_upper, compute_incumbent)

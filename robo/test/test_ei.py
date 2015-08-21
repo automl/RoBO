@@ -6,7 +6,7 @@ import errno
 import numpy as np
 import random
 import GPy
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.acquisition.EI import EI
 from robo.recommendation.incumbent import compute_incumbent
 
@@ -20,7 +20,7 @@ class EITestCase1(unittest.TestCase):
         self.y = np.array([[-3.69925653], [-3.66221988], [-3.65560591], [-3.58907791], [-8.06925984]])
         self.kernel = GPy.kern.RBF(input_dim=1, variance=30.1646253727, lengthscale=0.435343653946)
         self.noise = 1e-20
-        self.model = GPyModel(self.kernel, noise_variance=self.noise, optimize=False)
+        self.model = gpy_model(self.kernel, noise_variance=self.noise, optimize=False)
         self.model.train(self.x, self.y)
 
     def test(self):

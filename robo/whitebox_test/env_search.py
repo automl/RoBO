@@ -8,7 +8,7 @@ import GPy
 
 import numpy as np
 
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.solver.env_bayesian_optimization import EnvBayesianOptimization
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
 from robo.maximizers.cmaes import CMAES
@@ -25,12 +25,12 @@ from robo.models.GPyModelMCMC import GPyModelMCMC
 task = EnvSVMDigits()
 
 kernel = GPy.kern.Matern52(input_dim=task.n_dims)
-env_es_model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+env_es_model = gpy_model(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 #env_es_model = GPyModelMCMC(kernel, noise_variance=1e-8)
-es_model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+es_model = gpy_model(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 
 cost_kernel = GPy.kern.Matern52(input_dim=task.n_dims)
-cost_model = GPyModel(cost_kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+cost_model = gpy_model(cost_kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 #cost_model = GPyModelMCMC(cost_kernel, noise_variance=1e-8)
 n_representer = 50
 n_hals_vals = 200

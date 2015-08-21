@@ -6,7 +6,7 @@ Created on Jul 3, 2015
 
 import GPy
 
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.models.GPyModelMCMC import GPyModelMCMC
 from robo.acquisition.EntropyMC import EntropyMC
 from robo.acquisition.Entropy import Entropy
@@ -43,7 +43,7 @@ def fmin(objective_fkt, X_lower, X_upper, num_iterations=30, model="GPy", maximi
         return None
 
     if model == "GPy":
-        m = GPyModel(k, optimize=True, noise_variance=1e-4, num_restarts=10)
+        m = gpy_model(k, optimize=True, noise_variance=1e-4, num_restarts=10)
     elif model == "GPyMCMC":
         m = GPyModelMCMC(k, optimize=True, noise_variance=1e-4, num_restarts=10)
     else:

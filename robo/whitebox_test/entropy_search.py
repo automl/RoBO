@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.recommendation.incumbent import compute_incumbent
 from robo.acquisition.EntropyMC import EntropyMC
 from robo.acquisition.Entropy import Entropy
@@ -61,7 +61,7 @@ def main():
     task = ExampleTask()
 
     kernel = GPy.kern.Matern52(input_dim=task.n_dims)
-    model = GPyModel(kernel, optimize=False, noise_variance=1e-8, num_restarts=10)
+    model = gpy_model(kernel, optimize=False, noise_variance=1e-8, num_restarts=10)
 
     n_representer = 50
     n_hals_vals = 1000

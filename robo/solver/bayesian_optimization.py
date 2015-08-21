@@ -3,25 +3,18 @@ import time
 import logging
 import numpy as np
 
-from robo.models.GPyModelMCMC import GPyModelMCMC
+from robo.models.gpy_model_mcmc import GPyModelMCMC
 from robo.models.hmc_gp import HMCGP
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 from robo.solver.base_solver import BaseSolver
-
-try:
-    import cPickle as pickle
-except:
-    import pickle
-
-from argparse import ArgumentError
 
 
 class BayesianOptimization(BaseSolver):
     """
     Class implementing general Bayesian optimization.
     """
-    def __init__(self, acquisition_fkt=None, model=None,
-                 maximize_fkt=None, task=None, save_dir=None,
+    def __init__(self, acquisition_fkt, model,
+                 maximize_fkt, task, save_dir=None,
                  initialization=None, recommendation_strategy=None, num_save=1):
         """
         Initializes the Bayesian optimization.
@@ -40,27 +33,23 @@ class BayesianOptimization(BaseSolver):
 
         logging.basicConfig(level=logging.DEBUG)
 
-        self.enough_arguments = reduce(lambda a, b: a and b is not None, [True, acquisition_fkt, model, maximize_fkt, task])
-        if self.enough_arguments:
-            super(BayesianOptimization, self).__init__(acquisition_fkt, model, maximize_fkt, task, save_dir)
+        super(BayesianOptimization, self).__init__(acquisition_fkt, model, maximize_fkt, task, save_dir)
 
-            self.initialization = initialization
+        self.initialization = initialization
 
-            self.X = None
-            self.Y = None
-            self.time_func_eval = None
-            self.time_optimization_overhead = None
+        self.X = None
+        self.Y = None
+        self.time_func_eval = None
+        self.time_optimization_overhead = None
 
-            self.save_dir = save_dir
-            self.num_save = num_save
-            if save_dir is not None:
-                self.create_save_dir()
+        self.save_dir = save_dir
+        self.num_save = num_save
+        if save_dir is not None:
+            self.create_save_dir()
 
-            self.model_untrained = True
-            self.recommendation_strategy = recommendation_strategy
-            self.incumbent = None
-        else:
-            raise ArgumentError()
+        self.model_untrained = True
+        self.recommendation_strategy = recommendation_strategy
+        self.incumbent = None
 
     def initialize(self):
         """

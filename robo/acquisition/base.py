@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from robo.models.GPyModelMCMC import GPyModelMCMC
+from robo.models.gpy_model_mcmc import GPyModelMCMC
 
 
 class AcquisitionFunction(object):

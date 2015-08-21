@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from robo.benchmarks.branin import branin, get_branin_bounds
 from robo.benchmarks.hartmann6 import hartmann6, get_hartmann6_bounds
 from robo.benchmarks.goldstein_price import goldstein_price, get_goldstein_price_bounds
-from robo.models.GPyModelMCMC import GPyModelMCMC
-from robo.models.GPyModel import GPyModel
+from robo.models.gpy_model_mcmc import GPyModelMCMC
+from robo.models import gpy_model.GPyModel
 
 from sklearn import cross_validation
 from sklearn.metrics import mean_squared_error
@@ -119,7 +119,7 @@ def opt_vs_mcmc_data(objective_function, kernel, n_dims, X_lower, X_upper, ax1, 
 
         model = GPyModelMCMC(kernel, noise_variance=None, burnin=200, chain_length=100, n_hypers=10)
 
-        single_model = GPyModel(kernel)
+        single_model = gpy_model(kernel)
 
         kf = cross_validation.KFold(num_points, n_folds=n_folds)
 

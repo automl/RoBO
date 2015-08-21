@@ -8,7 +8,7 @@ import GPy
 import unittest
 import numpy as np
 
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.maximizers.cmaes import CMAES
 from robo.maximizers.direct import Direct
 from robo.maximizers.grid_search import GridSearch
@@ -38,7 +38,7 @@ class TestMaximizers1D(unittest.TestCase):
         self.Y = objective_function(self.X)
 
         kernel = GPy.kern.Matern52(input_dim=self.dims)
-        self.model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+        self.model = gpy_model(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 
         self.model.train(self.X, self.Y)
         self.acquisition_func = EI(self.model, X_upper=self.X_upper, X_lower=self.X_lower, compute_incumbent=compute_incumbent, par=0.1)
@@ -89,7 +89,7 @@ class TestMaximizers2D(unittest.TestCase):
         self.Y = self.branin.evaluate(self.X)
 
         kernel = GPy.kern.Matern52(input_dim=self.branin.n_dims)
-        self.model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+        self.model = gpy_model(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 
         self.model.train(self.X, self.Y)
         self.acquisition_func = EI(self.model,

@@ -9,9 +9,9 @@ import errno
 import argparse
 import numpy as np
 
-from robo.models import GPyModel
+from robo.models import gpy_model
 from robo.solver.env_bayesian_optimization import EnvBayesianOptimization
-from robo.acquisition.EnvEntropySearch import EnvEntropySearch
+from robo.acquisition import env_entropy_search.EnvEntropySearch
 from robo.maximizers import maximize
 from robo.recommendation.incumbent import compute_incumbent
 
@@ -143,11 +143,11 @@ def main(*args, **kwargs):
     print args.noise_variance
     if args.model == "GPy":
         #TODO: MCMC sampling of the hyperparameters
-        model = GPyModel(kernel, optimize=True, **model_kwargs)
-        cost_model = GPyModel(cost_kernel, optimize=True, **model_kwargs)
+        model = gpy_model(kernel, optimize=True, **model_kwargs)
+        cost_model = gpy_model(cost_kernel, optimize=True, **model_kwargs)
 
     # Specify the acquisition function
-    acquisition_fkt = EnvEntropySearch(model, cost_model,
+    acquisition_fkt = env_entropy_search(model, cost_model,
                                        X_lower, X_upper,
                                        is_env,
                                        args.n_representer,

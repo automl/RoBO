@@ -7,7 +7,7 @@ Created on Jun 8, 2015
 import emcee
 import numpy as np
 
-from robo.acquisition.EntropyMC import EntropyMC
+from robo.acquisition.entropy_mc import EntropyMC
 from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
 from _functools import partial
 

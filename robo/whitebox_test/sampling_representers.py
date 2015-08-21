@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import GPy
 
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
 from robo.acquisition.LogEI import LogEI
 from robo.recommendation.incumbent import compute_incumbent
@@ -28,7 +28,7 @@ X = X[:, np.newaxis]
 y = objective_function(X)
 
 kernel = GPy.kern.Matern52(input_dim=dims)
-model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+model = gpy_model(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 model.train(X, y)
 
 es = EnvEntropySearch(None, None, n_representer=100, n_hals_vals=0, n_func_samples=0)

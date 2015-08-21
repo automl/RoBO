@@ -8,7 +8,7 @@ import GPy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from robo.models.GPyModel import GPyModel
+from robo.models import gpy_model.GPyModel
 from robo.acquisition.EnvEntropySearch import EnvEntropySearch
 from robo.recommendation.incumbent import compute_incumbent
 from robo.visualization.plotting import plot_model, plot_projected_model,\
@@ -36,8 +36,8 @@ c = cost_function(X)
 
 kernel = GPy.kern.Matern52(input_dim=dims)
 cost_kernel = GPy.kern.Matern52(input_dim=dims)
-model = GPyModel(kernel, optimize=True)
-cost_model = GPyModel(cost_kernel, optimize=True)
+model = gpy_model(kernel, optimize=True)
+cost_model = gpy_model(cost_kernel, optimize=True)
 model.train(X, y)
 cost_model.train(X, c)
 
