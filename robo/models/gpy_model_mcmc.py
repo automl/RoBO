@@ -3,7 +3,7 @@ import GPy
 from copy import deepcopy
 
 from robo.models.base_model import BaseModel
-from robo.models import gpy_model.GPyModel
+from robo.models.gpy_model import GPyModel
 
 
 class GPyModelMCMC(BaseModel):

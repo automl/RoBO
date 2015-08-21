@@ -7,8 +7,8 @@ import scipy
 import numpy as np
 import emcee
 
-from robo.acquisition.LogEI import LogEI
-from robo.acquisition.UCB import UCB
+from robo.acquisition.log_ei import LogEI
+from robo.acquisition.ucb import UCB
 from robo.acquisition.base import AcquisitionFunction
 from robo.recommendation.incumbent import compute_incumbent
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std

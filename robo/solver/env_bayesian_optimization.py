@@ -8,20 +8,23 @@ import time
 import logging
 import numpy as np
 
-from robo.solver.base_solver import BaseSolver
+from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std,\
     env_optimize_posterior_mean_and_std_mcmc
 from robo.recommendation.incumbent import compute_incumbent
 
 
-class EnvBayesianOptimization(BaseSolver):
+class EnvBayesianOptimization(BayesianOptimization):
 
     def __init__(self, acquisition_fkt=None, model=None, cost_model=None, maximize_fkt=None,
                  task=None, save_dir=None, initialization=None, recommendation_strategy=None, num_save=1):
 
         logging.basicConfig(level=logging.DEBUG)
         # Initialize everything that is necessary
-        super(EnvBayesianOptimization, self).__init__(acquisition_fkt, model, maximize_fkt, task, save_dir)
+        self.acquisition_fkt = acquisition_fkt
+        self.model = model
+        self.maximize_fkt = maximize_fkt
+        self.task = task
 
         self.initialization = initialization
         self.cost_model = cost_model

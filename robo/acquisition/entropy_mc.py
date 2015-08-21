@@ -1,8 +1,8 @@
 import numpy as np
 import emcee
 from scipy.stats import norm
-from robo.acquisition.LogEI import LogEI
-from robo.acquisition import entropy.Entropy
+from robo.acquisition.log_ei import LogEI
+from robo.acquisition.entropy import Entropy
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 
 sq2 = np.sqrt(2)
@@ -10,7 +10,7 @@ l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
 
-class EntropyMC(entropy):
+class EntropyMC(Entropy):
     """
     The EntropyMC contains the asymptotically exact, sampling based variant of the entropy search acquisition function.
 

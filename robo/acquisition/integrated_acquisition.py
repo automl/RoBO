@@ -6,7 +6,7 @@ Created on Aug 11, 2015
 import numpy as np
 from copy import deepcopy
 
-from robo.models.GPyModelMCMC import GPyModelMCMC
+from robo.models.gpy_model_mcmc import GPyModelMCMC
 from robo.acquisition.base import AcquisitionFunction
 
 
