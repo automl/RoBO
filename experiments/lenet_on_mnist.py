@@ -37,7 +37,7 @@ def default_config():
     num_iterations = 20
     save_dir = "/home/kleinaa/experiments/entropy_search/benchmarks/lenet_on_mnist"
     num_restarts = 10
-    Nb = 1000
+    Nb = 80
     Nf = 500
     Np = 100
     method = "EntropyMC"

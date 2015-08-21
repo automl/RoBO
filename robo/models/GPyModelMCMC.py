@@ -51,8 +51,8 @@ class GPyModelMCMC(BaseModel):
 
         for i, model in enumerate(self.models):
             m, v = model.predict(X, full_cov)
-            mean[i, :] = m[:, 0]
-            var[i, :] = v[:, 0]
+            mean[i, :] = m
+            var[i, :] = v
 
         return mean, var
 

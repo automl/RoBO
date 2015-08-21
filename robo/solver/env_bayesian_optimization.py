@@ -60,7 +60,7 @@ class EnvBayesianOptimization(BayesianOptimization):
             these observations will be overwritten by the load
         """
 
-        # Save the time where we start the Bayesian optimization procedure
+        # Save the time when we start the Bayesian optimization procedure
         self.time_start = time.time()
 
         def _onerror(dirs, path, info):
@@ -75,7 +75,6 @@ class EnvBayesianOptimization(BayesianOptimization):
 
         if X is None and Y is None:
             self.initialize()
-            #num_iterations = num_iterations - 1
             self.incumbent = self.X[0]
             self.incumbent_value = self.Y[0]
             if self.save_dir is not None and (0) % self.num_save == 0:
@@ -150,11 +149,15 @@ class EnvBayesianOptimization(BayesianOptimization):
         """
             Starts a local search from each representer point in the configuration subspace and returns the best found point as incumbent
         """
+        #TODO: This does not work if we do MCMC sampling
+
+        # Start gradient descent from each representer point
         incs = np.zeros([self.acquisition_fkt.Nb, self.task.n_dims])
         inc_vals = np.zeros([self.acquisition_fkt.Nb])
         for i, representer in enumerate(self.acquisition_fkt.zb):
-            startpoint = representer[np.newaxis, :]
-            incs[i], inc_vals[i] = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, self.task.is_env, inc=startpoint)
+            # Extract the dimensions of the parameter subspace
+            startpoint = representer[np.newaxis, self.task.is_env == 0]
+            incs[i], inc_vals[i] = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, self.task.is_env, inc=startpoint, with_gradients=True)
 
         best = np.argmin(inc_vals)
         self.incumbent = incs[best]

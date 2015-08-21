@@ -106,7 +106,7 @@ class EntropyMC(Entropy):
         dMdb = Lx / s * np.sqrt(v)
         dVdb = -Lx.dot(Lx.T)
         # The innovations
-        stoch_changes = dMdb.dot(self.W) # This W is a vector ...
+        stoch_changes = dMdb.dot(self.W)  # This W is a vector ...
         # Update mean and variance by the innovations
         Mb_new = self.Mb[:, None] + stoch_changes
         Vb_new = self.Vb + dVdb
@@ -117,6 +117,8 @@ class EntropyMC(Entropy):
         try:
             cVb_new = np.linalg.cholesky(Vb_new)
         except np.linalg.LinAlgError:
+            from IPython import embed
+            embed()
             cVb_new = np.linalg.cholesky(Vb_new + 1e-10 * np.eye(Vb_new.shape[0]))
         # Draw new function samples from the innovated GP on the representer points
         f_new = np.dot(cVb_new, self.F.T)

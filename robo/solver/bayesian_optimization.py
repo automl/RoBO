@@ -4,13 +4,19 @@ import time
 import errno
 import logging
 import numpy as np
-
 import shutil
+
+from robo.models.GPyModelMCMC import GPyModelMCMC
+from robo.models.hmc_gp import HMCGP
+from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
+
 try:
     import cPickle as pickle
 except:
     import pickle
+
 from argparse import ArgumentError
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -240,10 +246,33 @@ class BayesianOptimization(object):
             self.acquisition_fkt.update(self.model)
 
             logging.info("Determine new incumbent")
+
             if self.recommendation_strategy is None:
                 best_idx = np.argmin(Y)
                 self.incumbent = X[best_idx]
                 self.incumbent_value = Y[best_idx]
+            elif self.recommendation_strategy is optimize_posterior_mean_and_std:
+                best_idx = np.argmin(Y)
+                startpoint = X[best_idx]
+
+                # If we do MCMC sampling over the GP hyperparameter, we optimize each model individually and return the best found point
+                # TODO: Maybe we should optimize based on the average over the GPs' predictions instead of optimizing each GP individually. that would
+                # prevent that we suffer return the incumbent based on a GP that is to certain in its predictions
+                if isinstance(self.model, GPyModelMCMC):
+                    incs = np.zeros([len(self.model.models), self.task.n_dims])
+                    inc_vals = np.zeros([len(self.model.models)])
+                    for i, model in enumerate(self.model.models):
+                        incs[i], inc_vals[i] = self.recommendation_strategy(model, self.task.X_lower, self.task.X_upper, inc=startpoint)
+
+                        best = np.argmin(inc_vals)
+                        self.incumbent = incs[best]
+                        self.incumbent_value = inc_vals[best]
+                elif isinstance(self.model, HMCGP):
+                    #TODO: Not clear how to compute gradients with HMCGP
+                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint, with_gradients=True)
+                else:
+                    #TODO: incumbent_value is the predicted value of the incumbent not its real value (if we optimize the posterior)
+                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint, with_gradients=True)
             else:
                 best_idx = np.argmin(Y)
                 startpoint = X[best_idx]
