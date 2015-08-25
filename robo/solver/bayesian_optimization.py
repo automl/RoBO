@@ -140,6 +140,7 @@ class BayesianOptimization(BaseSolver):
             self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
 
         logging.info("Return %s as incumbent with performance %f" % (str(self.incumbent), self.incumbent_value))
+
         return self.incumbent, self.incumbent_value
 
     def choose_next(self, X=None, Y=None):

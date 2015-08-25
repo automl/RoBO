@@ -18,16 +18,6 @@ class GPyModel(BaseModel):
         self.f_star = None
         self.m = None
 
-    """def __getstate__(self):
-        return dict(kernel = self.kernel,
-                    noise_variance = self.noise_variance,
-                    optimize = self.optimize,
-                    num_restarts = self.num_restarts,
-                    X = self.X,
-                    Y = self.Y,
-                    m_gaussian_noise = self.m['.*Gaussian_noise.variance'],
-                    )"""
-
     def train(self, X, Y):
         self.X = X
         self.Y = Y
@@ -41,7 +31,7 @@ class GPyModel(BaseModel):
         if self.noise_variance is not None:
             # self.m['.*Gaussian_noise.variance'].unconstrain()
             # self.m.constrain_fixed('noise',self.noise_variance)
-            print "constraining noise variance to ", self.noise_variance
+            #print "constraining noise variance to ", self.noise_variance
             self.m['.*Gaussian_noise.variance'] = self.noise_variance
             self.m['.*Gaussian_noise.variance'].fix()
 
@@ -57,6 +47,9 @@ class GPyModel(BaseModel):
         self.f_star = self.observation_means[index_min]
 
     def predict_variance(self, X1, X2):
+        """
+            Predict the variance between two test points X1, X2 by Sigma(X1, X2) = k_X1,X2 - k_X1,X * (K_X,X + simga^2*I)^-1 * k_X,X2)
+        """
         kern = self.m.kern
         KbX = kern.K(X2, self.m.X).T
         Kx = kern.K(X1, self.m.X).T

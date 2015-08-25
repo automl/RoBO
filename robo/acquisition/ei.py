@@ -51,7 +51,7 @@ class EI(AcquisitionFunction):
         """
 
         if X.shape[0] > 1:
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "EI is only for single X inputs")
+            raise ValueError("EI is only for single test points")
 
         if len(X.shape) == 1:
             X = X[:, np.newaxis]
