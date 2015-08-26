@@ -27,7 +27,7 @@ def optimize_posterior_mean(model, X_lower, X_upper, inc=None, with_gradients=Fa
     return res["x"], res["fun"]
 
 
-def optimize_posterior_mean_and_std(model, X_lower, X_upper, inc=None, with_gradients=False):
+def optimize_posterior_mean_and_std(model, X_lower, X_upper, startpoints=None, with_gradients=True):
     def f(x):
         mu, var = model.predict(x[np.newaxis, :])
         return (mu + np.sqrt(var))
@@ -41,15 +41,25 @@ def optimize_posterior_mean_and_std(model, X_lower, X_upper, inc=None, with_grad
         dstd = 0.5 * dvar / std
         return (dmu[:, :, 0] + dstd)[0, :]
 
-    if inc is None:
-        inc, _ = compute_incumbent(model)
+    if startpoints is None:
+        startpoints = []
+        startpoints.append(compute_incumbent(model)[0])
 
-    if with_gradients:
-        res = optimize.fmin_l_bfgs_b(f, inc, df, bounds=zip(X_lower, X_upper))
-        return res[0], res[1]
-    else:
-        res = optimize.minimize(f, inc, bounds=zip(X_lower, X_upper), method="L-BFGS-B")
-        return res["x"], res["fun"]
+    x_opt = np.zeros([len(startpoints), X_lower.shape[0]])
+    fval = np.zeros([len(startpoints)])
+    for i, startpoint in enumerate(startpoints):
+        if with_gradients:
+            res = optimize.fmin_l_bfgs_b(f, startpoint, df, bounds=zip(X_lower, X_upper))
+            x_opt[i] = res[0]
+            fval[i] = res[1]
+        else:
+            res = optimize.minimize(f, startpoint, bounds=zip(X_lower, X_upper), method="L-BFGS-B")
+            x_opt[i] = res["x"]
+            fval[i] = res["fun"]
+
+    # Return the point with the lowest function value
+    best = np.argmin(fval)
+    return x_opt[best], fval[best]
 
 
 def env_optimize_posterior_mean_and_std(model, X_lower, X_upper, is_env, startpoint, with_gradients=False):

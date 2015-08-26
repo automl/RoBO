@@ -50,6 +50,7 @@ class BayesianOptimization(BaseSolver):
         self.model_untrained = True
         self.recommendation_strategy = recommendation_strategy
         self.incumbent = None
+        self.n_restarts = 19
 
     def initialize(self):
         """
@@ -135,9 +136,11 @@ class BayesianOptimization(BaseSolver):
             self.incumbent = self.X[best_idx]
             self.incumbent_value = self.Y[best_idx]
         else:
+            # TODO: Use GradientAscent here
+            startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
             best_idx = np.argmin(self.Y)
-            startpoint = self.X[best_idx]
-            self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
+            startpoints.append(self.X[best_idx])
+            self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoints)
 
         logging.info("Return %s as incumbent with performance %f" % (str(self.incumbent), self.incumbent_value))
 
@@ -170,8 +173,11 @@ class BayesianOptimization(BaseSolver):
                 self.incumbent = X[best_idx]
                 self.incumbent_value = Y[best_idx]
             elif self.recommendation_strategy is optimize_posterior_mean_and_std:
+                # Start one local search from the best observed point and N - 1 from random points
+                #TODO: Use GradientAscent here
+                startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
                 best_idx = np.argmin(Y)
-                startpoint = X[best_idx]
+                startpoints.append(X[best_idx])
 
                 # If we do MCMC sampling over the GP hyperparameter, we optimize each model individually and return the best found point
                 # TODO: Maybe we should optimize based on the average over the GPs' predictions instead of optimizing each GP individually. that would
@@ -180,21 +186,21 @@ class BayesianOptimization(BaseSolver):
                     incs = np.zeros([len(self.model.models), self.task.n_dims])
                     inc_vals = np.zeros([len(self.model.models)])
                     for i, model in enumerate(self.model.models):
-                        incs[i], inc_vals[i] = self.recommendation_strategy(model, self.task.X_lower, self.task.X_upper, inc=startpoint)
+                        incs[i], inc_vals[i] = self.recommendation_strategy(model, self.task.X_lower, self.task.X_upper, startpoints=startpoints)
 
                         best = np.argmin(inc_vals)
                         self.incumbent = incs[best]
                         self.incumbent_value = inc_vals[best]
                 elif isinstance(self.model, HMCGP):
                     #TODO: Not clear how to compute gradients with HMCGP
-                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint, with_gradients=True)
+                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoints, with_gradients=True)
                 else:
                     #TODO: incumbent_value is the predicted value of the incumbent not its real value (if we optimize the posterior)
-                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint, with_gradients=True)
+                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoints, with_gradients=True)
             else:
                 best_idx = np.argmin(Y)
                 startpoint = X[best_idx]
-                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint)
+                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoint)
             logging.info("New incumbent is %s", str(self.incumbent))
 
             logging.info("Maximize acquisition function...")

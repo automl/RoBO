@@ -14,7 +14,7 @@ from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_a
 from robo.recommendation.incumbent import compute_incumbent
 
 
-class EnvBayesianOptimization(BayesianOptimization):
+class EnvironmentSearch(BayesianOptimization):
 
     def __init__(self, acquisition_fkt=None, model=None, cost_model=None, maximize_fkt=None,
                  task=None, save_dir=None, initialization=None, recommendation_strategy=None, num_save=1):
@@ -42,7 +42,7 @@ class EnvBayesianOptimization(BayesianOptimization):
 
     def initialize(self):
         start_time = time.time()
-        super(EnvBayesianOptimization, self).initialize()
+        super(EnvironmentSearch, self).initialize()
         self.Costs = np.array([[time.time() - start_time]])
 
     def run(self, num_iterations=10, X=None, Y=None, Costs=None):
@@ -116,7 +116,7 @@ class EnvBayesianOptimization(BayesianOptimization):
                 # Project best seen configuration to subspace and use it as startpoint
                 startpoint, _ = compute_incumbent(self.model)
                 startpoint[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
-                if isinstance(self.recommendation_strategy, env_optimize_posterior_mean_and_std) or isinstance(self.recommendation_strategy, env_optimize_posterior_mean_and_std_mcmc):
+                if self.recommendation_strategy == env_optimize_posterior_mean_and_std or self.recommendation_strategy == env_optimize_posterior_mean_and_std_mcmc:
                     self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, self.task.is_env, startpoint)
                 else:
                     self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, self.task.is_env, startpoint)
