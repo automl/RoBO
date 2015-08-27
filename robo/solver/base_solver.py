@@ -25,15 +25,9 @@ class BaseSolver(object):
         self.acquisition_fkt = acquisition_fkt
         self.maximize_fkt = maximize_fkt
         self.task = task
-
-        if save_dir is not None:
-            self.save_dir = save_dir
-            try:
-                os.mkdir(self.save_dir)
-            except:
-                pass
-            self.output_file = open(os.path.join(save_dir, 'results.csv'), 'wb')
-            self.csv_writer = None
+        self.save_dir = save_dir
+        if self.save_dir is not None:
+            self.create_save_dir()
 
     def init_last_iteration(self):
         """
@@ -55,12 +49,13 @@ class BaseSolver(object):
         """
         Creates the save directory to store the runs
         """
-        if self.save_dir is not None:
-            try:
-                os.makedirs(self.save_dir)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
+        try:
+            os.makedirs(self.save_dir)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+        self.output_file = open(os.path.join(self.save_dir, 'results.csv'), 'wb')
+        self.csv_writer = None
 
     def get_observations(self):
         return self.X, self.Y
@@ -105,14 +100,14 @@ class BaseSolver(object):
             self.csv_writer.writeheader()
 
         output = dict()
-        output["iteration"] = str(it)
-        output['config'] = str(self.X[-1])
-        output['fval'] = str(self.Y[-1])
-        output['incumbent'] = str(self.incumbent)
-        output['incumbent_val'] = str(self.incumbent_value)
-        output['time_func_eval'] = str(self.time_func_eval[-1])
-        output['time_overhead'] = str(self.time_optimization_overhead[-1])
-        output['runtime'] = str(time.time() - self.time_start)
+        output["iteration"] = it
+        output['config'] = self.X[-1]
+        output['fval'] = self.Y[-1]
+        output['incumbent'] = self.incumbent
+        output['incumbent_val'] = self.incumbent_value
+        output['time_func_eval'] = self.time_func_eval[-1]
+        output['time_overhead'] = self.time_optimization_overhead[-1]
+        output['runtime'] = time.time() - self.time_start
 
         if kwargs is not None:
             for key, value in kwargs.iteritems():
