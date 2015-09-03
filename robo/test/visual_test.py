@@ -57,9 +57,10 @@ def run():
     ax2 = fig.add_subplot(2,1,2)
     resolution = 0.1
     # Call plot_model function
-    ax1=plotting.plot_model(model,X_lower,X_upper,ax1,resolution,'b','blue',"Model",3,True)
+    ax1=plotting.plot_model(model,X_lower,X_upper,ax1,resolution,'b','blue',"Prosterior Mean",3,True)
     #Call plot_objective_function
     ax1=plotting.plot_objective_function(objective_function,X_lower,X_upper,X,Y,ax1,resolution,'black','ObjectiveFunction',True)
+    ax1.set_title("Model + Objective Function")
     #Call plot_acquisition_function
     ax2=plotting.plot_acquisition_function(acquisition_func,X_lower,X_upper,X,ax2,resolution,"AcquisitionFunction",True)
     plt.savefig('test2.png')

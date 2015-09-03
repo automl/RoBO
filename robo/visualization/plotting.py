@@ -20,6 +20,7 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1,mean_color='r',uncert
     if plot_mean == True:
         ax.plot(X, mean, mean_color, label=label)
     ax.fill_between(X, mean + std_scale * np.sqrt(var), mean - std_scale * np.sqrt(var), facecolor=uncertainity_color, alpha=0.2)
+    ax.legend(prop={'size':6})
     return ax
 
 
@@ -34,6 +35,7 @@ def plot_objective_function(objective_function, X_lower, X_upper, X, Y, ax, reso
     if maximizer_flag ==True:
         ax.plot(X[0], Y[0], "bo")
         ax.plot(X[1],Y[1], "rv")
+    ax.legend(prop={'size':6})
     return ax
 
 
@@ -47,4 +49,5 @@ def plot_acquisition_function(acquisition_function, X_lower, X_upper,X, ax, reso
     ax.plot(grid, grid_values, "g", label=label)
     if maximizer_flag == True:
         ax.plot(X[1],np.amax(grid_values), "rv")
+    ax.set_title('Acquisition Function')
     return ax
