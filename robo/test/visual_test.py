@@ -8,7 +8,8 @@ from robo.models.GPyModel import GPyModel
 from robo.acquisition.EI import EI
 from robo.maximizers.maximize import stochastic_local_search
 from robo.recommendation.incumbent import compute_incumbent
-import matplotlib.image as mpimg
+from robo.visualization import plotting as plotting
+
 
 
 # The optimization function that we want to optimize. It gets a numpy array with shape (N,D) where N >= 1 are the number of datapoints and D are the number of features
@@ -50,18 +51,16 @@ def run():
 
     # Visualize the objective function, model and the acquisition function
     fig = plt.figure()
-    ax1 = fig.add_subplot(1, 1, 1)
-    plotting_range = np.linspace(X_lower[0], X_upper[0], num=1000)
-    ax1.plot(plotting_range, objective_function(plotting_range[:, np.newaxis]), color='b', linestyle="--")
-    _min_y1, _max_y1 = ax1.get_ylim()
-    model.visualize(ax1, X_lower[0], X_upper[0])
-    _min_y2, _max_y2 = ax1.get_ylim()
-    ax1.set_ylim(min(_min_y1, _min_y2), max(_max_y1, _max_y2))
-    mu, var = model.predict(new_x)
-    ax1.plot(new_x[0], mu[0], "r.", markeredgewidth=5.0)
-    ax2 = acquisition_func.plot(fig, X_lower[0], X_upper[0], plot_attr={"color": "red"}, resolution=1000)
-
-
-    plt.savefig('test3.png')
-    #plt.show(block=True)
-    os.system('eog test3.png&')
+    #Sub plot for the model and the objective function
+    ax1 = fig.add_subplot(2,1,1)
+    #Sub plot for the acquisition function
+    ax2 = fig.add_subplot(2,1,2)
+    resolution = 0.1
+    # Call plot_model function
+    ax1=plotting.plot_model(model,X_lower,X_upper,ax1,resolution,'b','blue',"Model",3,True)
+    #Call plot_objective_function
+    ax1=plotting.plot_objective_function(objective_function,X_lower,X_upper,X,Y,ax1,resolution,'black','ObjectiveFunction',True)
+    #Call plot_acquisition_function
+    ax2=plotting.plot_acquisition_function(acquisition_func,X_lower,X_upper,X,ax2,resolution,"AcquisitionFunction",True)
+    plt.savefig('test2.png')
+    os.system('eog test2.png&')
