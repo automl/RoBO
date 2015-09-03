@@ -9,7 +9,7 @@ Edits: Numair Mansur (numair.mansur@gmail.com)
 import numpy as np
 
 
-def plot_model(model, X_lower, X_upper, ax, resolution=0.1,mean_color='r',uncertainity_color='blue',label="Model",std_scale=3,plot_mean=True):
+def plot_model(model, X_lower, X_upper, ax, resolution=0.1,mean_color='b',uncertainity_color='blue',label="Model",std_scale=3,plot_mean=True):
     X = np.arange(X_lower[0], X_upper[0], resolution)
 
     mean = np.zeros([X.shape[0]])
