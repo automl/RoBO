@@ -3,7 +3,6 @@ import matplotlib; matplotlib.use('GTKAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-
 from robo.models.GPyModel import GPyModel
 from robo.acquisition.EI import EI
 from robo.maximizers.maximize import stochastic_local_search
