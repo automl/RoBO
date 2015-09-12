@@ -127,8 +127,7 @@ class Entropy(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if X.shape[0] > 1:
-            logging.error("Entropy is only for single X inputs")
-            return
+            raise ValueError("Entropy is only for single test points")
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:
                 f = 0
@@ -152,14 +151,6 @@ class Entropy(AcquisitionFunction):
             self.zb = self.zb[:, None]
         if len(self.lmb.shape) == 1:
             self.lmb = self.lmb[:, None]
-
-        # Add incumbent to the representer points
-        #inc, _ = self.compute_incumbent(self.model, self.X_lower, self.X_upper)
-
-        #self.zb = np.concatenate((self.zb, inc[np.newaxis, :]), axis=0)
-        #self.zb[0] = inc
-        #self.lmb = np.concatenate((self.lmb, self.sampling_acquisition_wrapper(inc)[np.newaxis, :]))
-        #self.lmb[0] = self.sampling_acquisition_wrapper(inc)
 
     def update_best_guesses(self):
         if self.BestGuesses.shape[0] == 0:
@@ -210,9 +201,7 @@ class Entropy(AcquisitionFunction):
         # Stochastic part of change:
         stochange = (self.dlogPdMu.dot(dMdx)).dot(self.W)
         # Predicted new logP:
-
         lPred = np.add(logP + detchange, stochange)
-        #
         _maxLPred = np.amax(lPred, axis=0)
         s = _maxLPred + np.log(np.sum(np.exp(lPred - _maxLPred), axis=0))
         lselP = _maxLPred if np.any(np.isinf(s)) else s
@@ -284,9 +273,12 @@ class Entropy(AcquisitionFunction):
             logging.error("Expects single points as input")
             return
 
-        m, v = self.model.predict(x)
+        _, v = self.model.predict(x)
+        # Standard deviation with noise
         s = np.sqrt(v - self.sn2)
+        # The variance between the test point x and the representers
         v_projected = self.model.predict_variance(x, self.zb)
+
         Lx = v_projected / s
         return Lx, s, v
 
@@ -400,13 +392,17 @@ class Entropy(AcquisitionFunction):
             A = 0.5 * (A.T + A)  # ensure symmetry.
             b = (Mu + np.dot(Sigma, r))
             Ab = np.dot(A, b)
-            try:
-                cIRSR = np.linalg.cholesky(IRSR)
-            except np.linalg.LinAlgError:
+            noise = 0
+            while(True):
                 try:
-                    cIRSR = np.linalg.cholesky(IRSR + 1e-10 * np.eye(IRSR.shape[0]))
+                    cIRSR = np.linalg.cholesky(IRSR + noise * np.eye(IRSR.shape[0]))
+                    break
                 except np.linalg.LinAlgError:
-                    cIRSR = np.linalg.cholesky(IRSR + 1e-6 * np.eye(IRSR.shape[0]))
+                    if noise == 0:
+                        noise = 1e-10
+                    else:
+                        noise *= 10
+                    logging.error("Cholesky decomposition failed. Add %f noise on the diagonal." % noise)
             dts = 2 * np.sum(np.log(np.diagonal(cIRSR)))
             logZ = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + np.dot(Mu.T, r) + s - 0.5 * mpm
             yield logZ

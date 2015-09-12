@@ -47,3 +47,7 @@ class Hartmann6(BaseTask):
             external_sum = external_sum + self.alpha[i] * np.exp(-internal_sum)
 
         return -external_sum[:, np.newaxis]
+
+
+    def evaluate_test(self, x):
+        return self.objective_function(x)

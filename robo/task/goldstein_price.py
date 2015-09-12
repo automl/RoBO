@@ -30,3 +30,6 @@ class GoldsteinPrice(BaseTask):
                         14 * x[:, 1] + 6 * x[:, 0] * x[:, 1] + 3 * x[:, 1] ** 2)) * (30 + (2 * x[:, 0] - 3 * x[:, 1]) ** 2 * (18 - 32 * x[:, 0] +
                         12 * x[:, 0] ** 2 + 48 * x[:, 1] - 36 * x[:, 0] * x[:, 1] + 27 * x[:, 1] ** 2))
         return fval[:, np.newaxis]
+
+    def evaluate_test(self, x):
+        return self.objective_function(x)

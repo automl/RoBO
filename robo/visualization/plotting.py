@@ -8,7 +8,7 @@ Created on Jun 12, 2015
 import numpy as np
 
 
-def plot_model(model, X_lower, X_upper, ax, resolution=0.1):
+def plot_model(model, X_lower, X_upper, ax, resolution=0.1, color="blue"):
     X = np.arange(X_lower[0], X_upper[0], resolution)
 
     mean = np.zeros([X.shape[0]])
@@ -16,8 +16,8 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1):
     for i in xrange(X.shape[0]):
         mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
 
-    ax.plot(X, mean, "b", label="Model")
-    ax.fill_between(X, mean + 3 * np.sqrt(var), mean - 3 * np.sqrt(var), facecolor='blue', alpha=0.2)
+    ax.plot(X, mean, color, label="Model")
+    ax.fill_between(X, mean + np.sqrt(var), mean - np.sqrt(var), facecolor=color, alpha=0.2)
     return ax
 
 

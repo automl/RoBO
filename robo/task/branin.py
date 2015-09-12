@@ -22,3 +22,6 @@ class Branin(BaseTask):
         y += 10 * (1 - 1 / (8 * np.pi)) * np.cos(x[:, 0]) + 10
 
         return y[:, np.newaxis]
+
+    def evaluate_test(self, x):
+        return self.objective_function(x)

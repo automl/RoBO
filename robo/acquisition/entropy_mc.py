@@ -1,5 +1,6 @@
 import numpy as np
 import emcee
+import logging
 from scipy.stats import norm
 from robo.acquisition.log_ei import LogEI
 from robo.acquisition.entropy import Entropy
@@ -32,7 +33,7 @@ class EntropyMC(Entropy):
     :type Np: int
     :param Nf: Number of functions to be sampled.
     :type Nf: int
-    :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it deafults to log loss (cf. loss_functions module).
+    :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it default is log loss (cf. loss_functions module).
 
     """
     def __init__(self, model, X_lower, X_upper, compute_inc=optimize_posterior_mean_and_std, Nb=50, Nf=1000, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=300, **kwargs):
@@ -51,7 +52,7 @@ class EntropyMC(Entropy):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if derivative:
-            print "EntropyMC does not support derivative calculation until now"
+            logging.error("EntropyMC does not support derivative calculation until now")
             return
         return self.dh_fun(X)
 
@@ -89,6 +90,7 @@ class EntropyMC(Entropy):
         self.update_best_guesses()
 
     def calc_pmin(self, f):
+        print f.shape
         if len(f.shape) == 3:
             f = f.reshape(f.shape[0], f.shape[1] * f.shape[2])
         # Determine the minima for each function sample
@@ -101,23 +103,21 @@ class EntropyMC(Entropy):
         pmin[np.where(pmin < 1e-70)] = 1e-70
         return pmin
 
-    def change_pmin_by_innovation(self, x, f):
+    def change_pmin_by_innovation(self, x):
         Lx, s, v = self._gp_innovation_local(x)
-        dMdb = Lx / s * np.sqrt(v)
-        dVdb = -Lx.dot(Lx.T)
-        # The innovations
-        stoch_changes = dMdb.dot(self.W)  # This W is a vector ...
-        # Update mean and variance by the innovations
+        dMdb = Lx / s * np.sqrt(v)  # Sigma(xstar, zb) * (1 / sigma(x)^2) * Cholesky(Sigma(x,x) + noise)
+        dVdb = -Lx.dot(Lx.T)  # Sigma(x, zb) * (1 / sigma(x)^2) * Sigma(zb, x)
+        # Add the stochastic factor W to the innovations
+        stoch_changes = dMdb.dot(self.W)
+        # Update mean and variance of the posterior (at the representer points) by the innovations
         Mb_new = self.Mb[:, None] + stoch_changes
         Vb_new = self.Vb + dVdb
 
-        #Vb_new[np.diag_indices(Vb_new.shape[0])] = np.clip(Vb_new[np.diag_indices(Vb_new.shape[0])], np.finfo(Vb_new.dtype).eps, np.inf)
-
-        #Vb_new[np.where((Vb_new < np.finfo(Vb_new.dtype).eps) & (Vb_new > -np.finfo(Vb_new.dtype).eps))] = 0
         try:
             cVb_new = np.linalg.cholesky(Vb_new)
         except np.linalg.LinAlgError:
             cVb_new = np.linalg.cholesky(Vb_new + 1e-10 * np.eye(Vb_new.shape[0]))
+
         # Draw new function samples from the innovated GP on the representer points
         f_new = np.dot(cVb_new, self.F.T)
         f_new = f_new[:, :, None]
@@ -128,12 +128,15 @@ class EntropyMC(Entropy):
 
     def dh_fun(self, x):
         if x.shape[0] > 1:
-            raise BayesianOptimizationError(BayesianOptimizationError.SINGLE_INPUT_ONLY, "dHdx_local is only for single x inputs")
-        new_pmin = self.change_pmin_by_innovation(x, self.f)
+            raise ValueError("EntropyMC is only for single test points")
+        # Compute the fantasized pmin if we would evaluate at x
+        new_pmin = self.change_pmin_by_innovation(x)
+
         # Calculate the Kullback-Leibler divergence w.r.t. this pmin approximation
         H_old = np.sum(np.multiply(self.pmin, (self.logP + self.lmb)))
         H_new = np.sum(np.multiply(new_pmin, (np.log(new_pmin) + self.lmb)))
 
+        # Return the expected information gain
         return np.array([[-H_new + H_old]])
 
     def plot(self, fig, minx, maxx, plot_attr={"color": "red"}, resolution=1000):

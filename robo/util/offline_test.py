@@ -9,7 +9,7 @@ import numpy as np
 
 def test_performance(task, results):
     """
-        Computes the test performance of a single run of an experiment. Returns a numpy array with the test performance of the incumbent after each 
+        Computes the test performance of a single run of an experiment. Returns a numpy array with the test performance of the incumbent after each
         iteration.
     """
 
@@ -17,5 +17,18 @@ def test_performance(task, results):
     test_performance = np.zeros([n_iters])
     for i in range(n_iters):
         test_performance[i] = task.evaluate_test(results['incumbent'][i][np.newaxis, :])[0]
-        
+
     return test_performance
+
+
+def distance_to_optimum(task, results):
+    """
+
+    """
+
+    n_iters = len(results['incumbent'])
+    dist = np.zeros([n_iters])
+    for i in range(n_iters):
+        dist[i] = np.linalg.norm(task.opt - results['incumbent'][i])
+
+    return dist

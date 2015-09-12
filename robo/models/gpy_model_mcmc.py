@@ -35,8 +35,14 @@ class GPyModelMCMC(BaseModel):
         self.models = []
         for sample in self.samples:
             kernel = deepcopy(self.kernel)
+            print kernel
+            print sample
             for i in range(len(sample) - 1):
-                kernel.parameters[i][0] = sample[i]
+                if kernel.name is 'mul':
+                    kernel.param_array[i] = sample[i]
+                else:
+                    kernel.parameters[i][0] = sample[i]
+            print kernel
             model = GPyModel(kernel, noise_variance=sample[-1], optimization=False)
             model.train(self.X, self.Y)
             self.models.append(model)
@@ -54,7 +60,22 @@ class GPyModelMCMC(BaseModel):
             mean[i, :] = m
             var[i, :] = v
 
-        return mean, var
+        return mean.mean(axis=0), var.mean(axis=0)
+
+    def predictive_gradients(self, X):
+        if self.models == None:
+            print "ERROR: The model needs to be trained first."
+            return None
+
+        mean = np.zeros([self.n_hypers, X.shape[0], X.shape[1], 1])
+        var = np.zeros([self.n_hypers, X.shape[0], X.shape[1]])
+
+        for i, model in enumerate(self.models):
+            m, v = model.predictive_gradients(X)
+            mean[i], = m
+            var[i] = v
+
+        return mean.mean(axis=0), var.mean(axis=0)
 
     def predict_variance(self, X1, X2):
         var = []
