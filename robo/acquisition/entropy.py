@@ -77,9 +77,9 @@ class Entropy(AcquisitionFunction):
         #x = np.zeros((1, self.D))
         #m, v = self.model.predict(x)
         #return v - self.model.predict_variance(x, x)
-        from robo.models.hmc_gp import HMCGP
-        if isinstance(self.model, HMCGP):
-            return self.model.get_noise()
+        #from robo.models.hmc_gp import HMCGP
+        #if isinstance(self.model, HMCGP):
+        #    return self.model.get_noise()
         return self.model.m.Gaussian_noise.variance[0]
 
     def _scipy_optimizer_fkt_wrapper(self, acq_f, derivative=True):

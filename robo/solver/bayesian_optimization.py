@@ -4,7 +4,7 @@ import logging
 import numpy as np
 
 from robo.models.gpy_model_mcmc import GPyModelMCMC
-from robo.models.hmc_gp import HMCGP
+#from robo.models.hmc_gp import HMCGP
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 from robo.solver.base_solver import BaseSolver
 
@@ -184,9 +184,9 @@ class BayesianOptimization(BaseSolver):
                         best = np.argmin(inc_vals)
                         self.incumbent = incs[best]
                         self.incumbent_value = inc_vals[best]
-                elif isinstance(self.model, HMCGP):
+                #elif isinstance(self.model, HMCGP):
                     #TODO: Not clear how to compute gradients with HMCGP
-                    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint, with_gradients=True)
+                #    self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint, with_gradients=True)
                 else:
                     #TODO: incumbent_value is the predicted value of the incumbent not its real value (if we optimize the posterior)
                     self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, inc=startpoint, with_gradients=True)
