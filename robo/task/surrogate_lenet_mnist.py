@@ -18,11 +18,13 @@ class SurrogateLeNetMnist(BaseTask):
 
         X_lower = np.array([0.0, 0.0, 0.00001, 0.5])
         X_upper = np.array([0.9, 0.9, 0.1, 0.9])
-        super(SurrogateLeNetMnist, self).__init__(X_lower, X_upper)
+        opt = np.array([[0.2996595241534879, 0.08047093750372306, 0.08066154204902518, 0.7171868310769648]])
+        fopt = 0.005909
+        super(SurrogateLeNetMnist, self).__init__(X_lower, X_upper, opt, fopt)
 
     def objective_function(self, x):
 
-        rf = cPickle.load(open("/mhome/kleinaa/experiments/entropy_search/surrogates/lenet/rf.pkl", "r"))
+        rf = cPickle.load(open("/home/kleinaa/experiments/entropy_search/surrogates/lenet/rf.pkl", "r"))
 
         validation_error = rf.predict(x)
         return validation_error[:, np.newaxis]

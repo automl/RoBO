@@ -21,7 +21,7 @@ from robo.visualization.plotting import plot_objective_function, plot_model,\
 class ExampleTask(BaseTask):
     def __init__(self):
         self.X_lower = np.array([0])
-        self.X_upper = np.array([6])
+        self.X_upper = np.array([7])
         self.n_dims = 1
 
     def objective_function(self, x):

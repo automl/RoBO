@@ -392,13 +392,17 @@ class Entropy(AcquisitionFunction):
             A = 0.5 * (A.T + A)  # ensure symmetry.
             b = (Mu + np.dot(Sigma, r))
             Ab = np.dot(A, b)
-            try:
-                cIRSR = np.linalg.cholesky(IRSR)
-            except np.linalg.LinAlgError:
+            noise = 0
+            while(True):
                 try:
-                    cIRSR = np.linalg.cholesky(IRSR + 1e-10 * np.eye(IRSR.shape[0]))
+                    cIRSR = np.linalg.cholesky(IRSR + noise * np.eye(IRSR.shape[0]))
+                    break
                 except np.linalg.LinAlgError:
-                    cIRSR = np.linalg.cholesky(IRSR + 1e-6 * np.eye(IRSR.shape[0]))
+                    if noise == 0:
+                        noise = 1e-10
+                    else:
+                        noise *= 10
+                    logging.error("Cholesky decomposition failed. Add %f noise on the diagonal." % noise)
             dts = 2 * np.sum(np.log(np.diagonal(cIRSR)))
             logZ = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + np.dot(Mu.T, r) + s - 0.5 * mpm
             yield logZ

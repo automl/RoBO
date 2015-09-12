@@ -58,6 +58,7 @@ def optimize_posterior_mean_and_std(model, X_lower, X_upper, startpoints=None, w
             fval[i] = res["fun"]
 
     # Return the point with the lowest function value
+
     best = np.argmin(fval)
     return x_opt[best], fval[best]
 

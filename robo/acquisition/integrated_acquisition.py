@@ -26,10 +26,10 @@ class IntegratedAcquisition(AcquisitionFunction):
             assert isinstance(cost_model, GPyModelMCMC)
             self.cost_model = cost_model
 
-        # Keep for each model a acquisition function
+        # Keep for each model an extra acquisition function module
         self.estimators = []
         for _ in range(self.model.n_hypers):
-            # Copy the acquisition for this model
+            # Copy the acquisition function for this model
             estimator = deepcopy(acquisition_func)
             estimator.model = None
             if cost_model is not None:

@@ -35,6 +35,8 @@ class EnvEntropySearch(Entropy):
         super(EnvEntropySearch, self).update(model)
 
     def __call__(self, X, derivative=False):
+        if len(X.shape) == 1:
+            X = X[np.newaxis, :]
 
         # Predict the costs for this configuration
         cost = self.cost_model.predict(X)[0]
