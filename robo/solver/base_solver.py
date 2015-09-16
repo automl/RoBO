@@ -16,14 +16,14 @@ class BaseSolver(object):
     classdocs
     '''
 
-    def __init__(self, acquisition_fkt=None, model=None,
-                 maximize_fkt=None, task=None, save_dir=None):
+    def __init__(self, acquisition_func=None, model=None,
+                 maximize_func=None, task=None, save_dir=None):
         '''
         Constructor
         '''
         self.model = model
-        self.acquisition_fkt = acquisition_fkt
-        self.maximize_fkt = maximize_fkt
+        self.acquisition_func = acquisition_func
+        self.maximize_func = maximize_func
         self.task = task
         self.save_dir = save_dir
         if self.save_dir is not None:
@@ -93,7 +93,8 @@ class BaseSolver(object):
         """
 
         if self.csv_writer is None:
-            self.fieldnames = ["iteration", "config", "fval", "incumbent", "incumbent_val", "time_func_eval", "time_overhead", "runtime", "acquisition_value"]
+            self.fieldnames = ["iteration", "config", "fval", "incumbent", "incumbent_val",
+            "time_func_eval", "time_overhead", "runtime"]
             for key in kwargs:
                     self.fieldnames.append(key)
             self.csv_writer = csv.DictWriter(self.output_file, fieldnames=self.fieldnames)
@@ -108,10 +109,6 @@ class BaseSolver(object):
         output['time_func_eval'] = self.time_func_eval[-1]
         output['time_overhead'] = self.time_optimization_overhead[-1]
         output['runtime'] = time.time() - self.time_start
-        if it == 0:
-            output['acquisition_value'] = 0
-        else:
-            output['acquisition_value'] = self.acquisition_fkt(self.X[-1])
 
         if kwargs is not None:
             for key, value in kwargs.iteritems():

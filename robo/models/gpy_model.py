@@ -32,12 +32,21 @@ class GPyModel(BaseModel):
             # self.m['.*Gaussian_noise.variance'].unconstrain()
             # self.m.constrain_fixed('noise',self.noise_variance)
             #print "constraining noise variance to ", self.noise_variance
-            self.m['.*Gaussian_noise.variance'] = self.noise_variance
-            self.m['.*Gaussian_noise.variance'].fix()
-
-        if self.optimize:
+            #self.m['.*Gaussian_noise.variance'] = self.noise_variance
+            print "Do not optimize noise use fix value of %f" % (self.noise_variance)            
+            self.m.likelihood.variance.fix(self.noise_variance)
+            if self.optimize:
+                stdout = sys.stdout
+                sys.stdout = StringIO.StringIO()
+                self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
+                sys.stdout = stdout
+        elif self.optimize:
             stdout = sys.stdout
             sys.stdout = StringIO.StringIO()
+            epsilon = 0.001
+            self.m.likelihood.variance.fix(self.Y.var() * epsilon)
+            self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
+            self.m.likelihood.variance.unfix()
             self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
             sys.stdout = stdout
 

@@ -35,14 +35,12 @@ class GPyModelMCMC(BaseModel):
         self.models = []
         for sample in self.samples:
             kernel = deepcopy(self.kernel)
-            print kernel
-            print sample
+
             for i in range(len(sample) - 1):
                 if kernel.name is 'mul':
                     kernel.param_array[i] = sample[i]
                 else:
                     kernel.parameters[i][0] = sample[i]
-            print kernel
             model = GPyModel(kernel, noise_variance=sample[-1], optimization=False)
             model.train(self.X, self.Y)
             self.models.append(model)

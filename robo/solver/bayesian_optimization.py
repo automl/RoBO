@@ -12,17 +12,17 @@ class BayesianOptimization(BaseSolver):
     """
     Class implementing general Bayesian optimization.
     """
-    def __init__(self, acquisition_fkt, model,
-                 maximize_fkt, task, save_dir=None,
-                 initialization=None, recommendation_strategy=None, num_save=1):
+    def __init__(self, acquisition_func, model,
+                 maximize_func, task, save_dir=None,
+                 initialization=None, recommendation_strategy=None, num_save=1, train_intervall=1):
         """
         Initializes the Bayesian optimization.
         Either acquisition function, model, maximization function, bounds, dimensions and objective function are
         specified or an existing run can be continued by specifying only save_dir.
 
-        :param acquisition_fkt: Any acquisition function
+        :param acquisition_funct: Any acquisition function
         :param model: A model
-        :param maximize_fkt: The function for maximizing the acquisition function
+        :param maximize_func: The function for maximizing the acquisition function
         :param initialization: The initialization strategy that to find some starting points in order to train the model
         :param task: The task (derived from BaseTask) that should be optimized
         :param recommendation_strategy: A function that recommends which configuration should be return at the end
@@ -32,7 +32,7 @@ class BayesianOptimization(BaseSolver):
 
         logging.basicConfig(level=logging.INFO)
 
-        super(BayesianOptimization, self).__init__(acquisition_fkt, model, maximize_fkt, task, save_dir)
+        super(BayesianOptimization, self).__init__(acquisition_func, model, maximize_func, task, save_dir)
 
         self.initialization = initialization
 
@@ -40,6 +40,7 @@ class BayesianOptimization(BaseSolver):
         self.Y = None
         self.time_func_eval = None
         self.time_optimization_overhead = None
+        self.train_intervall = train_intervall
 
         self.num_save = num_save
 
@@ -48,25 +49,46 @@ class BayesianOptimization(BaseSolver):
         self.incumbent = None
         self.n_restarts = 10
 
-    def initialize(self):
+    def initialize(self, n_init_points=3):
         """
         Draws a random configuration and initializes the first data point
         """
-        start_time = time.time()
-        if self.initialization is None:
-            # Draw one random configuration
-            self.X = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
-            logging.info("Evaluate randomly chosen candidate %s" % (str(self.X[0])))
-        else:
-            logging.info("Initialize ...")
-            self.X = self.initialization()
-        self.time_optimization_overhead = np.array([time.time() - start_time])
+        #start_time = time.time()
+        #if self.initialization is None:
+        #    # Draw one random configuration
+        #    self.X = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
+        #    logging.info("Evaluate randomly chosen candidate %s" % (str(self.X[0])))
+        #else:
+        #    logging.info("Initialize ...")
+        #    self.X = self.initialization()
+        #self.time_optimization_overhead = np.array([time.time() - start_time])
 
-        start_time = time.time()
-        self.Y = self.task.evaluate(self.X)
-        self.time_func_eval = np.array([time.time() - start_time])
-        logging.info("Configuration achieved a performance of %f " % (self.Y[0]))
-        logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[0]))
+        #start_time = time.time()
+        
+        #self.Y = self.task.evaluate(x[np.newaxis, :])
+        
+        #self.time_func_eval = np.array([time.time() - start_time])
+        #logging.info("Configuration achieved a performance of %f " % (self.Y[0]))
+        #logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[0]))
+        self.time_func_eval = np.zeros([n_init_points])
+        self.time_optimization_overhead = np.zeros([n_init_points])
+        self.X = np.zeros([n_init_points, self.task.n_dims])
+        self.Y = np.zeros([n_init_points, 1])
+        
+        for i in range(n_init_points):
+            start_time = time.time()                    
+            x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
+            self.time_optimization_overhead[i] = time.time() - start_time
+    
+            start_time = time.time()
+            y = self.task.evaluate(x)
+            self.time_func_eval[i] = time.time() - start_time
+    
+            self.X[i] = x[0, :]
+            self.Y[i] = y[0, :]
+            
+            logging.info("Configuration achieved a performance of %f " % (self.Y[i]))
+            logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[i]))
 
     def run(self, num_iterations=10, X=None, Y=None):
         """
@@ -87,7 +109,7 @@ class BayesianOptimization(BaseSolver):
             self.incumbent_value = self.Y[0]
 
             if self.save_dir is not None and (0) % self.num_save == 0:
-                self.save_iteration(0, hyperparameters=None)
+                self.save_iteration(0, hyperparameters=None, acquisition_value=0)
         else:
             self.X = X
             self.Y = Y
@@ -99,7 +121,11 @@ class BayesianOptimization(BaseSolver):
 
             start_time = time.time()
             # Choose next point to evaluate
-            new_x = self.choose_next(self.X, self.Y)
+            if it % self.train_intervall == 0:
+                do_optimize = True
+            else:
+                do_optimize = False
+            new_x = self.choose_next(self.X, self.Y, do_optimize)
 
             start_time_inc = time.time()
             if self.recommendation_strategy is None:
@@ -142,7 +168,9 @@ class BayesianOptimization(BaseSolver):
 
             if self.save_dir is not None and (it) % self.num_save == 0:
                 if isinstance(self.model, GPyModel):
-                    self.save_iteration(it, hyperparameters=self.model.m.param_array)
+                    self.save_iteration(it,
+                                        hyperparameters=self.model.m.param_array, 
+                                        acquisition_value=self.acquisition_func(new_x))
                 else:
                     #TODO: Save also the hyperparameters if we perform mcmc sampling
                     self.save_iteration(it, hyperparameters=None)
@@ -163,7 +191,7 @@ class BayesianOptimization(BaseSolver):
 
         return self.incumbent, self.incumbent_value
 
-    def choose_next(self, X=None, Y=None):
+    def choose_next(self, X=None, Y=None, do_optimize=True):
         """
         Chooses the next configuration by optimizing the acquisition function.
 
@@ -175,17 +203,18 @@ class BayesianOptimization(BaseSolver):
             try:
                 logging.info("Train model...")
                 t = time.time()
-                self.model.train(X, Y)
+                if do_optimize:
+                    self.model.train(X, Y)
                 logging.info("Time to train the model: %f", (time.time() - t))
             except Exception, e:
                 logging.info("Model could not be trained", X, Y)
                 raise
             self.model_untrained = False
-            self.acquisition_fkt.update(self.model)
+            self.acquisition_func.update(self.model)
 
             logging.info("Maximize acquisition function...")
             t = time.time()
-            x = self.maximize_fkt.maximize()
+            x = self.maximize_func.maximize()
             logging.info("Time to maximize the acquisition function: %f", (time.time() - t))
         else:
             self.initialize()
