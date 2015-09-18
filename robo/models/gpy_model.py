@@ -9,16 +9,16 @@ class GPyModel(BaseModel):
     """
      Wraps the standard Gaussian process for regression from the GPy library
     """
-    def __init__(self, kernel, noise_variance=None, optimize=True, num_restarts=100, *args, **kwargs):
+    def __init__(self, kernel, noise_variance=None, num_restarts=100, *args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
-        self.optimize = optimize
         self.num_restarts = num_restarts
         self.X_star = None
         self.f_star = None
         self.m = None
+        self.start_point = None
 
-    def train(self, X, Y):
+    def train(self, X, Y, optimze):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
@@ -29,26 +29,11 @@ class GPyModel(BaseModel):
         self.likelihood = self.m.likelihood
         self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
-            # self.m['.*Gaussian_noise.variance'].unconstrain()
-            # self.m.constrain_fixed('noise',self.noise_variance)
-            #print "constraining noise variance to ", self.noise_variance
-            #self.m['.*Gaussian_noise.variance'] = self.noise_variance
             print "Do not optimize noise use fix value of %f" % (self.noise_variance)            
             self.m.likelihood.variance.fix(self.noise_variance)
-            if self.optimize:
-                stdout = sys.stdout
-                sys.stdout = StringIO.StringIO()
-                self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
-                sys.stdout = stdout
-        elif self.optimize:
-            stdout = sys.stdout
-            sys.stdout = StringIO.StringIO()
-            epsilon = 0.001
-            self.m.likelihood.variance.fix(self.Y.var() * epsilon)
-            self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
-            self.m.likelihood.variance.unfix()
-            self.m.optimize_restarts(num_restarts=self.num_restarts, robust=True)
-            sys.stdout = stdout
+        if optimize:    
+            self.m.optimize(start=self.start_point)
+            self.start_point = self.m.param_array
 
         self.observation_means = self.predict(self.X)[0]
         index_min = np.argmin(self.observation_means)

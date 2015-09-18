@@ -105,9 +105,12 @@ class BayesianOptimization(BaseSolver):
 
         if X is None and Y is None:
             self.initialize()
-            self.incumbent = self.X[0]
-            self.incumbent_value = self.Y[0]
-
+            
+            logging.info("Use best point seen so far as incumbent.")
+            best_idx = np.argmin(self.Y)
+            self.incumbent = self.X[best_idx]
+            self.incumbent_value = self.Y[best_idx]
+            
             if self.save_dir is not None and (0) % self.num_save == 0:
                 self.save_iteration(0, hyperparameters=None, acquisition_value=0)
         else:
@@ -203,8 +206,7 @@ class BayesianOptimization(BaseSolver):
             try:
                 logging.info("Train model...")
                 t = time.time()
-                if do_optimize:
-                    self.model.train(X, Y)
+                self.model.train(X, Y, do_optimize)
                 logging.info("Time to train the model: %f", (time.time() - t))
             except Exception, e:
                 logging.info("Model could not be trained", X, Y)

@@ -43,9 +43,9 @@ class EnvironmentSearch(BayesianOptimization):
         super(EnvironmentSearch, self).__init__(acquisition_fkt, model, maximize_fkt, task, save_dir)
 
     def initialize(self):
-        start_time = time.time()
         super(EnvironmentSearch, self).initialize()
-        self.Costs = np.array([[time.time() - start_time]])
+        self.Costs = self.time_func_eval[:, np.newaxis]
+        
 
     def run(self, num_iterations=10, X=None, Y=None, Costs=None):
 
