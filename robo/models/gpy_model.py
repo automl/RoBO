@@ -18,7 +18,7 @@ class GPyModel(BaseModel):
         self.m = None
         self.start_point = None
 
-    def train(self, X, Y, optimze):
+    def train(self, X, Y, optimize):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:

@@ -20,6 +20,7 @@ class EnvironmentSearch(BayesianOptimization):
 
         logging.basicConfig(level=logging.DEBUG)
 
+        self.train_intervall = 1
         self.acquisition_fkt = acquisition_fkt
         self.model = model
         self.maximize_fkt = maximize_fkt
@@ -69,7 +70,11 @@ class EnvironmentSearch(BayesianOptimization):
             logging.info("Start iteration %d ... ", it)
             # Choose a new configuration
             start_time = time.time()
-            new_x = self.choose_next(self.X, self.Y, self.Costs)
+            if it % self.train_intervall == 0:
+                do_optimize = True
+            else:
+                do_optimize = False
+            new_x = self.choose_next(self.X, self.Y, self.Costs, do_optimize)
 
             # Estimate current incumbent from our posterior
             start_time_inc = time.time()
@@ -126,13 +131,14 @@ class EnvironmentSearch(BayesianOptimization):
                                                                             startpoints,
                                                                             with_gradients=True)
 
-    def choose_next(self, X=None, Y=None, Costs=None):
+    def choose_next(self, X=None, Y=None, Costs=None, do_optimize=True):
         if X is not None and Y is not None:
             # Train the model for the objective function as well as for the cost function
             try:
                 t = time.time()
-                self.model.train(X, Y)
-                self.cost_model.train(X, Costs)
+                
+                self.model.train(X, Y, do_optimize)
+                self.cost_model.train(X, Costs, do_optimize)
 
                 logging.info("Time to train the models: %f", (time.time() - t))
             except Exception, e:
