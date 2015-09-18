@@ -23,17 +23,22 @@ class GPyModel(BaseModel):
         self.Y = Y
         if X.size == 0 or Y.size == 0:
             return
+
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
-        self.m.constrain_positive('')
-        self.log_likelihood = self.m.log_likelihood()
-        self.likelihood = self.m.likelihood
-        self.m[".*variance"].constrain_positive()
         if self.noise_variance is not None:
             print "Do not optimize noise use fix value of %f" % (self.noise_variance)            
             self.m.likelihood.variance.fix(self.noise_variance)
-        if optimize:    
+        if optimize:
+            #self.start_point = None
+           # self.m.likelihood.variance.fix(self.Y.var() * 0.001)
             self.m.optimize(start=self.start_point)
+            #self.start_point = self.m.param_array
+            #self.m.likelihood.variance.unfix()
+            #print self.start_point
+            #self.m.optimize(start=self.start_point)
             self.start_point = self.m.param_array
+            print self.start_point
+
 
         self.observation_means = self.predict(self.X)[0]
         index_min = np.argmin(self.observation_means)
