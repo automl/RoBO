@@ -39,11 +39,13 @@ class EnvEntropySearch(Entropy):
             X = X[np.newaxis, :]
 
         # Predict the costs for this configuration
-        cost = self.cost_model.predict(X)[0]
+        cost = self.cost_model.predict(X[:, self.is_env_variable == 1])[0]
 
         #TODO: Allow derivatives here
+
         dh = self.compute(X, derivative=False)
-        acquisition_value = dh / np.log(cost + 1e-8)
+
+        acquisition_value = np.exp(dh) / (cost + 1e-8)
 
         return acquisition_value
 
@@ -92,7 +94,7 @@ class EnvEntropySearchMC(EntropyMC):
 
         loss = np.array([[-H_new + H_old]])
 
-        acquisition_value = loss / np.log(cost + 1e-8)
+        acquisition_value = loss / (cost + 1e-8)
 
         return acquisition_value
 

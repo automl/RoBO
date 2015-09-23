@@ -23,5 +23,5 @@ class Branin(BaseTask):
 
         return y[:, np.newaxis]
 
-    def evaluate_test(self, x):
+    def objective_function_test(self, x):
         return self.objective_function(x)

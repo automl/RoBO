@@ -20,29 +20,34 @@ class GPyModelMCMC(BaseModel):
         self.burnin = burnin
         self.chain_length = chain_length
         self.n_hypers = n_hypers
+        self.hmc = None
 
-    def train(self, X, Y):
+    def train(self, X, Y, *args):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
             return
 
         m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
-        hmc = GPy.inference.mcmc.hmc.HMC(m, stepsize=5e-2)
-        self.mcmc_chain = hmc.sample(num_samples=(self.burnin + self.chain_length))
-        self.samples = self.mcmc_chain[range(self.burnin, self.burnin + self.chain_length, self.chain_length / self.n_hypers)]
+        if self.hmc is None:
+            self.hmc = GPy.inference.mcmc.hmc.HMC(m, stepsize=5e-2)
+            self.hmc.sample(num_samples=self.burnin)
+        else:
+            self.hmc.model = m
+        self.mcmc_chain = self.hmc.sample(num_samples=(self.chain_length))
+        self.samples = self.mcmc_chain[range(0, self.chain_length, self.chain_length / self.n_hypers)]
 
         self.models = []
         for sample in self.samples:
             kernel = deepcopy(self.kernel)
 
             for i in range(len(sample) - 1):
-                if kernel.name is 'mul':
-                    kernel.param_array[i] = sample[i]
-                else:
-                    kernel.parameters[i][0] = sample[i]
-            model = GPyModel(kernel, noise_variance=sample[-1], optimization=False)
-            model.train(self.X, self.Y)
+                #if kernel.name is 'mul':
+                kernel.param_array[i] = sample[i]
+                #else:
+                #    kernel.parameters[i][0] = sample[i]
+            model = GPyModel(kernel, noise_variance=sample[-1])
+            model.train(self.X, self.Y, False)
             self.models.append(model)
 
     def predict(self, X, full_cov=False):

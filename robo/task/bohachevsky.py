@@ -23,5 +23,5 @@ class Bohachevsky(BaseTask):
         y -= 0.4 * np.cos(4 * np.pi * x[:, 1])
         return y[:, np.newaxis]
 
-    def evaluate_test(self, x):
+    def objective_function_test(self, x):
         return self.objective_function(x)

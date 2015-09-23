@@ -15,15 +15,16 @@ from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_a
 
 class EnvironmentSearch(BayesianOptimization):
 
-    def __init__(self, acquisition_fkt=None, model=None, cost_model=None, maximize_fkt=None,
-                 task=None, save_dir=None, initialization=None, num_save=1, synthetic_func=False):
+    def __init__(self, acquisition_func=None, model=None, cost_model=None, maximize_func=None,
+                 task=None, save_dir=None, initialization=None,
+                 num_save=1, synthetic_func=False, train_intervall=1):
 
         logging.basicConfig(level=logging.DEBUG)
 
-        self.train_intervall = 1
-        self.acquisition_fkt = acquisition_fkt
+        self.train_intervall = train_intervall
+        self.acquisition_func = acquisition_func
         self.model = model
-        self.maximize_fkt = maximize_fkt
+        self.maximize_func = maximize_func
         self.task = task
         self.synthetic_func = synthetic_func
 
@@ -41,12 +42,52 @@ class EnvironmentSearch(BayesianOptimization):
         self.incumbent = None
         # How often we restart the local search to find the current incumbent
         self.n_restarts = 10
-        super(EnvironmentSearch, self).__init__(acquisition_fkt, model, maximize_fkt, task, save_dir)
+        super(EnvironmentSearch, self).__init__(acquisition_func, model, maximize_func, task, save_dir)
 
     def initialize(self):
-        super(EnvironmentSearch, self).initialize()
-        self.Costs = self.time_func_eval[:, np.newaxis]
-        
+        #super(EnvironmentSearch, self).initialize()
+        #
+        n_init_points=3
+        self.time_func_eval = np.zeros([n_init_points])
+        self.time_optimization_overhead = np.zeros([n_init_points])
+        self.X = np.zeros([3, self.task.n_dims])
+        self.Y = np.zeros([3, 1])
+        self.Costs = np.zeros([3, 1])
+
+        grid = []
+        grid.append(np.array(self.task.X_lower))
+        grid.append(np.array(self.task.X_upper))
+        grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
+        grid = np.array(grid)
+
+        #for i in range(n_init_points):
+        for i, x in enumerate(grid):
+            start_time = time.time()
+            #x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
+            self.time_optimization_overhead[i] = time.time() - start_time
+
+            x = x[np.newaxis, :]
+
+            start_time = time.time()
+            y = self.task.evaluate(x)
+            self.time_func_eval[i] = time.time() - start_time
+
+            self.X[i] = x[0, :]
+            self.Y[i] = y[0, :]
+
+            if self.synthetic_func:
+                self.Costs[i] = np.exp(x[:, self.task.is_env == 1])[0]
+            else:
+                self.Costs[i] = np.array([time.time() - start_time])
+
+            # Use best point seen so far as incumbent
+            best_idx = np.argmin(self.Y)
+            self.incumbent = self.X[best_idx]
+            self.incumbent_value = self.Y[best_idx]
+            self.incumbent[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
+
+            if self.save_dir is not None and (0) % self.num_save == 0:
+                self.save_iteration(0, costs=self.Costs, hyperparameters=None, acquisition_value=0)
 
     def run(self, num_iterations=10, X=None, Y=None, Costs=None):
 
@@ -55,12 +96,7 @@ class EnvironmentSearch(BayesianOptimization):
         if X is None and Y is None:
             # No data yet start with initialization procedure
             self.initialize()
-            self.incumbent = self.X[0]
-            # As incumbent we just return the point we just evaluated projected on the configuration space
-            self.incumbent[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
-            self.incumbent_value = self.Y[0]
-            if self.save_dir is not None and (0) % self.num_save == 0:
-                self.save_iteration(0, costs=self.Costs, hyperparameters=None)
+
         else:
             self.X = X
             self.Y = Y
@@ -104,11 +140,7 @@ class EnvironmentSearch(BayesianOptimization):
             self.Costs = np.append(self.Costs, new_cost[:, np.newaxis], axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                if isinstance(self.model, GPyModel):
-                    self.save_iteration(it, costs=self.Costs[-1], hyperparameters=self.model.m.param_array)
-                else:
-                    #TODO: Save also the hyperparameters if we peroform mcmc sampling
-                    self.save_iteration(it, costs=self.Costs[-1], hyperparameters=None)
+                self.save_iteration(it, costs=self.Costs[-1], hyperparameters=self.model.m.param_array, acquisition_value=self.acquisition_func(new_x))
         # Recompute the incumbent before we return it
         #self.estimate_incumbent()
 
@@ -136,9 +168,8 @@ class EnvironmentSearch(BayesianOptimization):
             # Train the model for the objective function as well as for the cost function
             try:
                 t = time.time()
-                
                 self.model.train(X, Y, do_optimize)
-                self.cost_model.train(X, Costs, do_optimize)
+                self.cost_model.train(X[:, self.task.is_env == 1], Costs, do_optimize)
 
                 logging.info("Time to train the models: %f", (time.time() - t))
             except Exception, e:
@@ -147,11 +178,11 @@ class EnvironmentSearch(BayesianOptimization):
             self.model_untrained = False
 
             # Update the acquisition function with the new models
-            self.acquisition_fkt.update(self.model, self.cost_model)
+            self.acquisition_func.update(self.model, self.cost_model)
 
             # Maximize the acquisition function and return the suggested point
             t = time.time()
-            x = self.maximize_fkt.maximize()
+            x = self.maximize_func.maximize()
             logging.info("Time to maximize the acquisition function: %f", (time.time() - t))
         else:
             self.initialize()

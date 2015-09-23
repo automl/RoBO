@@ -2,6 +2,10 @@ import sys
 import StringIO
 import numpy as np
 import GPy
+import logging
+
+from scipy import spatial
+
 from robo.models.base_model import BaseModel
 
 
@@ -18,27 +22,30 @@ class GPyModel(BaseModel):
         self.m = None
         self.start_point = None
 
-    def train(self, X, Y, optimize):
+    def train(self, X, Y, optimize=True):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
             return
 
         self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
+        
         if self.noise_variance is not None:
-            print "Do not optimize noise use fix value of %f" % (self.noise_variance)            
+            print "Do not optimize noise use fix value of %f" % (self.noise_variance)
             self.m.likelihood.variance.fix(self.noise_variance)
-        if optimize:
-            #self.start_point = None
-           # self.m.likelihood.variance.fix(self.Y.var() * 0.001)
-            self.m.optimize(start=self.start_point)
-            #self.start_point = self.m.param_array
-            #self.m.likelihood.variance.unfix()
-            #print self.start_point
-            #self.m.optimize(start=self.start_point)
-            self.start_point = self.m.param_array
-            print self.start_point
+        else:
+            # Add an exponential prior for the noise in order to prevent that the GP explains everything with noise
+             self.m.likelihood.unconstrain()
+             self.m.likelihood.variance.set_prior(GPy.priors.Exponential(1))
+             self.m.likelihood.variance.constrain_positive()
 
+        if optimize:
+            # Start from previous hyperparameters
+            self.m.optimize(start=self.start_point)
+            # Start from random
+            #self.m.optimize()
+            logging.info("HYPERS: " + str(self.m.param_array))
+            self.start_point = self.m.param_array
 
         self.observation_means = self.predict(self.X)[0]
         index_min = np.argmin(self.observation_means)

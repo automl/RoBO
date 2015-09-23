@@ -33,17 +33,14 @@ class CMAES(BaseMaximizer):
             stdout = sys.stdout
             sys.stdout = StringIO.StringIO()
 
-            # Start from incumbent if the objective function has one otherwise start from random
-            if (hasattr(self.objective_func, "compute_incumbent")):
-                start_point, _ = self.objective_func.compute_incumbent(self.objective_func.model, self.X_lower, self.X_upper)
-            else:
-                start_point = np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])
+            # Start from random point
+            start_point = np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])
 
             res = cma.fmin(self._cma_fkt_wrapper(self.objective_func),
                            start_point, 0.6,
                            options={"bounds": [self.X_lower, self.X_upper], "verbose": 0, "verb_log": sys.maxint})
 
-            # Turn on stdout
+            # Turn on stdout again
             sys.stdout = stdout
         else:
             res = cma.fmin(self._cma_fkt_wrapper(self.objective_func), (self.X_upper + self.X_lower) * 0.5,

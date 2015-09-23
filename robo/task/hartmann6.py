@@ -48,6 +48,5 @@ class Hartmann6(BaseTask):
 
         return -external_sum[:, np.newaxis]
 
-
-    def evaluate_test(self, x):
+    def objective_function_test(self, x):
         return self.objective_function(x)

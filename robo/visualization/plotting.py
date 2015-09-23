@@ -2,13 +2,33 @@
 Created on Jun 12, 2015
 
 @author: Aaron Klein
+Edits: Numair Mansur (numair.mansur@gmail.com)
 '''
 
 
 import numpy as np
 
 
-def plot_model(model, X_lower, X_upper, ax, resolution=0.1, color="blue"):
+def plot_model(model, X_lower, X_upper, ax, resolution=0.1, maximizer=None, mean_color='b', uncertainity_color='blue', label="Model", std_scale=3, plot_mean=True):
+    ''' Plots the model on the ax object passed to it
+
+    Args:
+        model (object): Model of the objective funciton
+        X_lower (np.array): Upper bound of the input space
+        X_upper (np.array): Lower bound of the input space
+        ax (object): subplot for the model and the objective funciton
+        resolution (float): resolution for the subplot
+        mean_color (string): Color of the prosterior mean
+        uncertainity_color (string): Color of the model
+        label (string): Label string
+        std_scale (int): Standard Deviation Scale
+        plot_mean (bool): Bool flag, Plot the mean curve if value is True 
+
+    Returns:
+        ax (object) : subplot for the model and the objective funciton
+
+    '''
+
     X = np.arange(X_lower[0], X_upper[0], resolution)
 
     mean = np.zeros([X.shape[0]])
@@ -16,88 +36,70 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1, color="blue"):
     for i in xrange(X.shape[0]):
         mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
 
-    ax.plot(X, mean, color, label="Model")
-    ax.fill_between(X, mean + np.sqrt(var), mean - np.sqrt(var), facecolor=color, alpha=0.2)
+    if plot_mean == True:
+        ax.plot(X, mean, mean_color, label=label)
+    if maximizer is not None:
+        ax.axvline(maximizer, color='red')
+    ax.fill_between(X, mean + std_scale * np.sqrt(var), mean - std_scale * np.sqrt(var), facecolor=uncertainity_color, alpha=0.2)
+    ax.legend()
     return ax
 
 
-def plot_model_2d(model, X_lower, X_upper, ax, resolution=0.1):
-    X1 = np.arange(X_lower[0], X_upper[0], resolution)
-    X2 = np.arange(X_lower[1], X_upper[1], resolution)
+def plot_objective_function(objective_function, X_lower, X_upper, ax, X=None, Y=None, resolution=0.1, color='black', label='ObjectiveFunction'):
+    ''' Plots the objective_function on the ax object passed to it
 
-    mean = np.zeros([X1.shape[0], X2.shape[0]])
+    Args:
+        objective_function ():
+        X_lower ():
+        X_upper ():
+        X ():
+        Y ():
+        ax ():
+        resolution ():
+        color ():
+        label ():
+        maximizer_flag ():
+    Returns:
+        ax ():
 
-    for i in xrange(X1.shape[0]):
-        for j in xrange(X2.shape[0]):
-            input = np.array([X1[i], X2[j]])
-            input = input[np.newaxis, :]
-            mean[i, j], v  = model.predict(input)
-    #ax.axis([0, 6, 0, 6])
-    ax.pcolormesh(mean)
-
-    return ax
-
-
-def plot_projected_model(model, X_lower, X_upper, ax, projection, resolution=0.1):
-    X = np.arange(X_lower[0], X_upper[0], resolution)
-    X = np.vstack((X, np.ones([X.shape[0]]) * projection))
-
-    mean = np.zeros([X.shape[1]])
-    var = np.zeros([X.shape[1]])
-    for i in xrange(X.shape[1]):
-        mean[i], var[i] = model.predict(np.array([X[:, i]]))
-
-    ax.plot(X[0, :], mean, "b", label="Model")
-    ax.fill_between(X[0, :], mean + 3 * np.sqrt(var), mean - 3 * np.sqrt(var), facecolor='blue', alpha=0.2)
-    return ax
-
-
-def plot_objective_function(objective_function, X_lower, X_upper, X, Y, ax, resolution=0.1):
+    '''
     grid = np.arange(X_lower[0], X_upper[0], resolution)
-    grid_values = objective_function(grid[:, np.newaxis])
 
-    ax.plot(grid, grid_values[:, 0], "r", label="ObjectiveFunction")
-    ax.plot(X, Y, "ro")
+    grid_values = np.zeros([grid.shape[0]])
+    for i in xrange(grid.shape[0]):
+        grid_values[i] = objective_function(grid[i])
+
+    ax.plot(grid, grid_values, color, label=label, linestyle="--")
+    if X is not None and Y is not None:
+        ax.plot(X, Y, "bo")
+    ax.legend()
     return ax
 
 
-def plot_objective_function_2d(objective_function, X_lower, X_upper, ax, resolution=0.1):
-    grid1 = np.arange(X_lower[0], X_upper[0], resolution)
-    grid2 = np.arange(X_lower[1], X_upper[1], resolution)
+def plot_acquisition_function(acquisition_function, X_lower, X_upper, ax, resolution=0.1, label="AcquisitionFunction", maximizer=None):
+    ''' Plots the acquisition_function on the ax object passed to it
 
-    a = np.tile(grid1, grid2.shape[0])
-    b = np.repeat(grid2, grid1.shape[0])
-    input = np.concatenate((a[:, np.newaxis], b[:, np.newaxis]), axis=1)
-    grid_values = objective_function(input)
+    Args:
+        acquisition_function ():
+        X_lower ():
+        X_upper ():
+        X ():
+        ax ():
+        resolution ():
+        label ():
+        maximizer_flag ():
+    Returns:
+        ax ():
 
-    ax.pcolormesh(grid_values)
-
-    return ax
-
-
-def plot_acquisition_function_2d(acq_fkt, X_lower, X_upper, ax, resolution=0.1):
-    X1 = np.arange(X_lower[0], X_upper[0], resolution)
-    X2 = np.arange(X_lower[1], X_upper[1], resolution)
-
-    val = np.zeros([X1.shape[0], X2.shape[0]])
-
-    for i in xrange(X1.shape[0]):
-        for j in xrange(X2.shape[0]):
-            input = np.array([X1[i], X2[j]])
-            input = input[np.newaxis, :]
-            val[i, j]= acq_fkt(input)
-    #ax.axis([0, 6, 0, 6])
-    ax.pcolormesh(val)
-
-    return ax
-
-
-def plot_acquisition_function(acquisition_function, X_lower, X_upper, ax, resolution=0.1, color="g", label="AcquisitionFunction"):
+    '''
     grid = np.arange(X_lower[0], X_upper[0], resolution)
 
     grid_values = np.zeros([grid.shape[0]])
     for i in xrange(grid.shape[0]):
         grid_values[i] = acquisition_function(grid[i, np.newaxis])
 
-    ax.plot(grid, grid_values, color, label=label)
+    ax.plot(grid, grid_values, "g", label=label)
+    if maximizer is not None:
+        ax.axvline(maximizer, color='red')
+    ax.legend()
     return ax

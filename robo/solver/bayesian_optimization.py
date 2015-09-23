@@ -51,7 +51,7 @@ class BayesianOptimization(BaseSolver):
 
     def initialize(self, n_init_points=3):
         """
-        Draws a random configuration and initializes the first data point
+        Draws random points to initialize the model
         """
         #start_time = time.time()
         #if self.initialization is None:
@@ -64,31 +64,52 @@ class BayesianOptimization(BaseSolver):
         #self.time_optimization_overhead = np.array([time.time() - start_time])
 
         #start_time = time.time()
-        
+
         #self.Y = self.task.evaluate(x[np.newaxis, :])
-        
+
         #self.time_func_eval = np.array([time.time() - start_time])
         #logging.info("Configuration achieved a performance of %f " % (self.Y[0]))
         #logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[0]))
         self.time_func_eval = np.zeros([n_init_points])
         self.time_optimization_overhead = np.zeros([n_init_points])
-        self.X = np.zeros([n_init_points, self.task.n_dims])
-        self.Y = np.zeros([n_init_points, 1])
-        
-        for i in range(n_init_points):
-            start_time = time.time()                    
-            x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
+        self.X = np.zeros([1, self.task.n_dims])
+        self.Y = np.zeros([1, 1])
+
+        grid = []
+        grid.append(np.array(self.task.X_lower))
+        grid.append(np.array(self.task.X_upper))
+        grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
+        grid = np.array(grid)
+
+        #for i in range(n_init_points):
+        for i, x in enumerate(grid):
+            start_time = time.time()
+            #x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
-    
+
+            x = x[np.newaxis, :]
+
             start_time = time.time()
             y = self.task.evaluate(x)
             self.time_func_eval[i] = time.time() - start_time
-    
-            self.X[i] = x[0, :]
-            self.Y[i] = y[0, :]
-            
+
+            if i == 0:
+                self.X[i] = x[0, :]
+                self.Y[i] = y[0, :]
+            else:
+                self.X = np.append(self.X, x, axis=0)
+                self.Y = np.append(self.Y, y, axis=0)
+
             logging.info("Configuration achieved a performance of %f " % (self.Y[i]))
             logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[i]))
+
+            # Use best point seen so far as incumbent
+            best_idx = np.argmin(self.Y)
+            self.incumbent = self.X[best_idx]
+            self.incumbent_value = self.Y[best_idx]
+
+            if self.save_dir is not None and (0) % self.num_save == 0:
+                self.save_iteration(0, hyperparameters=None, acquisition_value=0)
 
     def run(self, num_iterations=10, X=None, Y=None):
         """
@@ -105,14 +126,6 @@ class BayesianOptimization(BaseSolver):
 
         if X is None and Y is None:
             self.initialize()
-            
-            logging.info("Use best point seen so far as incumbent.")
-            best_idx = np.argmin(self.Y)
-            self.incumbent = self.X[best_idx]
-            self.incumbent_value = self.Y[best_idx]
-            
-            if self.save_dir is not None and (0) % self.num_save == 0:
-                self.save_iteration(0, hyperparameters=None, acquisition_value=0)
         else:
             self.X = X
             self.Y = Y
@@ -172,7 +185,7 @@ class BayesianOptimization(BaseSolver):
             if self.save_dir is not None and (it) % self.num_save == 0:
                 if isinstance(self.model, GPyModel):
                     self.save_iteration(it,
-                                        hyperparameters=self.model.m.param_array, 
+                                        hyperparameters=self.model.m.param_array,
                                         acquisition_value=self.acquisition_func(new_x))
                 else:
                     #TODO: Save also the hyperparameters if we perform mcmc sampling
