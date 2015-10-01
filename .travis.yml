@@ -1,2 +1,2 @@
 language: python
-script: nosetests
+script: python test.py
