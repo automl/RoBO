@@ -1,4 +1,2 @@
 language: python
-python:
-	- "2.7"
 script: nosetests
