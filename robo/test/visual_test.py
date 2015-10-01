@@ -63,4 +63,5 @@ def run():
     #Call plot_acquisition_function
     ax2=plotting.plot_acquisition_function(acquisition_func,X_lower,X_upper,X,ax2,resolution,"AcquisitionFunction",True)
     plt.savefig('test2.png')
+
     os.system('eog test2.png&')
