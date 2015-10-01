@@ -2,4 +2,6 @@ language: python
 before_install: 
   - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
   - sudo apt-get install -qq python-numpy python-scipy
+install:
+  - pip install -r requirments.txt
 script: python test.py
