@@ -1,2 +1,3 @@
 language: python
+before_install: sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
 script: python test.py
