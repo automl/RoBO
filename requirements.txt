@@ -1,5 +1,5 @@
-emcee==2.1.0
-git+https://github.com/SheffieldML/GPy.git
 numpy >= 1.7
 scipy==0.13.3
+emcee==2.1.0
+git+https://github.com/SheffieldML/GPy.git
 matplotlib==1.3.1
