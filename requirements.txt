@@ -1,1 +1,2 @@
 emcee==2.1.0
+git+https://github.com/SheffieldML/GPy.git
