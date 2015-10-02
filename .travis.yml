@@ -3,7 +3,8 @@ before_install:
   - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
   - sudo apt-get install -qq python-numpy python-scipy
 install:
+  - pip install --upgrade pip
   - pip install numpy
-  - travis_wait pip install scipy
+  - pip install scipy
   - pip install -r requirements.txt 
 script: python test.py
