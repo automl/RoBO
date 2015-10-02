@@ -6,5 +6,5 @@ install:
   - pip install --upgrade pip
   - pip install numpy
   - travis_wait pip install scipy
-  - pip install -r requirements.txt 
+  - travis_wait pip install -r requirements.txt 
 script: python test.py
