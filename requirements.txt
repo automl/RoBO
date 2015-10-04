@@ -3,5 +3,5 @@ scipy==0.13.3
 emcee==2.1.0
 git+https://github.com/SheffieldML/GPy.git
 matplotlib==1.3.1
-cma
 direct
+cma
