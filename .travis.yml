@@ -5,6 +5,9 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+os:
+  - linux
+  - osx
 before_install: 
   - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
   - sudo apt-get install -qq python-numpy python-scipy
