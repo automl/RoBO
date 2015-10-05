@@ -5,14 +5,15 @@ Created on Jul 3, 2015
 '''
 
 import GPy
-
-from robo.models import gpy_model.GPyModel
-from robo.models.GPyModelMCMC import GPyModelMCMC
-from robo.acquisition.EntropyMC import EntropyMC
-from robo.acquisition.Entropy import Entropy
-from robo.acquisition.EI import EI
-from robo.acquisition.UCB import UCB
-from robo.acquisition.PI import PI
+import pyGPs
+#from robo.models import gpy_model.GPyModel
+from robo.models.gpy_model_mcmc import GPyModelMCMC
+from robo.models.pygp_model import PyGPModel
+from robo.acquisition.entropy_mc import EntropyMC
+from robo.acquisition.entropy import Entropy
+from robo.acquisition.ei import EI
+from robo.acquisition.ucb import UCB
+from robo.acquisition.pi import PI
 from robo.maximizers import cmaes, direct, grid_search, stochastic_local_search
 from robo.recommendation.incumbent import compute_incumbent
 from robo.solver.bayesian_optimization import BayesianOptimization
@@ -31,21 +32,25 @@ def fmin(objective_fkt, X_lower, X_upper, num_iterations=30, model="GPy", maximi
             self.objective_function = objective_fkt
 
     task = Task()
+    return fmin_task(task)
 
-    if kernel == "Matern52":
-        k = GPy.kern.Matern52(input_dim=task.n_dims)
-    elif kernel == "Matern32":
-        k = GPy.kern.Matern32(input_dim=task.n_dims)
-    elif kernel == "RBF":
-        k = GPy.kern.RBF(input_dim=task.n_dims)
-    else:
-        print "ERROR: Kernel %s is not a valid kernel!" % (kernel)
-        return None
+def fmin_task(task, num_iterations=30, model="GPy", maximizer="direct", kernel="Matern52", acquisition_fkt="EI"):
 
     if model == "GPy":
+	k = get_gpy_kernel(kernel, task)
+	if k is None:
+		return None
         m = gpy_model(k, optimize=True, noise_variance=1e-4, num_restarts=10)
     elif model == "GPyMCMC":
+	k = get_gpy_kernel(kernel, task)
+	if k is None:
+		return None
         m = GPyModelMCMC(k, optimize=True, noise_variance=1e-4, num_restarts=10)
+    elif model == "pyGPs":
+        k = get_pygps_kernel(kernel, task)
+	if k is None:
+		return None
+        m = PyGPModel(k, optimize=True, num_restarts=10)
     else:
         print "ERROR: %s is not a valid model!" % (model)
         return None
@@ -76,10 +81,34 @@ def fmin(objective_fkt, X_lower, X_upper, num_iterations=30, model="GPy", maximi
         print "ERROR: %s is not a valid function to maximize the acquisition function!" % (acquisition_fkt)
         return None
 
-    bo = BayesianOptimization(acquisition_fkt=a,
+    bo = BayesianOptimization(acquisition_func=a,
                           model=m,
-                          maximize_fkt=max_fkt,
+                          maximize_func=max_fkt,
                           task=task)
 
     best_x, f_min = bo.run(num_iterations)
     return best_x, f_min
+
+def get_gpy_kernel(kernel, task):
+    if kernel == "Matern52":
+        k = GPy.kern.Matern52(input_dim=task.n_dims)
+    elif kernel == "Matern32":
+        k = GPy.kern.Matern32(input_dim=task.n_dims)
+    elif kernel == "RBF":
+        k = GPy.kern.RBF(input_dim=task.n_dims)
+    else:
+        print "ERROR: Kernel %s is not a valid kernel!" % (kernel)
+        return None
+    return k
+
+def get_pygps_kernel(kernel, task):
+    if kernel == "Matern52":
+        k = pyGPs.cov.Matern(d=5)
+    elif kernel == "Matern32":
+        k = pyGPs.cov.Matern(d=3)
+    elif kernel == "RBF":
+        k =  pyGPs.cov.RBF()
+    else:
+        print "ERROR: Kernel %s is not a valid kernel!" % (kernel)
+        return None
+    return k
