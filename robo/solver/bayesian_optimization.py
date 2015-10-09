@@ -75,19 +75,19 @@ class BayesianOptimization(BaseSolver):
         self.X = np.zeros([1, self.task.n_dims])
         self.Y = np.zeros([1, 1])
 
-        grid = []
-        grid.append(np.array(self.task.X_lower))
-        grid.append(np.array(self.task.X_upper))
-        grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
-        grid = np.array(grid)
+        #grid = []
+        #grid.append(np.array(self.task.X_lower))
+        #grid.append(np.array(self.task.X_upper))
+        #grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
+        #grid = np.array(grid)
 
-        #for i in range(n_init_points):
-        for i, x in enumerate(grid):
+        for i in range(n_init_points):
+        #for i, x in enumerate(grid):
             start_time = time.time()
-            #x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
+            x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
 
-            x = x[np.newaxis, :]
+            #x = x[np.newaxis, :]
 
             start_time = time.time()
             y = self.task.evaluate(x)

@@ -53,37 +53,45 @@ class EnvironmentSearch(BayesianOptimization):
         
         self.time_func_eval = np.zeros([self.n_init_points])
         self.time_optimization_overhead = np.zeros([self.n_init_points])
-        self.X = np.zeros([self.n_init_points, self.task.n_dims])
-        self.Y = np.zeros([self.n_init_points, 1])
-        self.Costs = np.zeros([self.n_init_points, 1])
+        self.X = np.zeros([1, self.task.n_dims])
+        self.Y = np.zeros([1, 1])
+        self.Costs = np.zeros([1, 1])
 
-        grid = []
-        grid.append(np.array(self.task.X_lower))
-        grid.append(np.array(self.task.X_upper))
-        grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
-        grid = np.array(grid)
+        #grid = []
+        #grid.append(np.array(self.task.X_lower))
+        #grid.append(np.array(self.task.X_upper))
+        #grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
+        #grid = np.array(grid)
 
-        #for i in range(n_init_points):
-        for i, x in enumerate(grid):
+        for i in range(self.n_init_points):
+        #for i, x in enumerate(grid):
             start_time = time.time()
             #TODO: Sample random points in subspace
-            #x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
+            x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
             logging.info("Evaluate: %s" % x)
-            x = x[np.newaxis, :]
+            #x = x[np.newaxis, :]
 
             start_time = time.time()
             y = self.task.evaluate(x)
             self.time_func_eval[i] = time.time() - start_time
 
-            self.X[i] = x[0, :]
-            self.Y[i] = y[0, :]
 
             if self.synthetic_func:
                 #self.Costs[i] = np.exp(x[:, self.task.is_env == 1])[0]
                 new_cost = 1. / (np.e - 1) * (np.exp(x[:, self.task.is_env == 1])[0] - 1)
             else:
-                self.Costs[i] = np.array([time.time() - start_time])
+                new_cost = np.array([time.time() - start_time])
+                
+            
+            if i == 0:
+                self.X[i] = x[0, :]
+                self.Y[i] = y[0, :]
+                self.Costs[i] = new_cost
+            else:
+                self.X = np.append(self.X, x, axis=0)
+                self.Y = np.append(self.Y, y, axis=0)
+                self.Costs = np.append(self.Costs, new_cost[np.newaxis, :], axis=0)
 
             # Use best point seen so far as incumbent
             best_idx = np.argmin(self.Y)
@@ -91,7 +99,7 @@ class EnvironmentSearch(BayesianOptimization):
             self.incumbent_value = self.Y[best_idx]
             self.incumbent[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
 
-            if self.save_dir is not None and (0) % self.num_save == 0:
+            if self.save_dir is not None and (i) % self.num_save == 0:
                 self.save_iteration(i, costs=self.Costs, hyperparameters=None, acquisition_value=0)
 
     def run(self, num_iterations=10, X=None, Y=None, Costs=None):

@@ -29,23 +29,29 @@ class GPyModelMCMC(BaseModel):
             return
 
         m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
+        # Add exponential prior for the noise
+        m.likelihood.unconstrain()
+        m.likelihood.variance.set_prior(GPy.priors.Exponential(1))
+        m.likelihood.variance.constrain_positive()
+        
+        
         if self.hmc is None:
             self.hmc = GPy.inference.mcmc.hmc.HMC(m, stepsize=5e-2)
+            # Burnin
             self.hmc.sample(num_samples=self.burnin)
         else:
             self.hmc.model = m
+        # Start the mcmc chain
         self.mcmc_chain = self.hmc.sample(num_samples=(self.chain_length))
         self.samples = self.mcmc_chain[range(0, self.chain_length, self.chain_length / self.n_hypers)]
 
         self.models = []
         for sample in self.samples:
+            # Instantiate a model for each hyperparam configuration
             kernel = deepcopy(self.kernel)
 
             for i in range(len(sample) - 1):
-                #if kernel.name is 'mul':
                 kernel.param_array[i] = sample[i]
-                #else:
-                #    kernel.parameters[i][0] = sample[i]
             model = GPyModel(kernel, noise_variance=sample[-1])
             model.train(self.X, self.Y, optimize=False)
             self.models.append(model)

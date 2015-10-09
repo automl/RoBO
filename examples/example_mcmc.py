@@ -30,6 +30,7 @@ bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
                           maximize_func=maximizer,
                           recommendation_strategy=optimize_posterior_mean_and_std,
-                          task=branin)
+                          task=branin,
+                          save_dir="/home/kleinaa/temp")
 
-bo.run(10)
+bo.run(30)
