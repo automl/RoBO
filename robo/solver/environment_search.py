@@ -34,6 +34,9 @@ class EnvironmentSearch(BayesianOptimization):
         self.num_save = num_save
         if save_dir is not None:
             self.create_save_dir()
+            
+        self.n_init_points=3 
+
 
         self.X = None
         self.Y = None
@@ -47,12 +50,12 @@ class EnvironmentSearch(BayesianOptimization):
     def initialize(self):
         #super(EnvironmentSearch, self).initialize()
         #
-        n_init_points=3
-        self.time_func_eval = np.zeros([n_init_points])
-        self.time_optimization_overhead = np.zeros([n_init_points])
-        self.X = np.zeros([3, self.task.n_dims])
-        self.Y = np.zeros([3, 1])
-        self.Costs = np.zeros([3, 1])
+        
+        self.time_func_eval = np.zeros([self.n_init_points])
+        self.time_optimization_overhead = np.zeros([self.n_init_points])
+        self.X = np.zeros([self.n_init_points, self.task.n_dims])
+        self.Y = np.zeros([self.n_init_points, 1])
+        self.Costs = np.zeros([self.n_init_points, 1])
 
         grid = []
         grid.append(np.array(self.task.X_lower))
@@ -63,9 +66,10 @@ class EnvironmentSearch(BayesianOptimization):
         #for i in range(n_init_points):
         for i, x in enumerate(grid):
             start_time = time.time()
+            #TODO: Sample random points in subspace
             #x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
-
+            logging.info("Evaluate: %s" % x)
             x = x[np.newaxis, :]
 
             start_time = time.time()
@@ -76,7 +80,8 @@ class EnvironmentSearch(BayesianOptimization):
             self.Y[i] = y[0, :]
 
             if self.synthetic_func:
-                self.Costs[i] = np.exp(x[:, self.task.is_env == 1])[0]
+                #self.Costs[i] = np.exp(x[:, self.task.is_env == 1])[0]
+                new_cost = 1. / (np.e - 1) * (np.exp(x[:, self.task.is_env == 1])[0] - 1)
             else:
                 self.Costs[i] = np.array([time.time() - start_time])
 
@@ -87,7 +92,7 @@ class EnvironmentSearch(BayesianOptimization):
             self.incumbent[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
 
             if self.save_dir is not None and (0) % self.num_save == 0:
-                self.save_iteration(0, costs=self.Costs, hyperparameters=None, acquisition_value=0)
+                self.save_iteration(i, costs=self.Costs, hyperparameters=None, acquisition_value=0)
 
     def run(self, num_iterations=10, X=None, Y=None, Costs=None):
 
@@ -102,7 +107,7 @@ class EnvironmentSearch(BayesianOptimization):
             self.Y = Y
             self.Costs = Costs
 
-        for it in range(1, num_iterations):
+        for it in range(self.n_init_points, num_iterations):
             logging.info("Start iteration %d ... ", it)
             # Choose a new configuration
             start_time = time.time()
@@ -130,7 +135,8 @@ class EnvironmentSearch(BayesianOptimization):
             ############################################ Debugging ############################################
             if self.synthetic_func:
                 logging.info("Optimizing a synthetic functions for that we use np.exp(x[-1]) as cost!")
-                new_cost = np.exp(new_x[:, self.task.is_env == 1])[0]
+                #new_cost = np.exp(new_x[:, self.task.is_env == 1])[0]
+                new_cost = 1. / (np.e - 1) * (np.exp(new_x[:, self.task.is_env == 1])[0] - 1)
             self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
             logging.info("Configuration achieved a performance of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
 

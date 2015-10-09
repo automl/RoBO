@@ -1,26 +1,29 @@
 import numpy as np
 
+from robo.task.base_task import BaseTask
 from robo.task.log_reg import LogisticRegression
 
-class EnvLogisticRegression(LogisticRegression):
+class EnvLogisticRegression(BaseTask):
 
-    def __init__(self):
-        super(EnvLogisticRegression, self).__init__()
-        self.X_lower = np.concatenate((self.X_lower, np.array([6.91])))
-        self.X_upper = np.concatenate((self.X_upper, np.array([10.81978])))
-        self.is_env = np.zeros([self.n_dims])
+    def __init__(self, path="/mhome/kleinaa/data/mnist_npy"):
+        self.log_reg = LogisticRegression(path)
+        
+        X_lower = np.concatenate((self.log_reg.original_X_lower, np.array([6.91])))
+        X_upper = np.concatenate((self.log_reg.original_X_upper, np.array([10.81978])))
+        self.is_env = np.zeros([self.log_reg.n_dims])
         self.is_env = np.concatenate((self.is_env, np.array([1])))
-        self.n_dims = self.n_dims + 1
+        
+        super(EnvLogisticRegression, self).__init__(X_lower, X_upper)
 
     def objective_function(self, x):
-        shuffle = np.random.permutation(np.arange(self.train.shape[0]))
-        self.train, self.train_targets = self.train[shuffle], self.train_targets[shuffle]
-        self.n_train = int(np.exp(x[0, -1]))
+        shuffle = np.random.permutation(np.arange(self.log_reg.train.shape[0]))
+        self.log_reg.train, self.log_reg.train_targets = self.log_reg.train[shuffle], self.log_reg.train_targets[shuffle]
+        self.log_reg.n_train = int(np.exp(x[0, -1]))
 
-        #eps = np.random.exponential(x[0, -1])
-        y = super(EnvLogisticRegression, self).objective_function(x)
+        y = self.log_reg.objective_function(x)
 
         return y
 
-    def evaluate_test(self, x):
-        return self.objective_function(x[:, :-1])
+    def objective_function_test(self, x):
+        return self.log_reg.objective_function_test(x[:, :-1])
+    

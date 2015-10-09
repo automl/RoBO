@@ -7,13 +7,14 @@ import logging
 from scipy import spatial
 
 from robo.models.base_model import BaseModel
+from copy import deepcopy
 
 
 class GPyModel(BaseModel):
     """
      Wraps the standard Gaussian process for regression from the GPy library
     """
-    def __init__(self, kernel, noise_variance=None, num_restarts=100, *args, **kwargs):
+    def __init__(self, kernel, noise_variance=None, num_restarts=10, *args, **kwargs):
         self.kernel = kernel
         self.noise_variance = noise_variance
         self.num_restarts = num_restarts
@@ -27,8 +28,9 @@ class GPyModel(BaseModel):
         self.Y = Y
         if X.size == 0 or Y.size == 0:
             return
-
-        self.m = GPy.models.GPRegression(self.X, self.Y, self.kernel)
+        
+        kern = deepcopy(self.kernel)
+        self.m = GPy.models.GPRegression(self.X, self.Y, kern)
         
         if self.noise_variance is not None:
             print "Do not optimize noise use fix value of %f" % (self.noise_variance)
@@ -39,11 +41,16 @@ class GPyModel(BaseModel):
              self.m.likelihood.variance.set_prior(GPy.priors.Exponential(1))
              self.m.likelihood.variance.constrain_positive()
 
+        # Add a Gaussian Prior centered at the variance of the data for the sigma^2
+        #self.m.kern.variance.unconstrain()
+        #self.m.kern.variance.set_prior(GPy.priors.Gaussian(mu=self.Y.var(), sigma=np.std(self.Y - self.Y.var())))
+        #self.m.kern.variance.constrain_positive()
+        #optimize = False
         if optimize:
             # Start from previous hyperparameters
             self.m.optimize(start=self.start_point)
             # Start from random
-            #self.m.optimize()
+            #self.m.optimize_restarts(num_restarts=self.num_restarts)
             logging.info("HYPERS: " + str(self.m.param_array))
             self.start_point = self.m.param_array
 
@@ -73,6 +80,8 @@ class GPyModel(BaseModel):
 
         if not full_cov:
             # GPy sometimes returns negative variance if the noise level is too low, clip them to be in the interval between the smallest positive number and inf
+            #if np.any(var < 0):
+            #    logging.error("Variance is negative (%s)" % var)
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
 
         else:

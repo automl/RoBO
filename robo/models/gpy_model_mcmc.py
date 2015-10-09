@@ -47,7 +47,7 @@ class GPyModelMCMC(BaseModel):
                 #else:
                 #    kernel.parameters[i][0] = sample[i]
             model = GPyModel(kernel, noise_variance=sample[-1])
-            model.train(self.X, self.Y, False)
+            model.train(self.X, self.Y, optimize=False)
             self.models.append(model)
 
     def predict(self, X, full_cov=False):

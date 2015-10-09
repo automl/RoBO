@@ -135,7 +135,19 @@ class Entropy(AcquisitionFunction):
                 return np.array([[f]]), np.array([df])
             else:
                 return np.array([[0]])
-        return self.dh_fun(X, invertsign=True, derivative=derivative)
+
+        if derivative:
+            acq, grad = self.dh_fun(X, invertsign=True, derivative=True)
+        
+            if np.any(np.isnan(acq)) or np.any(acq == np.inf):
+                return -sys.float_info.max
+            return acq, grad
+        else:
+            acq = self.dh_fun(X, invertsign=True, derivative=False)
+        
+            if np.any(np.isnan(acq)) or np.any(acq == np.inf):
+                return -sys.float_info.max
+            return acq
 
     def sampling_acquisition_wrapper(self, x):
         return  self.sampling_acquisition(np.array([x]))[0]

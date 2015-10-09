@@ -41,18 +41,21 @@ class EnvEntropySearch(Entropy):
         # Predict the costs for this configuration
         cost = self.cost_model.predict(X[:, self.is_env_variable == 1])[0]
 
-        #TODO: Allow derivatives here
+        if derivative:
+            dh, g = self.compute(X, derivative=derivative)
+            dmu = self.cost_model.predictive_gradients(X[:, self.is_env_variable == 1])[0]
+            cost = (cost + 1e-8)
+            acquisition_value = dh / cost 
+            grad = g * cost + dmu * dh
 
-        dh = self.compute(X, derivative=False)
-
-        acquisition_value = np.exp(dh) / (cost + 1e-8)
-
-        return acquisition_value
+            return acquisition_value, grad
+        else:
+            dh = self.compute(X, derivative=derivative)
+            acquisition_value = dh / (cost + 1e-8)
+            return acquisition_value
 
     def update_representer_points(self):
 
-        #TODO: We might want to start the sampling of the representer points from the incumbent here? Or maybe from a sobel grid?
-        #TODO: Sample only in the subspace
         super(EnvEntropySearch, self).update_representer_points()
 
         # Project representer points to subspace

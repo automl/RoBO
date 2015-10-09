@@ -109,7 +109,7 @@ class BayesianOptimization(BaseSolver):
             self.incumbent_value = self.Y[best_idx]
 
             if self.save_dir is not None and (0) % self.num_save == 0:
-                self.save_iteration(0, hyperparameters=None, acquisition_value=0)
+                self.save_iteration(i, hyperparameters=None, acquisition_value=0)
 
     def run(self, num_iterations=10, X=None, Y=None):
         """
@@ -132,7 +132,8 @@ class BayesianOptimization(BaseSolver):
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_optimization_overhead = np.zeros([self.X.shape[0]])
 
-        for it in range(1, num_iterations):
+        n_init_points = 3
+        for it in range(n_init_points, num_iterations):
             logging.info("Start iteration %d ... ", it)
 
             start_time = time.time()
