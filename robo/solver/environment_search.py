@@ -154,7 +154,13 @@ class EnvironmentSearch(BayesianOptimization):
             self.Costs = np.append(self.Costs, new_cost[:, np.newaxis], axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                self.save_iteration(it, costs=self.Costs[-1], hyperparameters=self.model.m.param_array, acquisition_value=self.acquisition_func(new_x))
+                if isinstance(self.model, GPyModel):
+                    hypers = self.model.m.param_array
+                else:
+                    #TODO: Save also the hyperparameters if we perform mcmc sampling
+                    hypers = None
+                    
+                self.save_iteration(it, costs=self.Costs[-1], hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
         # Recompute the incumbent before we return it
         #self.estimate_incumbent()
 

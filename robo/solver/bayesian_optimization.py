@@ -185,12 +185,11 @@ class BayesianOptimization(BaseSolver):
 
             if self.save_dir is not None and (it) % self.num_save == 0:
                 if isinstance(self.model, GPyModel):
-                    self.save_iteration(it,
-                                        hyperparameters=self.model.m.param_array,
-                                        acquisition_value=self.acquisition_func(new_x))
+                    hypers = self.model.m.param_array
                 else:
                     #TODO: Save also the hyperparameters if we perform mcmc sampling
-                    self.save_iteration(it, hyperparameters=None)
+                    hypers = None
+                self.save_iteration(it, hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
 
 #         # Recompute the incumbent before we return it
 #         if self.recommendation_strategy is None:
