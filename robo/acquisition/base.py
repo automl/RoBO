@@ -2,8 +2,6 @@
 
 import numpy as np
 
-from robo.models.gpy_model_mcmc import GPyModelMCMC
-
 
 class AcquisitionFunction(object):
     """
@@ -25,12 +23,12 @@ class AcquisitionFunction(object):
         :type X_upper: np.ndarray(D, 1)
 
         """
-        if isinstance(model, GPyModelMCMC):
-            self.mcmc_model = model
-            self.model = None
-        else:
-            self.model = model
-            self.mcmc_model = None
+#        if isinstance(model, GPyModelMCMC):
+#            self.mcmc_model = model
+#            self.model = None
+#        else:
+        self.model = model
+        self.mcmc_model = None
         self.X_lower = X_lower
         self.X_upper = X_upper
 
@@ -39,12 +37,12 @@ class AcquisitionFunction(object):
             This method will be called if the model is updated. E.g. the Entropy search uses it
             to update it's approximation of P(x=x_min)
         """
-        if isinstance(model, GPyModelMCMC):
-            self.mcmc_model = model
-            self.model = None
-        else:
-            self.model = model
-            self.mcmc_model = None
+#        if isinstance(model, GPyModelMCMC):
+#            self.mcmc_model = model
+#            self.model = None
+#        else:
+        self.model = model
+        self.mcmc_model = None
 
     def __call__(self, X, derivative=False):
         """
