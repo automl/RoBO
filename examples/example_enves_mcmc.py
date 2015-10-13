@@ -46,6 +46,5 @@ bo = EnvironmentSearch(acquisition_func=acquisition_func,
                   cost_model=cost_model,
                   maximize_func=maximizer,
                   task=branin,
-                  save_dir="/home/kleinaa/temp/test_es",
                   synthetic_func=True)
 bo.run(10)
