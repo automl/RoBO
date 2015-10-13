@@ -18,6 +18,7 @@ class GaussianProcess(BaseModel):
     
     def __init__(self, kernel, *args, **kwargs):
         self.kernel = kernel
+        self.model = None
         
     def train(self, X, Y, do_optimize=True):
         self.X = X
@@ -43,6 +44,10 @@ class GaussianProcess(BaseModel):
         return self.kernel.k2.k2.pars[0]
     
     def nll(self, p):
+        # Specify bounds to keep things sane
+        if np.any((-10 > x) + (x > 10)):
+            return 1e25
+    
         self.model.kernel[:] = p
         ll = self.model.lnlikelihood(self.Y[:, 0], quiet=True)
         return -ll if np.isfinite(ll) else 1e25
@@ -52,34 +57,21 @@ class GaussianProcess(BaseModel):
         return -self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
         
     def optimize(self):
+        #TODO: Maybe we should start from a random point here, as this might be more likely to get stuck in a local minima
         p0 = self.model.kernel.vector
-        
-        # Specify bounds to keep things sane
-        lo = -5 * np.ones([p0.shape[0]])
-        up = 5 * np.ones([p0.shape[0]])
-        results = optimize.minimize(self.nll, p0, jac=self.grad_nll, bounds=zip(lo, up), method="L-BFGS-B")
+        results = optimize.minimize(self.nll, p0, jac=self.grad_nll)
         
         return results.x
     
 
     def predict_variance(self, X1, X2):
-        """
-            Predict the variance between two test points X1, X2 by Sigma(X1, X2) = k_X1,X2 - k_X1,X * (K_X,X + simga^2*I)^-1 * k_X,X2)
-        """
+        # Predict the variance between two test points X1, X2 by Sigma(X1, X2) = k_X1,X2 - k_X1,X * (K_X,X + simga^2*I)^-1 * k_X,X2)
         var = self.kernel.value(X1, X2) - np.dot(self.kernel.value(X1, self.X), self.model.solver.apply_inverse(self.kernel.value(self.X, X2)))
-        
-#         kern = self.m.kern
-#         KbX = kern.K(X2, self.m.X).T
-#         Kx = kern.K(X1, self.m.X).T
-#         WiKx = np.dot(self.m.posterior.woodbury_inv, Kx)
-#         Kbx = kern.K(X2, X1)
-#         var = Kbx - np.dot(KbX.T, WiKx)
-
         return var
 
     def predict(self, X, **kwargs):
+        if self.model is None:
+            logging.error("The model has to be trained first!")
+            raise ValueError
         mu, var = self.model.predict(self.Y[:, 0], X)
         return mu, var
-        
-    def predictive_gradients(self, Xnew, X=None):
-        pass

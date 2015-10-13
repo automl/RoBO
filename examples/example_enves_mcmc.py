@@ -4,6 +4,8 @@ Created on Jun 26, 2015
 @author: Aaron Klein
 '''
 
+import numpy as np
+import george
 
 
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
@@ -15,7 +17,12 @@ from robo.recommendation.incumbent import compute_incumbent
 from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
 from robo.task.env_branin import EnvBranin
 from robo.solver.environment_search import EnvironmentSearch
-import george
+
+
+def lnprior(x):
+    if np.any((-10 > x) + (x > 10)):
+        return -np.inf 
+    return 0
 
 branin = EnvBranin()
 
@@ -25,7 +32,7 @@ exp_kernel = george.kernels.ExpSquaredKernel([1.0, 1.0, 1.0], ndim=3)
 noise_kernel = george.kernels.WhiteKernel(noise, ndim=3)
 kernel = cov_amp * (exp_kernel + noise_kernel)
 
-model = GaussianProcessMCMC(kernel, chain_length=100, burnin_steps=20)
+model = GaussianProcessMCMC(kernel, lnprior=lnprior, chain_length=100, burnin_steps=200, n_hypers=20)
 
 
 cost_noise = 1.0
@@ -34,7 +41,7 @@ cost_exp_kernel = george.kernels.ExpSquaredKernel([1.0, 1.0, 1.0], ndim=3)
 cost_noise_kernel = george.kernels.WhiteKernel(cost_noise, ndim=3)
 cost_kernel = cost_cov_amp * (cost_exp_kernel + cost_noise_kernel)
 
-cost_model = GaussianProcessMCMC(cost_kernel)
+cost_model = GaussianProcessMCMC(cost_kernel, lnprior=lnprior)
 
 es = EnvEntropySearch(model, cost_model, branin.X_lower, branin.X_upper, env_optimize_posterior_mean_and_std, branin.is_env, 50)
 acquisition_func = IntegratedAcquisition(model, es, cost_model)
