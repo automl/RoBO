@@ -57,5 +57,11 @@ class PyGPModel(BaseModel):
         Omega = np.random.standard_normal([X.shape[1], size])
         return np.dot(self.m.posterior.L, Omega)
 
+    def negative_log_likelihood(self, kernel):
+	model = pyGPs.GPR()  
+	model.setPrior(kernel=kernel)    
+	model.getPosterior(self.X, self.Y)
+	return model.nlZ
+
     def visualize(self, ax, plot_min, plot_max):
         self.m.plot()
