@@ -1,36 +1,40 @@
-'''
-Created on Jun 26, 2015
-
-@author: Aaron Klein
-'''
-
-
-import GPy
-from robo.models.gpy_model_mcmc import GPyModelMCMC
+from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
+from robo.acquisition.entropy import Entropy
 from robo.acquisition.ei import EI
-from robo.acquisition.integrated_acquisition import IntegratedAcquisition
 from robo.maximizers.direct import Direct
 from robo.recommendation.incumbent import compute_incumbent
-from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 from robo.task.branin import Branin
 from robo.solver.bayesian_optimization import BayesianOptimization
+from george.kernels import ExpSquaredKernel
+from robo.acquisition.integrated_acquisition import IntegratedAcquisition
+from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std, env_optimize_posterior_mean_and_std
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-branin = Branin()
+task = Branin()
 
-kernel = GPy.kern.Matern52(input_dim=branin.n_dims, ARD=True)
-model = GPyModelMCMC(kernel, burnin=20, chain_length=100, n_hypers=10)
+noise = 1.0
+cov_amp = 2
+exp_kernel = george.kernels.ExpSquaredKernel([1.0, 1.0], ndim=2)
+noise_kernel = george.kernels.WhiteKernel(noise, ndim=2)
+kernel = cov_amp * (exp_kernel + noise_kernel)
 
-ei = EI(model, X_upper=branin.X_upper, X_lower=branin.X_lower, compute_incumbent=compute_incumbent, par=0.1)
+model = GaussianProcessMCMC(kernel, chain_length=100, burnin_steps=20)
+
+#entropy = Entropy(model, task.X_lower, task.X_upper, 50, optimize_posterior_mean_and_std)
+#acquisition_func = IntegratedAcquisition(model, entropy)
+
+ei = EI(model, task.X_lower, task.X_upper, compute_incumbent)
 acquisition_func = IntegratedAcquisition(model, ei)
 
+maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
 
-maximizer = Direct(acquisition_func, branin.X_lower, branin.X_upper)
 bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
                           maximize_func=maximizer,
-                          recommendation_strategy=optimize_posterior_mean_and_std,
-                          task=branin,
-                          save_dir="/home/kleinaa/temp")
+                          task=task,
+                          save_dir="/home/kleinaa/temp",
+                          num_save=1)
 
-bo.run(30)
+print bo.run(10)

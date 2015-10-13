@@ -45,7 +45,10 @@ class GPyModel(BaseModel):
         #self.m.kern.variance.unconstrain()
         #self.m.kern.variance.set_prior(GPy.priors.Gaussian(mu=self.Y.var(), sigma=np.std(self.Y - self.Y.var())))
         #self.m.kern.variance.constrain_positive()
+        
+        # Debug
         #optimize = False
+        
         if optimize:
             # Start from previous hyperparameters
             self.m.optimize(start=self.start_point)

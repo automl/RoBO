@@ -188,7 +188,7 @@ class BayesianOptimization(BaseSolver):
                     hypers = self.model.m.param_array
                 else:
                     #TODO: Save also the hyperparameters if we perform mcmc sampling
-                    hypers = None
+                    hypers = self.model.hypers
                 self.save_iteration(it, hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
 
 #         # Recompute the incumbent before we return it

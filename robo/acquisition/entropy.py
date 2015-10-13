@@ -7,6 +7,7 @@ import scipy
 import numpy as np
 import emcee
 
+
 from robo.acquisition.log_ei import LogEI
 from robo.acquisition.ucb import UCB
 from robo.acquisition.base import AcquisitionFunction
@@ -67,20 +68,6 @@ class Entropy(AcquisitionFunction):
         H = - np.sum(np.multiply(np.exp(logP), (logP + lmb)))  # current entropy
         dHp = - np.sum(np.multiply(np.exp(lPred), np.add(lPred, lmb)), axis=0) - H
         return np.array([dHp])
-
-    def _get_noise(self):
-        """
-        A little hack to determine the noise in the GPy model.
-        :return: the noise
-        :rtype: np.ndarray(1,1)
-        """
-        #x = np.zeros((1, self.D))
-        #m, v = self.model.predict(x)
-        #return v - self.model.predict_variance(x, x)
-        #from robo.models.hmc_gp import HMCGP
-        #if isinstance(self.model, HMCGP):
-        #    return self.model.get_noise()
-        return self.model.m.Gaussian_noise.variance[0]
 
     def _scipy_optimizer_fkt_wrapper(self, acq_f, derivative=True):
         def _l(x, *args, **kwargs):
@@ -179,9 +166,11 @@ class Entropy(AcquisitionFunction):
 
     def update(self, model):
         self.model = model
-        self.sn2 = self._get_noise()
+        
+        self.sn2 = self.model.get_noise()
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
+
         self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.W = np.random.randn(1, self.zb.shape[0])
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
@@ -286,12 +275,14 @@ class Entropy(AcquisitionFunction):
             return
 
         _, v = self.model.predict(x)
+        
         # Standard deviation with noise
         s = np.sqrt(v - self.sn2)
         # The variance between the test point x and the representers
         v_projected = self.model.predict_variance(x, self.zb)
 
         Lx = v_projected / s
+        Lx =Lx.T
         return Lx, s, v
 
     def _joint_min(self, mu, var, with_derivatives=False, **kwargs):

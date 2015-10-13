@@ -3,27 +3,25 @@ Created on Aug 11, 2015
 
 @author: Aaron Klein
 '''
+import logging
 import numpy as np
-from copy import deepcopy
 
-from robo.models.gpy_model_mcmc import GPyModelMCMC
+from copy import deepcopy
 from robo.acquisition.base import AcquisitionFunction
 
 
 class IntegratedAcquisition(AcquisitionFunction):
     '''
-        Meta acquisition function that allows to marginalise the acquisition over different GPs. Note the model has to be a GPyMCMC instance
+        Meta acquisition function that allows to marginalise the acquisition over different GPs.
     '''
 
     def __init__(self, model, acquisition_func, cost_model=None):
-
-        assert isinstance(model, GPyModelMCMC)
 
         self.model = model
 
         # Save also the cost model if the acquisition function needs it
         if cost_model is not None:
-            assert isinstance(cost_model, GPyModelMCMC)
+
             self.cost_model = cost_model
 
         # Keep for each model an extra acquisition function module
@@ -42,7 +40,7 @@ class IntegratedAcquisition(AcquisitionFunction):
             self.cost_model = cost_model
         for i in range(self.model.n_hypers):
             if cost_model is not None:
-                self.estimators[i].update(self.model.models[i], self.cost_model.models[i])
+                self.estimators[i].update(self.model.models[i], self.cost_model.models[i],)
             else:
                 self.estimators[i].update(self.model.models[i])
 

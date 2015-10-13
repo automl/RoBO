@@ -3,14 +3,16 @@ Created on Jun 11, 2015
 
 @author: Aaron Klein
 '''
-
+import sys
 import time
 import logging
 import numpy as np
+import StringIO
+import cma
 
 from robo.models.gpy_model import GPyModel
 from robo.solver.bayesian_optimization import BayesianOptimization
-from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
+#from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
 
 
 class EnvironmentSearch(BayesianOptimization):
@@ -46,6 +48,33 @@ class EnvironmentSearch(BayesianOptimization):
         # How often we restart the local search to find the current incumbent
         self.n_restarts = 10
         super(EnvironmentSearch, self).__init__(acquisition_func, model, maximize_func, task, save_dir)
+
+    def env_optimize_posterior_mean_and_std(self, model, X_lower, X_upper, is_env, startpoint):
+        
+        # We only optimize the posterior in the projected subspace
+        env_values = X_upper[is_env == 1]
+        sub_X_lower = X_lower[is_env == 0]
+        sub_X_upper = X_upper[is_env == 0]
+    
+        def f(x):
+            # Project x to the subspace
+            x_ = np.zeros([is_env.shape[0]])
+            x_[is_env == 1] = env_values
+            x_[is_env == 0] = x
+    
+            mu, var = model.predict(x_[np.newaxis, :])
+            return (mu + np.sqrt(var))[0, 0]
+
+        stdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+    
+        res = cma.fmin(f, startpoint[is_env == 0], 0.6, options={"bounds": [sub_X_lower, sub_X_upper]})
+        xopt = np.zeros([is_env.shape[0]])
+        xopt[is_env == 1] = env_values
+        xopt[is_env == 0] = res[0]
+        fval = res[1]
+        sys.stdout = stdout    
+        return xopt, fval 
 
     def initialize(self):
         #super(EnvironmentSearch, self).initialize()
@@ -157,31 +186,38 @@ class EnvironmentSearch(BayesianOptimization):
                 if isinstance(self.model, GPyModel):
                     hypers = self.model.m.param_array
                 else:
-                    #TODO: Save also the hyperparameters if we perform mcmc sampling
                     hypers = None
                     
                 self.save_iteration(it, costs=self.Costs[-1], hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
-        # Recompute the incumbent before we return it
-        #self.estimate_incumbent()
 
         logging.info("Return %s as incumbent" % (str(self.incumbent)))
         return self.incumbent
 
     def estimate_incumbent(self):
         # Start one local search from the best observed point and N - 1 from random points
-        startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
-        best_idx = np.argmin(self.Y)
-        startpoints.append(self.X[best_idx])
+        #startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
+        #best_idx = np.argmin(self.Y)
+        #startpoints.append(self.X[best_idx])
         # Project startpoints to the configuration space
-        for startpoint in startpoints:
-            startpoint[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
+        #for startpoint in startpoints:
+        #    startpoint[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
 
-        self.incumbent, self.incumbent_value = env_optimize_posterior_mean_and_std(self.model,
+        #self.incumbent, self.incumbent_value = env_optimize_posterior_mean_and_std(self.model,
+        #                                                                    self.task.X_lower,
+        #                                                                    self.task.X_upper,
+        #                                                                    self.task.is_env,
+        #                                                                    startpoints,
+        #                                                                    with_gradients=True)
+        
+        best_idx = np.argmin(self.Y)
+        startpoints = self.X[best_idx]
+        # Project startpoints to the configuration space
+        startpoints[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
+        self.incumbent, self.incumbent_value = self.env_optimize_posterior_mean_and_std(self.model,
                                                                             self.task.X_lower,
                                                                             self.task.X_upper,
                                                                             self.task.is_env,
-                                                                            startpoints,
-                                                                            with_gradients=True)
+                                                                            startpoints)
 
     def choose_next(self, X=None, Y=None, Costs=None, do_optimize=True):
         if X is not None and Y is not None:
@@ -189,7 +225,8 @@ class EnvironmentSearch(BayesianOptimization):
             try:
                 t = time.time()
                 self.model.train(X, Y, do_optimize)
-                self.cost_model.train(X[:, self.task.is_env == 1], Costs, do_optimize)
+                #self.cost_model.train(X[:, self.task.is_env == 1], Costs, do_optimize)
+                self.cost_model.train(X, Costs, do_optimize)
 
                 logging.info("Time to train the models: %f", (time.time() - t))
             except Exception, e:

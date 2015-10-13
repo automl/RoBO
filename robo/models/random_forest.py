@@ -20,8 +20,8 @@ class RandomForest(object):
                  do_bootstrapping=True,
                  n_points_per_tree=0,
                  ratio_features=0.5,
-                 min_samples_split=0,
-                 min_samples_leaf=0,
+                 min_samples_split=10,
+                 min_samples_leaf=10,
                  max_depth=0,
                  eps_purity=1e-8,
                  seed=42):

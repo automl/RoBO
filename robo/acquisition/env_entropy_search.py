@@ -3,8 +3,6 @@ Created on Jun 8, 2015
 
 @author: Aaron Klein
 '''
-
-import emcee
 import numpy as np
 
 from robo.acquisition.entropy_mc import EntropyMC
