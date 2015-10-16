@@ -23,7 +23,7 @@ class GPyModel(BaseModel):
         self.m = None
         self.start_point = None
 
-    def train(self, X, Y, optimize=True):
+    def train(self, X, Y, do_optimize=True):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
@@ -40,22 +40,16 @@ class GPyModel(BaseModel):
              self.m.likelihood.unconstrain()
              self.m.likelihood.variance.set_prior(GPy.priors.Exponential(1))
              self.m.likelihood.variance.constrain_positive()
-
-        # Add a Gaussian Prior centered at the variance of the data for the sigma^2
-        #self.m.kern.variance.unconstrain()
-        #self.m.kern.variance.set_prior(GPy.priors.Gaussian(mu=self.Y.var(), sigma=np.std(self.Y - self.Y.var())))
-        #self.m.kern.variance.constrain_positive()
         
-        # Debug
-        #optimize = False
-        
-        if optimize:
+        if do_optimize:
             # Start from previous hyperparameters
             self.m.optimize(start=self.start_point)
             # Start from random
             #self.m.optimize_restarts(num_restarts=self.num_restarts)
             logging.info("HYPERS: " + str(self.m.param_array))
             self.start_point = self.m.param_array
+
+        self.hypers = self.m.param_array
 
         self.observation_means = self.predict(self.X)[0]
         index_min = np.argmin(self.observation_means)

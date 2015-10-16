@@ -20,16 +20,30 @@ class GaussianProcess(BaseModel):
         self.kernel = kernel
         self.model = None
         
+    def scale(self, x, new_min, new_max, min, max):
+        return ((new_max - new_min) * (x -min) / (max - min)) + new_min
+
+
     def train(self, X, Y, do_optimize=True):
         self.X = X
+        #self.Y = self.scale(Y, 0, 100, np.min(Y, axis=0), np.max(Y, axis=0))
         self.Y = Y
-        
         # Use the mean of the data as mean for the GP
-        mean = np.mean(Y, axis=0)
+        #mean = np.mean(Y, axis=0)
+        mean = 0
         self.model = george.GP(self.kernel, mean=mean)
+        #self.model = george.GP(self.kernel)
         
         # Precompute the covariance
-        self.model.compute(self.X)
+        yerr = 1e-25
+        while(True):
+            try:
+                self.model.compute(self.X, yerr=yerr)
+                break
+            except np.linalg.LinAlgError:
+                yerr *= 10
+                logging.error("Cholesky decomposition for the covariance matrix of the GP failed. Add %s noise on the diagonal." % yerr)
+        
         
         if do_optimize:
             self.hypers = self.optimize()
@@ -45,7 +59,7 @@ class GaussianProcess(BaseModel):
     
     def nll(self, p):
         # Specify bounds to keep things sane
-        if np.any((-10 > x) + (x > 10)):
+        if np.any((-10 > p) + (p > 10)):
             return 1e25
     
         self.model.kernel[:] = p

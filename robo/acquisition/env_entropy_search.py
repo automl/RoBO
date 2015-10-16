@@ -32,15 +32,16 @@ class EnvEntropySearch(Entropy):
         self.cost_model = cost_model
         super(EnvEntropySearch, self).update(model)
 
-    def __call__(self, X, derivative=False):
+    def compute(self, X, derivative=False):
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
 
         # Predict the costs for this configuration
-        cost = self.cost_model.predict(X[:, self.is_env_variable == 1])[0]
+        #cost = self.cost_model.predict(X[:, self.is_env_variable == 1])[0]
+        cost = self.cost_model.predict(X)[0]
 
         if derivative:
-            dh, g = self.compute(X, derivative=derivative)
+            dh, g = super(EnvEntropySearch, self).compute(X, derivative=derivative)
             dmu = self.cost_model.predictive_gradients(X[:, self.is_env_variable == 1])[0]
             cost = (cost + 1e-8)
             acquisition_value = dh / cost 
@@ -48,8 +49,9 @@ class EnvEntropySearch(Entropy):
 
             return acquisition_value, grad
         else:
-            dh = self.compute(X, derivative=derivative)
+            dh = super(EnvEntropySearch, self).compute(X, derivative=derivative)
             acquisition_value = dh / (cost + 1e-8)
+            
             return acquisition_value
 
     def update_representer_points(self):

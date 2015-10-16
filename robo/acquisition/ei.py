@@ -65,8 +65,9 @@ class EI(AcquisitionFunction):
                 return np.array([[0]])
 
         m, v = self.model.predict(X, full_cov=True)
-        incumbent, _ = self.compute_incumbent(self.model)
-        eta, _ = self.model.predict(np.array([incumbent]))
+
+        incumbent, eta = self.compute_incumbent(self.model)
+        #eta, _ = self.model.predict(np.array([incumbent]))
 
         s = np.sqrt(v)
         z = (eta - m - self.par) / s

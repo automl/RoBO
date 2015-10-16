@@ -150,6 +150,7 @@ class BayesianOptimization(BaseSolver):
                 best_idx = np.argmin(self.Y)
                 self.incumbent = self.X[best_idx]
                 self.incumbent_value = self.Y[best_idx]
+            
             elif self.recommendation_strategy is optimize_posterior_mean_and_std:
                 logging.info("Optimize the posterior mean and std to find a new incumbent")
                 # Start one local search from the best observed point and N - 1 from random points
@@ -159,10 +160,16 @@ class BayesianOptimization(BaseSolver):
 
                 self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoints, with_gradients=True)
             else:
-                best_idx = np.argmin(self.Y)
-                startpoint = self.X[best_idx]
-                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoint)
-            logging.info("New incumbent %s found in %f seconds", str(self.incumbent), time.time() - start_time_inc)
+                startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
+                x_opt = np.zeros([len(startpoints), self.task.n_dims])
+                fval = np.zeros([len(startpoints)])
+                for i, startpoint in enumerate(startpoints):
+                    x_opt[i], fval[i] = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoint)
+                 
+                best = np.argmin(fval)
+                self.incumbent = x_opt[best]
+                self.incumbent_value = fval[best]
+            logging.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
 
             time_optimization_overhead = time.time() - start_time
             self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
@@ -184,24 +191,8 @@ class BayesianOptimization(BaseSolver):
             self.Y = np.append(self.Y, new_y, axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                if isinstance(self.model, GPyModel):
-                    hypers = self.model.m.param_array
-                else:
-                    #TODO: Save also the hyperparameters if we perform mcmc sampling
-                    hypers = self.model.hypers
+                hypers = self.model.hypers
                 self.save_iteration(it, hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
-
-#         # Recompute the incumbent before we return it
-#         if self.recommendation_strategy is None:
-#             best_idx = np.argmin(self.Y)
-#             self.incumbent = self.X[best_idx]
-#             self.incumbent_value = self.Y[best_idx]
-#         else:
-#             # TODO: Use GradientAscent here
-#             startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
-#             best_idx = np.argmin(self.Y)
-#             startpoints.append(self.X[best_idx])
-#             self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoints)
 #
         logging.info("Return %s as incumbent with predicted performance %f" % (str(self.incumbent), self.incumbent_value))
 

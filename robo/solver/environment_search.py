@@ -9,6 +9,7 @@ import logging
 import numpy as np
 import StringIO
 import cma
+import scipy
 
 from robo.models.gpy_model import GPyModel
 from robo.solver.bayesian_optimization import BayesianOptimization
@@ -37,7 +38,7 @@ class EnvironmentSearch(BayesianOptimization):
         if save_dir is not None:
             self.create_save_dir()
             
-        self.n_init_points=3 
+        self.n_init_points=5
 
 
         self.X = None
@@ -63,51 +64,93 @@ class EnvironmentSearch(BayesianOptimization):
             x_[is_env == 0] = x
     
             mu, var = model.predict(x_[np.newaxis, :])
-            return (mu + np.sqrt(var))[0, 0]
+            #return (mu + np.sqrt(var))[0, 0]
+            return mu
 
-        stdout = sys.stdout
-        sys.stdout = StringIO.StringIO()
-    
-        res = cma.fmin(f, startpoint[is_env == 0], 0.6, options={"bounds": [sub_X_lower, sub_X_upper]})
+        res = scipy.optimize.basinhopping(f, startpoint[is_env == 0], minimizer_kwargs={"bounds" : zip(sub_X_lower, sub_X_upper), "method": "L-BFGS-B"})
+
         xopt = np.zeros([is_env.shape[0]])
         xopt[is_env == 1] = env_values
-        xopt[is_env == 0] = res[0]
-        fval = res[1]
-        sys.stdout = stdout    
-        return xopt, fval 
-
-    def initialize(self):
-        #super(EnvironmentSearch, self).initialize()
-        #
+        xopt[is_env == 0] = res.x
+        fval = np.array([res.fun]) 
         
+        return xopt, fval
+    
+    def optimize_posterior_mean_global(self, model, X_lower, X_upper, startpoints):
+        def f(x):
+            mu, var = model.predict(x[np.newaxis, :])
+            return mu + var
+        res = scipy.optimize.basinhopping(f, startpoints, minimizer_kwargs={"bounds" : zip(X_lower, X_upper), "method": "L-BFGS-B"})
+        
+        return res.x, np.array([res.fun]) 
+    
+    def extrapolative_initial_design(self):
+        
+        # Create grid for the system size
+        grid = [self.task.X_upper[self.task.is_env == 1] / float(i) for i in [4, 8, 16, 32, 64]]
+
+        self.time_func_eval = np.zeros([self.n_init_points * len(grid)])
+        self.time_optimization_overhead = np.zeros([self.n_init_points * len(grid)])
+        self.X = np.zeros([1, self.task.n_dims])
+        self.Y = np.zeros([1, 1])
+        self.Costs = np.zeros([1, 1])
+                
+        for i  in range(self.n_init_points):
+            #x = x[np.newaxis, :]
+            for j, s in enumerate(grid):
+                x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
+                self.time_optimization_overhead[i] = 0
+                x[:, self.task.is_env == 1] = s
+                logging.info("Evaluate: %s" % x)
+
+                start_time = time.time()
+                y = self.task.evaluate(x)
+                self.time_func_eval[i] = time.time() - start_time
+
+                if self.synthetic_func:
+                    new_cost = 1. / (np.e - 1) * (np.exp(x[:, self.task.is_env == 1])[0] - 1)
+                else:
+                    new_cost = np.array([time.time() - start_time])
+                
+            
+                if i + j == 0:
+                    self.X[i] = x[0, :]
+                    self.Y[i] = y[0, :]
+                    self.Costs[i] = new_cost
+                else:
+                    self.X = np.append(self.X, x, axis=0)
+                    self.Y = np.append(self.Y, y, axis=0)
+                    self.Costs = np.append(self.Costs, new_cost[np.newaxis, :], axis=0)
+
+                # Use best point seen so far as incumbent
+                best_idx = np.argmin(self.Y)
+                # Copy because we are going to change the system size to smax
+                self.incumbent = np.copy(self.X[best_idx])
+                self.incumbent_value = self.Y[best_idx]
+                self.incumbent[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
+    
+                if self.save_dir is not None and (i * len(grid) + j) % self.num_save == 0:
+                    self.save_iteration(i, costs=self.Costs, hyperparameters=None, acquisition_value=0)
+        self.n_init_points = self.n_init_points * len(grid)
+            
+    def initialize(self):
+
         self.time_func_eval = np.zeros([self.n_init_points])
         self.time_optimization_overhead = np.zeros([self.n_init_points])
         self.X = np.zeros([1, self.task.n_dims])
         self.Y = np.zeros([1, 1])
         self.Costs = np.zeros([1, 1])
 
-        #grid = []
-        #grid.append(np.array(self.task.X_lower))
-        #grid.append(np.array(self.task.X_upper))
-        #grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
-        #grid = np.array(grid)
-
         for i in range(self.n_init_points):
-        #for i, x in enumerate(grid):
-            start_time = time.time()
-            #TODO: Sample random points in subspace
             x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
-            self.time_optimization_overhead[i] = time.time() - start_time
+            self.time_optimization_overhead[i] = 0
             logging.info("Evaluate: %s" % x)
-            #x = x[np.newaxis, :]
 
             start_time = time.time()
             y = self.task.evaluate(x)
             self.time_func_eval[i] = time.time() - start_time
 
-
             if self.synthetic_func:
-                #self.Costs[i] = np.exp(x[:, self.task.is_env == 1])[0]
                 new_cost = 1. / (np.e - 1) * (np.exp(x[:, self.task.is_env == 1])[0] - 1)
             else:
                 new_cost = np.array([time.time() - start_time])
@@ -124,20 +167,24 @@ class EnvironmentSearch(BayesianOptimization):
 
             # Use best point seen so far as incumbent
             best_idx = np.argmin(self.Y)
-            self.incumbent = self.X[best_idx]
+            # Copy because we are going to change the system size to smax
+            self.incumbent = np.copy(self.X[best_idx])
             self.incumbent_value = self.Y[best_idx]
             self.incumbent[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
 
             if self.save_dir is not None and (i) % self.num_save == 0:
                 self.save_iteration(i, costs=self.Costs, hyperparameters=None, acquisition_value=0)
+                
 
     def run(self, num_iterations=10, X=None, Y=None, Costs=None):
 
         self.time_start = time.time()
 
         if X is None and Y is None:
+        
             # No data yet start with initialization procedure
-            self.initialize()
+            self.extrapolative_initial_design()
+            #self.initialize()
 
         else:
             self.X = X
@@ -157,7 +204,7 @@ class EnvironmentSearch(BayesianOptimization):
             # Estimate current incumbent from our posterior
             start_time_inc = time.time()
             self.estimate_incumbent()
-            logging.info("New incumbent %s found in %f seconds", str(self.incumbent), time.time() - start_time_inc)
+            logging.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
 
             time_optimization_overhead = time.time() - start_time
             self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
@@ -183,14 +230,11 @@ class EnvironmentSearch(BayesianOptimization):
             self.Costs = np.append(self.Costs, new_cost[:, np.newaxis], axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
-                if isinstance(self.model, GPyModel):
-                    hypers = self.model.m.param_array
-                else:
-                    hypers = None
+                hypers = self.model.hypers
                     
                 self.save_iteration(it, costs=self.Costs[-1], hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
 
-        logging.info("Return %s as incumbent" % (str(self.incumbent)))
+        logging.info("Return %s as incumbent with estimate performance of %f" % (str(self.incumbent), self.incumbent_value))
         return self.incumbent
 
     def estimate_incumbent(self):
@@ -208,16 +252,24 @@ class EnvironmentSearch(BayesianOptimization):
         #                                                                    self.task.is_env,
         #                                                                    startpoints,
         #                                                                    with_gradients=True)
+               
         
-        best_idx = np.argmin(self.Y)
-        startpoints = self.X[best_idx]
-        # Project startpoints to the configuration space
-        startpoints[self.task.is_env == 1] = self.task.X_upper[self.task.is_env == 1]
-        self.incumbent, self.incumbent_value = self.env_optimize_posterior_mean_and_std(self.model,
+        startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
+        
+        x_opt = np.zeros([len(startpoints), self.task.n_dims])
+        fval = np.zeros([len(startpoints)])
+        for i, startpoint in enumerate(startpoints):
+            
+            x_opt[i], fval[i] = self.env_optimize_posterior_mean_and_std(self.model,
                                                                             self.task.X_lower,
                                                                             self.task.X_upper,
                                                                             self.task.is_env,
-                                                                            startpoints)
+                                                                            startpoint)
+             
+         
+        best = np.argmin(fval)
+        self.incumbent = x_opt[best]
+        self.incumbent_value = fval[best]
 
     def choose_next(self, X=None, Y=None, Costs=None, do_optimize=True):
         if X is not None and Y is not None:
