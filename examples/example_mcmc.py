@@ -1,3 +1,6 @@
+import setup_logger
+
+import logging
 import numpy as np
 import george
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
@@ -11,6 +14,8 @@ from george.kernels import ExpSquaredKernel
 from robo.acquisition.integrated_acquisition import IntegratedAcquisition
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std, env_optimize_posterior_mean_and_std
 
+
+logger = logging.getLogger(__name__)
 
 def lnprior(x):
     if np.any((-10 > x) + (x > 10)):

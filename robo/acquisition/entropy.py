@@ -19,6 +19,7 @@ l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 here = os.path.abspath(os.path.dirname(__file__))
 
+logger = logging.getLogger(__name__)
 
 class Entropy(AcquisitionFunction):
     """
@@ -218,7 +219,7 @@ class Entropy(AcquisitionFunction):
     def dh_fun(self, x, invertsign=True, derivative=False):
 
         if not (np.all(np.isfinite(self.lmb))):
-            logging.debug(self.zb[np.where(np.isinf(self.lmb))], self.lmb[np.where(np.isinf(self.lmb))])
+            logger.debug(self.zb[np.where(np.isinf(self.lmb))], self.lmb[np.where(np.isinf(self.lmb))])
             raise Exception("lmb should not be infinite. This is not allowed to be sampled")
 
         D = x.shape[1]
@@ -271,7 +272,7 @@ class Entropy(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if x.shape[0] > 1:
-            logging.error("Expects single points as input")
+            logger.error("Expects single points as input")
             return
 
         _, v = self.model.predict(x)
@@ -405,7 +406,7 @@ class Entropy(AcquisitionFunction):
                         noise = 1e-10
                     else:
                         noise *= 10
-                    logging.error("Cholesky decomposition failed. Add %f noise on the diagonal." % noise)
+                    logger.error("Cholesky decomposition failed. Add %f noise on the diagonal." % noise)
             dts = 2 * np.sum(np.log(np.diagonal(cIRSR)))
             logZ = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + np.dot(Mu.T, r) + s - 0.5 * mpm
             yield logZ

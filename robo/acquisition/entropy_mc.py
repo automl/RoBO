@@ -10,6 +10,7 @@ sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
 eps = np.finfo(np.float32).eps
 
+logger = logging.getLogger(__name__)
 
 class EntropyMC(Entropy):
     """
@@ -52,7 +53,7 @@ class EntropyMC(Entropy):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if derivative:
-            logging.error("EntropyMC does not support derivative calculation until now")
+            logger.error("EntropyMC does not support derivative calculation until now")
             return
         return self.dh_fun(X)
 
@@ -90,7 +91,7 @@ class EntropyMC(Entropy):
         self.update_best_guesses()
 
     def calc_pmin(self, f):
-        print f.shape
+        logger.debug(f.shape)
         if len(f.shape) == 3:
             f = f.reshape(f.shape[0], f.shape[1] * f.shape[2])
         # Determine the minima for each function sample

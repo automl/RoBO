@@ -4,6 +4,8 @@ Created on Jul 3, 2015
 @author: Aaron Klein
 '''
 
+import setup_logger
+
 import numpy as np
 
 from robo.fmin import fmin

@@ -3,6 +3,7 @@ Created on Jun 25, 2015
 
 @author: Aaron Klein
 '''
+import setup_logger
 import unittest
 
 import GPy
@@ -34,4 +35,5 @@ class TestGPyModelMCMC(unittest.TestCase):
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
+    setup_logger.setup_logger()
     unittest.main()

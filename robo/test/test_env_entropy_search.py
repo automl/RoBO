@@ -3,6 +3,8 @@ Created on Jul 1, 2015
 
 @author: Aaron Klein
 '''
+import setup_logger
+import logging
 import unittest
 import numpy as np
 
@@ -12,6 +14,8 @@ from robo.acquisition.log_ei import LogEI
 from robo.acquisition.env_entropy_search import EnvEntropySearch
 from robo.recommendation.incumbent import compute_incumbent
 
+
+logger = logging.getLogger(__name__)
 
 class TestEnvEntropySearch(unittest.TestCase):
 
@@ -58,9 +62,10 @@ class TestEnvEntropySearch(unittest.TestCase):
         proposal_measure = LogEI(self.model, self.X_lower, self.X_upper, compute_incumbent)
         reps = self.env_es._sample_representers(proposal_measure, n_representers=10, n_dim=self.X_lower.shape[0])
         pmin = self.env_es._compute_pmin(self.model, reps, num_func_samples=100)
-        print pmin
+        logger.info(pmin)
         assert pmin.shape[0] == reps.shape[0]
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
+    setup_logger.setup_logger()
     unittest.main()

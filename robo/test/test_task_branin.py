@@ -3,6 +3,7 @@ Created on 14.07.2015
 
 @author: aaron
 '''
+import setup_logger
 import unittest
 import numpy as np
 from robo.task.branin import Branin
@@ -40,4 +41,5 @@ class TestTaskBranin(unittest.TestCase):
         assert np.all(np.round(y, 6) == np.array([branin.fopt]))
 
 if __name__ == "__main__":
+    setup_logger.setup_logger()
     unittest.main()

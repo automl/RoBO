@@ -14,6 +14,8 @@ from copy import deepcopy
 from robo.models.base_model import BaseModel
 from robo.models.gaussian_process import GaussianProcess
 
+logger = logging.getLogger(__name__)
+
 
 class GaussianProcessMCMC(BaseModel):
     

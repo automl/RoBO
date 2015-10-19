@@ -14,6 +14,7 @@ from robo.models.gpy_model import GPyModel
 from robo.solver.bayesian_optimization import BayesianOptimization
 #from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
 
+logger = logging.getLogger(__name__)
 
 class EnvironmentSearch(BayesianOptimization):
 
@@ -98,7 +99,7 @@ class EnvironmentSearch(BayesianOptimization):
             #TODO: Sample random points in subspace
             x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
-            logging.info("Evaluate: %s" % x)
+            logger.info("Evaluate: %s" % x)
             #x = x[np.newaxis, :]
 
             start_time = time.time()
@@ -145,7 +146,7 @@ class EnvironmentSearch(BayesianOptimization):
             self.Costs = Costs
 
         for it in range(self.n_init_points, num_iterations):
-            logging.info("Start iteration %d ... ", it)
+            logger.info("Start iteration %d ... ", it)
             # Choose a new configuration
             start_time = time.time()
             if it % self.train_intervall == 0:
@@ -157,25 +158,25 @@ class EnvironmentSearch(BayesianOptimization):
             # Estimate current incumbent from our posterior
             start_time_inc = time.time()
             self.estimate_incumbent()
-            logging.info("New incumbent %s found in %f seconds", str(self.incumbent), time.time() - start_time_inc)
+            logger.info("New incumbent %s found in %f seconds", str(self.incumbent), time.time() - start_time_inc)
 
             time_optimization_overhead = time.time() - start_time
             self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
-            logging.info("Optimization overhead was %f seconds" % (self.time_optimization_overhead[-1]))
+            logger.info("Optimization overhead was %f seconds" % (self.time_optimization_overhead[-1]))
 
             # Evaluate the configuration
-            logging.info("Evaluate candidate %s" % (str(new_x)))
+            logger.info("Evaluate candidate %s" % (str(new_x)))
             start_time = time.time()
             new_y = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
             new_cost = np.array([time_func_eval])
             ############################################ Debugging ############################################
             if self.synthetic_func:
-                logging.info("Optimizing a synthetic functions for that we use np.exp(x[-1]) as cost!")
+                logger.info("Optimizing a synthetic functions for that we use np.exp(x[-1]) as cost!")
                 #new_cost = np.exp(new_x[:, self.task.is_env == 1])[0]
                 new_cost = 1. / (np.e - 1) * (np.exp(new_x[:, self.task.is_env == 1])[0] - 1)
             self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
-            logging.info("Configuration achieved a performance of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
+            logger.info("Configuration achieved a performance of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
 
             # Update the data
             self.X = np.append(self.X, new_x, axis=0)
@@ -190,7 +191,7 @@ class EnvironmentSearch(BayesianOptimization):
                     
                 self.save_iteration(it, costs=self.Costs[-1], hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
 
-        logging.info("Return %s as incumbent" % (str(self.incumbent)))
+        logger.info("Return %s as incumbent" % (str(self.incumbent)))
         return self.incumbent
 
     def estimate_incumbent(self):
@@ -228,9 +229,9 @@ class EnvironmentSearch(BayesianOptimization):
                 #self.cost_model.train(X[:, self.task.is_env == 1], Costs, do_optimize)
                 self.cost_model.train(X, Costs, do_optimize)
 
-                logging.info("Time to train the models: %f", (time.time() - t))
+                logger.info("Time to train the models: %f", (time.time() - t))
             except Exception, e:
-                logging.error("Model could not be trained with data:", X, Y, Costs)
+                logger.error("Model could not be trained with data:", X, Y, Costs)
                 raise
             self.model_untrained = False
 
@@ -240,7 +241,7 @@ class EnvironmentSearch(BayesianOptimization):
             # Maximize the acquisition function and return the suggested point
             t = time.time()
             x = self.maximize_func.maximize()
-            logging.info("Time to maximize the acquisition function: %f", (time.time() - t))
+            logger.info("Time to maximize the acquisition function: %f", (time.time() - t))
         else:
             self.initialize()
             x = self.X

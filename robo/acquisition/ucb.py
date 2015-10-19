@@ -1,7 +1,10 @@
+import logging
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
 
+
+logger = logging.getLogger(__name__)
 
 class UCB(AcquisitionFunction):
     r"""
@@ -30,7 +33,7 @@ class UCB(AcquisitionFunction):
     def compute(self, X, derivative=False, **kwargs):
 
         if derivative:
-            print "UCB  does not support derivative calculation until now"
+            logger.error("UCB  does not support derivative calculation until now")
             return
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             return np.array([[- np.finfo(np.float).max]])

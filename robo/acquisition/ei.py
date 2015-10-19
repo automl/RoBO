@@ -1,9 +1,11 @@
 # encoding=utf8
+import logging
 from scipy.stats import norm
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
 
+logger = logging.getLogger(__name__)
 
 class EI(AcquisitionFunction):
     r"""
@@ -37,6 +39,8 @@ class EI(AcquisitionFunction):
         #self.X_upper = X_upper
         self.compute_incumbent = compute_incumbent
         super(EI, self).__init__(model, X_lower, X_upper)
+
+        logger.debug("Test")
 
     def compute(self, X, derivative=False, **kwargs):
         """

@@ -3,6 +3,7 @@ Created on 14.07.2015
 
 @author: Aaron Klein
 '''
+import setup_logger
 import unittest
 import numpy as np
 
@@ -41,4 +42,5 @@ class TestTaskGoldsteinPrice(unittest.TestCase):
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
+    setup_logger.setup_logger()
     unittest.main()

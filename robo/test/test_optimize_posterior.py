@@ -4,6 +4,7 @@ Created on 16.07.2015
 @author: Aaron Klein
 '''
 
+import setup_logger
 import GPy
 import unittest
 import numpy as np
@@ -50,4 +51,5 @@ class Test(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    setup_logger.setup_logger()
     unittest.main()

@@ -1,3 +1,5 @@
+import setup_logger
+
 import unittest
 import numpy as np
 
@@ -88,4 +90,5 @@ class TestBenchmarks(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    setup_logger.setup_logger()
     unittest.main()

@@ -13,6 +13,8 @@ from scipy import optimize
 
 from robo.models.base_model import BaseModel
 
+logger = logging.getLogger(__name__)
+
 
 class GaussianProcess(BaseModel):
     
@@ -33,7 +35,7 @@ class GaussianProcess(BaseModel):
         
         if do_optimize:
             self.hypers = self.optimize()
-            logging.info("HYPERS: " + str(self.hypers))
+            logger.info("HYPERS: " + str(self.hypers))
             self.model.kernel[:] = self.hypers
         else:
             self.hypers = self.model.kernel[:]
@@ -71,7 +73,7 @@ class GaussianProcess(BaseModel):
 
     def predict(self, X, **kwargs):
         if self.model is None:
-            logging.error("The model has to be trained first!")
+            logger.error("The model has to be trained first!")
             raise ValueError
         mu, var = self.model.predict(self.Y[:, 0], X)
         return mu, var

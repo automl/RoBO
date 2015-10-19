@@ -3,6 +3,7 @@ Created on Jun 15, 2015
 
 @author: Aaron Klein
 '''
+import setup_logger
 
 import GPy
 import matplotlib.pyplot as plt
