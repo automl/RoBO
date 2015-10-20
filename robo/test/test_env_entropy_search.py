@@ -67,5 +67,4 @@ class TestEnvEntropySearch(unittest.TestCase):
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
-    setup_logger.setup_logger()
     unittest.main()

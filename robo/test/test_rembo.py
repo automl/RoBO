@@ -36,5 +36,4 @@ class Test(unittest.TestCase):
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.test_rembo']
-    setup_logger.setup_logger()
     unittest.main()

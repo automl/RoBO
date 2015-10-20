@@ -41,5 +41,4 @@ class TestTaskBranin(unittest.TestCase):
         assert np.all(np.round(y, 6) == np.array([branin.fopt]))
 
 if __name__ == "__main__":
-    setup_logger.setup_logger()
     unittest.main()

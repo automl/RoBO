@@ -31,5 +31,4 @@ class PITestCase1(unittest.TestCase):
         self.assertAlmostEqual(pi_estimator(self.x[-1, np.newaxis])[0], 0.0, delta=10E-5)
 
 if __name__ == "__main__":
-    setup_logger.setup_logger()
     unittest.main()
