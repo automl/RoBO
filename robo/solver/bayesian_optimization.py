@@ -61,12 +61,9 @@ class BayesianOptimization(BaseSolver):
         self.Y = np.zeros([1, 1])
 
         for i in range(n_init_points):
-
             start_time = time.time()
             x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
-
-            logging.info("Evaluate randomly chosen candidate %s" % (str(x)))
 
             start_time = time.time()
             y = self.task.evaluate(x)

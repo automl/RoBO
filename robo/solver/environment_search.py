@@ -170,6 +170,7 @@ class EnvironmentSearch(BayesianOptimization):
 
         for i in range(self.n_init_points):
             start_time = time.time()
+
             x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
             logger.info("Evaluate: %s" % x)
