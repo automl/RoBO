@@ -1,8 +1,11 @@
+import logging
 from scipy.stats import norm
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
 
+
+logger = logging.getLogger(__name__)
 
 class LogEI(AcquisitionFunction):
     r"""
@@ -46,7 +49,7 @@ class LogEI(AcquisitionFunction):
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
         if derivative:
-            print "LogEI does not support derivative calculation until now"
+            logger.error("LogEI does not support derivative calculation until now")
             return
 
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):

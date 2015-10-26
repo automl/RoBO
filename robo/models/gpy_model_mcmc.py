@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import GPy
 from copy import deepcopy
@@ -5,6 +6,7 @@ from copy import deepcopy
 from robo.models.base_model import BaseModel
 from robo.models.gpy_model import GPyModel
 
+logger = logging.getLogger(__name__)
 
 class GPyModelMCMC(BaseModel):
 
@@ -58,7 +60,7 @@ class GPyModelMCMC(BaseModel):
 
     def predict(self, X, full_cov=False):
         if self.models == None:
-            print "ERROR: The model needs to be trained first."
+            logger.error("ERROR: The model needs to be trained first.")
             return None
 
         mean = np.zeros([self.n_hypers, X.shape[0]])
@@ -73,7 +75,7 @@ class GPyModelMCMC(BaseModel):
 
     def predictive_gradients(self, X):
         if self.models == None:
-            print "ERROR: The model needs to be trained first."
+            logger.error("ERROR: The model needs to be trained first.")
             return None
 
         mean = np.zeros([self.n_hypers, X.shape[0], X.shape[1], 1])

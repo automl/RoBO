@@ -3,6 +3,7 @@ Created on Jun 25, 2015
 
 @author: Aaron Klein
 '''
+import setup_logger
 import unittest
 
 import GPy

@@ -4,6 +4,8 @@ Created on Jul 23, 2015
 @author: Aaron Klein
 '''
 
+import setup_logger
+
 import GPy
 import numpy as np
 

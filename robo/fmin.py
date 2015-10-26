@@ -3,6 +3,7 @@ Created on Jul 3, 2015
 
 @author: Aaron Klein
 '''
+import logging
 
 import GPy
 import pyGPs
@@ -18,6 +19,8 @@ from robo.maximizers import cmaes, direct, grid_search, stochastic_local_search
 from robo.recommendation.incumbent import compute_incumbent
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.task.base_task import BaseTask
+
+logger = logging.getLogger(__name__)
 
 
 def fmin(objective_fkt, X_lower, X_upper, num_iterations=30, model="GPy", maximizer="direct", kernel="Matern52", acquisition_fkt="EI"):
@@ -52,7 +55,7 @@ def fmin_task(task, num_iterations=30, model="GPy", maximizer="direct", kernel="
 		return None
         m = PyGPModel(k, optimize=True, num_restarts=10)
     else:
-        print "ERROR: %s is not a valid model!" % (model)
+        logger.error("ERROR: %s is not a valid model!" % (model))
         return None
 
     if acquisition_fkt == "EI":
@@ -66,7 +69,7 @@ def fmin_task(task, num_iterations=30, model="GPy", maximizer="direct", kernel="
     elif acquisition_fkt == "EntropyMC":
         a = EntropyMC(model, X_upper=task.X_upper, X_lower=task.X_lower, compute_incumbent=compute_incumbent, par=0.1)
     else:
-        print "ERROR: %s is not a valid acquisition function!" % (acquisition_fkt)
+        logger.error("ERROR: %s is not a valid acquisition function!" % (acquisition_fkt))
         return None
 
     if maximizer == "cmaes":
@@ -78,7 +81,7 @@ def fmin_task(task, num_iterations=30, model="GPy", maximizer="direct", kernel="
     elif maximizer == "grid_search":
         max_fkt = grid_search.GridSearch(a, task.X_lower, task.X_upper)
     else:
-        print "ERROR: %s is not a valid function to maximize the acquisition function!" % (acquisition_fkt)
+        logger.error("ERROR: %s is not a valid function to maximize the acquisition function!" % (acquisition_fkt))
         return None
 
     bo = BayesianOptimization(acquisition_func=a,
@@ -97,7 +100,7 @@ def get_gpy_kernel(kernel, task):
     elif kernel == "RBF":
         k = GPy.kern.RBF(input_dim=task.n_dims)
     else:
-        print "ERROR: Kernel %s is not a valid kernel!" % (kernel)
+        logger.error("ERROR: Kernel %s is not a valid kernel!" % (kernel))
         return None
     return k
 
@@ -109,6 +112,6 @@ def get_pygps_kernel(kernel, task):
     elif kernel == "RBF":
         k =  pyGPs.cov.RBF()
     else:
-        print "ERROR: Kernel %s is not a valid kernel!" % (kernel)
+        logger.error("ERROR: Kernel %s is not a valid kernel!" % (kernel))
         return None
     return k

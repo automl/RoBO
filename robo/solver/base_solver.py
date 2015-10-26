@@ -10,6 +10,8 @@ import time
 import errno
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 class BaseSolver(object):
     '''
@@ -62,7 +64,7 @@ class BaseSolver(object):
 
     def get_model(self):
         if self.model is None:
-            logging.info("No model trained yet!")
+            logger.info("No model trained yet!")
         return self.model
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):

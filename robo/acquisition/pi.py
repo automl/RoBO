@@ -1,8 +1,10 @@
+import logging
 from scipy.stats import norm
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
 
+logger = logging.getLogger(__name__)
 
 class PI(AcquisitionFunction):
     r"""
@@ -45,7 +47,7 @@ class PI(AcquisitionFunction):
         :return: The value of PI and its derivative at x.
         """
         if X.shape[0] > 1:
-            print "PI is only for single x inputs"
+            logger.error("PI is only for single x inputs")
             return
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
             if derivative:

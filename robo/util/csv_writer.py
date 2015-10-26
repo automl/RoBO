@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import csv,os
 from collections import Counter
+import logging
 
+logger = logging.getLogger(__name__)
 
 def csv_reader(filepath):
     with open(filepath, 'rb') as csvfile: #opens the csv file
@@ -50,4 +52,4 @@ def result_dict(filepath):
 def get_all_columns(dictionary,optimizer_name,column_name):
     #IT should return to you a list which contains the enteries from all the csv files of that column.
     for i in dictionary[optimizer_name]:
-        print dictionary[optimizer_name][i][column_name]
+        logger.info(dictionary[optimizer_name][i][column_name])

@@ -4,9 +4,11 @@ Created on Jun 23, 2015
 @author: Aaron Klein
 '''
 
+import setup_logger
+
 import GPy
-from robo.models.GPyModel import GPyModel
-from robo.acquisition.EI import EI
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.ei import EI
 from robo.maximizers.cmaes import CMAES
 from robo.recommendation.incumbent import compute_incumbent
 from robo.task.branin import Branin

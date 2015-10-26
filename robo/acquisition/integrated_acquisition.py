@@ -9,6 +9,7 @@ import numpy as np
 from copy import deepcopy
 from robo.acquisition.base import AcquisitionFunction
 
+logger = logging.getLogger(__name__)
 
 class IntegratedAcquisition(AcquisitionFunction):
     '''

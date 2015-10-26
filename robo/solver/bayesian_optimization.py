@@ -7,6 +7,8 @@ from robo.models.gpy_model import GPyModel
 from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 from robo.solver.base_solver import BaseSolver
 
+logger = logging.getLogger(__name__)
+
 
 class BayesianOptimization(BaseSolver):
     """
@@ -77,8 +79,8 @@ class BayesianOptimization(BaseSolver):
                 self.X = np.append(self.X, x, axis=0)
                 self.Y = np.append(self.Y, y, axis=0)
 
-            logging.info("Configuration achieved a performance of %f " % (self.Y[i]))
-            logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[i]))
+            logger.info("Configuration achieved a performance of %f " % (self.Y[i]))
+            logger.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[i]))
 
             # Use best point seen so far as incumbent
             best_idx = np.argmin(self.Y)
@@ -111,7 +113,7 @@ class BayesianOptimization(BaseSolver):
 
         n_init_points = 3
         for it in range(n_init_points, num_iterations):
-            logging.info("Start iteration %d ... ", it)
+            logger.info("Start iteration %d ... ", it)
 
             start_time = time.time()
             # Choose next point to evaluate
@@ -123,13 +125,13 @@ class BayesianOptimization(BaseSolver):
 
             start_time_inc = time.time()
             if self.recommendation_strategy is None:
-                logging.info("Use best point seen so far as incumbent.")
+                logger.info("Use best point seen so far as incumbent.")
                 best_idx = np.argmin(self.Y)
                 self.incumbent = self.X[best_idx]
                 self.incumbent_value = self.Y[best_idx]
             
             elif self.recommendation_strategy is optimize_posterior_mean_and_std:
-                logging.info("Optimize the posterior mean and std to find a new incumbent")
+                logger.info("Optimize the posterior mean and std to find a new incumbent")
                 # Start one local search from the best observed point and N - 1 from random points
                 startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
                 best_idx = np.argmin(self.Y)
@@ -151,17 +153,17 @@ class BayesianOptimization(BaseSolver):
             time_optimization_overhead = time.time() - start_time
             self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
 
-            logging.info("Optimization overhead was %f seconds" % (self.time_optimization_overhead[-1]))
+            logger.info("Optimization overhead was %f seconds" % (self.time_optimization_overhead[-1]))
 
-            logging.info("Evaluate candidate %s" % (str(new_x)))
+            logger.info("Evaluate candidate %s" % (str(new_x)))
             start_time = time.time()
             new_y = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
             self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
 
-            logging.info("Configuration achieved a performance of %f " % (new_y[0, 0]))
+            logger.info("Configuration achieved a performance of %f " % (new_y[0, 0]))
 
-            logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[-1]))
+            logger.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[-1]))
 
             # Update the data
             self.X = np.append(self.X, new_x, axis=0)
@@ -170,8 +172,8 @@ class BayesianOptimization(BaseSolver):
             if self.save_dir is not None and (it) % self.num_save == 0:
                 hypers = self.model.hypers
                 self.save_iteration(it, hyperparameters=hypers, acquisition_value=self.acquisition_func(new_x))
-#
-        logging.info("Return %s as incumbent with predicted performance %f" % (str(self.incumbent), self.incumbent_value))
+
+        logger.info("Return %s as incumbent with predicted performance %f" % (str(self.incumbent), self.incumbent_value))
 
         return self.incumbent, self.incumbent_value
 
@@ -185,20 +187,20 @@ class BayesianOptimization(BaseSolver):
         """
         if X is not None and Y is not None:
             try:
-                logging.info("Train model...")
+                logger.info("Train model...")
                 t = time.time()
                 self.model.train(X, Y, do_optimize)
-                logging.info("Time to train the model: %f", (time.time() - t))
+                logger.info("Time to train the model: %f", (time.time() - t))
             except Exception, e:
-                logging.info("Model could not be trained", X, Y)
+                logger.info("Model could not be trained", X, Y)
                 raise
             self.model_untrained = False
             self.acquisition_func.update(self.model)
 
-            logging.info("Maximize acquisition function...")
+            logger.info("Maximize acquisition function...")
             t = time.time()
             x = self.maximize_func.maximize()
-            logging.info("Time to maximize the acquisition function: %f", (time.time() - t))
+            logger.info("Time to maximize the acquisition function: %f", (time.time() - t))
         else:
             self.initialize()
             x = self.X
