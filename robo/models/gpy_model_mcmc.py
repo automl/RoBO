@@ -53,7 +53,7 @@ class GPyModelMCMC(BaseModel):
             for i in range(len(sample) - 1):
                 kernel.param_array[i] = sample[i]
             model = GPyModel(kernel, noise_variance=sample[-1])
-            model.train(self.X, self.Y, optimize=False)
+            model.train(self.X, self.Y, do_optimize=False)
             self.models.append(model)
 
     def predict(self, X, full_cov=False):

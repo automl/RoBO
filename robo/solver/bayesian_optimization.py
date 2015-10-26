@@ -14,7 +14,7 @@ class BayesianOptimization(BaseSolver):
     """
     def __init__(self, acquisition_func, model,
                  maximize_func, task, save_dir=None,
-                 initialization=None, recommendation_strategy=None, num_save=1, train_intervall=1):
+                 initialization=None, recommendation_strategy=None, num_save=1, train_intervall=1, n_restarts=1):
         """
         Initializes the Bayesian optimization.
         Either acquisition function, model, maximization function, bounds, dimensions and objective function are
@@ -47,47 +47,24 @@ class BayesianOptimization(BaseSolver):
         self.model_untrained = True
         self.recommendation_strategy = recommendation_strategy
         self.incumbent = None
-        self.n_restarts = 10
+        self.n_restarts = n_restarts
 
     def initialize(self, n_init_points=3):
         """
         Draws random points to initialize the model
         """
-        #start_time = time.time()
-        #if self.initialization is None:
-        #    # Draw one random configuration
-        #    self.X = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
-        #    logging.info("Evaluate randomly chosen candidate %s" % (str(self.X[0])))
-        #else:
-        #    logging.info("Initialize ...")
-        #    self.X = self.initialization()
-        #self.time_optimization_overhead = np.array([time.time() - start_time])
-
-        #start_time = time.time()
-
-        #self.Y = self.task.evaluate(x[np.newaxis, :])
-
-        #self.time_func_eval = np.array([time.time() - start_time])
-        #logging.info("Configuration achieved a performance of %f " % (self.Y[0]))
-        #logging.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[0]))
         self.time_func_eval = np.zeros([n_init_points])
         self.time_optimization_overhead = np.zeros([n_init_points])
         self.X = np.zeros([1, self.task.n_dims])
         self.Y = np.zeros([1, 1])
 
-        #grid = []
-        #grid.append(np.array(self.task.X_lower))
-        #grid.append(np.array(self.task.X_upper))
-        #grid.append(np.array((self.task.X_upper - self.task.X_lower) / 2))
-        #grid = np.array(grid)
-
         for i in range(n_init_points):
-        #for i, x in enumerate(grid):
+
             start_time = time.time()
             x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
             self.time_optimization_overhead[i] = time.time() - start_time
 
-            #x = x[np.newaxis, :]
+            logging.info("Evaluate randomly chosen candidate %s" % (str(x)))
 
             start_time = time.time()
             y = self.task.evaluate(x)
@@ -158,13 +135,13 @@ class BayesianOptimization(BaseSolver):
                 best_idx = np.argmin(self.Y)
                 startpoints.append(self.X[best_idx])
 
-                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoints, with_gradients=True)
+                self.incumbent, self.incumbent_value = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoint=startpoints, with_gradients=True)
             else:
                 startpoints = [np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims) for i in range(self.n_restarts)]
                 x_opt = np.zeros([len(startpoints), self.task.n_dims])
                 fval = np.zeros([len(startpoints)])
                 for i, startpoint in enumerate(startpoints):
-                    x_opt[i], fval[i] = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoints=startpoint)
+                    x_opt[i], fval[i] = self.recommendation_strategy(self.model, self.task.X_lower, self.task.X_upper, startpoint=startpoint)
                  
                 best = np.argmin(fval)
                 self.incumbent = x_opt[best]

@@ -14,8 +14,8 @@ from _functools import partial
 
 class SciPyOptimizer(BaseMaximizer):
     
-    def __init__(self, objective_function, X_lower, X_upper, n_local_searches=10, verbosity=False):
-        self.n_local_searches = n_local_searches
+    def __init__(self, objective_function, X_lower, X_upper, n_restarts=10, verbosity=False):
+        self.n_restarts = n_restarts
         self.verbosity = verbosity
         super(SciPyOptimizer, self).__init__(objective_function, X_lower, X_upper)
 
@@ -23,12 +23,12 @@ class SciPyOptimizer(BaseMaximizer):
         return -acq_f(np.array([x]))
 
     def maximize(self):
-        cand = np.zeros([self.n_local_searches, self.X_lower.shape[0]])
-        cand_vals = np.zeros([self.n_local_searches])
+        cand = np.zeros([self.n_restarts, self.X_lower.shape[0]])
+        cand_vals = np.zeros([self.n_restarts])
 
         f = partial(self._direct_acquisition_fkt_wrapper, acq_f=self.objective_func)
 
-        for i in range(self.n_local_searches):
+        for i in range(self.n_restarts):
             start = np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
             
             res = optimize.minimize(f, start, method="L-BFGS-B", bounds=zip(self.X_lower, self.X_upper), options={"disp": self.verbosity})
@@ -41,8 +41,8 @@ class SciPyOptimizer(BaseMaximizer):
 
 class SciPyGlobalOptimizer(BaseMaximizer):
     
-    def __init__(self, objective_function, X_lower, X_upper, n_local_searches=10, verbosity=False):
-        self.n_local_searches = n_local_searches
+    def __init__(self, objective_function, X_lower, X_upper, n_restarts=10, verbosity=False):
+        self.n_restarts = n_restarts
         self.verbosity = verbosity
 
         super(SciPyGlobalOptimizer, self).__init__(objective_function, X_lower, X_upper)
@@ -51,12 +51,12 @@ class SciPyGlobalOptimizer(BaseMaximizer):
         return -acq_f(np.array([x]))
 
     def maximize(self):
-        cand = np.zeros([self.n_local_searches, self.X_lower.shape[0]])
-        cand_vals = np.zeros([self.n_local_searches])
+        cand = np.zeros([self.n_restarts, self.X_lower.shape[0]])
+        cand_vals = np.zeros([self.n_restarts])
 
         f = partial(self._direct_acquisition_fkt_wrapper, acq_f=self.objective_func)
 
-        for i in range(self.n_local_searches):
+        for i in range(self.n_restarts):
             start = np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
             res = optimize.basinhopping(f, start, minimizer_kwargs={"bounds" : zip(self.X_lower, self.X_upper), "method": "L-BFGS-B"}, disp=self.verbosity)
      

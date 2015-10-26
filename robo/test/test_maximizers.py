@@ -121,8 +121,8 @@ class TestMaximizers2D(unittest.TestCase):
         assert np.all(x < self.branin.X_upper)
 
     def test_cmaes(self):
-        maximizer = CMAES(self.acquisition_func, self.branin.X_lower, self.branin.X_upper)
-        x = maximizer.maximize(verbose=False)
+        maximizer = CMAES(self.acquisition_func, self.branin.X_lower, self.branin.X_upper, verbose=False)
+        x = maximizer.maximize()
 
         assert x.shape[0] == 1
         assert x.shape[1] == self.branin.n_dims

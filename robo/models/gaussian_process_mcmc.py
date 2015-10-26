@@ -10,6 +10,7 @@ import emcee
 import numpy as np
 from scipy import optimize
 from copy import deepcopy
+import scipy.stats as sps
 
 from robo.models.base_model import BaseModel
 from robo.models.gaussian_process import GaussianProcess
@@ -17,7 +18,7 @@ from robo.models.gaussian_process import GaussianProcess
 
 class GaussianProcessMCMC(BaseModel):
     
-    def __init__(self, kernel, lnprior=None, n_hypers=20, chain_length=2000, burnin_steps=2000, p0=None, *args, **kwargs):
+    def __init__(self, kernel, lnprior=None, n_hypers=20, chain_length=2000, burnin_steps=2000, p0=None, scaling=False, *args, **kwargs):
         self.kernel = kernel
         if lnprior is None:
             lnprior = lambda x : 0
@@ -29,6 +30,9 @@ class GaussianProcessMCMC(BaseModel):
         self.burnin_steps = burnin_steps
         self.p0 = p0
         
+        # This flag is only need for environmental search to transform s into (1 - s) ** 2
+        self.scaling = scaling
+        
                 
     def scale(self, x, new_min, new_max, min, max):
         return ((new_max - new_min) * (x -min) / (max - min)) + new_min
@@ -36,11 +40,15 @@ class GaussianProcessMCMC(BaseModel):
     def train(self, X, Y, do_optimize=True):
         self.X = X
         self.Y = Y
-        #self.Y = self.scale(Y, 0, 100, np.min(Y, axis=0), np.max(Y, axis=0))
+        
+        
+        # Transform s to (1 - s) ** 2
+        if self.scaling:
+            self.X = np.copy(X)
+            self.X[:, -1] = (1 - self.X[:, -1]) ** 2
 
         # Use the mean of the data as mean for the GP
-        #mean = np.mean(Y, axis=0)
-        mean = 0
+        mean = np.mean(Y, axis=0)
         self.gp = george.GP(self.kernel, mean=mean)
         
         # Precompute the covariance
@@ -56,12 +64,12 @@ class GaussianProcessMCMC(BaseModel):
         if do_optimize:
             # Initialize the walkers. We have one walker for each hyperparameter configuration
             
-            self.sampler = emcee.EnsembleSampler(self.n_hypers, len(self.kernel), self.lnprob)
+            self.sampler = emcee.EnsembleSampler(self.n_hypers, len(self.kernel.pars), self.lnprob)
             
             # Do a burn-in in the first iteration
             if not self.burned:
                 if self.p0 is None:
-                    self.p0 = [np.log(self.kernel.pars) + 1e-4 * np.random.randn(len(self.kernel)) for i in range(self.n_hypers)]
+                    self.p0 = [np.log(self.kernel.pars) + 1e-4 * np.random.randn(len(self.kernel.pars)) for i in range(self.n_hypers)]
                 
                 self.p0, _, _ = self.sampler.run_mcmc(self.p0, self.burnin_steps)
                 
@@ -78,12 +86,13 @@ class GaussianProcessMCMC(BaseModel):
             
             self.models = []
             for sample in self.hypers:
-                logging.info("HYPERS: " + str(sample))
-
+                
                 # Instantiate a model for each hyperparam configuration
                 #TODO: Just keep one model and replace the hypers every time we need them
                 kernel = deepcopy(self.kernel)
-                
+                kernel.pars = np.exp(sample)
+
+                #model = GaussianProcess(kernel, mean=np.exp(sample[0]))
                 model = GaussianProcess(kernel)
                 model.train(self.X, self.Y, do_optimize=False)
                 self.models.append(model)
@@ -92,11 +101,13 @@ class GaussianProcessMCMC(BaseModel):
                    
     def lnprob(self, p):
         # Update the kernel and compute the lnlikelihood. Hyperparameters are all on a log scale
-        self.gp.kernel.pars = np.exp(p)
-
+        self.gp.kernel.pars = np.exp(p[:])
+        
         return self.lnprior(p) + self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
 
     def predict(self, X):
+        if self.scaling:
+            X[:, -1] = (1 - X[:, -1]) ** 2
         mu = np.zeros([self.n_hypers])
         var = np.zeros([self.n_hypers])
         for i, model in enumerate(self.models):

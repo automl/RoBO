@@ -48,7 +48,18 @@ class AcquisitionFunction(object):
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
 
-        return self.compute(X, derivative)
+        if derivative:
+            acq, grad = self.compute(X, derivative)
+            if np.isnan(acq):
+                return np.array([[-np.finfo(np.float).max]]), np.array([[-np.inf]])
+            else:
+                return acq, grad 
+        else:
+            acq = self.compute(X, derivative)
+            if np.isnan(acq):
+                return np.array([[-np.finfo(np.float).max]])
+            else:
+                return acq
 
     def compute(self, X, derivative=False):
         """

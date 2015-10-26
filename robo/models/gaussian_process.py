@@ -16,9 +16,10 @@ from robo.models.base_model import BaseModel
 
 class GaussianProcess(BaseModel):
     
-    def __init__(self, kernel, *args, **kwargs):
+    def __init__(self, kernel, mean=0, *args, **kwargs):
         self.kernel = kernel
         self.model = None
+        self.mean = mean
         
     def scale(self, x, new_min, new_max, min, max):
         return ((new_max - new_min) * (x -min) / (max - min)) + new_min
@@ -29,9 +30,8 @@ class GaussianProcess(BaseModel):
         #self.Y = self.scale(Y, 0, 100, np.min(Y, axis=0), np.max(Y, axis=0))
         self.Y = Y
         # Use the mean of the data as mean for the GP
-        #mean = np.mean(Y, axis=0)
-        mean = 0
-        self.model = george.GP(self.kernel, mean=mean)
+        self.mean = np.mean(Y, axis=0)
+        self.model = george.GP(self.kernel, mean=self.mean)
         #self.model = george.GP(self.kernel)
         
         # Precompute the covariance
@@ -47,14 +47,16 @@ class GaussianProcess(BaseModel):
         
         if do_optimize:
             self.hypers = self.optimize()
-            logging.info("HYPERS: " + str(self.hypers))
+            
             self.model.kernel[:] = self.hypers
         else:
             self.hypers = self.model.kernel[:]
+        logging.info("HYPERS: mean=%s, kernel=%s" % (str(self.model.mean.value), str(self.kernel.pars)))
 
     def get_noise(self):
         # Assumes a kernel of the form amp * (kernel1 + noise_kernel)
         # FIXME: How to determine the noise of george gp?
+        assert self.kernel.k2.k2.kernel_type == 1
         return self.kernel.k2.k2.pars[0]
     
     def nll(self, p):
@@ -71,7 +73,7 @@ class GaussianProcess(BaseModel):
         return -self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
         
     def optimize(self):
-        #TODO: Maybe we should start from a random point here, as this might be more likely to get stuck in a local minima
+        #Start from the previous configuration
         p0 = self.model.kernel.vector
         results = optimize.minimize(self.nll, p0, jac=self.grad_nll)
         
@@ -87,5 +89,7 @@ class GaussianProcess(BaseModel):
         if self.model is None:
             logging.error("The model has to be trained first!")
             raise ValueError
+
         mu, var = self.model.predict(self.Y[:, 0], X)
+
         return mu, var

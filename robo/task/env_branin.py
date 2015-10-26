@@ -20,7 +20,7 @@ class EnvBranin(BaseTask):
 
     def objective_function(self, x):
         y = self.branin.objective_function(x[:, :-1]) * np.exp(-(x[0, -1] - 1))
-
+        
         return y
 
     def objective_function_test(self, x):

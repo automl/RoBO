@@ -46,7 +46,7 @@ class RandomForest(object):
         self.Y = Y
 
         data = rfr.data_container.numpy_data_container_regression(self.X, self.Y, self.types)
-        
+
         self.rf = rfr.regression.binary_rss()
         self.rf.num_trees = self.num_trees
         self.rf.seed = self.seed
