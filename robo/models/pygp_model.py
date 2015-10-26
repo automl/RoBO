@@ -1,7 +1,10 @@
+import logging
 import numpy as np
 import pyGPs
 from robo.models.base_model import BaseModel
 import scipy.linalg as spla
+
+logger = logging.getLogger(__name__)
 
 class PyGPModel(BaseModel):
     def __init__(self, kernel, num_restarts=10, *args, **kwargs):
@@ -20,15 +23,15 @@ class PyGPModel(BaseModel):
         if optimize:
             self.m.setOptimizer("Minimize", num_restarts=self.num_restarts)
             self.m.optimize(X, Y)
-            print "Covariance Function parameters"
-            print self.m.covfunc.hyp
-            print self.m.likfunc.hyp
+            logger.debug("Covariance Function parameters")
+            logger.debug(self.m.covfunc.hyp)
+            logger.debug(self.m.likfunc.hyp)
         else:
             self.m.setData(X, Y)
 
     def predict_variance(self, X1, X2):
         if self.m == None:
-            print "ERROR: Model has to be trained first."
+            logger.error("ERROR: Model has to be trained first.")
             return None
         LX1 = spla.cho_solve((self.m.posterior.L, True), self.kernel.getCovMatrix(self.X, X1, "cross"))
         LX2 = spla.cho_solve((self.m.posterior.L, True), self.kernel.getCovMatrix(self.X, X2, "cross"))
@@ -37,7 +40,7 @@ class PyGPModel(BaseModel):
 
     def predict(self, X, full_cov=False):
         if self.m == None:
-            print "ERROR: Model has to be trained first."
+            logger.error("ERROR: Model has to be trained first.")
             return None
 
         mean, var, _, _, _ = self.m.predict(X)

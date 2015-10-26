@@ -3,11 +3,13 @@ Created on Jul 21, 2015
 
 @author: Aaron Klein
 '''
+import logging
 
 import numpy as np
 
 from robo.task.base_task import BaseTask
 
+logger = logging.getLogger(__name__)
 
 class REMBO(BaseTask):
     '''
@@ -36,7 +38,7 @@ class REMBO(BaseTask):
             for i in xrange(self.d):
                 A[i, i] = 1.0
         else:
-            print ('ERROR: Unknown embedding option: ' + str(embedding))
+            logger.error('ERROR: Unknown embedding option: ' + str(embedding))
             return
         self.A = A
 

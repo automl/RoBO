@@ -4,6 +4,7 @@ Created on Jun 26, 2015
 @author: Aaron Klein
 '''
 
+import setup_logger
 import GPy
 import unittest
 import numpy as np

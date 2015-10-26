@@ -9,6 +9,8 @@ from scipy import spatial
 from robo.models.base_model import BaseModel
 from copy import deepcopy
 
+logger = logging.getLogger(__name__)
+
 
 class GPyModel(BaseModel):
     """
@@ -33,7 +35,7 @@ class GPyModel(BaseModel):
         self.m = GPy.models.GPRegression(self.X, self.Y, kern)
         
         if self.noise_variance is not None:
-            print "Do not optimize noise use fix value of %f" % (self.noise_variance)
+            logger.warning("Do not optimize noise use fix value of %f" % (self.noise_variance))
             self.m.likelihood.variance.fix(self.noise_variance)
         else:
             # Add an exponential prior for the noise in order to prevent that the GP explains everything with noise
@@ -46,7 +48,7 @@ class GPyModel(BaseModel):
             self.m.optimize(start=self.start_point)
             # Start from random
             #self.m.optimize_restarts(num_restarts=self.num_restarts)
-            logging.info("HYPERS: " + str(self.m.param_array))
+            logger.info("HYPERS: " + str(self.m.param_array))
             self.start_point = self.m.param_array
 
         self.hypers = self.m.param_array
@@ -70,7 +72,7 @@ class GPyModel(BaseModel):
 
     def predict(self, X, full_cov=False):
         if self.m == None:
-            print "ERROR: Model has to be trained first."
+            logger.error("ERROR: Model has to be trained first.")
             return None
 
         mean, var = self.m.predict(X, full_cov=full_cov)

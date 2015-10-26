@@ -13,6 +13,8 @@ from scipy import optimize
 
 from robo.models.base_model import BaseModel
 
+logger = logging.getLogger(__name__)
+
 
 class GaussianProcess(BaseModel):
     
@@ -29,6 +31,7 @@ class GaussianProcess(BaseModel):
         self.X = X
         #self.Y = self.scale(Y, 0, 100, np.min(Y, axis=0), np.max(Y, axis=0))
         self.Y = Y
+        
         # Use the mean of the data as mean for the GP
         self.mean = np.mean(Y, axis=0)
         self.model = george.GP(self.kernel, mean=self.mean)
@@ -47,11 +50,10 @@ class GaussianProcess(BaseModel):
         
         if do_optimize:
             self.hypers = self.optimize()
-            
+            logger.info("HYPERS: " + str(self.hypers))
             self.model.kernel[:] = self.hypers
         else:
             self.hypers = self.model.kernel[:]
-        logging.info("HYPERS: mean=%s, kernel=%s" % (str(self.model.mean.value), str(self.kernel.pars)))
 
     def get_noise(self):
         # Assumes a kernel of the form amp * (kernel1 + noise_kernel)
@@ -87,7 +89,7 @@ class GaussianProcess(BaseModel):
 
     def predict(self, X, **kwargs):
         if self.model is None:
-            logging.error("The model has to be trained first!")
+            logger.error("The model has to be trained first!")
             raise ValueError
 
         mu, var = self.model.predict(self.Y[:, 0], X)

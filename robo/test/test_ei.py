@@ -1,3 +1,5 @@
+import setup_logger
+
 import GPy
 import unittest
 import numpy as np

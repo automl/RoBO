@@ -3,6 +3,7 @@ Created on 14.07.2015
 
 @author: Aaron Klein
 '''
+import setup_logger
 import unittest
 import numpy as np
 
