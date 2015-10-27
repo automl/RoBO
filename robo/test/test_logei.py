@@ -1,16 +1,12 @@
-import sys
-import os
-#sys.path.insert(0, '../')
+import setup_logger
 import unittest
-import errno
+
 import numpy as np
-import random
+
 import GPy
-from robo.models.GPyModel import GPyModel
+from robo.models.gpy_model import GPyModel
 from robo.acquisition.LogEI import LogEI
 from robo.recommendation.incumbent import compute_incumbent
-
-here = os.path.abspath(os.path.dirname(__file__))
 
 
 class LogEITestCase1(unittest.TestCase):

@@ -2,8 +2,11 @@
 This module contains the functions necessary to perform the sampling in the execution of the entropy search algorithm.
 Alternatively the sampling can be carried out using the emcee Python module.
 """
+import logging
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisition_fn):
     """
@@ -147,7 +150,7 @@ def slice_ShrinkRank_nolog(xx, P, s0, transpose):
             else:
                 s = np.append(s, np.multiply(theta, s[k-1]))
                 if s[k] < np.spacing(1):
-                    print 'bug found: contracted down to zero step size, still not accepted.\n'
+                    logger.error('bug found: contracted down to zero step size, still not accepted.\n')
                 if transpose:
                     xx = xx.transpose()
                     return xx
