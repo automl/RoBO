@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 
 class GaussianProcess(BaseModel):
     
-    def __init__(self, kernel, mean=0, *args, **kwargs):
+    def __init__(self, kernel, prior=None, mean=0, *args, **kwargs):
         self.kernel = kernel
         self.model = None
         self.mean = mean
+        self.prior = prior
         
     def scale(self, x, new_min, new_max, min, max):
         return ((new_max - new_min) * (x -min) / (max - min)) + new_min
@@ -60,18 +61,26 @@ class GaussianProcess(BaseModel):
         assert self.kernel.k2.k2.kernel_type == 1
         return self.kernel.k2.k2.pars[0]
     
-    def nll(self, p):
+    def nll(self, theta):
         # Specify bounds to keep things sane
-        if np.any((-10 > p) + (p > 10)):
-            return 1e25
+        if np.any((-40 > theta) + (theta > 40)):
+             return 1e25
     
-        self.model.kernel[:] = p
+        self.model.kernel[:] = theta
         ll = self.model.lnlikelihood(self.Y[:, 0], quiet=True)
+        
+        # Add prior
+        ll += self.prior.lnprob(theta)
+        
+        # We add a minus here because scipy is minimizing
         return -ll if np.isfinite(ll) else 1e25
 
-    def grad_nll(self, p):
-        self.model.kernel[:] = p
-        return -self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
+    def grad_nll(self, theta):
+        self.model.kernel[:] = theta
+        
+        gll = self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
+        gll += self.prior.gradients(theta)
+        return -gll
         
     def optimize(self):
         # Start optimization  from the previous hyperparameter configuration

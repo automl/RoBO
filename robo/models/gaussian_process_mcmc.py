@@ -20,17 +20,16 @@ logger = logging.getLogger(__name__)
 
 class GaussianProcessMCMC(BaseModel):
     
-    def __init__(self, kernel, lnprior=None, n_hypers=20, chain_length=2000, burnin_steps=2000, p0=None, scaling=False, *args, **kwargs):
+    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000, scaling=False, *args, **kwargs):
         self.kernel = kernel
-        if lnprior is None:
-            lnprior = lambda x : 0
+        if prior is None:
+            prior = lambda x : 0
         else:
-            self.lnprior = lnprior
+            self.prior = prior
         self.n_hypers = n_hypers
         self.chain_length = chain_length
         self.burned = False
         self.burnin_steps = burnin_steps
-        self.p0 = p0
         
         # This flag is only need for environmental search to transform s into (1 - s) ** 2
         self.scaling = scaling
@@ -44,7 +43,7 @@ class GaussianProcessMCMC(BaseModel):
         self.Y = Y
         
         
-        # Transform s to (1 - s) ** 2
+        # Transform s to (1 - s) ** 2 only necessary for environment entropy search
         if self.scaling:
             self.X = np.copy(X)
             self.X[:, -1] = (1 - self.X[:, -1]) ** 2
@@ -65,13 +64,11 @@ class GaussianProcessMCMC(BaseModel):
 
         if do_optimize:
             # Initialize the walkers. We have one walker for each hyperparameter configuration
-            
-            self.sampler = emcee.EnsembleSampler(self.n_hypers, len(self.kernel.pars), self.lnprob)
+            self.sampler = emcee.EnsembleSampler(self.n_hypers, len(self.kernel.pars), self.loglikelihood)
             
             # Do a burn-in in the first iteration
             if not self.burned:
-                if self.p0 is None:
-                    self.p0 = [np.log(self.kernel.pars) + 1e-4 * np.random.randn(len(self.kernel.pars)) for i in range(self.n_hypers)]
+                self.p0 = self.prior.sample_from_prior()
                 
                 self.p0, _, _ = self.sampler.run_mcmc(self.p0, self.burnin_steps)
                 
@@ -94,18 +91,21 @@ class GaussianProcessMCMC(BaseModel):
                 kernel = deepcopy(self.kernel)
                 kernel.pars = np.exp(sample)
 
-                #model = GaussianProcess(kernel, mean=np.exp(sample[0]))
                 model = GaussianProcess(kernel)
                 model.train(self.X, self.Y, do_optimize=False)
                 self.models.append(model)
         else:
             self.hypers = self.gp.kernel[:]
                    
-    def lnprob(self, p):
-        # Update the kernel and compute the lnlikelihood. Hyperparameters are all on a log scale
-        self.gp.kernel.pars = np.exp(p[:])
+    def loglikelihood(self, theta):
+        # Bound the hyperparameter space to keep things sane. Note all hyperparameters live on a log scale
+        if np.any((-40 > x) + (x > 40)):
+            return -np.inf
         
-        return self.lnprior(p) + self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
+        # Update the kernel and compute the lnlikelihood. Hyperparameters are all on a log scale
+        self.gp.kernel.pars = np.exp(theta[:])
+        
+        return self.prior.lnprior(theta) + self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
 
     def predict(self, X):
         if self.scaling:

@@ -5,22 +5,15 @@ Created on Oct 14, 2015
 '''
 
 class BasePrior(object):
-    '''
-    classdocs
-    '''
 
-
-    def __init__(self, params):
-        '''
-        Constructor
-        '''
+    def __init__(self):
         pass
 
-    def lnprob(self, x):
-        '''
-        Constructor
-        '''
-        return 0
+    def lnprob(self, theta):
+        pass
     
-    def sample(self, n_samples):
+    def sample_from_prior(self, n_samples):
         return np.random.rand(n_samples)
+    
+    def gradient(self, theta):
+        pass
