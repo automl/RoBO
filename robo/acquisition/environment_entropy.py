@@ -11,7 +11,7 @@ from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_a
 from _functools import partial
 
 
-class EnvEntropySearch(Entropy):
+class EnvironmentEntropy(Entropy):
     '''
         Environment Entropy Search
     '''
@@ -26,11 +26,11 @@ class EnvEntropySearch(Entropy):
         if compute_incumbent is env_optimize_posterior_mean_and_std:
             compute_incumbent = partial(compute_incumbent, is_env=is_env_variable)
 
-        super(EnvEntropySearch, self).__init__(model, X_lower, X_upper, compute_inc=compute_incumbent, Nb=n_representer)
+        super(EnvironmentEntropy, self).__init__(model, X_lower, X_upper, compute_inc=compute_incumbent, Nb=n_representer)
 
     def update(self, model, cost_model):
         self.cost_model = cost_model
-        super(EnvEntropySearch, self).update(model)
+        super(EnvironmentEntropy, self).update(model)
 
     def compute(self, X, derivative=False):
         if len(X.shape) == 1:
@@ -57,7 +57,7 @@ class EnvEntropySearch(Entropy):
 
     def update_representer_points(self):
 
-        super(EnvEntropySearch, self).update_representer_points()
+        super(EnvironmentEntropy, self).update_representer_points()
 
         # Project representer points to subspace
         self.zb[:, self.is_env_variable == 1] = self.X_upper[self.is_env_variable == 1]

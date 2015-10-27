@@ -139,20 +139,3 @@ class EntropyMC(Entropy):
 
         # Return the expected information gain
         return np.array([[-H_new + H_old]])
-
-    def plot(self, fig, minx, maxx, plot_attr={"color": "red"}, resolution=1000):
-        n = len(fig.axes)
-        for i in range(n):
-            fig.axes[i].change_geometry(n + 1, 1, i + 1)
-        ax = fig.add_subplot(n + 1, 1, n + 1)
-        #bar_ax = fig.add_subplot(n + 3, 1, n + 2)
-        plotting_range = np.linspace(minx, maxx, num=resolution)
-        acq_v = np.array([self(np.array([x]))[0][0] for x in plotting_range[:, np.newaxis]])
-        ax.plot(plotting_range, acq_v, **plot_attr)
-        #zb = self.zb
-        #bar_ax.plot(zb, np.zeros_like(zb), "g^")
-        ax.set_xlim(minx, maxx)
-        #bar_ax.bar(zb, self.pmin[:, 0], width=(maxx - minx) / 200, color="yellow")
-        #bar_ax.set_xlim(minx, maxx)
-        ax.set_title(str(self))
-        return ax

@@ -44,11 +44,10 @@ class GPyModel(BaseModel):
              self.m.likelihood.variance.constrain_positive()
         
         if do_optimize:
-            # Start from previous hyperparameters
+            # Start from previous hyperparameter configuration
             self.m.optimize(start=self.start_point)
-            # Start from random
-            #self.m.optimize_restarts(num_restarts=self.num_restarts)
-            logger.info("HYPERS: " + str(self.m.param_array))
+
+            logger.debug("HYPERS: " + str(self.m.param_array))
             self.start_point = self.m.param_array
 
         self.hypers = self.m.param_array
@@ -79,8 +78,6 @@ class GPyModel(BaseModel):
 
         if not full_cov:
             # GPy sometimes returns negative variance if the noise level is too low, clip them to be in the interval between the smallest positive number and inf
-            #if np.any(var < 0):
-            #    logging.error("Variance is negative (%s)" % var)
             return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
 
         else:

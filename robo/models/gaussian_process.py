@@ -35,7 +35,6 @@ class GaussianProcess(BaseModel):
         # Use the mean of the data as mean for the GP
         self.mean = np.mean(Y, axis=0)
         self.model = george.GP(self.kernel, mean=self.mean)
-        #self.model = george.GP(self.kernel)
         
         # Precompute the covariance
         yerr = 1e-25
@@ -45,12 +44,12 @@ class GaussianProcess(BaseModel):
                 break
             except np.linalg.LinAlgError:
                 yerr *= 10
-                logging.error("Cholesky decomposition for the covariance matrix of the GP failed. Add %s noise on the diagonal." % yerr)
+                logger.error("Cholesky decomposition for the covariance matrix of the GP failed. Add %s noise on the diagonal." % yerr)
         
         
         if do_optimize:
             self.hypers = self.optimize()
-            logger.info("HYPERS: " + str(self.hypers))
+            logger.debug("HYPERS: " + str(self.hypers))
             self.model.kernel[:] = self.hypers
         else:
             self.hypers = self.model.kernel[:]
@@ -75,7 +74,7 @@ class GaussianProcess(BaseModel):
         return -self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
         
     def optimize(self):
-        #Start from the previous configuration
+        # Start optimization  from the previous hyperparameter configuration
         p0 = self.model.kernel.vector
         results = optimize.minimize(self.nll, p0, jac=self.grad_nll)
         

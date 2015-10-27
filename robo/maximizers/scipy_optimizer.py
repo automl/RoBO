@@ -19,14 +19,14 @@ class SciPyOptimizer(BaseMaximizer):
         self.verbosity = verbosity
         super(SciPyOptimizer, self).__init__(objective_function, X_lower, X_upper)
 
-    def _direct_acquisition_fkt_wrapper(self, x, acq_f):
+    def _acquisition_fkt_wrapper(self, x, acq_f):
         return -acq_f(np.array([x]))
 
     def maximize(self):
         cand = np.zeros([self.n_restarts, self.X_lower.shape[0]])
         cand_vals = np.zeros([self.n_restarts])
 
-        f = partial(self._direct_acquisition_fkt_wrapper, acq_f=self.objective_func)
+        f = partial(self._acquisition_fkt_wrapper, acq_f=self.objective_func)
 
         for i in range(self.n_restarts):
             start = np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
@@ -47,14 +47,14 @@ class SciPyGlobalOptimizer(BaseMaximizer):
 
         super(SciPyGlobalOptimizer, self).__init__(objective_function, X_lower, X_upper)
 
-    def _direct_acquisition_fkt_wrapper(self, x, acq_f):
+    def _acquisition_fkt_wrapper(self, x, acq_f):
         return -acq_f(np.array([x]))
 
     def maximize(self):
         cand = np.zeros([self.n_restarts, self.X_lower.shape[0]])
         cand_vals = np.zeros([self.n_restarts])
 
-        f = partial(self._direct_acquisition_fkt_wrapper, acq_f=self.objective_func)
+        f = partial(self._acquisition_fkt_wrapper, acq_f=self.objective_func)
 
         for i in range(self.n_restarts):
             start = np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
