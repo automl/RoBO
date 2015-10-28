@@ -5,7 +5,6 @@ Created on Oct 14, 2015
 '''
 
 class BasePrior(object):
-
     def __init__(self):
         pass
 
