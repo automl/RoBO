@@ -64,11 +64,29 @@ class EnvironmentEntropy(Entropy):
         super(EnvironmentEntropy, self).update(model)
 
     def compute(self, X, derivative=False):
+        """
+        Computes the acquisiton value for a single point.
+        
+        Parameters
+        ----------
+        X : (1, D) numpy array
+            The input point for which the acquisiton functions is computed.
+        derivative : bool, optional
+            If it is equal to True also the derivatives with respection X is 
+            computed.
+            
+        Returns
+        -------
+        acquisition_value: numpy array
+            The acquisition value computed for X.
+        grad : numpy array
+            The computed gradient of the acquisiton function at X. Only
+            returned if derivate==True
+        """
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
 
         # Predict the log costs for this configuration
-        #cost = self.cost_model.predict(X[:, self.is_env_variable == 1])[0]
         log_cost = self.cost_model.predict(X)[0]
 
         if derivative:
