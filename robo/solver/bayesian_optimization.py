@@ -145,7 +145,7 @@ class BayesianOptimization(BaseSolver):
                 best = np.argmin(fval)
                 self.incumbent = x_opt[best]
                 self.incumbent_value = fval[best]
-            logging.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
+            logger.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
 
             time_optimization_overhead = time.time() - start_time
             self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
