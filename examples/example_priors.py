@@ -4,6 +4,7 @@ Created on Oct 27, 2015
 @author: Aaron Klein
 '''
 import george
+import cma
 import numpy as np
 
 from robo.task.branin import Branin
@@ -11,7 +12,7 @@ from robo.priors.base_prior import BasePrior
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.priors import default_priors
 from robo.acquisition.ei import EI
-from robo.maximizers.cmaes import CMAES
+from robo.maximizers.direct import Direct
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.recommendation.incumbent import compute_incumbent
 
@@ -19,16 +20,12 @@ from robo.recommendation.incumbent import compute_incumbent
 class MyPrior(BasePrior):
 
     def __init__(self, n_dims):
-
         # The number of hyperparameters
         self.n_dims = n_dims
-
         # Prior for the Matern52 lengthscales
         self.tophat = default_priors.TophatPrior(-2, 2)
-
         # Prior for the covariance amplitude
         self.ln_prior = default_priors.LognormalPrior(mean=0.0, sigma=1.0)
-
         # Prior for the noise
         self.horseshoe = default_priors.HorseshoePrior(scale=0.1)
 
@@ -57,6 +54,15 @@ class MyPrior(BasePrior):
         return p0
 
 
+def global_optimize_posterior(model, X_lower, X_upper, startpoint):
+    def f(x):
+        mu, var = model.predict(x[np.newaxis, :])
+        return (mu + np.sqrt(var))[0, 0]
+    # Use CMAES to optimize the posterior mean + std
+    res = cma.fmin(f, startpoint, 0.6, options={"bounds": [X_lower, X_upper]})
+    return res[0], np.array([res[1]])
+
+
 burnin = 100
 chain_length = 200
 n_hypers = 20
@@ -78,13 +84,14 @@ model = GaussianProcessMCMC(kernel, prior=prior, burnin=burnin,
 acquisition_func = EI(model, X_upper=task.X_upper, X_lower=task.X_lower,
                       compute_incumbent=compute_incumbent, par=0.1)
 
-maximizer = CMAES(acquisition_func, task.X_lower, task.X_upper)
+maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
 
 bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
                           maximize_func=maximizer,
-                          task=task)
+                          task=task,
+                          recommendation_strategy=global_optimize_posterior)
 
-bo.run(10)
+bo.run(20)
 
 

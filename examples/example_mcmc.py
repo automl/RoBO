@@ -17,9 +17,10 @@ from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_s
 
 logger = logging.getLogger(__name__)
 
+
 def lnprior(x):
     if np.any((-10 > x) + (x > 10)):
-        return -np.inf 
+        return -np.inf
     return 0
 
 task = Branin()
