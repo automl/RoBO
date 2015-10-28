@@ -5,7 +5,7 @@ import numpy as np
 
 import GPy
 from robo.models.gpy_model import GPyModel
-from robo.acquisition.LogEI import LogEI
+from robo.acquisition.log_ei import LogEI
 from robo.recommendation.incumbent import compute_incumbent
 
 
