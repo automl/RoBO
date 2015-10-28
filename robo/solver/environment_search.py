@@ -234,7 +234,7 @@ class EnvironmentSearch(BayesianOptimization):
             # Add the new observations to the data
             self.X = np.append(self.X, new_x, axis=0)
             self.Y = np.append(self.Y, new_y, axis=0)
-            self.Costs = np.append(self.Costs, new_cost[:, np.newaxis], axis=0)
+            self.Costs = np.append(self.Costs, new_cost, axis=0)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
                 hypers = self.model.hypers
