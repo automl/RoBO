@@ -16,7 +16,8 @@ from robo.acquisition.environment_entropy import EnvironmentEntropy
 from robo.acquisition.integrated_acquisition import IntegratedAcquisition
 from robo.maximizers.direct import Direct
 from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
-from robo.task.env_branin import EnvBranin
+from robo.task.branin import Branin
+from robo.task.environmental_synthetic_function import EnvironmentalSyntheticFunction
 from robo.solver.environment_search import EnvironmentSearch
 from robo.priors import default_priors
 from robo.priors.base_prior import BasePrior
@@ -62,8 +63,10 @@ class Prior(BasePrior):
 
         return p0
 
-# Adapted branin function with additional system size
-branin = EnvBranin()
+# Warp the original Branin function to an the system size
+# as additional input and an exponential cost function
+branin = Branin()
+task = EnvironmentalSyntheticFunction(branin)
 
 # Define the kernel + prior for modeling the objective function
 noise = 1.0
@@ -89,16 +92,15 @@ cost_prior = Prior(len(cost_kernel))
 cost_model = GaussianProcessMCMC(cost_kernel, prior=cost_prior)
 
 # Inititalize the BO ingredients
-es = EnvironmentEntropy(model, cost_model, branin.X_lower, branin.X_upper,
-                        env_optimize_posterior_mean_and_std, branin.is_env, 50)
+es = EnvironmentEntropy(model, cost_model, task.X_lower, task.X_upper,
+                        env_optimize_posterior_mean_and_std, task.is_env, 50)
 acquisition_func = IntegratedAcquisition(model, es, cost_model)
-maximizer = Direct(acquisition_func, branin.X_lower, branin.X_upper)
+maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
 
 bo = EnvironmentSearch(acquisition_func=acquisition_func,
                   model=model,
                   cost_model=cost_model,
                   maximize_func=maximizer,
-                  task=branin,
-                  synthetic_func=True,
+                  task=task,
                   n_init_points=2)
 bo.run(20)
