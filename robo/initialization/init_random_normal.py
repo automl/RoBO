@@ -17,6 +17,4 @@ def init_random_normal(x_lower, x_upper, mean, std, n):
     :return: drawn samples
     """
     n_dims = x_lower.shape[0]
-    return np.transpose(
-        np.array([np.clip(np.random.normal(mean[i], std[i], n), x_lower[i], x_upper[i]) for i in range(n_dims)])
-    )
+    return np.array([np.clip(np.random.normal(mean[i], std[i], n), x_lower[i], x_upper[i]) for i in range(n_dims)]).T
