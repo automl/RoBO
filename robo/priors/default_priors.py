@@ -16,8 +16,8 @@ class TophatPrior(BasePrior):
         if not (max > min):
             raise Exception("Upper bound of Tophat prior must be greater than the lower bound!")
 
-    def lnprob(self, p):
-        if np.any(p < self.min) or np.any(p > self.max):
+    def lnprob(self, theta):
+        if np.any(theta < self.min) or np.any(theta > self.max):
             return -np.inf
         else:
             return 0.
@@ -25,19 +25,20 @@ class TophatPrior(BasePrior):
     def sample_from_prior(self, n_samples):
         return self.min + np.random.rand(n_samples) * (self.max-self.min)
 
-# From Spearmint
+
+# Copied from Spearmint
 class HorseshoePrior(BasePrior):
     def __init__(self, scale=0.1):
         self.scale = scale
 
     # THIS IS INEXACT
-    def lnprob(self, x):
-        if np.any(x == 0.0):
+    def lnprob(self, theta):
+        if np.any(theta == 0.0):
             return np.inf  # POSITIVE infinity (this is the "spike")
         # We don't actually have an analytical form for this
         # But we have a bound between 2 and 4, so I just use 3.....
         # (or am I wrong and for the univariate case we have it analytically?)
-        return np.sum(np.log(np.log(1 + 3.0 * (self.scale/x)**2) ) )
+        return np.sum(np.log(np.log(1 + 3.0 * (self.scale/theta)**2) ) )
 
     def sample_from_prior(self, n_samples):
         
@@ -45,13 +46,14 @@ class HorseshoePrior(BasePrior):
 
         return np.log(np.abs(np.random.randn() * lamda * self.scale))
 
+
 class LognormalPrior(BasePrior):
     def __init__(self, sigma, mean=0):
         self.sigma = sigma
         self.mean = mean
 
-    def lnprob(self, x):
-        return np.sum(sps.lognorm.logpdf(x, self.sigma, loc=self.mean))
+    def lnprob(self, theta):
+        return np.sum(sps.lognorm.logpdf(theta, self.sigma, loc=self.mean))
 
     def sample_from_prior(self, n_samples):
         return np.random.lognormal(mean=self.mean, sigma=self.sigma, size=n_samples)

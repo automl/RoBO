@@ -4,8 +4,6 @@ import numpy as np
 import GPy
 import logging
 
-from scipy import spatial
-
 from robo.models.base_model import BaseModel
 from copy import deepcopy
 
@@ -25,7 +23,7 @@ class GPyModel(BaseModel):
         self.m = None
         self.start_point = None
 
-    def train(self, X, Y, do_optimize=True):
+    def train(self, X, Y, do_optimize=True, **kwargs):
         self.X = X
         self.Y = Y
         if X.size == 0 or Y.size == 0:
@@ -69,7 +67,7 @@ class GPyModel(BaseModel):
         var = Kbx - np.dot(KbX.T, WiKx)
         return var
 
-    def predict(self, X, full_cov=False):
+    def predict(self, X, full_cov=False, **kwargs):
         if self.m == None:
             logger.error("ERROR: Model has to be trained first.")
             return None
@@ -96,5 +94,3 @@ class GPyModel(BaseModel):
         """
         return self.m.posterior_samples_f(X, size)
 
-    def visualize(self, ax, plot_min, plot_max):
-        self.m.plot(ax=ax, plot_limits=[plot_min, plot_max])

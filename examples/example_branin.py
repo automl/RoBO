@@ -18,7 +18,7 @@ from robo.solver.bayesian_optimization import BayesianOptimization
 branin = Branin()
 
 kernel = GPy.kern.Matern52(input_dim=branin.n_dims)
-model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+model = GPyModel(kernel)
 
 acquisition_func = EI(model,
                      X_upper=branin.X_upper,
@@ -28,11 +28,9 @@ acquisition_func = EI(model,
 
 maximizer = CMAES(acquisition_func, branin.X_lower, branin.X_upper)
 
-bo = BayesianOptimization(acquisition_fkt=acquisition_func,
+bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
-                          maximize_fkt=maximizer,
-                          task=branin,
-                          save_dir="./test_output",
-                          num_save=1)
+                          maximize_func=maximizer,
+                          task=branin)
 
 bo.run(10)

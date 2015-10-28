@@ -31,19 +31,19 @@ class GaussianProcessMCMC(BaseModel):
         self.burned = False
         self.burnin_steps = burnin_steps
         
-        # This flag is only need for environmental search to transform s into (1 - s) ** 2
+        # This flag is only need for environmental entropy search to transform s into (1 - s) ** 2
         self.scaling = scaling
         
                 
     def scale(self, x, new_min, new_max, min, max):
         return ((new_max - new_min) * (x -min) / (max - min)) + new_min
         
-    def train(self, X, Y, do_optimize=True):
+    def train(self, X, Y, do_optimize=True, **kwargs):
         self.X = X
         self.Y = Y
         
         
-        # Transform s to (1 - s) ** 2 only necessary for environment entropy search
+        # Transform s to (1 - s) ** 2 only necessary for environmental entropy search
         if self.scaling:
             self.X = np.copy(X)
             self.X[:, -1] = (1 - self.X[:, -1]) ** 2
@@ -63,13 +63,14 @@ class GaussianProcessMCMC(BaseModel):
                 logging.error("Cholesky decomposition for the covariance matrix of the GP failed. Add %s noise on the diagonal." % yerr)
 
         if do_optimize:
-            # Initialize the walkers. We have one walker for each hyperparameter configuration
+            # We have one walker for each hyperparameter configuration
             self.sampler = emcee.EnsembleSampler(self.n_hypers, len(self.kernel.pars), self.loglikelihood)
             
             # Do a burn-in in the first iteration
             if not self.burned:
-                self.p0 = self.prior.sample_from_prior()
-                
+                # Initialize the walkers by sampling from the prior 
+                self.p0 = self.prior.sample_from_prior(self.n_hypers)
+                # Run mcmc sampling
                 self.p0, _, _ = self.sampler.run_mcmc(self.p0, self.burnin_steps)
                 
                 self.burned = True
@@ -99,15 +100,15 @@ class GaussianProcessMCMC(BaseModel):
                    
     def loglikelihood(self, theta):
         # Bound the hyperparameter space to keep things sane. Note all hyperparameters live on a log scale
-        if np.any((-40 > x) + (x > 40)):
+        if np.any((-40 > theta) + (theta > 40)):
             return -np.inf
         
         # Update the kernel and compute the lnlikelihood. Hyperparameters are all on a log scale
         self.gp.kernel.pars = np.exp(theta[:])
         
-        return self.prior.lnprior(theta) + self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
+        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
 
-    def predict(self, X):
+    def predict(self, X, **kwargs):
         if self.scaling:
             X[:, -1] = (1 - X[:, -1]) ** 2
         mu = np.zeros([self.n_hypers])

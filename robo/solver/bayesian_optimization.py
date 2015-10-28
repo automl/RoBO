@@ -76,8 +76,7 @@ class BayesianOptimization(BaseSolver):
                 self.X = np.append(self.X, x, axis=0)
                 self.Y = np.append(self.Y, y, axis=0)
 
-            logger.info("Configuration achieved a performance of %f " % (self.Y[i]))
-            logger.info("Evaluation of this configuration took %f seconds" % (self.time_func_eval[i]))
+            logger.info("Configuration achieved a performance of %f in %f seconds" % (self.Y[i], self.time_func_eval[i]))
 
             # Use best point seen so far as incumbent
             best_idx = np.argmin(self.Y)
@@ -145,7 +144,7 @@ class BayesianOptimization(BaseSolver):
                 best = np.argmin(fval)
                 self.incumbent = x_opt[best]
                 self.incumbent_value = fval[best]
-            logging.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
+            logger.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
 
             time_optimization_overhead = time.time() - start_time
             self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))

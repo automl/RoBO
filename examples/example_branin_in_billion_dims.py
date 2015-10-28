@@ -11,11 +11,11 @@ import numpy as np
 
 from robo.task.rembo import REMBO
 from robo.task.branin import Branin
-from robo.models.GPyModel import GPyModel
+from robo.models.gpy_model import GPyModel
 from robo.maximizers.cmaes import CMAES
 from robo.recommendation.incumbent import compute_incumbent
 from robo.solver.bayesian_optimization import BayesianOptimization
-from robo.acquisition.EI import EI
+from robo.acquisition.ei import EI
 
 
 class BraninInBillionDims(REMBO):
@@ -30,12 +30,12 @@ class BraninInBillionDims(REMBO):
 
 task = BraninInBillionDims()
 kernel = GPy.kern.Matern52(input_dim=task.n_dims)
-model = GPyModel(kernel, optimize=True, noise_variance=1e-3, num_restarts=10)
+model = GPyModel(kernel, optimize=True, num_restarts=10)
 acquisition_func = EI(model, task.X_lower, task.X_upper, compute_incumbent)
 maximizer = CMAES(acquisition_func, task.X_lower, task.X_upper)
-bo = BayesianOptimization(acquisition_fkt=acquisition_func,
+bo = BayesianOptimization(acquisition_func=acquisition_func,
                       model=model,
-                      maximize_fkt=maximizer,
+                      maximize_func=maximizer,
                       task=task)
 
 bo.run(500)
