@@ -17,19 +17,57 @@ logger = logging.getLogger(__name__)
 
 
 class EnvironmentSearch(BayesianOptimization):
-
-    def __init__(self, acquisition_func=None,
-                 model=None,
-                 cost_model=None,
-                 maximize_func=None,
-                 task=None,
+    """
+    Environment Entropy Search.
+    
+    """
+    def __init__(self, acquisition_func,
+                 model,
+                 cost_model,
+                 maximize_func,
+                 task,
                  save_dir=None,
                  initialization=None,
                  num_save=1,
                  train_intervall=1,
                  n_restarts=1,
                  n_init_points=15):
-
+        """
+        Solver class that performs the Environment Entropy Search described in
+        
+        Parameters
+        ----------
+        acquisition_func : EnvironmentEntropy Object
+            The acquisition function to determine the next point to evaluate. 
+            This object has to be an instance of EnvironmentEntropy class. 
+        model : Model object
+            Models the objective function. The model has to be a
+            Gaussian process. If MCMC sampling of the model's hyperparameter is
+            performed, make sure that the acquistion_func is of an instance of
+            IntegratedAcquisition to marginalise over the GP's hyperparameter.
+        cost_model : model
+            Models the cost function. The model has to be a Gaussian Process.
+        maximize_func : Maximizer object
+            Optimizer to maximize the acquisition function.
+        task: Task object
+            The task that should be optimzed. Make sure that it returns the 
+            function value as well as the cost if the evaluate() function is 
+            called.
+        save_dir : str, optional
+            Path where the results file will be saved
+        initialization : func, optional
+            Initial design function to find some intial points
+        num_save : int, optional
+            Specifies after how many iterations the results will be written to
+            the output file
+        train_intervall : int, optional
+            Specified after how many iterations the model will be retrained
+        n_restarts : int, optional
+            How many local searches are performed to estimate the incumbent.
+        n_init_points : int , optional
+            How many points are sampled for the intial design
+        
+        """
         self.train_intervall = train_intervall
         self.acquisition_func = acquisition_func
         self.model = model
@@ -91,7 +129,7 @@ class EnvironmentSearch(BayesianOptimization):
 #
 #         return xopt, fval
 
-    def env_optimize_posterior_mean_and_std(self, model, X_lower, X_upper,
+    def _env_optimize_posterior_mean_and_std(self, model, X_lower, X_upper,
                                             is_env, startpoint):
         def f(x):
             mu, var = model.predict(x[np.newaxis, :])
@@ -109,7 +147,7 @@ class EnvironmentSearch(BayesianOptimization):
         fval = np.array([res[1]])
         return xopt, fval
 
-    def extrapolative_initial_design(self):
+    def _extrapolative_initial_design(self):
 
         # Create grid for the system size
         idx = self.task.is_env == 1
@@ -178,13 +216,34 @@ class EnvironmentSearch(BayesianOptimization):
         self.n_init_points = self.n_init_points * len(grid)
 
     def run(self, num_iterations=10, X=None, Y=None, Costs=None):
+        """
+        Runs the main Bayesian optimization loop
+        
+        Parameters
+        ----------
+        num_iterations : int, optional
+            Specifies the number of iterations. 
+        X : (N, D) numpy array, optional
+            Initial points where BO starts from.
+        Y : (N, D) numpy array, optional
+            The function values of the intial points. Make sure the number of
+            points is the same.
+        Costs : (N, D) numpy array, optional
+            The costs of the intial points. Make sure the number of
+            points is the same.
 
+        Returns
+        -------
+        incumbent : (1, D) numpy array
+            The estimated optimium that was found after the specified number of
+            iterations.
+        """
         self.time_start = time.time()
 
         if X is None and Y is None:
             # No data yet start with initialization procedure
             # TODO: update to new initial design interface
-            self.extrapolative_initial_design()
+            self._extrapolative_initial_design()
             #self.initialize()
 
         else:
@@ -204,7 +263,7 @@ class EnvironmentSearch(BayesianOptimization):
 
             # Estimate current incumbent from our posterior
             start_time_inc = time.time()
-            self.estimate_incumbent()
+            self._estimate_incumbent()
 
             logger.info("New incumbent %s found in %f seconds",
                         str(self.incumbent), time.time() - start_time_inc)
@@ -246,7 +305,7 @@ class EnvironmentSearch(BayesianOptimization):
         logger.info("Return %s as incumbent" % (str(self.incumbent)))
         return self.incumbent
 
-    def estimate_incumbent(self):
+    def _estimate_incumbent(self):
 
         startpoints = [np.random.uniform(self.task.X_lower,
                                          self.task.X_upper,
@@ -257,7 +316,7 @@ class EnvironmentSearch(BayesianOptimization):
         fval = np.zeros([len(startpoints)])
         for i, startpoint in enumerate(startpoints):
             logging.info("StartPoint: %s" % startpoint)
-            x_opt[i], fval[i] = self.env_optimize_posterior_mean_and_std(
+            x_opt[i], fval[i] = self._env_optimize_posterior_mean_and_std(
                                                             self.model,
                                                             self.task.X_lower,
                                                             self.task.X_upper,
@@ -270,6 +329,31 @@ class EnvironmentSearch(BayesianOptimization):
         self.incumbent_value = fval[best]
 
     def choose_next(self, X=None, Y=None, Costs=None, do_optimize=True):
+       """
+        Performs one single iteration of Bayesian optimization and estimated 
+        the next point to evaluate.
+
+        Parameters
+        ----------
+        X : (N, D) numpy array, optional
+            The points that have been observed so far. The model is trained on
+            this points.
+        Y : (N, D) numpy array, optional
+            The function values of the observed points. Make sure the number of
+            points is the same.
+        Costs : (N, D) numpy array, optional
+            The costs of the observed points. Make sure the number of
+            points is the same.
+        do_optimze : bool, optional
+            Specifies if the hyperparamter of the Gaussian process should be 
+            optimized.
+
+        Returns
+        -------
+        x : (1, D) numpy array
+            The suggested point to evaluate.
+        """        
+        
         if X is not None and Y is not None:
             # Train the model for the objective function and the cost function
             try:

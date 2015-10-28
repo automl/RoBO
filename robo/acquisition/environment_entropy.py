@@ -12,15 +12,40 @@ from _functools import partial
 
 
 class EnvironmentEntropy(Entropy):
-    '''
-        Environment Entropy Search
-    '''
-
+    
     def __init__(self, model, cost_model, X_lower, X_upper,
                  compute_incumbent,
                  is_env_variable,
                  n_representer=50, **kwargs):
-
+        """
+        Adaption of the original Entropy Search by Hennig et al for
+        environmental variable.      
+        
+        Parameters
+        ----------
+        model : Model object
+            Models the objective function. The model has to be a
+            Gaussian process. If MCMC sampling of the model's hyperparameter is
+            performed, make sure that the acquistion_func is of an instance of
+            IntegratedAcquisition to marginalise over the GP's hyperparameter.
+        cost_model : model
+            Models the cost function. The model has to be a Gaussian Process.
+        X_lower : (D) numpy array
+            Specified the lower bound of the input space. Each entry
+            corresponds to one dimension.        
+        X_upper : (D) numpy array
+            Specified the upper bound of the input space. Each entry
+            corresponds to one dimension.
+        compute_incumbent : function
+            Computes the current incumbent.
+        is_env_variable : (D) numpy array
+            Specifies which input dimension is an environmental variable. If 
+            the i-th input is an environmental variable than the i-th entry has
+            to be 1 and 0 otherwise.
+        n_representers : int, optional
+            The number of representer points to discretize the input space and
+            to compute pmin.
+        """
         self.cost_model = cost_model
         self.n_dims = X_lower.shape[0]
 
