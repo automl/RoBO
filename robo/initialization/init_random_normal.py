@@ -16,9 +16,9 @@ def init_random_normal(x_lower, x_upper, n, mean=None, std=None):
     :param std: standard deviation for each dimension (n array). If None, the width of the range is used.
     :return: drawn samples
     """
-    if mean == None:
+    if mean is None:
         mean = (x_upper + x_lower) * 0.5
-    if std == None:
+    if std is None:
         std = (x_lower - x_upper) * 0.5
     n_dims = x_lower.shape[0]
     return np.array([np.clip(np.random.normal(mean[i], std[i], n), x_lower[i], x_upper[i]) for i in range(n_dims)]).T
