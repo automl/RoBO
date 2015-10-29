@@ -9,7 +9,7 @@ Edits: Numair Mansur (numair.mansur@gmail.com)
 import numpy as np
 
 
-def plot_model(model, X_lower, X_upper, ax, resolution=0.1,mean_color='b',uncertainity_color='blue',label="Model",std_scale=3,plot_mean=True):
+def plot_model(model, X_lower, X_upper, ax, resolution=0.1, maximizer=None, mean_color='b', uncertainity_color='blue', label="Model", std_scale=3, plot_mean=True):
     ''' Plots the model on the ax object passed to it
 
     Args:
@@ -29,7 +29,6 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1,mean_color='b',uncert
 
     '''
 
-
     X = np.arange(X_lower[0], X_upper[0], resolution)
 
     mean = np.zeros([X.shape[0]])
@@ -39,12 +38,14 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1,mean_color='b',uncert
 
     if plot_mean == True:
         ax.plot(X, mean, mean_color, label=label)
+    if maximizer is not None:
+        ax.axvline(maximizer, color='red')
     ax.fill_between(X, mean + std_scale * np.sqrt(var), mean - std_scale * np.sqrt(var), facecolor=uncertainity_color, alpha=0.2)
-    ax.legend(prop={'size':6})
+    ax.legend()
     return ax
 
 
-def plot_objective_function(objective_function, X_lower, X_upper, X, Y, ax, resolution=0.1,color='black',label='ObjectiveFunction',maximizer_flag=True):
+def plot_objective_function(objective_function, X_lower, X_upper, ax, X=None, Y=None, resolution=0.1, color='black', label='ObjectiveFunction'):
     ''' Plots the objective_function on the ax object passed to it
 
     Args:
@@ -68,15 +69,14 @@ def plot_objective_function(objective_function, X_lower, X_upper, X, Y, ax, reso
     for i in xrange(grid.shape[0]):
         grid_values[i] = objective_function(grid[i])
 
-    ax.plot(grid, grid_values, color, label=label,linestyle="--")
-    if maximizer_flag ==True:
-        ax.plot(X[0], Y[0], "bo")
-        ax.plot(X[1],Y[1], "rv")
-    ax.legend(prop={'size':6})
+    ax.plot(grid, grid_values, color, label=label, linestyle="--")
+    if X is not None and Y is not None:
+        ax.plot(X, Y, "bo")
+    ax.legend()
     return ax
 
 
-def plot_acquisition_function(acquisition_function, X_lower, X_upper,X, ax, resolution=0.1,label="AcquisitionFunction", maximizer_flag = True):
+def plot_acquisition_function(acquisition_function, X_lower, X_upper, ax, resolution=0.1, label="AcquisitionFunction", maximizer=None):
     ''' Plots the acquisition_function on the ax object passed to it
 
     Args:
@@ -99,7 +99,7 @@ def plot_acquisition_function(acquisition_function, X_lower, X_upper,X, ax, reso
         grid_values[i] = acquisition_function(grid[i, np.newaxis])
 
     ax.plot(grid, grid_values, "g", label=label)
-    if maximizer_flag == True:
-        ax.plot(X[1],np.amax(grid_values), "rv")
-    ax.set_title('Acquisition Function')
+    if maximizer is not None:
+        ax.axvline(maximizer, color='red')
+    ax.legend()
     return ax

@@ -1,4 +1,6 @@
 
+import numpy as np
+
 
 class BaseModel(object):
     """
@@ -19,6 +21,11 @@ class BaseModel(object):
         self.X = X
         self.y = y
 
+    def update(self, X, y):
+        X = np.append(self.X, X, axis=0)
+        y = np.append(self.Y, y, axis=0)
+        self.train(X, y)
+
     def predict(self, X):
         """
             Predicts for a given X matrix the target values
@@ -37,20 +44,5 @@ class BaseModel(object):
         :param Xnew: The points to predict the gradient for
         :param X: TODO: Not implemented yet
         :return: Gradients(?)
-        """
-        raise NotImplementedError()
-
-    def predict(self, X, full_cov=False):
-        """
-        Predicts the mean and variance.
-        :param X: X values to predict for
-        :param full_cov: If true, the full covariance is returned
-        :return: (mean, variance) tuple
-        """
-        raise NotImplementedError()
-
-    def sample(self, X, size=10):
-        """
-        Samples from the GP at values X size times.
         """
         raise NotImplementedError()

@@ -1,23 +1,18 @@
-import sys
-import os
-#sys.path.insert(0, '../')
+import setup_logger
+import logging
 import unittest
-import errno
 import numpy as np
-import random
-import GPy
-from robo.models.GPyModel import GPyModel
-from robo.acquisition.PI import PI
-from robo.util.visualization import Visualization
-import matplotlib.pyplot as plt
 
+import scipy.optimize
+
+import GPy
+
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.pi import PI
 from robo.recommendation.incumbent import compute_incumbent
 
+logger = logging.getLogger(__name__)
 
-here = os.path.abspath(os.path.dirname(__file__))
-
-
-#@unittest.skip("skip first test\n")
 class PITestCase1(unittest.TestCase):
     def setUp(self):
         self.x = np.array([[0.62971589], [0.63273273], [0.17867868], [0.17447447], [1.88558559]])
@@ -32,12 +27,15 @@ class PITestCase1(unittest.TestCase):
         X_lower = np.array([-2.1])
 
         x_test = np.array([[1.7], [2.0]])
-        pi_estimator = PI(self.model, X_lower, X_upper)
+        pi_estimator = PI(self.model, X_lower, X_upper, compute_incumbent)
 
-        assert pi_estimator(x_test[0, np.newaxis], incumbent=np.array([1.88558559]))[0] > 0.0
-        assert pi_estimator(x_test[1, np.newaxis], incumbent=np.array([1.88558559]))[0] > 0.0
+        assert pi_estimator(x_test[0, np.newaxis])[0] > 0.0
+        assert pi_estimator(x_test[1, np.newaxis])[0] > 0.0
 
-        self.assertAlmostEqual(pi_estimator(self.x[-1, np.newaxis], incumbent=np.array([1.88558559]))[0], 0.0, delta=10E-5)
+        self.assertAlmostEqual(pi_estimator(self.x[-1, np.newaxis])[0], 0.0, delta=10E-5)
 
-if __name__=="__main__":
+        assert scipy.optimize.check_grad(pi_estimator, lambda x: -pi_estimator(x, True)[1], x_test[0, np.newaxis]) < 1e-5
+        assert scipy.optimize.check_grad(pi_estimator, lambda x: -pi_estimator(x, True)[1], x_test[1, np.newaxis]) < 1e-5
+
+if __name__ == "__main__":
     unittest.main()

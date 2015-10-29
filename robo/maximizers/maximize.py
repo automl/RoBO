@@ -20,40 +20,41 @@ import StringIO
 import numpy as np
 import scipy
 import emcee
-from robo import BayesianOptimizationError
-try:
-    import DIRECT as _DIRECT
-    def _DIRECT_acquisition_fkt_wrapper(acq_f):
-        def _l(x, user_data):
-            return -acq_f(np.array([x])), 0
-        return _l
-    def DIRECT(acquisition_fkt, X_lower, X_upper):
-        x, fmin, ierror = _DIRECT.solve(_DIRECT_acquisition_fkt_wrapper(acquisition_fkt), l=[X_lower], u=[X_upper], maxT=2000, maxf=2000)
-        return np.array([x])
-    
-except Exception, e:
-    def DIRECT(acquisition_fkt, X_lower, X_upper):
-        raise NotImplementedError("cannot find DIRECT library")
+import cma
+import DIRECT
 
-try:
-    import cma as _cma
 
-    def _cma_fkt_wrapper(acq_f, derivative=False):
-        def _l(x, *args, **kwargs):
-            x = np.array([x])
-            return -acq_f(x, derivative=derivative, *args, **kwargs)[0]
-        return _l
+def _direct_acquisition_fkt_wrapper(acq_f):
+    def _l(x, user_data):
+        return -acq_f(np.array([x])), 0
+    return _l
 
-    def cma(acquisition_fkt, X_lower, X_upper):
-        # stdout = sys.stdout
-        # sys.stdout = StringIO.StringIO()
-        x = _cma.fmin(_cma_fkt_wrapper(acquisition_fkt), (X_upper + X_lower) * 0.5, 0.6, options={"bounds":[X_lower, X_upper], "verbose":-1, "verb_log":sys.maxint})[0]
-        # sys.stdout = stdout
-        return np.array([x])
 
-except Exception, e:
-    def cma(acquisition_fkt, X_lower, X_upper):
-        raise NotImplementedError("cannot find cma library")
+def direct(acquisition_fkt, X_lower, X_upper, n_func_evals=1000, n_iters=2000):
+    x, fmin, ierror = DIRECT.solve(_direct_acquisition_fkt_wrapper(acquisition_fkt), l=[X_lower], u=[X_upper], maxT=n_iters, maxf=n_func_evals)
+    return np.array([x])
+
+
+def _cma_fkt_wrapper(acq_f, derivative=False):
+    def _l(x, *args, **kwargs):
+        x = np.array([x])
+        return -acq_f(x, derivative=derivative, *args, **kwargs)[0]
+    return _l
+
+
+def cmaes(acquisition_fkt, X_lower, X_upper, verbose=False):
+
+    if  X_lower.shape[0] == 1:
+        raise RuntimeError("CMAES does not works in a one dimensional function space")
+
+    if not verbose:
+        stdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        res = cma.fmin(_cma_fkt_wrapper(acquisition_fkt), (X_upper + X_lower) * 0.5, 0.6, options={"bounds": [X_lower, X_upper], "verbose": 0, "verb_log": sys.maxint})
+        sys.stdout = stdout
+    else:
+        res = cma.fmin(_cma_fkt_wrapper(acquisition_fkt), (X_upper + X_lower) * 0.5, 0.6, options={"bounds": [X_lower, X_upper], "verbose": 0, "verb_log": sys.maxint})
+    return np.array([res[0]])
 
 
 def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
@@ -69,50 +70,54 @@ def grid_search(acquisition_fkt, X_lower, X_upper, resolution=1000):
     x_star = x[y.argmax()]
     return x_star
 
+
 def _scipy_optimizer_fkt_wrapper(acq_f, derivative=True):
     def _l(x, *args, **kwargs):
         x = np.array([x])
         if np.any(np.isnan(x)):
             #raise Exception("oO")
-            
+
             if derivative:
                 return np.inf, np.zero_like(x)
             else:
                 return np.inf
         a = acq_f(x, derivative=derivative, *args, **kwargs)
-        
+
         if derivative:
             #print -a[0][0], -a[1][0][0, :]
             return -a[0][0], -a[1][0][0, :]
-           
+
         else:
             return -a[0]
     return _l
 
+
 def stochastic_local_search(acquisition_fkt, X_lower, X_upper, Ne=20, starts=None):
-    if hasattr(acquisition_fkt, "_get_most_probable_minimum") :
+    if hasattr(acquisition_fkt, "_get_most_probable_minimum"):
         xx = acquisition_fkt._get_most_probable_minimum()
     else:
         xx = np.add(np.multiply((X_lower - X_upper), np.random.uniform(size=(1, X_lower.shape[0]))), X_lower)
+
     def fun_p(x):
         acq_v = acquisition_fkt(np.array([x]))[0]
         log_acq_v = np.log(acq_v) if  acq_v > 0 else -np.inf
-        
+
         return log_acq_v
     sc_fun = _scipy_optimizer_fkt_wrapper(acquisition_fkt, False)
     S0 = 0.5 * np.linalg.norm(X_upper - X_lower)
     D = X_lower.shape[0]
     Xstart = np.zeros((Ne, D))
-    
-    restarts = np.zeros((Ne, D))    
+
+    restarts = np.zeros((Ne, D))
     if starts is None and hasattr(acquisition_fkt, "BestGuesses"):
         starts = acquisition_fkt.BestGuesses
     if starts != None and Ne > starts.shape[0]:
-        restarts[starts.shape[0]:Ne, ] = X_lower + (X_upper - X_lower) * np.random.uniform(size=(Ne-starts.shape[0], D))    
+        restarts[starts.shape[0]:Ne, ] = X_lower + (X_upper - X_lower) * np.random.uniform(size=(Ne - starts.shape[0], D))
     elif starts != None:
         restarts[0:Ne] = starts[0:Ne]
     else:
-        restarts = X_lower + (X_upper - X_lower) * np.random.uniform(size=(Ne, D))  
+        restarts = X_lower + (X_upper - X_lower) * np.random.uniform(size=(Ne, D))
+
     sampler = emcee.EnsembleSampler(Ne, D, fun_p)
     Xstart, logYstart, _ = sampler.run_mcmc(restarts, 20)
     search_cons = []
