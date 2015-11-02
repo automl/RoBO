@@ -4,6 +4,8 @@ Created on Oct 14, 2015
 @author: Aaron Klein
 '''
 
+import numpy as np
+
 class BasePrior(object):
     def __init__(self):
         pass
