@@ -41,7 +41,7 @@ class BayesianOptimization(BaseSolver):
         self.X = None
         self.Y = None
         self.time_func_eval = None
-        self.time_optimization_overhead = None
+        self.time_overhead = None
         self.train_intervall = train_intervall
 
         self.num_save = num_save
@@ -56,14 +56,14 @@ class BayesianOptimization(BaseSolver):
         Draws random points to initialize the model
         """
         self.time_func_eval = np.zeros([n_init_points])
-        self.time_optimization_overhead = np.zeros([n_init_points])
+        self.time_overhead = np.zeros([n_init_points])
         self.X = np.zeros([1, self.task.n_dims])
         self.Y = np.zeros([1, 1])
 
         for i in range(n_init_points):
             start_time = time.time()
             x = np.array([np.random.uniform(self.task.X_lower, self.task.X_upper, self.task.n_dims)])
-            self.time_optimization_overhead[i] = time.time() - start_time
+            self.time_overhead[i] = time.time() - start_time
 
             start_time = time.time()
             y = self.task.evaluate(x)
@@ -105,7 +105,7 @@ class BayesianOptimization(BaseSolver):
             self.X = X
             self.Y = Y
             self.time_func_eval = np.zeros([self.X.shape[0]])
-            self.time_optimization_overhead = np.zeros([self.X.shape[0]])
+            self.time_overhead = np.zeros([self.X.shape[0]])
 
         n_init_points = 3
         for it in range(n_init_points, num_iterations):
@@ -146,10 +146,10 @@ class BayesianOptimization(BaseSolver):
                 self.incumbent_value = fval[best]
             logger.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
 
-            time_optimization_overhead = time.time() - start_time
-            self.time_optimization_overhead = np.append(self.time_optimization_overhead, np.array([time_optimization_overhead]))
+            time_overhead = time.time() - start_time
+            self.time_overhead = np.append(self.time_overhead, np.array([time_overhead]))
 
-            logger.info("Optimization overhead was %f seconds" % (self.time_optimization_overhead[-1]))
+            logger.info("Optimization overhead was %f seconds" % (self.time_overhead[-1]))
 
             logger.info("Evaluate candidate %s" % (str(new_x)))
             start_time = time.time()
