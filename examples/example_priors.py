@@ -15,11 +15,13 @@ from robo.acquisition.ei import EI
 from robo.maximizers.direct import Direct
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.recommendation.incumbent import compute_incumbent
+from robo.task.noise_task import NoiseTask
 
 
 class MyPrior(BasePrior):
 
     def __init__(self, n_dims):
+        super(MyPrior, self).__init__()
         # The number of hyperparameters
         self.n_dims = n_dims
         # Prior for the Matern52 lengthscales
