@@ -12,15 +12,15 @@ from _functools import partial
 
 
 class EnvironmentEntropy(Entropy):
-    
+
     def __init__(self, model, cost_model, X_lower, X_upper,
                  compute_incumbent,
                  is_env_variable,
                  n_representer=50, **kwargs):
         """
         Adaption of the original Entropy Search by Hennig et al for
-        environmental variable.      
-        
+        environmental variable.
+
         Parameters
         ----------
         model : Model object
@@ -32,14 +32,14 @@ class EnvironmentEntropy(Entropy):
             Models the cost function. The model has to be a Gaussian Process.
         X_lower : (D) numpy array
             Specified the lower bound of the input space. Each entry
-            corresponds to one dimension.        
+            corresponds to one dimension.
         X_upper : (D) numpy array
             Specified the upper bound of the input space. Each entry
             corresponds to one dimension.
         compute_incumbent : function
             Computes the current incumbent.
         is_env_variable : (D) numpy array
-            Specifies which input dimension is an environmental variable. If 
+            Specifies which input dimension is an environmental variable. If
             the i-th input is an environmental variable than the i-th entry has
             to be 1 and 0 otherwise.
         n_representers : int, optional
@@ -66,22 +66,22 @@ class EnvironmentEntropy(Entropy):
     def compute(self, X, derivative=False):
         """
         Computes the acquisiton value for a single point.
-        
+
         Parameters
         ----------
         X : (1, D) numpy array
-            The input point for which the acquisiton functions is computed.
+            The input point for which the acquisition functions is computed.
         derivative : bool, optional
-            If it is equal to True also the derivatives with respection X is 
+            If it is equal to True also the derivatives with respect to X is
             computed.
-            
+
         Returns
         -------
         acquisition_value: numpy array
             The acquisition value computed for X.
         grad : numpy array
-            The computed gradient of the acquisiton function at X. Only
-            returned if derivate==True
+            The computed gradient of the acquisition function at X. Only
+            returned if derivative==True
         """
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
