@@ -109,7 +109,7 @@ class BaseSolver(object):
         output['incumbent'] = self.incumbent
         output['incumbent_val'] = self.incumbent_value
         output['time_func_eval'] = self.time_func_eval[-1]
-        output['time_overhead'] = self.time_optimization_overhead[-1]
+        output['time_overhead'] = self.time_overhead[-1]
         output['runtime'] = time.time() - self.time_start
 
         if kwargs is not None:
