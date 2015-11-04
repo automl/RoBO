@@ -71,25 +71,28 @@ class EI(AcquisitionFunction):
         m, v = self.model.predict(X, full_cov=True)
 
         # Use the best seen observation as incumbent
-        incumbent, eta = self.compute_incumbent(self.model)
+        _, eta = self.compute_incumbent(self.model)
 
         s = np.sqrt(v)
-        z = (eta - m - self.par) / s
-        f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)
-        if derivative:
-            dmdx, ds2dx = self.model.predictive_gradients(X)
-            dmdx = dmdx[0]
-            ds2dx = ds2dx[0][:, None]
-            dsdx = ds2dx / (2 * s)
-            df = (-dmdx * norm.cdf(z) + (dsdx * norm.pdf(z))).T
-        if (f < 0).any():
-            f[np.where(f < 0)] = 0.0
+
+        if (s == 0).any():
+            f = np.array([[0]])
+            df = np.zeros((1, X.shape[1]))
+        else:
+            z = (eta - m - self.par) / s
+            f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)
             if derivative:
-                df[np.where(f < 0), :] = np.zeros_like(X)
-        if (f < 0).any():
-            raise Exception
-        if len(f.shape) == 1:
-            f = np.array([f])
+                dmdx, ds2dx = self.model.predictive_gradients(X)
+                dmdx = dmdx[0]
+                ds2dx = ds2dx[0][:, None]
+                dsdx = ds2dx / (2 * s)
+                df = (-dmdx * norm.cdf(z) + (dsdx * norm.pdf(z))).T
+            if (f < 0).any():
+                logger.error("Expected Improvement is smaller than 0!")
+                raise Exception
+            if len(f.shape) == 1:
+                f = np.array([f])
+
         if derivative:
             if len(df.shape) == 3:
                 return_df = df
