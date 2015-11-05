@@ -21,6 +21,7 @@ class EnvironmentSearch(BayesianOptimization):
     Environment Entropy Search.
 
     """
+
     def __init__(self, acquisition_func,
                  model,
                  cost_model,
@@ -130,7 +131,7 @@ class EnvironmentSearch(BayesianOptimization):
 #         return xopt, fval
 
     def _env_optimize_posterior_mean_and_std(self, model, X_lower, X_upper,
-                                            is_env, startpoint):
+                                             is_env, startpoint):
         def f(x):
             mu, var = model.predict(x[np.newaxis, :])
             return (mu + np.sqrt(var))[0, 0]
@@ -159,7 +160,7 @@ class EnvironmentSearch(BayesianOptimization):
         self.Y = np.zeros([1, 1])
         self.Costs = np.zeros([1, 1])
 
-        for i  in range(self.n_init_points):
+        for i in range(self.n_init_points):
 
             for j, s in enumerate(grid):
 
@@ -241,7 +242,7 @@ class EnvironmentSearch(BayesianOptimization):
             # No data yet start with initialization procedure
             # TODO: update to new initial design interface
             self._extrapolative_initial_design()
-            #self.initialize()
+            # self.initialize()
 
         else:
             self.X = X
@@ -296,8 +297,8 @@ class EnvironmentSearch(BayesianOptimization):
                 hypers = self.model.hypers
 
                 self.save_iteration(it, costs=self.Costs[-1],
-                                hyperparameters=hypers,
-                                acquisition_value=self.acquisition_func(new_x))
+                                    hyperparameters=hypers,
+                                    acquisition_value=self.acquisition_func(new_x))
 
         logger.info("Return %s as incumbent" % (str(self.incumbent)))
         return self.incumbent
@@ -313,11 +314,11 @@ class EnvironmentSearch(BayesianOptimization):
         fval = np.zeros([len(startpoints)])
         for i, startpoint in enumerate(startpoints):
             x_opt[i], fval[i] = self._env_optimize_posterior_mean_and_std(
-                                                            self.model,
-                                                            self.task.X_lower,
-                                                            self.task.X_upper,
-                                                            self.task.is_env,
-                                                            startpoint)
+                self.model,
+                self.task.X_lower,
+                self.task.X_upper,
+                self.task.is_env,
+                startpoint)
 
         # Pick best point that was found as incumbent
         best = np.argmin(fval)
@@ -326,7 +327,7 @@ class EnvironmentSearch(BayesianOptimization):
 
     def choose_next(self, X=None, Y=None, Costs=None, do_optimize=True):
         """
-        Performs one single iteration of Bayesian optimization and estimated 
+        Performs one single iteration of Bayesian optimization and estimated
         the next point to evaluate.
 
         Parameters

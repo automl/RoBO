@@ -33,7 +33,9 @@ class BaseTask(object):
             self.X_lower = np.zeros(self.original_X_lower.shape)
             self.X_upper = np.ones(self.original_X_upper.shape)
             if self.opt is not None:
-                self.opt = np.true_divide((self.original_opt - self.original_X_lower), (self.original_X_upper - self.original_X_lower))
+                self.opt = np.true_divide(
+                    (self.original_opt - self.original_X_lower),
+                    (self.original_X_upper - self.original_X_lower))
 
     def objective_function(self, x):
         pass
