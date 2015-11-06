@@ -51,27 +51,20 @@ class GaussianProcessMCMC(BaseModel):
         self.burned = False
         self.burnin_steps = burnin_steps
 
-        # This flag is only need for environmental entropy search to transform s into (1 - s) ** 2
+        # This flag is only need for environmental entropy search to transform
+        # s into (1 - s) ** 2
         self.scaling = scaling
 
-    def scale(self, x, new_min, new_max, min, max):
-        return ((new_max - new_min) * (x - min) / (max - min)) + new_min
-  
-	def train(self, X, Y, do_optimize=True, **kwargs):
-        Parameters
-        ----------
-        X : 
+    def scale(self, x, new_min, new_max, old_min, old_max):
+        return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
 
-        Y : 
+    def train(self, X, Y, do_optimize=True, **kwargs):
 
-        do_optimize : int
-        """
-
-        
         self.X = X
         self.Y = Y
 
-        # Transform s to (1 - s) ** 2 only necessary for environmental entropy search
+        # Transform s to (1 - s) ** 2 only necessary for environmental
+        # entropy search
         if self.scaling:
             self.X = np.copy(X)
             self.X[:, -1] = (1 - self.X[:, -1]) ** 2
@@ -89,7 +82,8 @@ class GaussianProcessMCMC(BaseModel):
             except np.linalg.LinAlgError:
                 yerr *= 10
                 logging.error(
-                    "Cholesky decomposition for the covariance matrix of the GP failed. \
+                    "Cholesky decomposition for the covariance matrix of \
+                     the GP failed. \
                     Add %s noise on the diagonal." %
                     yerr)
 
@@ -103,14 +97,17 @@ class GaussianProcessMCMC(BaseModel):
                 # Initialize the walkers by sampling from the prior
                 self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run mcmc sampling
-                self.p0, _, _ = self.sampler.run_mcmc(self.p0, self.burnin_steps)
+                self.p0, _, _ = self.sampler.run_mcmc(self.p0,
+                                                      self.burnin_steps)
 
                 self.burned = True
 
             # Start sampling
-            pos, prob, state = self.sampler.run_mcmc(self.p0, self.chain_length)
+            pos, prob, state = self.sampler.run_mcmc(self.p0,
+                                                     self.chain_length)
 
-            # Save the current position, it will be the startpoint in the next iteration
+            # Save the current position, it will be the startpoint in
+            # the next iteration
             self.p0 = pos
 
             # Take the last samples from each walker
@@ -121,7 +118,8 @@ class GaussianProcessMCMC(BaseModel):
             for sample in self.hypers:
 
                 # Instantiate a model for each hyperparam configuration
-                # TODO: Just keep one model and replace the hypers every time we need them
+                # TODO: Just keep one model and replace the hypers every
+                # time we need them
                 kernel = deepcopy(self.kernel)
                 kernel.pars = np.exp(sample)
 
@@ -130,24 +128,26 @@ class GaussianProcessMCMC(BaseModel):
                 self.models.append(model)
         else:
             self.hypers = self.gp.kernel[:]
-                   
+
     def loglikelihood(self, theta):
         """
 
         Parameters
         ----------
-        theta : 
+        theta :
 
         """
 
-        # Bound the hyperparameter space to keep things sane. Note all hyperparameters live on a log scale
+        # Bound the hyperparameter space to keep things sane. Note all
+        # hyperparameters live on a log scale
         if np.any((-40 > theta) + (theta > 40)):
             return -np.inf
 
-        # Update the kernel and compute the lnlikelihood. Hyperparameters are all on a log scale
+        # Update the kernel and compute the lnlikelihood.
         self.gp.kernel.pars = np.exp(theta[:])
 
-        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
+        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0],
+                                                                quiet=True)
 
     def predict(self, X, **kwargs):
         """
@@ -155,11 +155,10 @@ class GaussianProcessMCMC(BaseModel):
 
         Parameters
         ----------
-        X : 
+        X :
 
         """
 
-        
         if self.scaling:
             X[:, -1] = (1 - X[:, -1]) ** 2
         mu = np.zeros([self.n_hypers])
