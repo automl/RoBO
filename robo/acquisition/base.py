@@ -1,4 +1,4 @@
-#encoding=utf8
+# encoding=utf8
 
 import numpy as np
 
@@ -16,7 +16,8 @@ class AcquisitionFunction(object):
         """
         Initializes the acquisition function
 
-        :param model: Model that captures our current belief of the objective function
+        :param model: Model that captures our
+                      current belief of the objective function
         :param X_lower: Lower bound of input space
         :type X_lower: np.ndarray(D, 1)
         :param X_upper: Upper bound of input space
@@ -29,19 +30,26 @@ class AcquisitionFunction(object):
 
     def update(self, model):
         """
-            This method will be called if the model is updated. E.g. the Entropy search uses it
+            This method will be called if the model
+            is updated. E.g. the Entropy search uses it
             to update it's approximation of P(x=x_min)
         """
         self.model = model
 
     def __call__(self, X, derivative=False):
         """
-            :param X: X values, where the acquisition function should be evaluate. The dimensionality of X is (N, D), with N as the number of points to evaluate
-                        at and D is the number of dimensions of one X.
+            :param X: X values, where the acquisition
+                    function should be evaluate.
+                    The dimensionality of X is (N, D),
+                    with N as the number of points to evaluate
+                    at and D is the number of dimensions of one X.
             :type X: np.ndarray (N, D)
             :param derivative: if the derivatives should be computed
             :type derivative: Boolean
-            :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and the acquisition function does not allow to compute the gradients
+            :raises BayesianOptimizationError.NO_DERIVATIVE:
+                                        if derivative is True
+                                        and the acquisition function does
+                                        not allow to compute the gradients
             :rtype: np.ndarray(N, 1)
         """
 
@@ -51,9 +59,10 @@ class AcquisitionFunction(object):
         if derivative:
             acq, grad = self.compute(X, derivative)
             if np.isnan(acq):
-                return np.array([[-np.finfo(np.float).max]]), np.array([[-np.inf]])
+                return np.array([[-np.finfo(np.float).max]]
+                                ), np.array([[-np.inf]])
             else:
-                return acq, grad 
+                return acq, grad
         else:
             acq = self.compute(X, derivative)
             if np.isnan(acq):
@@ -63,12 +72,18 @@ class AcquisitionFunction(object):
 
     def compute(self, X, derivative=False):
         """
-            :param X: X values, where the acquisition function should be evaluate. The dimensionality of X is (N, D), with N as the number of points to evaluate
-                        at and D is the number of dimensions of one X.
+            :param X: X values, where the acquisition
+                    function should be evaluate.
+                    The dimensionality of X is (N, D),
+                    with N as the number of points to evaluate
+                    at and D is the number of dimensions of one X.
             :type X: np.ndarray (N, D)
             :param derivative: if the derivatives should be computed
             :type derivative: Boolean
-            :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and the acquisition function does not allow to compute the gradients
+            :raises BayesianOptimizationError.NO_DERIVATIVE:
+                                    if derivative is True and
+                                    the acquisition function does
+                                    not allow to compute the gradients
             :rtype: np.ndarray(N, 1)
         """
         raise NotImplementedError()

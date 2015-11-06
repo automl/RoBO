@@ -14,7 +14,8 @@ from base_maximizer import BaseMaximizer
 
 class CMAES(BaseMaximizer):
     '''
-     Wrapper around the python implementation of the Covariance Matrix Adaptation Evolutionary Strategy (CMA-ES)
+     Wrapper around the python implementation of the
+     Covariance Matrix Adaptation Evolutionary Strategy (CMA-ES)
     '''
 
     def __init__(self, objective_function, X_lower, X_upper, verbose=False):
@@ -38,16 +39,33 @@ class CMAES(BaseMaximizer):
             # Start from random point
             start_point = np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])
 
-            res = cma.fmin(self._cma_fkt_wrapper(self.objective_func),
-                           start_point, 0.6,
-                           options={"bounds": [self.X_lower, self.X_upper], "verbose": 0, "verb_log": sys.maxint})
+            res = cma.fmin(
+                self._cma_fkt_wrapper(
+                    self.objective_func),
+                start_point,
+                0.6,
+                options={
+                    "bounds": [
+                        self.X_lower,
+                        self.X_upper],
+                    "verbose": 0,
+                    "verb_log": sys.maxsize})
 
             # Turn on stdout again
             sys.stdout = stdout
         else:
-            res = cma.fmin(self._cma_fkt_wrapper(self.objective_func), (self.X_upper + self.X_lower) * 0.5,
-                           0.6, options={"bounds": [self.X_lower, self.X_upper], "verbose": 0, "verb_log": sys.maxint})
-        if res[0] == None:
+            res = cma.fmin(
+                self._cma_fkt_wrapper(
+                    self.objective_func),
+                (self.X_upper + self.X_lower) * 0.5,
+                0.6,
+                options={
+                    "bounds": [
+                        self.X_lower,
+                        self.X_upper],
+                    "verbose": 0,
+                    "verb_log": sys.maxsize})
+        if res[0] is None:
             logging.error("CMA-ES did not find anything. Return random configuration instead.")
             return np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
         return np.array([res[0]])

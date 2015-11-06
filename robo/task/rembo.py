@@ -11,6 +11,7 @@ from robo.task.base_task import BaseTask
 
 logger = logging.getLogger(__name__)
 
+
 class REMBO(BaseTask):
     '''
     classdocs
@@ -49,13 +50,17 @@ class REMBO(BaseTask):
         self.original_scaled_X_lower = -1 * np.ones([self.d_orig])
         self.original_scaled_X_upper = 1 * np.ones([self.d_orig])
         # The embedded configuration space
-        super(REMBO, self).__init__(- np.sqrt(self.d) * np.ones(self.d), np.sqrt(self.d) * np.ones(self.d), do_scaling=False)
+        super(REMBO, self).__init__(- np.sqrt(self.d) * np.ones(self.d),
+                                    np.sqrt(self.d) * np.ones(self.d), do_scaling=False)
 
     def evaluate(self, x):
         # Project to original space
         x_transform = np.array([np.dot(self.A, e) for e in x])
         # Convex projection
-        x_projected = np.fmax(self.original_scaled_X_lower, np.fmin(self.original_scaled_X_upper, x_transform))
+        x_projected = np.fmax(
+            self.original_scaled_X_lower, np.fmin(
+                self.original_scaled_X_upper, x_transform))
         # Rescale back to original space
-        x_rescaled = (self.original_X_upper - self.original_X_lower) * (x_projected - self.original_scaled_X_lower) / (self.original_scaled_X_upper - self.original_scaled_X_lower) + self.original_X_lower
+        x_rescaled = (self.original_X_upper - self.original_X_lower) * (x_projected - self.original_scaled_X_lower) / \
+            (self.original_scaled_X_upper - self.original_scaled_X_lower) + self.original_X_lower
         return self.objective_function(x_rescaled)

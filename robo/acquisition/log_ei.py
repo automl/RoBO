@@ -7,6 +7,7 @@ from robo.acquisition.base import AcquisitionFunction
 
 logger = logging.getLogger(__name__)
 
+
 class LogEI(AcquisitionFunction):
     r"""
 
@@ -15,13 +16,18 @@ class LogEI(AcquisitionFunction):
                  - predict(X)
                  - getCurrentBestX().
 
-    :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of search space)
+    :param X_lower: Lower bounds for the search,
+                    its shape should be 1xD (D = dimension of search space)
     :type X_lower: np.ndarray (1,D)
-    :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of search space)
+    :param X_upper: Upper bounds for the search,
+                    its shape should be 1xD (D = dimension of search space)
     :type X_upper: np.ndarray (1,D)
-    :param compute_incumbent: A python function that takes as input a model and returns a np.array as incumbent
-    :param par: A parameter meant to control the balance between exploration and exploitation of the acquisition
-                function. Empirical testing determines 0.01 to be a good value in most cases.
+    :param compute_incumbent: A python function that takes as
+                        input a model and returns a np.array as incumbent
+    :param par: A parameter meant to control the balance between
+                exploration and exploitation of the acquisition
+                function. Empirical testing determines 0.01 to be
+                a good value in most cases.
 
     """
 
@@ -34,7 +40,6 @@ class LogEI(AcquisitionFunction):
         super(LogEI, self).__init__(model, X_lower, X_upper)
 
     def compute(self, X, derivative=False, **kwargs):
-
         """
         A call to the object returns the log(EI) and derivative values.
 
@@ -95,7 +100,8 @@ class LogEI(AcquisitionFunction):
 
                     log_ei[i] = max(a, b) + np.log(1 + np.exp(-abs(b - a)))
                 else:
-                    # When y<0, z>0, we define a=ln(-y), b=ln(z), and it has to be true that b >= a in order to satisfy y+z>=0.
+                    # When y<0, z>0, we define a=ln(-y), b=ln(z),
+                    # and it has to be true that b >= a in order to satisfy y+z>=0.
                     # Then y+z = exp[ b + ln(exp(b-a) -1) ],
                     # and thus log(y+z) = a + ln(exp(b-a) -1)
                     a = np.log(mu - f_min) + norm.logcdf(z[i])

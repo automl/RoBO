@@ -23,7 +23,14 @@ class NoiseTask(BaseTask):
         """
         self.noise_scale = noise_scale
         self.base_task = base_task
-        super(NoiseTask, self).__init__(base_task.X_lower, base_task.X_upper, base_task.opt, base_task.fopt, base_task.do_scaling)
+        super(
+            NoiseTask,
+            self).__init__(
+            base_task.X_lower,
+            base_task.X_upper,
+            base_task.opt,
+            base_task.fopt,
+            base_task.do_scaling)
 
     def objective_function(self, x):
         res = self.base_task.objective_function(x)

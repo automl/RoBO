@@ -6,6 +6,7 @@ from robo.acquisition.base import AcquisitionFunction
 
 logger = logging.getLogger(__name__)
 
+
 class PI(AcquisitionFunction):
     r"""
     Probability of Improvement solves the following equation
@@ -19,11 +20,14 @@ class PI(AcquisitionFunction):
                If you want to calculate derivatives than it should also support
 
                  - predictive_gradients(X)
-    :param X_lower: Lower bounds for the search, its shape should be 1xn (n = dimension of input space)
+    :param X_lower: Lower bounds for the search,
+                    its shape should be 1xn (n = dimension of input space)
     :type X_lower: np.ndarray (1,n)
-    :param X_upper: Upper bounds for the search, its shape should be 1xn (n = dimension of input space)
+    :param X_upper: Upper bounds for the search,
+                    its shape should be 1xn (n = dimension of input space)
     :type X_upper: np.ndarray (1,n)
-    :param par: A parameter meant to control the balance between exploration and exploitation of the acquisition
+    :param par: A parameter meant to control the balance
+                between exploration and exploitation of the acquisition
                 function. Empirical testing determines 0.01 to be a good value in most cases.
     """
     long_name = "Probability of Improvement"

@@ -12,8 +12,10 @@ from base_maximizer import BaseMaximizer
 
 class GradientAscent(BaseMaximizer):
     '''
-    Performs a gradient ascent based on the LBFGS algorithm. It draws N configurations uniformly and start a local search from the M best random point.
-    For the resulting M points that were obtain via local search it returns the point with the highest function value.
+    Performs a gradient ascent based on the LBFGS algorithm.
+    It draws N configurations uniformly and start a local search from the M best random point.
+    For the resulting M points that were obtain via
+    local search it returns the point with the highest function value.
     '''
 
     def __init__(self, objective_function, X_lower, X_upper, n_random=1000, n_restarts=10):
@@ -28,7 +30,8 @@ class GradientAscent(BaseMaximizer):
 
     def maximize(self):
         # Draw N random configurations uniformly
-        random_points = np.random.uniform(self.X_lower, self.X_upper, (self.n_random, self.X_lower.shape[0]))
+        random_points = np.random.uniform(
+            self.X_lower, self.X_upper, (self.n_random, self.X_lower.shape[0]))
         fvals = np.zeros([self.n_random])
         for i in range(self.n_random):
             fvals[i] = self.objective_func(random_points[i])
@@ -40,7 +43,9 @@ class GradientAscent(BaseMaximizer):
         fval = np.zeros([self.n_restarts])
         for i in range(self.n_restarts):
             start_point = random_points[best[i]]
-            res = scipy.optimize.fmin_l_bfgs_b(self._acquisition_fkt_wrapper, start_point, bounds=zip(self.X_lower, self.X_upper))
+            res = scipy.optimize.fmin_l_bfgs_b(
+                self._acquisition_fkt_wrapper, start_point, bounds=zip(
+                    self.X_lower, self.X_upper))
             x_opt[i] = res[0]
             fval[i] = res[1]
         # Return the point with the highest function value

@@ -90,19 +90,19 @@ class EnvironmentEntropy(Entropy):
         log_cost = self.cost_model.predict(X)[0]
 
         if derivative:
-            #dh, g = super(EnvironmentEntropy, self).compute(X,
+            # dh, g = super(EnvironmentEntropy, self).compute(X,
             #                                    derivative=derivative)
 
-            #dmu = self.cost_model.predictive_gradients(X[:, self.is_env_variable == 1])[0]
-            #log_cost = (log_cost + 1e-8)
-            #acquisition_value = dh / log_cost
-            #grad = g * log_cost + dmu * dh
+            # dmu = self.cost_model.predictive_gradients(X[:, self.is_env_variable == 1])[0]
+            # log_cost = (log_cost + 1e-8)
+            # acquisition_value = dh / log_cost
+            # grad = g * log_cost + dmu * dh
 
-            #return acquisition_value, grad
+            # return acquisition_value, grad
             raise("Not implemented")
         else:
             dh = super(EnvironmentEntropy, self).compute(X,
-                                                derivative=derivative)
+                                                         derivative=derivative)
             acquisition_value = dh / np.exp(log_cost)
 
             return acquisition_value
@@ -120,7 +120,9 @@ class EnvironmentEntropy(Entropy):
 #         Environment Entropy Search
 #     '''
 #
-#     def __init__(self, model, cost_model, X_lower, X_upper, compute_incumbent, is_env_variable, n_representer=10, n_hals_vals=100, n_func_samples=100, **kwargs):
+#     def __init__(self, model, cost_model, X_lower, X_upper,
+#                    compute_incumbent, is_env_variable, n_representer=10,
+#                    n_hals_vals=100, n_func_samples=100, **kwargs):
 #
 #         self.cost_model = cost_model
 #         self.n_dims = X_lower.shape[0]
@@ -130,7 +132,8 @@ class EnvironmentEntropy(Entropy):
 #         if compute_incumbent is env_optimize_posterior_mean_and_std:
 #             compute_incumbent = partial(compute_incumbent, is_env=is_env_variable)
 #
-#         super(EnvEntropySearchMC, self).__init__(model, X_lower, X_upper, compute_incumbent, Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
+#         super(EnvEntropySearchMC, self).__init__(model, X_lower, X_upper, compute_incumbent,
+#                           Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
 #
 #     def update(self, model, cost_model):
 #         self.cost_model = cost_model
@@ -156,7 +159,9 @@ class EnvironmentEntropy(Entropy):
 #
 #    def update_representer_points(self):
 #
-#         #TODO: We might want to start the sampling of the representer points from the incumbent here? Or maybe from a sobel grid?
+#         #TODO: We might want to start the sampling of the
+#                representer points from the incumbent here?
+#                Or maybe from a sobel grid?
 #         #TODO: Sample only in the subspace
 #         super(EnvEntropySearchMC, self).update_representer_points()
 #

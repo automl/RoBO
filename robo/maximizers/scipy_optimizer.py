@@ -13,7 +13,7 @@ from _functools import partial
 
 
 class SciPyOptimizer(BaseMaximizer):
-    
+
     def __init__(self, objective_function, X_lower, X_upper, n_restarts=10, verbosity=False):
         self.n_restarts = n_restarts
         self.verbosity = verbosity
@@ -30,17 +30,25 @@ class SciPyOptimizer(BaseMaximizer):
 
         for i in range(self.n_restarts):
             start = np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
-            
-            res = optimize.minimize(f, start, method="L-BFGS-B", bounds=zip(self.X_lower, self.X_upper), options={"disp": self.verbosity})
+
+            res = optimize.minimize(
+                f,
+                start,
+                method="L-BFGS-B",
+                bounds=zip(
+                    self.X_lower,
+                    self.X_upper),
+                options={
+                    "disp": self.verbosity})
             cand[i] = res["x"]
             cand_vals[i] = res["fun"]
-            
+
         best = np.argmax(cand_vals)
         return np.array([cand[best]])
 
 
 class SciPyGlobalOptimizer(BaseMaximizer):
-    
+
     def __init__(self, objective_function, X_lower, X_upper, n_restarts=10, verbosity=False):
         self.n_restarts = n_restarts
         self.verbosity = verbosity
@@ -58,8 +66,16 @@ class SciPyGlobalOptimizer(BaseMaximizer):
 
         for i in range(self.n_restarts):
             start = np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
-            res = optimize.basinhopping(f, start, minimizer_kwargs={"bounds" : zip(self.X_lower, self.X_upper), "method": "L-BFGS-B"}, disp=self.verbosity)
-     
+            res = optimize.basinhopping(
+                f,
+                start,
+                minimizer_kwargs={
+                    "bounds": zip(
+                        self.X_lower,
+                        self.X_upper),
+                    "method": "L-BFGS-B"},
+                disp=self.verbosity)
+
             cand[i] = res.x
             cand_vals[i] = res.fun
         best = np.argmax(cand_vals)

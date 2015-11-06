@@ -27,7 +27,7 @@ class EnvironmentalSyntheticFunction(BaseTask):
 
     def objective_function(self, x):
         y = self.original_task.objective_function(x[:, self.is_env == 0]) \
-                    * np.exp(-(x[0, -1] - 1))
+            * np.exp(-(x[0, -1] - 1))
 
         cost = np.exp(x[:, self.is_env == 1])
 
