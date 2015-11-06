@@ -29,16 +29,21 @@ class GaussianProcessMCMC(BaseModel):
         Parameters
         ----------
         kernel : george kernel object
-
+            Specifies the kernel that is used for all Gaussian Process
         prior : prior object
-
+            Defines a prior for the hyperparameters of the GP. Make sure that
+            it implements the Prior interface. During MCMC sampling the
+            lnlikelihood is multiplied with the prior.
         n_hypers : int
-
+            The number of hyperparameter samples. This also determines the
+            number of walker for MCMC sampling as each walker will
+            return one hyperparameter sample.
         chain_length : int
-
+            The length of the MCMC chain. We start n_hypers walker for
+            chain_length steps and we use the last sample
+            in the chain as a hyperparameter sample.
         burnin_steps : int
-
-        scaling : boolean
+            The number of burnin steps before the actual MCMC sampling starts.
         """
 
         self.kernel = kernel
@@ -55,11 +60,25 @@ class GaussianProcessMCMC(BaseModel):
         # s into (1 - s) ** 2
         self.scaling = scaling
 
-    def scale(self, x, new_min, new_max, old_min, old_max):
+    def _scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
 
     def train(self, X, Y, do_optimize=True, **kwargs):
+        """
+        Performs MCMC sampling to sample hyperparameter configurations from the
+        likelihood and trains for each sample a GP on X and Y
 
+        Parameters
+        ----------
+        X: np.ndarray (N, D)
+            Input datapoints. The dimensionality of X is (N, D),
+            with N as the number of points and D is the number of features.
+        Y: np.ndarray (N, 1)
+            The corresponding target values.
+        do_optimize: boolean
+            If set to true we perform MCMC sampling otherwise we just use the
+            hyperparameter specified in the kernel.
+        """
         self.X = X
         self.Y = Y
 
@@ -131,11 +150,19 @@ class GaussianProcessMCMC(BaseModel):
 
     def loglikelihood(self, theta):
         """
+        Return the loglikelihood (+ the prior) for a hyperparameter
+        configuration theta.
 
         Parameters
         ----------
-        theta :
+        theta : np.ndarray(H)
+            Hyperparameter vector. Note that all hyperparameter are
+            on a log scale.
 
+        Returns
+        ----------
+        float
+            lnlikelihood + prior
         """
 
         # Bound the hyperparameter space to keep things sane. Note all
@@ -151,11 +178,20 @@ class GaussianProcessMCMC(BaseModel):
 
     def predict(self, X, **kwargs):
         """
-        Returns the predictive mean and variance at X
+        Returns the predictive mean and variance of the objective function
+        at X average over all hyperparameter samples.
 
         Parameters
         ----------
-        X :
+        X: np.ndarray (N, D)
+            Input test points
+
+        Returns
+        ----------
+        np.array(1,)
+            predictive mean
+        np.array(1,)
+            predictive variance
 
         """
 
