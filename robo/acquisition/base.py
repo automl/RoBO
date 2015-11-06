@@ -30,8 +30,8 @@ class AcquisitionFunction(object):
 
     def update(self, model):
         """
-        This method will be called if the model is updated. E.g. the Entropy search uses it
-        to update it's approximation of P(x=x_min)
+        This method will be called if the model is updated. E.g.
+        Entropy search uses it to update it's approximation of P(x=x_min)
 
         Parameters
         ----------
