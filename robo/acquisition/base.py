@@ -4,9 +4,6 @@ import numpy as np
 
 
 class AcquisitionFunction(object):
-    """
-    A base class for acquisition functions.
-    """
     long_name = ""
 
     def __str__(self):
@@ -14,14 +11,18 @@ class AcquisitionFunction(object):
 
     def __init__(self, model, X_lower, X_upper, **kwargs):
         """
-        Initializes the acquisition function
+        A base class for acquisition functions.
 
-        :param model: Model that captures our current belief of the objective function
-        :param X_lower: Lower bound of input space
-        :type X_lower: np.ndarray(D, 1)
-        :param X_upper: Upper bound of input space
-        :type X_upper: np.ndarray(D, 1)
-
+        Parameters
+        ----------
+        model : Model object
+            Models the objective function.
+        X_lower : (D) numpy array
+            Specified the lower bound of the input space. Each entry
+            corresponds to one dimension.
+        X_upper : (D) numpy array
+            Specified the upper bound of the input space. Each entry
+            corresponds to one dimension.
         """
         self.model = model
         self.X_lower = X_lower
@@ -29,20 +30,31 @@ class AcquisitionFunction(object):
 
     def update(self, model):
         """
-            This method will be called if the model is updated. E.g. the Entropy search uses it
-            to update it's approximation of P(x=x_min)
+        This method will be called if the model is updated. E.g. the Entropy search uses it
+        to update it's approximation of P(x=x_min)
+
+        Parameters
+        ----------
+        model : Model object
+            Models the objective function.
         """
+
         self.model = model
 
     def __call__(self, X, derivative=False):
         """
-            :param X: X values, where the acquisition function should be evaluate. The dimensionality of X is (N, D), with N as the number of points to evaluate
-                        at and D is the number of dimensions of one X.
-            :type X: np.ndarray (N, D)
-            :param derivative: if the derivatives should be computed
-            :type derivative: Boolean
-            :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and the acquisition function does not allow to compute the gradients
-            :rtype: np.ndarray(N, 1)
+        Computes the acquisition value for a given point X
+
+        Parameters
+        ----------
+        X: np.ndarray(1, D), The input point where the acquisition function
+            should be evaluate. The dimensionality of X is (N, D), with N as
+            the number of points to evaluate at and D is the number of
+            dimensions of one X.
+
+        derivative: Boolean
+            If is set to true also the derivative of the acquisition
+            function at X is returned
         """
 
         if len(X.shape) == 1:
@@ -63,12 +75,18 @@ class AcquisitionFunction(object):
 
     def compute(self, X, derivative=False):
         """
-            :param X: X values, where the acquisition function should be evaluate. The dimensionality of X is (N, D), with N as the number of points to evaluate
-                        at and D is the number of dimensions of one X.
-            :type X: np.ndarray (N, D)
-            :param derivative: if the derivatives should be computed
-            :type derivative: Boolean
-            :raises BayesianOptimizationError.NO_DERIVATIVE: if derivative is True and the acquisition function does not allow to compute the gradients
-            :rtype: np.ndarray(N, 1)
+        Computes the acquisition value for a given point X. This function has
+        to be overwritten in a derived class.
+
+        Parameters
+        ----------
+        X: np.ndarray(1, D), The input point where the acquisition function
+            should be evaluate. The dimensionality of X is (N, D), with N as
+            the number of points to evaluate at and D is the number of
+            dimensions of one X.
+
+        derivative: Boolean
+            If is set to true also the derivative of the acquisition
+            function at X is returned
         """
         raise NotImplementedError()

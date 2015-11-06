@@ -8,9 +8,7 @@ import logging
 import george
 import emcee
 import numpy as np
-from scipy import optimize
 from copy import deepcopy
-import scipy.stats as sps
 
 from robo.models.base_model import BaseModel
 from robo.models.gaussian_process import GaussianProcess
@@ -19,8 +17,30 @@ logger = logging.getLogger(__name__)
 
 
 class GaussianProcessMCMC(BaseModel):
-    
-    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000, scaling=False, *args, **kwargs):
+
+    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
+                 burnin_steps=2000, scaling=False, *args, **kwargs):
+        """
+        GaussianProcess model based on the george GP library that uses MCMC
+        sampling to marginalise the hyperparmeter. If you use this class
+        make sure that to use the IntegratedAcqusition function to integrate
+        over the GP's hyperparameter as proposed by Snoek et al.
+
+        Parameters
+        ----------
+        kernel : george kernel object
+
+        prior : prior object
+
+        n_hypers : int
+
+        chain_length : int
+
+        burnin_steps : int
+
+        scaling : boolean
+        """
+
         self.kernel = kernel
         if prior is None:
             prior = lambda x : 0
@@ -38,7 +58,21 @@ class GaussianProcessMCMC(BaseModel):
     def scale(self, x, new_min, new_max, min, max):
         return ((new_max - new_min) * (x -min) / (max - min)) + new_min
         
-    def train(self, X, Y, do_optimize=True, **kwargs):
+    def train(self, X, Y, do_optimize=True, **kwargs):        
+        """
+        
+        
+
+        Parameters
+        ----------
+        X : 
+
+        Y : 
+
+        do_optimize : int
+        """
+
+        
         self.X = X
         self.Y = Y
         
@@ -85,6 +119,7 @@ class GaussianProcessMCMC(BaseModel):
             self.hypers = self.sampler.chain[:, -1]
             
             self.models = []
+            logging.info("Hypers: %s" % self.hypers)
             for sample in self.hypers:
                 
                 # Instantiate a model for each hyperparam configuration
@@ -99,6 +134,14 @@ class GaussianProcessMCMC(BaseModel):
             self.hypers = self.gp.kernel[:]
                    
     def loglikelihood(self, theta):
+        """
+
+        Parameters
+        ----------
+        theta : 
+
+        """
+
         # Bound the hyperparameter space to keep things sane. Note all hyperparameters live on a log scale
         if np.any((-40 > theta) + (theta > 40)):
             return -np.inf
@@ -109,6 +152,16 @@ class GaussianProcessMCMC(BaseModel):
         return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
 
     def predict(self, X, **kwargs):
+        """
+        Returns the predictive mean and variance at X
+
+        Parameters
+        ----------
+        X : 
+
+        """
+
+        
         if self.scaling:
             X[:, -1] = (1 - X[:, -1]) ** 2
         mu = np.zeros([self.n_hypers])

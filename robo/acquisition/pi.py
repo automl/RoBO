@@ -6,6 +6,7 @@ from robo.acquisition.base import AcquisitionFunction
 
 logger = logging.getLogger(__name__)
 
+
 class PI(AcquisitionFunction):
     r"""
     Probability of Improvement solves the following equation
