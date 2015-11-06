@@ -1,4 +1,4 @@
-#encoding=utf8
+# encoding=utf8
 
 import numpy as np
 
@@ -63,9 +63,10 @@ class AcquisitionFunction(object):
         if derivative:
             acq, grad = self.compute(X, derivative)
             if np.isnan(acq):
-                return np.array([[-np.finfo(np.float).max]]), np.array([[-np.inf]])
+                return np.array([[-np.finfo(np.float).max]]
+                                ), np.array([[-np.inf]])
             else:
-                return acq, grad 
+                return acq, grad
         else:
             acq = self.compute(X, derivative)
             if np.isnan(acq):

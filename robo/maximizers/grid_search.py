@@ -22,7 +22,9 @@ class GridSearch(BaseMaximizer):
         super(GridSearch, self).__init__(objective_function, X_lower, X_upper)
 
     def maximize(self, verbose=False):
-        x = np.linspace(self.X_lower[0], self.X_upper[0], self.resolution).reshape((self.resolution, 1, 1))
+        x = np.linspace(
+            self.X_lower[0], self.X_upper[0], self.resolution).reshape(
+            (self.resolution, 1, 1))
         # y = array(map(acquisition_fkt, x))
         ys = np.zeros([self.resolution])
         for i in range(self.resolution):

@@ -11,6 +11,7 @@ from robo.acquisition.base import AcquisitionFunction
 
 logger = logging.getLogger(__name__)
 
+
 class IntegratedAcquisition(AcquisitionFunction):
     '''
         Meta acquisition function that allows to marginalise the acquisition over different GPs.
@@ -51,5 +52,5 @@ class IntegratedAcquisition(AcquisitionFunction):
         # Integrate over the acquisition values
         for i in range(self.model.n_hypers):
             acquisition_values[i] = self.estimators[i](X, derivative=False)
-        
+
         return np.array([[acquisition_values.mean()]])

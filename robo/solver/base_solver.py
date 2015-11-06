@@ -72,9 +72,12 @@ class BaseSolver(object):
         The main Bayesian optimization loop
 
         :param num_iterations: number of iterations to perform
-        :param X: (optional) Initial observations. If a run continues these observations will be overwritten by the load
-        :param Y: (optional) Initial observations. If a run continues these observations will be overwritten by the load
-        :param overwrite: data present in save_dir will be deleted and overwritten, otherwise the run will be continued.
+        :param X: (optional) Initial observations. If a run
+                continues these observations will be overwritten by the load
+        :param Y: (optional) Initial observations. If a run
+                continues these observations will be overwritten by the load
+        :param overwrite: data present in save_dir will be deleted
+                    and overwritten, otherwise the run will be continued.
         :return: the incumbent
         """
         pass
@@ -96,9 +99,9 @@ class BaseSolver(object):
 
         if self.csv_writer is None:
             self.fieldnames = ["iteration", "config", "fval", "incumbent", "incumbent_val",
-            "time_func_eval", "time_overhead", "runtime"]
+                               "time_func_eval", "time_overhead", "runtime"]
             for key in kwargs:
-                    self.fieldnames.append(key)
+                self.fieldnames.append(key)
             self.csv_writer = csv.DictWriter(self.output_file, fieldnames=self.fieldnames)
             self.csv_writer.writeheader()
 

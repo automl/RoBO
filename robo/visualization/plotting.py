@@ -9,7 +9,18 @@ Edits: Numair Mansur (numair.mansur@gmail.com)
 import numpy as np
 
 
-def plot_model(model, X_lower, X_upper, ax, resolution=0.1, maximizer=None, mean_color='b', uncertainity_color='blue', label="Model", std_scale=3, plot_mean=True):
+def plot_model(
+        model,
+        X_lower,
+        X_upper,
+        ax,
+        resolution=0.1,
+        maximizer=None,
+        mean_color='b',
+        uncertainity_color='blue',
+        label="Model",
+        std_scale=3,
+        plot_mean=True):
     ''' Plots the model on the ax object passed to it
 
     Args:
@@ -22,7 +33,7 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1, maximizer=None, mean
         uncertainity_color (string): Color of the model
         label (string): Label string
         std_scale (int): Standard Deviation Scale
-        plot_mean (bool): Bool flag, Plot the mean curve if value is True 
+        plot_mean (bool): Bool flag, Plot the mean curve if value is True
 
     Returns:
         ax (object) : subplot for the model and the objective funciton
@@ -36,16 +47,34 @@ def plot_model(model, X_lower, X_upper, ax, resolution=0.1, maximizer=None, mean
     for i in xrange(X.shape[0]):
         mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
 
-    if plot_mean == True:
+    if plot_mean:
         ax.plot(X, mean, mean_color, label=label)
     if maximizer is not None:
         ax.axvline(maximizer, color='red')
-    ax.fill_between(X, mean + std_scale * np.sqrt(var), mean - std_scale * np.sqrt(var), facecolor=uncertainity_color, alpha=0.2)
+    ax.fill_between(
+        X,
+        mean +
+        std_scale *
+        np.sqrt(var),
+        mean -
+        std_scale *
+        np.sqrt(var),
+        facecolor=uncertainity_color,
+        alpha=0.2)
     ax.legend()
     return ax
 
 
-def plot_objective_function(objective_function, X_lower, X_upper, ax, X=None, Y=None, resolution=0.1, color='black', label='ObjectiveFunction'):
+def plot_objective_function(
+        objective_function,
+        X_lower,
+        X_upper,
+        ax,
+        X=None,
+        Y=None,
+        resolution=0.1,
+        color='black',
+        label='ObjectiveFunction'):
     ''' Plots the objective_function on the ax object passed to it
 
     Args:
@@ -76,7 +105,14 @@ def plot_objective_function(objective_function, X_lower, X_upper, ax, X=None, Y=
     return ax
 
 
-def plot_acquisition_function(acquisition_function, X_lower, X_upper, ax, resolution=0.1, label="AcquisitionFunction", maximizer=None):
+def plot_acquisition_function(
+        acquisition_function,
+        X_lower,
+        X_upper,
+        ax,
+        resolution=0.1,
+        label="AcquisitionFunction",
+        maximizer=None):
     ''' Plots the acquisition_function on the ax object passed to it
 
     Args:

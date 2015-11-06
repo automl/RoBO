@@ -7,10 +7,13 @@ from robo.acquisition.base import AcquisitionFunction
 
 logger = logging.getLogger(__name__)
 
+
 class EI(AcquisitionFunction):
     r"""
         Expected Improvement computes for a given x the acquisition value by
-        :math:`EI(X) := \mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, with
+        :math:`EI(X) :=
+            \mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) -
+                f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, with
         :math:`f(X^+)` as the incumbent.
 
         :param model: A model that implements at least
@@ -21,22 +24,33 @@ class EI(AcquisitionFunction):
                If you want to calculate derivatives than it should also support
 
                  - predictive_gradients(X)
-        :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of input space)
+        :param X_lower: Lower bounds for the search,
+                its shape should be 1xD (D = dimension of input space)
         :type X_lower: np.ndarray (1,D)
-        :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of input space)
+        :param X_upper: Upper bounds for the search,
+                its shape should be 1xD (D = dimension of input space)
         :type X_upper: np.ndarray (1,D)
-        :param compute_incumbent: A python function that takes as input a model and returns a np.array as incumbent
-        :param par: Controls the balance between exploration and exploitation of the acquisition
+        :param compute_incumbent: A python function that takes as input
+                            a model and returns a np.array as incumbent
+        :param par: Controls the balance between exploration
+                    and exploitation of the acquisition
                     function. Default is 0.01
     """
 
     long_name = "Expected Improvement"
 
-    def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):
-        #self.model = model
+    def __init__(
+            self,
+            model,
+            X_lower,
+            X_upper,
+            compute_incumbent,
+            par=0.01,
+            **kwargs):
+        # self.model = model
         self.par = par
-        #self.X_lower = X_lower
-        #self.X_upper = X_upper
+        # self.X_lower = X_lower
+        # self.X_upper = X_upper
         self.compute_incumbent = compute_incumbent
         super(EI, self).__init__(model, X_lower, X_upper)
 
@@ -48,7 +62,8 @@ class EI(AcquisitionFunction):
 
         :param X: The point at which the function is to be evaluated.
         :type X: np.ndarray (1,D)
-        :param derivative: This controls whether the derivative is to be returned.
+        :param derivative: This controls whether
+                the derivative is to be returned.
         :type derivative: Boolean
         :return: The value of EI and optionally its derivative at X.
         :rtype: np.ndarray(1, 1) or (np.ndarray(1, 1), np.ndarray(1, D))
