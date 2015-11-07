@@ -17,7 +17,7 @@ from robo.acquisition.integrated_acquisition import IntegratedAcquisition
 from robo.maximizers.direct import Direct
 from robo.recommendation.optimize_posterior import env_optimize_posterior_mean_and_std
 from robo.task.branin import Branin
-from robo.task.environmental_synthetic_function import EnvironmentalSyntheticFunction
+from robo.task.environmental_synthetic_function import SyntheticFunctionWrapper
 from robo.solver.environment_search import EnvironmentSearch
 from robo.priors import default_priors
 from robo.priors.base_prior import BasePrior
@@ -66,7 +66,7 @@ class Prior(BasePrior):
 # Warp the original Branin function to an the system size
 # as additional input and an exponential cost function
 branin = Branin()
-task = EnvironmentalSyntheticFunction(branin)
+task = SyntheticFunctionWrapper(branin)
 
 # Define the kernel + prior for modeling the objective function
 noise = 1.0

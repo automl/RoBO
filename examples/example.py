@@ -22,6 +22,7 @@ from robo.visualization.plotting import plot_objective_function, plot_model,\
 # It gets a numpy array with shape (N,D) where N >= 1 are the number of
 # datapoints and D are the number of features
 class ExampleTask(BaseTask):
+
     def __init__(self):
         self.X_lower = np.array([0])
         self.X_upper = np.array([7])

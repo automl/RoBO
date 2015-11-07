@@ -21,28 +21,48 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 logger = logging.getLogger(__name__)
 
+
 class Entropy(AcquisitionFunction):
     """
     The Entropy Search acquisition function
         - predict(X)
         - predict_variance(X1, X2)
-    :param X_lower: Lower bounds for the search, its shape should be 1xD (D = dimension of search space)
+    :param X_lower: Lower bounds for the search,
+                    its shape should be 1xD (D = dimension of search space)
     :type X_lower: np.ndarray (1,D)
-    :param X_upper: Upper bounds for the search, its shape should be 1xD (D = dimension of search space)
+    :param X_upper: Upper bounds for the search,
+                    its shape should be 1xD (D = dimension of search space)
     :type X_upper: np.ndarray (1,D)
     :param Nb: Number of representer points to define pmin.
     :type Nb: int
-    :param sampling_acquisition: A function to be used in calculating the density that representer points are to be sampled from. It uses
+    :param sampling_acquisition: A function to be used in calculating
+                    the density that representer points are to be sampled from.
+                    It uses
     :type samping_acquisition: AcquisitionFunction
-    :param sampling_acquisition_kw: Additional keyword parameters to be passed to sampling_acquisition, if they are required, e.g. xi parameter for LogEI.
+    :param sampling_acquisition_kw: Additional keyword parameters to be passed to
+                                    sampling_acquisition, if they are required,
+                                    e.g. xi parameter for LogEI.
     :type sampling_acquisition_kw: dict
-    :param Np: Number of prediction points at X to calculate stochastic changes of the mean for the representer points
+    :param Np: Number of prediction points at X to calculate stochastic changes
+                of the mean for the representer points
     :type Np: int
-    :param loss_function: The loss function to be used in the calculation of the entropy. If not specified it defaults to log loss (cf. loss_functions module).
+    :param loss_function: The loss function to be used in the calculation of the entropy.
+                    If not specified it defaults to log loss (cf. loss_functions module).
     """
     long_name = "Information gain over p_min(x)"
 
-    def __init__(self, model, X_lower, X_upper, Nb=10, compute_inc=optimize_posterior_mean_and_std, sampling_acquisition=None, sampling_acquisition_kw={"par": 0.0}, Np=400, **kwargs):
+    def __init__(
+            self,
+            model,
+            X_lower,
+            X_upper,
+            Nb=10,
+            compute_inc=optimize_posterior_mean_and_std,
+            sampling_acquisition=None,
+            sampling_acquisition_kw={
+                "par": 0.0},
+            Np=400,
+            **kwargs):
         self.Nb = Nb
         super(Entropy, self).__init__(model, X_lower, X_upper)
         self.compute_incumbent = compute_inc
@@ -51,37 +71,43 @@ class Entropy(AcquisitionFunction):
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
-        self.sampling_acquisition = sampling_acquisition(model, self.X_lower, self.X_upper, compute_incumbent, **sampling_acquisition_kw)
+        self.sampling_acquisition = sampling_acquisition(
+            model, self.X_lower, self.X_upper, compute_incumbent, **sampling_acquisition_kw)
 
         self.Np = Np
 
     def loss_function(self, logP, lmb, lPred, *args):
         """
-            This module contains the loss functions used in the calculation of the expected information gain.
+            This module contains the loss functions used in the
+            calculation of the expected information gain.
             For the moment only the logloss function is implemented.
-            .. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None, sampling_acquisition_kw={"par":0.0}, Np=200, loss_function=None, **kwargs)
+            .. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None,
+                                 sampling_acquisition_kw={"par":0.0}, Np=200,
+                                 loss_function=None, **kwargs)
             :param logP: Log-probability values.
             :param lmb: Log values of acquisition function at belief points.
             :param lPred: Log of the predictive distribution
             :param args: Additional parameters
             :return:
         """
-        H = - np.sum(np.multiply(np.exp(logP), (logP + lmb)))  # current entropy
-        dHp = - np.sum(np.multiply(np.exp(lPred), np.add(lPred, lmb)), axis=0) - H
+        H = - np.sum(np.multiply(np.exp(logP), (logP + lmb))
+                     )  # current entropy
+        dHp = - np.sum(np.multiply(np.exp(lPred),
+                                   np.add(lPred, lmb)), axis=0) - H
         return np.array([dHp])
 
     def _scipy_optimizer_fkt_wrapper(self, acq_f, derivative=True):
         def _l(x, *args, **kwargs):
             x = np.array([x])
             if np.any(np.isnan(x)):
-                #raise Exception("oO")
+                # raise Exception("oO")
                 if derivative:
                     return np.inf, np.zero_like(x)
                 else:
                     return np.inf
             a = acq_f(x, derivative=derivative, *args, **kwargs)
             if derivative:
-                #print -a[0][0], -a[1][0][0, :]
+                # print -a[0][0], -a[1][0][0, :]
                 return -a[0][0], -a[1][0][0, :]
 
             else:
@@ -94,10 +120,16 @@ class Entropy(AcquisitionFunction):
         minima = []
         for i in range(self.BestGuesses.shape[0]):
             xx = self.BestGuesses[i]
-            minima.append(scipy.optimize.minimize(
-                   fun=sc_fun, x0=xx, jac=False, method='L-BFGS-B', constraints=None,
-                   options={'ftol': np.spacing(1), 'maxiter': 120}
-                ))
+            minima.append(
+                scipy.optimize.minimize(
+                    fun=sc_fun,
+                    x0=xx,
+                    jac=False,
+                    method='L-BFGS-B',
+                    constraints=None,
+                    options={
+                        'ftol': np.spacing(1),
+                        'maxiter': 120}))
 
         Xdh = np.array([res.fun for res in minima])
         Xend = np.array([res.x for res in minima])
@@ -106,7 +138,8 @@ class Entropy(AcquisitionFunction):
 
     def compute(self, X, derivative=False, **kwargs):
         """
-        :param x: The point at which the function is to be evaluated. Its shape is (1,D), where D is the dimension of the search space.
+        :param x: The point at which the function is to be evaluated.
+                  Its shape is (1,D), where D is the dimension of the search space.
         :type x: np.ndarray (1, D)
         :param derivative: Controls whether the derivative is calculated and returned.
         :type derivative: Boolean
@@ -126,25 +159,27 @@ class Entropy(AcquisitionFunction):
 
         if derivative:
             acq, grad = self.dh_fun(X, invertsign=True, derivative=True)
-        
+
             if np.any(np.isnan(acq)) or np.any(acq == np.inf):
                 return -sys.float_info.max
             return acq, grad
         else:
             acq = self.dh_fun(X, invertsign=True, derivative=False)
-        
+
             if np.any(np.isnan(acq)) or np.any(acq == np.inf):
                 return -sys.float_info.max
             return acq
 
     def sampling_acquisition_wrapper(self, x):
-        return  self.sampling_acquisition(np.array([x]))[0]
+        return self.sampling_acquisition(np.array([x]))[0]
 
     def update_representer_points(self):
         self.sampling_acquisition.update(self.model)
         restarts = np.zeros((self.Nb, self.D))
-        restarts[0:self.Nb, ] = self.X_lower + (self.X_upper - self.X_lower) * np.random.uniform(size=(self.Nb, self.D))
-        sampler = emcee.EnsembleSampler(self.Nb, self.D, self.sampling_acquisition_wrapper)
+        restarts[0:self.Nb, ] = self.X_lower + \
+            (self.X_upper - self.X_lower) * np.random.uniform(size=(self.Nb, self.D))
+        sampler = emcee.EnsembleSampler(
+            self.Nb, self.D, self.sampling_acquisition_wrapper)
         # zb are the representer points and lmb are their log EI values
         self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
         if len(self.zb.shape) == 1:
@@ -161,18 +196,24 @@ class Entropy(AcquisitionFunction):
             c = np.sqrt(np.sum(sqm, axis=1))
             cmin = c.min()
         if cmin < 0.25:
-            self.BestGuesses[c.argmin()] = self.zb[np.argmax(self.logP + self.lmb)]
+            self.BestGuesses[
+                c.argmin()] = self.zb[
+                np.argmax(
+                    self.logP +
+                    self.lmb)]
         else:
-            self.BestGuesses = np.append(self.BestGuesses, np.array([self.zb[np.argmax(self.logP + self.lmb)]]), axis=0)
+            self.BestGuesses = np.append(self.BestGuesses, np.array(
+                [self.zb[np.argmax(self.logP + self.lmb)]]), axis=0)
 
     def update(self, model):
         self.model = model
-        
+
         self.sn2 = self.model.get_noise()
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
 
-        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
+        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(
+            mu, var, with_derivatives=True)
         self.W = np.random.randn(1, self.zb.shape[0])
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
         self.update_best_guesses()
@@ -187,13 +228,17 @@ class Entropy(AcquisitionFunction):
         dMdx = Lx
         # Innovation function for covariance:
         dVdx = -Lx.dot(Lx.T)
-        # The transpose operator is there to make the array indexing equivalent to matlab's
+        # The transpose operator is there to make the array indexing equivalent
+        # to matlab's
         dVdx = dVdx[np.triu(np.ones((N, N))).T.astype(bool), np.newaxis]
 
         dMM = dMdx.dot(dMdx.T)
-        trterm = np.sum(np.sum(
-            np.multiply(self.dlogPdMudMu, np.reshape(dMM, (1, dMM.shape[0], dMM.shape[1]))),
-            2), 1)[:, np.newaxis]
+        trterm = np.sum(
+            np.sum(
+                np.multiply(
+                    self.dlogPdMudMu, np.reshape(
+                        dMM, (1, dMM.shape[0], dMM.shape[1]))), 2), 1)[
+            :, np.newaxis]
 
         # add a second dimension to the arrays if necessary:
         logP = np.reshape(self.logP, (self.logP.shape[0], 1))
@@ -219,11 +264,20 @@ class Entropy(AcquisitionFunction):
     def dh_fun(self, x, invertsign=True, derivative=False):
 
         if not (np.all(np.isfinite(self.lmb))):
-            logger.debug(self.zb[np.where(np.isinf(self.lmb))], self.lmb[np.where(np.isinf(self.lmb))])
-            raise Exception("lmb should not be infinite. This is not allowed to be sampled")
+            logger.debug(
+                self.zb[
+                    np.where(
+                        np.isinf(
+                            self.lmb))], self.lmb[
+                    np.where(
+                        np.isinf(
+                            self.lmb))])
+            raise Exception(
+                "lmb should not be infinite. This is not allowed to be sampled")
 
         D = x.shape[1]
-        # If x is a vector, convert it to a matrix (some functions are sensitive to this distinction)
+        # If x is a vector, convert it to a matrix (some functions are
+        # sensitive to this distinction)
         if len(x.shape) == 1:
             x = x[np.newaxis]
 
@@ -238,7 +292,8 @@ class Entropy(AcquisitionFunction):
             dH = -dH
         if not np.isreal(dH):
             raise Exception("dH is not real")
-        # Numerical derivative, renormalisation makes analytical derivatives unstable.
+        # Numerical derivative, renormalisation makes analytical derivatives
+        # unstable.
         e = 1.0e-5
         if derivative:
             ddHdx = np.zeros((1, D))
@@ -265,9 +320,11 @@ class Entropy(AcquisitionFunction):
 
     def _gp_innovation_local(self, x):
         """
-        :param x: The point at which the function is to be evaluated. Its shape is (1,D), where D is the dimension of the search space.
+        :param x: The point at which the function is to be evaluated.
+                Its shape is (1,D), where D is the dimension of the search space.
         :type x: np.ndarray (1, D)
-        :return: A vector that contains ..., the standard deviation at x (WITHOUT noise) and the variance at x (PLUS noise).
+        :return: A vector that contains ..., the standard deviation at x (WITHOUT noise)
+                and the variance at x (PLUS noise).
         :rtype: (np.ndarray(1, Nb), np.ndarray(1, 1), np.ndarray(1, 1)).
         :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
         """
@@ -276,14 +333,14 @@ class Entropy(AcquisitionFunction):
             return
 
         _, v = self.model.predict(x)
-        
+
         # Standard deviation with noise
         s = np.sqrt(v - self.sn2)
         # The variance between the test point x and the representers
         v_projected = self.model.predict_variance(x, self.zb)
 
         Lx = v_projected / s
-        Lx =Lx.T
+        Lx = Lx.T
         return Lx, s, v
 
     def _joint_min(self, mu, var, with_derivatives=False, **kwargs):
@@ -350,9 +407,10 @@ class Entropy(AcquisitionFunction):
         for count in xrange(50):
             diff = 0
             for i in range(D - 1):
-                l = i if  i < k else i + 1
+                l = i if i < k else i + 1
                 try:
-                    M, V, P[i], MP[i], logS[i], d = self._lt_factor(k, l, M, V, MP[i], P[i], gamma)
+                    M, V, P[i], MP[i], logS[i], d = self._lt_factor(
+                        k, l, M, V, MP[i], P[i], gamma)
                 except Exception as e:
                     raise
 
@@ -360,7 +418,7 @@ class Entropy(AcquisitionFunction):
                     break
                 diff += np.abs(d)
             if np.isnan(d):
-                    break
+                break
             if np.abs(diff) < 0.001:
                 b = True
                 break
@@ -399,16 +457,20 @@ class Entropy(AcquisitionFunction):
             noise = 0
             while(True):
                 try:
-                    cIRSR = np.linalg.cholesky(IRSR + noise * np.eye(IRSR.shape[0]))
+                    cIRSR = np.linalg.cholesky(
+                        IRSR + noise * np.eye(IRSR.shape[0]))
                     break
                 except np.linalg.LinAlgError:
                     if noise == 0:
                         noise = 1e-10
                     else:
                         noise *= 10
-                    logger.error("Cholesky decomposition failed. Add %f noise on the diagonal." % noise)
+                    logger.error(
+                        "Cholesky decomposition failed. Add %f noise on the diagonal." %
+                        noise)
             dts = 2 * np.sum(np.log(np.diagonal(cIRSR)))
-            logZ = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + np.dot(Mu.T, r) + s - 0.5 * mpm
+            logZ = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + \
+                np.dot(Mu.T, r) + s - 0.5 * mpm
             yield logZ
             btA = np.dot(b.T, A)
 
@@ -416,7 +478,8 @@ class Entropy(AcquisitionFunction):
             yield dlogZdMu
             dlogZdMudMu = -A
             yield dlogZdMudMu
-            dlogZdSigma = -A - 2 * np.outer(r, Ab.T) + np.outer(r, r.T) + np.outer(btA.T, Ab.T)
+            dlogZdSigma = -A - 2 * \
+                np.outer(r, Ab.T) + np.outer(r, r.T) + np.outer(btA.T, Ab.T)
             _dlogZdSigma = np.zeros_like(dlogZdSigma)
             np.fill_diagonal(_dlogZdSigma, np.diagonal(dlogZdSigma))
             dlogZdSigma = 0.5 * (dlogZdSigma + dlogZdSigma.T - _dlogZdSigma)
@@ -445,7 +508,8 @@ class Entropy(AcquisitionFunction):
             mpnew = r * (alpha + cmni / cVnic) + alpha
 
             # update terms
-            dp = np.max([-p + eps, gamma * (pnew - p)])  # at worst, remove message
+            # at worst, remove message
+            dp = np.max([-p + eps, gamma * (pnew - p)])
             dmp = np.max([-mp + eps, gamma * (mpnew - mp)])
             d = np.max([dmp, dp])  # for convergence measures
 
@@ -456,9 +520,12 @@ class Entropy(AcquisitionFunction):
 
             Mnew = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
             if np.any(np.isnan(Vnew)):
-                raise Exception("an error occurs while running expectation propagation in entropy search. Resulting variance contains NaN")
+                raise Exception(
+                    "an error occurs while running expectation \
+                    propagation in entropy search. Resulting variance contains NaN")
             # % there is a problem here, when z is very large
-            logS = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic)) + (alpha * alpha) / (2 * beta) * cVnic
+            logS = lP - 0.5 * (np.log(beta) - np.log(pnew) -
+                               np.log(cVnic)) + (alpha * alpha) / (2 * beta) * cVnic
 
         elif exit_flag == -1:
             d = np.NAN
@@ -494,7 +561,14 @@ class Entropy(AcquisitionFunction):
             e = np.exp(logphi - logPhi)
             return e, logPhi, 0
 
-    def plot(self, fig, minx, maxx, plot_attr={"color": "red"}, resolution=1000):
+    def plot(
+            self,
+            fig,
+            minx,
+            maxx,
+            plot_attr={
+                "color": "red"},
+            resolution=1000):
 
         n = len(fig.axes)
         for i in range(n):
@@ -502,16 +576,20 @@ class Entropy(AcquisitionFunction):
         ax = fig.add_subplot(n + 1, 1, n + 1)
         bar_ax = fig.add_subplot(n + 2, 1, n + 2)
         plotting_range = np.linspace(minx, maxx, num=resolution)
-        acq_v = np.array([self(np.array([x]), derivative=True)[0][0] for x in plotting_range[:, np.newaxis]])
+        acq_v = np.array([self(np.array([x]), derivative=True)[0][0]
+                          for x in plotting_range[:, np.newaxis]])
         ax.plot(plotting_range, acq_v, **plot_attr)
 
         zb = self.zb
         pmin = np.exp(self.logP)
         ax.set_xlim(minx, maxx)
-        bar_ax.bar(zb, pmin, width=(maxx - minx) / (2 * zb.shape[0]), color="yellow")
+        bar_ax.bar(zb, pmin, width=(maxx - minx) /
+                   (2 * zb.shape[0]), color="yellow")
         bar_ax.set_xlim(minx, maxx)
         bar_ax.set_ylim(0.0, pmin.max())
-        other_acq_ax = self.sampling_acquisition.plot(fig, minx, maxx, plot_attr={"color": "orange"})  # , logscale=True)
+        other_acq_ax = self.sampling_acquisition.plot(
+            fig, minx, maxx, plot_attr={
+                "color": "orange"})  # , logscale=True)
         other_acq_ax.set_xlim(minx, maxx)
         ax.set_title(str(self))
         return ax

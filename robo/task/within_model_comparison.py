@@ -18,7 +18,7 @@ class WithinModelComparison(BaseTask):
         X_upper = np.array([1, 1])
         rng = np.random.RandomState(seed)
         kern = GPy.kern.RBF(2, lengthscale=0.1, variance=1.0)
-        xstar = rng.rand(100,2)
+        xstar = rng.rand(100, 2)
         K = kern.K(xstar, xstar)
         L = sla.cholesky(K)
         sigma = rng.randn(100)
@@ -33,6 +33,6 @@ class WithinModelComparison(BaseTask):
         mu, _ = self.gp.predict(x)
 
         return mu
-    
+
     def evaluate_test(self, x):
         return self.objective_function(x)

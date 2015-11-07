@@ -12,15 +12,15 @@ from _functools import partial
 
 
 class EnvironmentEntropy(Entropy):
-    
+
     def __init__(self, model, cost_model, X_lower, X_upper,
                  compute_incumbent,
                  is_env_variable,
                  n_representer=50, **kwargs):
         """
         Adaption of the original Entropy Search by Hennig et al for
-        environmental variable.      
-        
+        environmental variable.
+
         Parameters
         ----------
         model : Model object
@@ -32,14 +32,14 @@ class EnvironmentEntropy(Entropy):
             Models the cost function. The model has to be a Gaussian Process.
         X_lower : (D) numpy array
             Specified the lower bound of the input space. Each entry
-            corresponds to one dimension.        
+            corresponds to one dimension.
         X_upper : (D) numpy array
             Specified the upper bound of the input space. Each entry
             corresponds to one dimension.
         compute_incumbent : function
             Computes the current incumbent.
         is_env_variable : (D) numpy array
-            Specifies which input dimension is an environmental variable. If 
+            Specifies which input dimension is an environmental variable. If
             the i-th input is an environmental variable than the i-th entry has
             to be 1 and 0 otherwise.
         n_representers : int, optional
@@ -66,22 +66,22 @@ class EnvironmentEntropy(Entropy):
     def compute(self, X, derivative=False):
         """
         Computes the acquisiton value for a single point.
-        
+
         Parameters
         ----------
         X : (1, D) numpy array
-            The input point for which the acquisiton functions is computed.
+            The input point for which the acquisition functions is computed.
         derivative : bool, optional
-            If it is equal to True also the derivatives with respection X is 
+            If it is equal to True also the derivatives with respect to X is
             computed.
-            
+
         Returns
         -------
         acquisition_value: numpy array
             The acquisition value computed for X.
         grad : numpy array
-            The computed gradient of the acquisiton function at X. Only
-            returned if derivate==True
+            The computed gradient of the acquisition function at X. Only
+            returned if derivative==True
         """
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
@@ -90,19 +90,19 @@ class EnvironmentEntropy(Entropy):
         log_cost = self.cost_model.predict(X)[0]
 
         if derivative:
-            #dh, g = super(EnvironmentEntropy, self).compute(X,
+            # dh, g = super(EnvironmentEntropy, self).compute(X,
             #                                    derivative=derivative)
 
-            #dmu = self.cost_model.predictive_gradients(X[:, self.is_env_variable == 1])[0]
-            #log_cost = (log_cost + 1e-8)
-            #acquisition_value = dh / log_cost
-            #grad = g * log_cost + dmu * dh
+            # dmu = self.cost_model.predictive_gradients(X[:, self.is_env_variable == 1])[0]
+            # log_cost = (log_cost + 1e-8)
+            # acquisition_value = dh / log_cost
+            # grad = g * log_cost + dmu * dh
 
-            #return acquisition_value, grad
+            # return acquisition_value, grad
             raise("Not implemented")
         else:
             dh = super(EnvironmentEntropy, self).compute(X,
-                                                derivative=derivative)
+                                                         derivative=derivative)
             acquisition_value = dh / np.exp(log_cost)
 
             return acquisition_value
@@ -120,7 +120,9 @@ class EnvironmentEntropy(Entropy):
 #         Environment Entropy Search
 #     '''
 #
-#     def __init__(self, model, cost_model, X_lower, X_upper, compute_incumbent, is_env_variable, n_representer=10, n_hals_vals=100, n_func_samples=100, **kwargs):
+#     def __init__(self, model, cost_model, X_lower, X_upper,
+#                    compute_incumbent, is_env_variable, n_representer=10,
+#                    n_hals_vals=100, n_func_samples=100, **kwargs):
 #
 #         self.cost_model = cost_model
 #         self.n_dims = X_lower.shape[0]
@@ -130,7 +132,8 @@ class EnvironmentEntropy(Entropy):
 #         if compute_incumbent is env_optimize_posterior_mean_and_std:
 #             compute_incumbent = partial(compute_incumbent, is_env=is_env_variable)
 #
-#         super(EnvEntropySearchMC, self).__init__(model, X_lower, X_upper, compute_incumbent, Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
+#         super(EnvEntropySearchMC, self).__init__(model, X_lower, X_upper, compute_incumbent,
+#                           Nb=n_representer, Nf=n_func_samples, Np=n_hals_vals)
 #
 #     def update(self, model, cost_model):
 #         self.cost_model = cost_model
@@ -156,7 +159,9 @@ class EnvironmentEntropy(Entropy):
 #
 #    def update_representer_points(self):
 #
-#         #TODO: We might want to start the sampling of the representer points from the incumbent here? Or maybe from a sobel grid?
+#         #TODO: We might want to start the sampling of the
+#                representer points from the incumbent here?
+#                Or maybe from a sobel grid?
 #         #TODO: Sample only in the subspace
 #         super(EnvEntropySearchMC, self).update_representer_points()
 #

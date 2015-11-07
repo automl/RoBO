@@ -9,10 +9,22 @@ import numpy as np
 
 
 class OutputReader(object):
+
     def __init__(self):
         pass
 
-    def read_results_file(self, filename, fieldnames=['iteration', 'config', 'fval', 'incumbent', 'incumbent_val', 'time_func_eval', 'time_overhead', 'runtime']):
+    def read_results_file(
+        self,
+        filename,
+        fieldnames=[
+            'iteration',
+            'config',
+            'fval',
+            'incumbent',
+            'incumbent_val',
+            'time_func_eval',
+            'time_overhead',
+            'runtime']):
         csv_file = open(filename, "r")
         reader = csv.DictReader(csv_file)
 
@@ -30,7 +42,8 @@ class OutputReader(object):
 
     def read_experiment(self, experiment_dir):
         """
-            Read mutliple runs of an experiment. Assumes that experiment_dir contains multiple subdirectories where each represents 
+            Read mutliple runs of an experiment.
+            Assumes that experiment_dir contains multiple subdirectories where each represents
             one single run of the experiment.
         """
         pass

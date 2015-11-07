@@ -27,6 +27,9 @@ class Direct(BaseMaximizer):
         return _l
 
     def maximize(self):
-        x, fmin, ierror = DIRECT.solve(self._direct_acquisition_fkt_wrapper(self.objective_func),
-                                l=[self.X_lower], u=[self.X_upper], maxT=self.n_iters, maxf=self.n_func_evals)
+        x, fmin, ierror = DIRECT.solve(
+            self._direct_acquisition_fkt_wrapper(
+                self.objective_func), l=[
+                self.X_lower], u=[
+                self.X_upper], maxT=self.n_iters, maxf=self.n_func_evals)
         return np.array([x])
