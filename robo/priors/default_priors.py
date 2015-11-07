@@ -38,7 +38,7 @@ class HorseshoePrior(BasePrior):
         # We don't actually have an analytical form for this
         # But we have a bound between 2 and 4, so I just use 3.....
         # (or am I wrong and for the univariate case we have it analytically?)
-        return np.sum(np.log(np.log(1 + 3.0 * (self.scale/theta)**2) ) )
+        return np.log(np.log(1 + 3.0 * (self.scale/np.exp(theta)**2) ) )
 
     def sample_from_prior(self, n_samples):
         
@@ -53,7 +53,7 @@ class LognormalPrior(BasePrior):
         self.mean = mean
 
     def lnprob(self, theta):
-        return np.sum(sps.lognorm.logpdf(theta, self.sigma, loc=self.mean))
+        return sps.lognorm.logpdf(theta, self.sigma, loc=self.mean)
 
     def sample_from_prior(self, n_samples):
         return np.random.lognormal(mean=self.mean, sigma=self.sigma, size=n_samples)
