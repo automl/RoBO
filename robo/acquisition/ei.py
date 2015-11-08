@@ -9,36 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class EI(AcquisitionFunction):
-    r"""
-    Expected Improvement computes for a given x the acquisition value by
-    :math:`EI(X) :=
-        \mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) -
-            f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, with
-    :math:`f(X^+)` as the incumbent.
-
-
-    Parameters
-    ----------
-    model: Model object
-        A model that implements at least
-             - predict(X)
-             - getCurrentBestX().
-        If you want to calculate derivatives than it should also support
-             - predictive_gradients(X)
-
-    X_lower: np.ndarray (D)
-        Lower bounds of the input space
-    X_upper: np.ndarray (D)
-        Upper bounds of the input space
-    compute_incumbent: func
-        A python function that takes as input a model and returns
-        a np.array as incumbent
-    par: float
-        Controls the balance between exploration
-        and exploitation of the acquisition function. Default is 0.01
-    """
-
-    long_name = "Expected Improvement"
 
     def __init__(
             self,
@@ -48,10 +18,37 @@ class EI(AcquisitionFunction):
             compute_incumbent,
             par=0.01,
             **kwargs):
-        # self.model = model
+
+        r"""
+        Computes for a given x the expected improvement as
+        acquisition value.
+        :math:`EI(X) :=
+            \mathbb{E}\left[ \max\{0, f(\mathbf{X^+}) -
+                f_{t+1}(\mathbf{X}) - \xi\right] \} ]`, with
+        :math:`f(X^+)` as the incumbent.
+
+        Parameters
+        ----------
+        model: Model object
+            A model that implements at least
+                 - predict(X)
+                 - getCurrentBestX().
+            If you want to calculate derivatives than it should also support
+                 - predictive_gradients(X)
+
+        X_lower: np.ndarray (D)
+            Lower bounds of the input space
+        X_upper: np.ndarray (D)
+            Upper bounds of the input space
+        compute_incumbent: func
+            A python function that takes as input a model and returns
+            a np.array as incumbent
+        par: float
+            Controls the balance between exploration
+            and exploitation of the acquisition function. Default is 0.01
+        """
+
         self.par = par
-        # self.X_lower = X_lower
-        # self.X_upper = X_upper
         self.compute_incumbent = compute_incumbent
         super(EI, self).__init__(model, X_lower, X_upper)
 
