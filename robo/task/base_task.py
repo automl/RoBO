@@ -33,15 +33,45 @@ class BaseTask(object):
             self.X_lower = np.zeros(self.original_X_lower.shape)
             self.X_upper = np.ones(self.original_X_upper.shape)
             if self.opt is not None:
-                self.opt = np.true_divide(
-                    (self.original_opt - self.original_X_lower),
-                    (self.original_X_upper - self.original_X_lower))
+                self.opt = self.transform(self.opt)
 
     def objective_function(self, x):
         pass
 
     def objective_function_test(self, x):
         pass
+
+    def transform(self, x):
+        """
+        Transforms from  original space to the space [0, 1]
+        Parameters
+        ----------
+        X: np.ndarray (1, D)
+            Data point in original space
+
+        Returns
+        ----------
+        np.ndarray (1, D)
+            Input point in [0, 1] input space
+        """
+        return np.true_divide((x - self.original_X_lower),
+                    (self.original_X_upper - self.original_X_lower))
+
+    def retransform(self, x):
+        """
+        Scales from [0, 1] back to original space
+        Parameters
+        ----------
+        X: np.ndarray (1, D)
+            Data point in [0, 1] space
+
+        Returns
+        ----------
+        np.ndarray (1, D)
+            Input point in original input space
+        """
+        return self.original_X_lower + (self.original_X_upper -
+                                        self.original_X_lower) * x
 
     def evaluate(self, x):
         assert len(x.shape) == 2
@@ -50,7 +80,7 @@ class BaseTask(object):
         assert np.all(x <= self.X_upper)
 
         if self.do_scaling:
-            x = self.original_X_lower + (self.original_X_upper - self.original_X_lower) * x
+            x = self.scaling(x)
         return self.objective_function(x)
 
     def evaluate_test(self, x):
