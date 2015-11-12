@@ -15,7 +15,7 @@ class Branin(BaseTask):
         X_upper = np.array([10, 15])
         opt = np.array([[-np.pi, 12.275], [np.pi, 2.275], [9.42478, 2.475]])
         fopt = 0.397887
-        super(Branin, self).__init__(X_lower, X_upper, opt, fopt)
+        super(Branin, self).__init__(X_lower, X_upper, opt=opt, fopt=fopt)
 
     def objective_function(self, x):
         y = (x[:, 1] - (5.1 / (4 * np.pi ** 2)) * x[:, 0] ** 2 + 5 * x[:, 0] / np.pi - 6) ** 2

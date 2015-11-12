@@ -3,12 +3,12 @@ Created on 13.07.2015
 
 @author: Aaron Klein
 '''
-import sys
+
 import DIRECT
-import StringIO
+
 import numpy as np
 
-from base_maximizer import BaseMaximizer
+from robo.maximizers.base_maximizer import BaseMaximizer
 
 
 class Direct(BaseMaximizer):
@@ -16,7 +16,9 @@ class Direct(BaseMaximizer):
     classdocs
     '''
 
-    def __init__(self, objective_function, X_lower, X_upper, n_func_evals=1000, n_iters=2000):
+    def __init__(self, objective_function, X_lower, X_upper,
+                 n_func_evals=1000, n_iters=2000):
+
         self.n_func_evals = n_func_evals
         self.n_iters = n_iters
         super(Direct, self).__init__(objective_function, X_lower, X_upper)

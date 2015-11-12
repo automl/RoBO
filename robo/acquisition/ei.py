@@ -101,6 +101,7 @@ class EI(AcquisitionFunction):
         if (s == 0).any():
             f = np.array([[0]])
             df = np.zeros((1, X.shape[1]))
+
         else:
             z = (eta - m - self.par) / s
             f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)

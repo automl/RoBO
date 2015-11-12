@@ -71,7 +71,7 @@ class GaussianProcessMCMC(BaseModel):
         Parameters
         ----------
         X: np.ndarray (N, D)
-            Input datapoints. The dimensionality of X is (N, D),
+            Input data points. The dimensionality of X is (N, D),
             with N as the number of points and D is the number of features.
         Y: np.ndarray (N, 1)
             The corresponding target values.
