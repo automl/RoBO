@@ -6,10 +6,10 @@ Created on 13.07.2015
 import sys
 import logging
 import cma
-import StringIO
+
 import numpy as np
 
-from base_maximizer import BaseMaximizer
+from robo.maximizers.base_maximizer import BaseMaximizer
 
 
 class CMAES(BaseMaximizer):
@@ -33,8 +33,8 @@ class CMAES(BaseMaximizer):
     def maximize(self):
         if not self.verbose:
             # Turn off stdout, a bit hacky but that's the only way how we get cma to be quiet
-            stdout = sys.stdout
-            sys.stdout = StringIO.StringIO()
+#            stdout = sys.stdout
+#            sys.stdout = StringIO.StringIO()
 
             # Start from random point
             start_point = np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])
@@ -52,7 +52,7 @@ class CMAES(BaseMaximizer):
                     "verb_log": sys.maxsize})
 
             # Turn on stdout again
-            sys.stdout = stdout
+#            sys.stdout = stdout
         else:
             res = cma.fmin(
                 self._cma_fkt_wrapper(

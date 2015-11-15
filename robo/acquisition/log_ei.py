@@ -9,31 +9,33 @@ logger = logging.getLogger(__name__)
 
 
 class LogEI(AcquisitionFunction):
-    r"""
-
-    :param model: A model that implements at least
-
-                 - predict(X)
-                 - getCurrentBestX().
-
-    :param X_lower: Lower bounds for the search,
-                    its shape should be 1xD (D = dimension of search space)
-    :type X_lower: np.ndarray (1,D)
-    :param X_upper: Upper bounds for the search,
-                    its shape should be 1xD (D = dimension of search space)
-    :type X_upper: np.ndarray (1,D)
-    :param compute_incumbent: A python function that takes as
-                        input a model and returns a np.array as incumbent
-    :param par: A parameter meant to control the balance between
-                exploration and exploitation of the acquisition
-                function. Empirical testing determines 0.01 to be
-                a good value in most cases.
-
-    """
-
-    long_name = "Logarithm  of Expected Improvement"
 
     def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):
+
+        r"""
+        Computes for a given x the logarithm expected improvement as
+        acquisition value.
+
+        Parameters
+        ----------
+        model: Model object
+            A model that implements at least
+                 - predict(X)
+                 - getCurrentBestX().
+            If you want to calculate derivatives than it should also support
+                 - predictive_gradients(X)
+
+        X_lower: np.ndarray (D)
+            Lower bounds of the input space
+        X_upper: np.ndarray (D)
+            Upper bounds of the input space
+        compute_incumbent: func
+            A python function that takes as input a model and returns
+            a np.array as incumbent
+        par: float
+            Controls the balance between exploration
+            and exploitation of the acquisition function. Default is 0.01
+        """
         self.par = par
         self.compute_incumbent = compute_incumbent
 
@@ -41,17 +43,26 @@ class LogEI(AcquisitionFunction):
 
     def compute(self, X, derivative=False, **kwargs):
         """
-        A call to the object returns the log(EI) and derivative values.
+        Computes the Log EI value and its derivatives.
 
-        :param X: The point at which the function is to be evaluated.
-        :type X: np.ndarray (1,D)
-        :param incumbent: The current incumbent
-        :type incumbent: np.ndarray (1,D)
-        :param derivative: This controls whether the derivative is to be returned.
-        :type derivative: Boolean
-        :return: The value of log(EI)
-        :rtype: np.ndarray(1, 1)
-        :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
+        Parameters
+        ----------
+        X: np.ndarray(1, D), The input point where the acquisition function
+            should be evaluate. The dimensionality of X is (N, D), with N as
+            the number of points to evaluate at and D is the number of
+            dimensions of one X.
+
+        derivative: Boolean
+            If is set to true also the derivative of the acquisition
+            function at X is returned
+            Not implemented yet!
+
+        Returns
+        -------
+        np.ndarray(1,1)
+            Log Expected Improvement of X
+        np.ndarray(1,D)
+            Derivative of Log Expected Improvement at X (only if derivative=True)
         """
         if derivative:
             logger.error("LogEI does not support derivative calculation until now")

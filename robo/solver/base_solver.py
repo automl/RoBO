@@ -56,7 +56,7 @@ class BaseSolver(object):
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
-        self.output_file = open(os.path.join(self.save_dir, 'results.csv'), 'wb')
+        self.output_file = open(os.path.join(self.save_dir, 'results.csv'), 'w')
         self.csv_writer = None
 
     def get_observations(self):
@@ -98,11 +98,14 @@ class BaseSolver(object):
         """
 
         if self.csv_writer is None:
-            self.fieldnames = ["iteration", "config", "fval", "incumbent", "incumbent_val",
-                               "time_func_eval", "time_overhead", "runtime"]
+            self.fieldnames = ['iteration', 'config', 'fval',
+                               'incumbent', 'incumbent_val',
+                               'time_func_eval', 'time_overhead', 'runtime']
+
             for key in kwargs:
                 self.fieldnames.append(key)
-            self.csv_writer = csv.DictWriter(self.output_file, fieldnames=self.fieldnames)
+            self.csv_writer = csv.DictWriter(self.output_file,
+                                             fieldnames=self.fieldnames)
             self.csv_writer.writeheader()
 
         output = dict()
@@ -116,7 +119,7 @@ class BaseSolver(object):
         output['runtime'] = time.time() - self.time_start
 
         if kwargs is not None:
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 output[key] = str(value)
 
         self.csv_writer.writerow(output)

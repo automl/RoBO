@@ -51,7 +51,7 @@ class GaussianProcess(BaseModel):
 
         if do_optimize:
             self.hypers = self.optimize()
-            logger.debug("HYPERS: " + str(self.hypers))
+            logger.info("HYPERS: " + str(self.hypers))
             self.model.kernel[:] = self.hypers
         else:
             self.hypers = self.model.kernel[:]
