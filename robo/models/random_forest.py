@@ -57,15 +57,17 @@ class RandomForest(object):
         self.types = types
         self.types.dtype = np.uint
 
-        self.num_trees = num_trees
-        self.max_num_nodes = max_num_nodes
-        self.do_bootstrapping = do_bootstrapping
-        self.n_points_per_tree = n_points_per_tree
-        self.ratio_features = ratio_features
-        self.min_samples_split = min_samples_split
-        self.min_samples_leaf = min_samples_leaf
-        self.max_depth = max_depth
-        self.eps_purity = eps_purity
+        self.rf = pyrfr.regression.binary_rss()
+        self.rf.num_trees = num_trees
+        self.rf.seed = seed
+        self.rf.do_bootstrapping = do_bootstrapping
+        self.rf.num_data_points_per_tree = n_points_per_tree
+        self.rf.max_features = int(types.shape[0] * ratio_features)
+        self.rf.min_samples_to_split = min_samples_split
+        self.rf.min_samples_in_leaf = min_samples_leaf
+        self.rf.max_depth = max_depth
+        self.rf.epsilon_purity = eps_purity
+        self.rf.max_num_nodes = max_num_nodes
 
         # This list well be read out by save_iteration() in the solver
         self.hypers = [num_trees, max_num_nodes, do_bootstrapping,
@@ -93,17 +95,6 @@ class RandomForest(object):
                                                       self.Y[:, 0],
                                                       self.types)
 
-        self.rf = pyrfr.regression.binary_rss()
-        self.rf.num_trees = self.num_trees
-        self.rf.seed = self.seed
-        self.rf.do_bootstrapping = self.do_bootstrapping
-        self.rf.num_data_points_per_tree = self.n_points_per_tree
-        self.rf.max_features = int(X.shape[1] * self.ratio_features)
-        self.rf.min_samples_to_split = self.min_samples_split
-        self.rf.min_samples_in_leaf = self.min_samples_leaf
-        self.rf.max_depth = self.max_depth
-        self.rf.epsilon_purity = self.eps_purity
-        self.rf.max_num_nodes = self.max_num_nodes
         self.rf.fit(data)
 
     def predict(self, Xtest, **kwargs):
