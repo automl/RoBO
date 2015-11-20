@@ -11,14 +11,29 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 
 
 class StochasticLocalSearch(BaseMaximizer):
-    '''
-    classdocs
-    '''
 
-    def __init__(self, objective_function, X_lower, X_upper, Ne=20, starts=None):
+    def __init__(self, objective_function, X_lower, X_upper,
+                 Ne=20, starts=None):
+
+        """
+        Stochastic local search.
+
+        Parameters
+        ----------
+        objective_function: acquisition function
+            The acquisition function which will be maximized
+        X_lower: np.ndarray (D)
+            Lower bounds of the input space
+        X_upper: np.ndarray (D)
+            Upper bounds of the input space
+        Ne: int
+            Determines how often the local search is repeated
+        """
+
         self.Ne = Ne
         self.starts = starts
-        super(StochasticLocalSearch, self).__init__(objective_function, X_lower, X_upper)
+        super(StochasticLocalSearch, self).__init__(objective_function,
+                                                    X_lower, X_upper)
 
     def _scipy_optimizer_fkt_wrapper(self, acq_f, derivative=True):
         def _l(x, *args, **kwargs):
@@ -40,8 +55,15 @@ class StochasticLocalSearch(BaseMaximizer):
                 return -a[0]
         return _l
 
-    def maximize(self, verbose=False):
+    def maximize(self):
+        """
+        Maximizes the given acquisition function.
 
+        Returns
+        -------
+        np.ndarray(N,D)
+            Point with highest acquisition value.
+        """
         if hasattr(self.objective_func, "_get_most_probable_minimum"):
             xx = self.objective_func._get_most_probable_minimum()
         else:
@@ -98,7 +120,8 @@ class StochasticLocalSearch(BaseMaximizer):
                                                   jac=jacobian,
                                                   method='L-BFGS-B',
                                                   constraints=search_cons,
-                                                  options={'ftol': np.spacing(1), 'maxiter': 20}))
+                                                  options={'ftol': np.spacing(1),
+                                                           'maxiter': 20}))
             i += 1
             # no derivatives
             # except BayesianOptimizationError, e:

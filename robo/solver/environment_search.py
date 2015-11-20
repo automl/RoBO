@@ -175,6 +175,10 @@ class EnvironmentSearch(BayesianOptimization):
 
                 start_time = time.time()
                 y, c = self.task.evaluate(x)
+
+                # Transform cost to log scale
+                c = np.log(c)
+
                 time_eval = time.time() - start_time
 
                 if i + j == 0:

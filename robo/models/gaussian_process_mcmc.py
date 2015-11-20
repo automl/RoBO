@@ -167,7 +167,7 @@ class GaussianProcessMCMC(BaseModel):
 
         # Bound the hyperparameter space to keep things sane. Note all
         # hyperparameters live on a log scale
-        if np.any((-40 > theta) + (theta > 40)):
+        if np.any((-10 > theta) + (theta > 10)):
             return -np.inf
 
         # Update the kernel and compute the lnlikelihood.
