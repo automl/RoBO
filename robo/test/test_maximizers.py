@@ -39,10 +39,14 @@ class TestMaximizers1D(unittest.TestCase):
         self.Y = objective_function(self.X)
 
         kernel = GPy.kern.Matern52(input_dim=self.dims)
-        self.model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+        self.model = GPyModel(kernel, optimize=True,
+                              noise_variance=1e-4, num_restarts=10)
 
         self.model.train(self.X, self.Y)
-        self.acquisition_func = EI(self.model, X_upper=self.X_upper, X_lower=self.X_lower, compute_incumbent=compute_incumbent, par=0.1)
+        self.acquisition_func = EI(self.model, X_upper=self.X_upper,
+                                   X_lower=self.X_lower,
+                                   compute_incumbent=compute_incumbent,
+                                   par=0.1)
 
     def test_direct(self):
         maximizer = Direct(self.acquisition_func, self.X_lower, self.X_upper)
@@ -55,7 +59,8 @@ class TestMaximizers1D(unittest.TestCase):
         assert np.all(x < self.X_upper)
 
     def test_stochastic_local_search(self):
-        maximizer = StochasticLocalSearch(self.acquisition_func, self.X_lower, self.X_upper)
+        maximizer = StochasticLocalSearch(self.acquisition_func,
+                                          self.X_lower, self.X_upper)
         x = maximizer.maximize()
 
         assert x.shape[0] == 1
@@ -65,7 +70,9 @@ class TestMaximizers1D(unittest.TestCase):
         assert np.all(x < self.X_upper)
 
     def test_grid_search(self):
-        maximizer = GridSearch(self.acquisition_func, self.X_lower, self.X_upper)
+        maximizer = GridSearch(self.acquisition_func,
+                               self.X_lower,
+                               self.X_upper)
         x = maximizer.maximize()
 
         assert x.shape[0] == 1
@@ -90,15 +97,21 @@ class TestMaximizers2D(unittest.TestCase):
         self.Y = self.branin.evaluate(self.X)
 
         kernel = GPy.kern.Matern52(input_dim=self.branin.n_dims)
-        self.model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
+        self.model = GPyModel(kernel, optimize=True,
+                              noise_variance=1e-4,
+                              num_restarts=10)
 
         self.model.train(self.X, self.Y)
         self.acquisition_func = EI(self.model,
-                                   X_upper=self.branin.X_upper, X_lower=self.branin.X_lower,
-                                   compute_incumbent=compute_incumbent, par=0.1)
+                                   X_upper=self.branin.X_upper,
+                                   X_lower=self.branin.X_lower,
+                                   compute_incumbent=compute_incumbent,
+                                   par=0.1)
 
     def test_direct(self):
-        maximizer = Direct(self.acquisition_func, self.branin.X_lower, self.branin.X_upper)
+        maximizer = Direct(self.acquisition_func,
+                           self.branin.X_lower,
+                           self.branin.X_upper)
         x = maximizer.maximize()
 
         assert x.shape[0] == 1
@@ -110,7 +123,9 @@ class TestMaximizers2D(unittest.TestCase):
         assert np.all(x < self.branin.X_upper)
 
     def test_stochastic_local_search(self):
-        maximizer = StochasticLocalSearch(self.acquisition_func, self.branin.X_lower, self.branin.X_upper)
+        maximizer = StochasticLocalSearch(self.acquisition_func,
+                                          self.branin.X_lower,
+                                          self.branin.X_upper)
         x = maximizer.maximize()
 
         assert x.shape[0] == 1
@@ -122,7 +137,10 @@ class TestMaximizers2D(unittest.TestCase):
         assert np.all(x < self.branin.X_upper)
 
     def test_cmaes(self):
-        maximizer = CMAES(self.acquisition_func, self.branin.X_lower, self.branin.X_upper, verbose=False)
+        maximizer = CMAES(self.acquisition_func,
+                          self.branin.X_lower,
+                          self.branin.X_upper)
+
         x = maximizer.maximize()
 
         assert x.shape[0] == 1

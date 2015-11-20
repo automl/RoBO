@@ -62,10 +62,12 @@ class LogEI(AcquisitionFunction):
         np.ndarray(1,1)
             Log Expected Improvement of X
         np.ndarray(1,D)
-            Derivative of Log Expected Improvement at X (only if derivative=True)
+            Derivative of Log Expected Improvement at X
+            (only if derivative=True)
         """
         if derivative:
-            logger.error("LogEI does not support derivative calculation until now")
+            logger.error("LogEI does not support derivative \
+                calculation until now")
             return
 
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
@@ -93,7 +95,8 @@ class LogEI(AcquisitionFunction):
                     log_ei[i] = np.log(sigma) + norm.logpdf(z[i])
                 else:
                     log_ei[i] = -np.Infinity
-            # Degenerate case 2: second term vanishes and first term has a special form.
+            # Degenerate case 2: second term vanishes and first term
+            # has a special form.
             elif sigma == 0:
                 if mu < np.any(f_min):
                     log_ei[i] = np.log(f_min - mu)
@@ -112,12 +115,14 @@ class LogEI(AcquisitionFunction):
                     log_ei[i] = max(a, b) + np.log(1 + np.exp(-abs(b - a)))
                 else:
                     # When y<0, z>0, we define a=ln(-y), b=ln(z),
-                    # and it has to be true that b >= a in order to satisfy y+z>=0.
+                    # and it has to be true that b >= a in
+                    # order to satisfy y+z>=0.
                     # Then y+z = exp[ b + ln(exp(b-a) -1) ],
                     # and thus log(y+z) = a + ln(exp(b-a) -1)
                     a = np.log(mu - f_min) + norm.logcdf(z[i])
                     if a >= b:
-                        # a>b can only happen due to numerical inaccuracies or approximation errors
+                        # a>b can only happen due to numerical inaccuracies
+                        # or approximation errors
                         log_ei[i] = -np.Infinity
                     else:
                         log_ei[i] = b + np.log(1 - np.exp(a - b))

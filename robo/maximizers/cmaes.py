@@ -13,15 +13,27 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 
 
 class CMAES(BaseMaximizer):
-    '''
-     Wrapper around the python implementation of the
-     Covariance Matrix Adaptation Evolutionary Strategy (CMA-ES)
-    '''
 
-    def __init__(self, objective_function, X_lower, X_upper, verbose=False):
+    def __init__(self, objective_function, X_lower, X_upper):
+        """
+        Interface for the  Covariance Matrix Adaptation Evolution Strategy
+        python package
+
+        Parameters
+        ----------
+        objective_function: acquisition function
+            The acquisition function which will be maximized
+        X_lower: np.ndarray (D)
+            Lower bounds of the input space
+        X_upper: np.ndarray (D)
+            Upper bounds of the input space
+        n_func_evals: int
+            The maximum number of function evaluations
+        """
         if X_lower.shape[0] == 1:
-            raise RuntimeError("CMAES does not works in a one dimensional function space")
-        self.verbose = verbose
+            raise RuntimeError("CMAES does not works in a one \
+                dimensional function space")
+
         super(CMAES, self).__init__(objective_function, X_lower, X_upper)
 
     def _cma_fkt_wrapper(self, acq_f, derivative=False):
@@ -31,41 +43,29 @@ class CMAES(BaseMaximizer):
         return _l
 
     def maximize(self):
-        if not self.verbose:
-            # Turn off stdout, a bit hacky but that's the only way how we get cma to be quiet
-#            stdout = sys.stdout
-#            sys.stdout = StringIO.StringIO()
+        """
+        Maximizes the given acquisition function.
 
-            # Start from random point
-            start_point = np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])
-
-            res = cma.fmin(
-                self._cma_fkt_wrapper(
-                    self.objective_func),
-                start_point,
-                0.6,
-                options={
-                    "bounds": [
-                        self.X_lower,
-                        self.X_upper],
-                    "verbose": 0,
-                    "verb_log": sys.maxsize})
-
-            # Turn on stdout again
-#            sys.stdout = stdout
-        else:
-            res = cma.fmin(
-                self._cma_fkt_wrapper(
-                    self.objective_func),
-                (self.X_upper + self.X_lower) * 0.5,
-                0.6,
-                options={
-                    "bounds": [
-                        self.X_lower,
-                        self.X_upper],
-                    "verbose": 0,
-                    "verb_log": sys.maxsize})
+        Returns
+        -------
+        np.ndarray(N,D)
+            Point with highest acquisition value.
+        """
+        res = cma.fmin(
+            self._cma_fkt_wrapper(
+                self.objective_func),
+            (self.X_upper + self.X_lower) * 0.5,
+            0.6,
+            options={
+                "bounds": [
+                    self.X_lower,
+                    self.X_upper],
+                "verbose": 0,
+                "verb_log": sys.maxsize})
         if res[0] is None:
-            logging.error("CMA-ES did not find anything. Return random configuration instead.")
-            return np.array([np.random.uniform(self.X_lower, self.X_upper, self.X_lower.shape[0])])
+            logging.error("CMA-ES did not find anything. \
+                Return random configuration instead.")
+            return np.array([np.random.uniform(self.X_lower,
+                                               self.X_upper,
+                                               self.X_lower.shape[0])])
         return np.array([res[0]])
