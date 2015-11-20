@@ -24,12 +24,12 @@ class GaussianProcess(BaseModel):
         self.mean = mean
         self.prior = prior
 
-    def scale(self, x, new_min, new_max, min, max):
-        return ((new_max - new_min) * (x - min) / (max - min)) + new_min
+    def scale(self, x, new_min, new_max, old_min, old_max):
+        return ((new_max - new_min) *
+                (x - old_min) / (old_max - old_min)) + new_min
 
     def train(self, X, Y, do_optimize=True):
         self.X = X
-        # self.Y = self.scale(Y, 0, 100, np.min(Y, axis=0), np.max(Y, axis=0))
         self.Y = Y
 
         # Use the mean of the data as mean for the GP
@@ -91,11 +91,10 @@ class GaussianProcess(BaseModel):
         return results.x
 
     def predict_variance(self, X1, X2):
-        # Predict the variance between two test points X1, X2 by Sigma(X1, X2) =
-        # k_X1,X2 - k_X1,X * (K_X,X + simga^2*I)^-1 * k_X,X2)
+        # Predict the variance between two test points X1, X2 by
+        #Sigma(X1, X2) = k_X1,X2 - k_X1,X * (K_X,X + simga^2*I)^-1 * k_X,X2)
         var = self.kernel.value(X1, X2) - np.dot(self.kernel.value(X1, self.X),
-                                                 self.model.solver.apply_inverse(
-            self.kernel.value(self.X, X2)))
+                self.model.solver.apply_inverse(self.kernel.value(self.X, X2)))
         return var
 
     def predict(self, X, **kwargs):
