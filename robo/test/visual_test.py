@@ -1,10 +1,11 @@
+'''
 import GPy
 import matplotlib; matplotlib.use('GTKAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from robo.models.GPyModel import GPyModel
-from robo.acquisition.EI import EI
+from robo.models.gpy_model import GPyModel
+from robo.acquisition.ei import EI
 from robo.maximizers.maximize import stochastic_local_search
 from robo.recommendation.incumbent import compute_incumbent
 from robo.visualization import plotting as plotting
@@ -64,3 +65,4 @@ def run():
     ax2=plotting.plot_acquisition_function(acquisition_func,X_lower,X_upper,X,ax2,resolution,"AcquisitionFunction",True)
     plt.savefig('test2.png')
     os.system('eog test2.png&')
+''' 
