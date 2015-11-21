@@ -1,4 +1,3 @@
-git+https://github.com/SheffieldML/GPy.git
 emcee>=2.1.0
 numpy >= 1.7
 scipy>=0.13.3
@@ -6,3 +5,4 @@ matplotlib>=1.3.1
 cma
 direct
 george
+git+https://github.com/SheffieldML/GPy.git
