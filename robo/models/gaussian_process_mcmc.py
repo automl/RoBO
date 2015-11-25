@@ -208,6 +208,6 @@ class GaussianProcessMCMC(BaseModel):
 
         # See Algorithm Runtime Prediction paper
         # for the derivation of the variance
-        m = np.array([mu.mean()])
+        m = np.array([[mu.mean()]])
         v = np.mean(mu ** 2 + var) - m ** 2
         return m, v
