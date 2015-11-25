@@ -21,9 +21,9 @@ def optimize_posterior_mean(model, X_lower, X_upper, inc=None, with_gradients=Fa
         inc, _ = compute_incumbent(model)
 
     if with_gradients:
-        res = optimize.minimize(f, inc, bounds=zip(X_lower, X_upper), jac=df)
+        res = optimize.minimize(f, inc, bounds=list(zip(X_lower, X_upper)), jac=df)
     else:
-        res = optimize.minimize(f, inc, bounds=zip(X_lower, X_upper))
+        res = optimize.minimize(f, inc, bounds=list(zip(X_lower, X_upper)))
     return res["x"], res["fun"]
 
 
@@ -49,11 +49,11 @@ def optimize_posterior_mean_and_std(model, X_lower, X_upper, startpoints=None, w
     fval = np.zeros([len(startpoints)])
     for i, startpoint in enumerate(startpoints):
         if with_gradients:
-            res = optimize.fmin_l_bfgs_b(f, startpoint, df, bounds=zip(X_lower, X_upper))
+            res = optimize.fmin_l_bfgs_b(f, startpoint, df, bounds=list(zip(X_lower, X_upper)))
             x_opt[i] = res[0]
             fval[i] = res[1]
         else:
-            res = optimize.minimize(f, startpoint, bounds=zip(X_lower, X_upper), method="L-BFGS-B")
+            res = optimize.minimize(f, startpoint, bounds=list(zip(X_lower, X_upper)), method="L-BFGS-B")
             x_opt[i] = res["x"]
             fval[i] = res["fun"]
 
