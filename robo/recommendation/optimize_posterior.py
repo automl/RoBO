@@ -23,13 +23,9 @@ def optimize_posterior_mean(model, X_lower, X_upper, inc=None, with_gradients=Fa
     if with_gradients:
         res = optimize.minimize(f, inc, bounds=list(zip(X_lower, X_upper)), jac=df)
     else:
-<<<<<<< HEAD
         res = optimize.minimize(f, inc, bounds=zip(X_lower, X_upper))
     return res["x"][np.newaxis, :], res["fun"]
-=======
-        res = optimize.minimize(f, inc, bounds=list(zip(X_lower, X_upper)))
-    return res["x"], res["fun"]
->>>>>>> efeac7e4a229f905043e6a05dde9f671436a4db6
+
 
 
 def optimize_posterior_mean_and_std(model, X_lower, X_upper, startpoints=None, with_gradients=True):
