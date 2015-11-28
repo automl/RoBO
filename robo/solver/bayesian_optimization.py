@@ -111,6 +111,8 @@ class BayesianOptimization(BaseSolver):
 
                 self.time_overhead[i] = time.time() - start_time
 
+                logger.info("Evaluate: %s" % x)
+
                 start_time = time.time()
                 y = self.task.evaluate(x)
                 self.time_func_eval[i] = time.time() - start_time

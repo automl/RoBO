@@ -81,17 +81,14 @@ class Entropy(AcquisitionFunction):
             This module contains the loss functions used in the
             calculation of the expected information gain.
             For the moment only the logloss function is implemented.
-            .. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None,
-                                 sampling_acquisition_kw={"par":0.0}, Np=200,
-                                 loss_function=None, **kwargs)
+
             :param logP: Log-probability values.
             :param lmb: Log values of acquisition function at belief points.
             :param lPred: Log of the predictive distribution
             :param args: Additional parameters
             :return:
         """
-        H = - np.sum(np.multiply(np.exp(logP), (logP + lmb))
-                     )  # current entropy
+        H = -np.sum(np.multiply(np.exp(logP), (logP + lmb)))  # current entropy
         dHp = - np.sum(np.multiply(np.exp(lPred),
                                    np.add(lPred, lmb)), axis=0) - H
         return np.array([dHp])
@@ -171,6 +168,8 @@ class Entropy(AcquisitionFunction):
             return acq
 
     def sampling_acquisition_wrapper(self, x):
+        if np.any(x < self.X_lower) or np.any(x > self.X_upper):
+            return -np.inf
         return self.sampling_acquisition(np.array([x]))[0]
 
     def update_representer_points(self):
@@ -340,7 +339,7 @@ class Entropy(AcquisitionFunction):
         v_projected = self.model.predict_variance(x, self.zb)
 
         Lx = v_projected / s
-        Lx = Lx.T
+        #Lx = Lx.T
         return Lx, s, v
 
     def _joint_min(self, mu, var, with_derivatives=False, **kwargs):

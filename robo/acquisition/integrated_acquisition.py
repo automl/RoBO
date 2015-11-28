@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 class IntegratedAcquisition(AcquisitionFunction):
 
-    def __init__(self, model, acquisition_func, cost_model=None):
+    def __init__(self, model, acquisition_func,
+                 X_lower, X_upper, cost_model=None):
         '''
         Meta acquisition function that allows to marginalise the
         acquisition function over GP hyperparameter.
@@ -48,6 +49,8 @@ class IntegratedAcquisition(AcquisitionFunction):
             if cost_model is not None:
                 estimator.cost_model = None
             self.estimators.append(estimator)
+
+        super(IntegratedAcquisition, self).__init__(model, X_lower, X_upper)
 
     def update(self, model, cost_model=None):
         '''

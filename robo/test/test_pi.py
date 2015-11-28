@@ -14,7 +14,7 @@ from robo.recommendation.incumbent import compute_incumbent
 logger = logging.getLogger(__name__)
 
 
-class PITestCase1(unittest.TestCase):
+class PITestCase(unittest.TestCase):
     def setUp(self):
         self.x = np.array([[0.62971589], [0.63273273],
                             [0.17867868], [0.17447447], [1.88558559]])

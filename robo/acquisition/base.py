@@ -57,6 +57,9 @@ class AcquisitionFunction(object):
             function at X is returned
         """
 
+        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
+            raise("Test point is out of bounds")
+
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
 

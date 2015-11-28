@@ -115,7 +115,7 @@ class GaussianProcessMCMC(BaseModel):
             if not self.burned:
                 # Initialize the walkers by sampling from the prior
                 self.p0 = self.prior.sample_from_prior(self.n_hypers)
-                # Run mcmc sampling
+                # Run MCMC sampling
                 self.p0, _, _ = self.sampler.run_mcmc(self.p0,
                                                       self.burnin_steps)
 
@@ -167,7 +167,7 @@ class GaussianProcessMCMC(BaseModel):
 
         # Bound the hyperparameter space to keep things sane. Note all
         # hyperparameters live on a log scale
-        if np.any((-40 > theta) + (theta > 40)):
+        if np.any((-10 > theta) + (theta > 10)):
             return -np.inf
 
         # Update the kernel and compute the lnlikelihood.
@@ -177,9 +177,13 @@ class GaussianProcessMCMC(BaseModel):
                                                                 quiet=True)
 
     def predict(self, X, **kwargs):
-        """
+        r"""
         Returns the predictive mean and variance of the objective function
         at X average over all hyperparameter samples.
+        The mean is computed by:
+        :math \mu(x) = \frac{1}{M}\sum_{i=1}^{M}\mu_m(x)
+        And the variance by:
+        :math \sigma^2(x) = (\frac{1}{M}\sum_{i=1}^{M}(\sigma^2_m(x) + \mu_m(x)^2) - \mu^2
 
         Parameters
         ----------
@@ -197,9 +201,13 @@ class GaussianProcessMCMC(BaseModel):
 
         if self.scaling:
             X[:, -1] = (1 - X[:, -1]) ** 2
-        mu = np.zeros([self.n_hypers])
-        var = np.zeros([self.n_hypers])
+        mu = np.zeros([self.n_hypers, X.shape[0]])
+        var = np.zeros([self.n_hypers, X.shape[0]])
         for i, model in enumerate(self.models):
             mu[i], var[i] = model.predict(X)
 
-        return np.array([mu.mean()]), np.array([[var.mean()]])
+        # See Algorithm Runtime Prediction paper
+        # for the derivation of the variance
+        m = np.array([[mu.mean()]])
+        v = np.mean(mu ** 2 + var) - m ** 2
+        return m, v

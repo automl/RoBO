@@ -175,6 +175,10 @@ class EnvironmentSearch(BayesianOptimization):
 
                 start_time = time.time()
                 y, c = self.task.evaluate(x)
+
+                # Transform cost to log scale
+                c = np.log(c)
+
                 time_eval = time.time() - start_time
 
                 if i + j == 0:
@@ -207,7 +211,8 @@ class EnvironmentSearch(BayesianOptimization):
                 it = i * len(grid) + j
                 if self.save_dir is not None and it % self.num_save == 0:
 
-                    self.save_iteration(i * len(grid) + j, costs=self.Costs,
+                    self.save_iteration(i * len(grid) + j,
+                                        costs=self.Costs[-1],
                                         hyperparameters=None,
                                         acquisition_value=0)
 
