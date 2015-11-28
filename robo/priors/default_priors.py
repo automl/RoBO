@@ -14,7 +14,8 @@ class TophatPrior(BasePrior):
         self.min = l_bound
         self.max = u_bound
         if not (self.max > self.min):
-            raise Exception("Upper bound of Tophat prior must be greater than the lower bound!")
+            raise Exception("Upper bound of Tophat prior must be greater \
+            than the lower bound!")
 
     def lnprob(self, theta):
         if np.any(theta < self.min) or np.any(theta > self.max):
@@ -23,7 +24,11 @@ class TophatPrior(BasePrior):
             return 0.
 
     def sample_from_prior(self, n_samples):
-        return self.min + np.random.rand(n_samples) * (self.max - self.min)
+        p0 = self.min + np.random.rand(n_samples) * (self.max - self.min)
+        return p0[:, np.newaxis]
+
+    def gradient(self, theta):
+        pass
 
 
 # Copied from Spearmint
@@ -44,7 +49,11 @@ class HorseshoePrior(BasePrior):
 
         lamda = np.abs(np.random.standard_cauchy(size=n_samples))
 
-        return np.log(np.abs(np.random.randn() * lamda * self.scale))
+        p0 = np.log(np.abs(np.random.randn() * lamda * self.scale))
+        return p0[:, np.newaxis]
+
+    def gradient(self, theta):
+        pass
 
 
 class LognormalPrior(BasePrior):
@@ -56,6 +65,10 @@ class LognormalPrior(BasePrior):
         return sps.lognorm.logpdf(theta, self.sigma, loc=self.mean)
 
     def sample_from_prior(self, n_samples):
-        return np.random.lognormal(mean=self.mean,
+        p0 = np.random.lognormal(mean=self.mean,
                                    sigma=self.sigma,
                                    size=n_samples)
+        return p0[:, np.newaxis]
+
+    def gradient(self, theta):
+        pass

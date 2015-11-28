@@ -81,18 +81,19 @@ class GPyModel(BaseModel):
             # GPy sometimes returns negative variance if the noise level is too low,
             # clip them to be in the interval between the smallest positive number and
             # inf
-            return mean[:, 0], np.clip(var[:, 0], np.finfo(var.dtype).eps, np.inf)
+            return mean, np.clip(var, np.finfo(var.dtype).eps, np.inf)
 
         else:
             # If we compute the full covariance matrix only clip the values on the diagonal
             var[np.diag_indices(var.shape[0])] = np.clip(
                 var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
             var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
-            return mean[:, 0], var
 
-    def predictive_gradients(self, Xnew, X=None):
-        if X is None:
-            return self.m.predictive_gradients(Xnew)
+            return mean, var
+
+    def predictive_gradients(self, Xnew):
+        dmdx, dvdx = self.m.predictive_gradients(Xnew)
+        return dmdx[:, 0, :], dvdx
 
     def sample(self, X, size=10):
         """

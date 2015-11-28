@@ -92,9 +92,18 @@ class GaussianProcess(BaseModel):
 
     def predict_variance(self, X1, X2):
         # Predict the variance between two test points X1, X2 by
-        #Sigma(X1, X2) = k_X1,X2 - k_X1,X * (K_X,X + simga^2*I)^-1 * k_X,X2)
+        # Sigma(X1, X2) = k_X1,X2 - k_X1,X * (K_X,X + sigma^2*I)^-1 * k_X,X2)
+
         var = self.kernel.value(X1, X2) - np.dot(self.kernel.value(X1, self.X),
                 self.model.solver.apply_inverse(self.kernel.value(self.X, X2)))
+
+        print var
+        KbX = self.kernel.value(X2, self.X)
+        Kx = self.kernel.value(X1, self.X).T
+        WiKx = self.model.solver.apply_inverse(Kx)
+        Kbx = self.kernel.value(X2, X1)
+        var = Kbx - np.dot(KbX, WiKx)
+        print var
         return var
 
     def predict(self, X, **kwargs):

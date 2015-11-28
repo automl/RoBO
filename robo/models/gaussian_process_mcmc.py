@@ -201,8 +201,8 @@ class GaussianProcessMCMC(BaseModel):
 
         if self.scaling:
             X[:, -1] = (1 - X[:, -1]) ** 2
-        mu = np.zeros([self.n_hypers])
-        var = np.zeros([self.n_hypers])
+        mu = np.zeros([self.n_hypers, X.shape[0]])
+        var = np.zeros([self.n_hypers, X.shape[0]])
         for i, model in enumerate(self.models):
             mu[i], var[i] = model.predict(X)
 
