@@ -83,7 +83,7 @@ class EntropyMC(Entropy):
 
     def update(self, model):
         super(EntropyMC, self).update(model)
-        self.sn2 = self._get_noise()
+        self.sn2 = self.model.get_noise()
 
         self.sampling_acquisition.update(model)
         self.update_representer_points()

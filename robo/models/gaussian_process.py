@@ -18,11 +18,12 @@ logger = logging.getLogger(__name__)
 
 class GaussianProcess(BaseModel):
 
-    def __init__(self, kernel, prior=None, mean=0, *args, **kwargs):
+    def __init__(self, kernel, prior=None, mean=0, yerr = 1e-25, *args, **kwargs):
         self.kernel = kernel
         self.model = None
         self.mean = mean
         self.prior = prior
+        self.yerr = yerr
 
     def scale(self, x, new_min, new_max, min, max):
         return ((new_max - new_min) * (x - min) / (max - min)) + new_min
@@ -37,10 +38,10 @@ class GaussianProcess(BaseModel):
         self.model = george.GP(self.kernel, mean=self.mean)
 
         # Precompute the covariance
-        yerr = 1e-25
+        
         while(True):
             try:
-                self.model.compute(self.X, yerr=yerr)
+                self.model.compute(self.X, yerr=self.yerr)
                 break
             except np.linalg.LinAlgError:
                 yerr *= 10
@@ -80,7 +81,7 @@ class GaussianProcess(BaseModel):
         self.model.kernel[:] = theta
 
         gll = self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
-        gll += self.prior.gradients(theta)
+        gll += self.prior.gradient(theta)
         return -gll
 
     def optimize(self):

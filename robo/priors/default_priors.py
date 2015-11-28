@@ -20,11 +20,16 @@ class TophatPrior(BasePrior):
         if np.any(theta < self.min) or np.any(theta > self.max):
             return -np.inf
         else:
-            return 0.
+            return 0
 
     def sample_from_prior(self, n_samples):
         return self.min + np.random.rand(n_samples) * (self.max - self.min)
 
+    def gradient(self, theta):
+        if np.any(theta < self.min) or np.any(theta > self.max):
+            return -np.inf
+        else:
+            return 0
 
 # Copied from Spearmint
 class HorseshoePrior(BasePrior):
