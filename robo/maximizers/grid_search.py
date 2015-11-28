@@ -5,7 +5,7 @@ Created on 13.07.2015
 '''
 import numpy as np
 
-from base_maximizer import BaseMaximizer
+from robo.maximizers.base_maximizer import BaseMaximizer
 
 
 class GridSearch(BaseMaximizer):
