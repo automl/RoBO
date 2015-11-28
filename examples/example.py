@@ -24,14 +24,13 @@ from robo.visualization.plotting import plot_objective_function, plot_model,\
 class ExampleTask(BaseTask):
 
     def __init__(self):
-        self.X_lower = np.array([0])
-        self.X_upper = np.array([7])
-        self.n_dims = 1
+        X_lower = np.array([0])
+        X_upper = np.array([7])
+        super(ExampleTask, self).__init__(X_lower, X_upper)
 
     def objective_function(self, x):
         return np.sin(3 * x) * 4 * (x - 1) * (x + 2)
 
-task = ExampleTask()
 
 # Defining the method to model the objective function
 kernel = GPy.kern.Matern52(input_dim=task.n_dims)
