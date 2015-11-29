@@ -72,7 +72,7 @@ n_hypers = 20
 task = Branin()
 
 cov_amp = 1.0
-config_kernel = george.kernels.Matern52Kernel(np.ones([task.n_dims]) * 0.5,
+config_kernel = george.kernels.Matern52Kernel(np.ones([task.n_dims]),
                                                ndim=task.n_dims)
 
 noise_kernel = george.kernels.WhiteKernel(0.01, ndim=task.n_dims)
