@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 
 class GaussianProcess(BaseModel):
 
-    def __init__(self, kernel, prior=None, mean=0, yerr = 1e-25, *args, **kwargs):
+    def __init__(self, kernel, prior=None, mean=0,
+                 yerr=1e-25, *args, **kwargs):
+
         self.kernel = kernel
         self.model = None
         self.mean = mean
@@ -38,17 +40,17 @@ class GaussianProcess(BaseModel):
         self.model = george.GP(self.kernel, mean=self.mean)
 
         # Precompute the covariance
-        
         while(True):
             try:
                 self.model.compute(self.X, yerr=self.yerr)
                 break
             except np.linalg.LinAlgError:
-                yerr *= 10
+                self.yerr *= 10
                 logger.error(
-                    "Cholesky decomposition for the covariance matrix of the GP failed. \
+                    "Cholesky decomposition for the covariance matrix \
+                    of the GP failed. \
                     Add %s noise on the diagonal." %
-                    yerr)
+                    self.yerr)
 
         if do_optimize:
             self.hypers = self.optimize()
@@ -59,13 +61,13 @@ class GaussianProcess(BaseModel):
 
     def get_noise(self):
         # Assumes a kernel of the form amp * (kernel1 + noise_kernel)
-        # FIXME: How to determine the noise of george gp?
+        # FIXME: How to determine the noise of george gp in general?
         assert self.kernel.k2.k2.kernel_type == 1
         return self.kernel.k2.k2.pars[0]
 
     def nll(self, theta):
         # Specify bounds to keep things sane
-        if np.any((-40 > theta) + (theta > 40)):
+        if np.any((-10 > theta) + (theta > 10)):
             return 1e25
 
         self.model.kernel[:] = theta
@@ -94,17 +96,10 @@ class GaussianProcess(BaseModel):
     def predict_variance(self, X1, X2):
         # Predict the variance between two test points X1, X2 by
         # Sigma(X1, X2) = k_X1,X2 - k_X1,X * (K_X,X + sigma^2*I)^-1 * k_X,X2)
+        x_ = np.concatenate((X1, X2))
+        _, var = self.predict(x_)
+        var = var[:-1, -1, np.newaxis]
 
-        var = self.kernel.value(X1, X2) - np.dot(self.kernel.value(X1, self.X),
-                self.model.solver.apply_inverse(self.kernel.value(self.X, X2)))
-
-        print var
-        KbX = self.kernel.value(X2, self.X)
-        Kx = self.kernel.value(X1, self.X).T
-        WiKx = self.model.solver.apply_inverse(Kx)
-        Kbx = self.kernel.value(X2, X1)
-        var = Kbx - np.dot(KbX, WiKx)
-        print var
         return var
 
     def predict(self, X, **kwargs):
