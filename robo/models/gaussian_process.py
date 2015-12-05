@@ -110,3 +110,6 @@ class GaussianProcess(BaseModel):
         mu, var = self.model.predict(self.Y[:, 0], X)
 
         return mu, var
+
+    def sample_functions(self, X_test, n_funcs=1):
+        return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)

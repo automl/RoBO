@@ -23,23 +23,24 @@ class NoiseTask(BaseTask):
         """
         self.noise_scale = noise_scale
         self.base_task = base_task
-        super(
-            NoiseTask,
-            self).__init__(
-            base_task.X_lower,
-            base_task.X_upper,
-            base_task.opt,
-            base_task.fopt,
-            base_task.do_scaling)
+        super(NoiseTask, self).__init__(
+                            base_task.original_X_lower,
+                            base_task.original_X_upper,
+                            opt=base_task.opt,
+                            fopt=base_task.fopt,
+                            do_scaling=base_task.do_scaling,
+                            types=base_task.types)
 
     def objective_function(self, x):
         res = self.base_task.objective_function(x)
         res += np.random.normal(0, self.noise_scale, res.shape)
+        #res = self.base_task.objective_function(x) / float(self.noise_scale)
+
+        #res += np.random.normal(0, 0.1, res.shape)
 
         return res
 
     def objective_function_test(self, x):
         res = self.base_task.objective_function_test(x)
-        res += np.random.normal(0, self.noise_scale, res.shape)
 
         return res
