@@ -124,7 +124,7 @@ class RandomForest(BaseModel):
         for i, x in enumerate(Xtest):
             mean[i], var[i] = self.rf.predict(x)
 
-        return mean, var
+        return mean[:, np.newaxis], var[:, np.newaxis]
 
     def predict_each_tree(self, Xtest, **args):
         pass

@@ -27,7 +27,6 @@ def optimize_posterior_mean(model, X_lower, X_upper, inc=None, with_gradients=Fa
     return res["x"][np.newaxis, :], res["fun"]
 
 
-
 def optimize_posterior_mean_and_std(model, X_lower, X_upper, startpoints=None, with_gradients=True):
     def f(x):
         mu, var = model.predict(x[np.newaxis, :])
