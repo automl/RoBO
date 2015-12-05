@@ -98,13 +98,13 @@ class GaussianProcess(BaseModel):
         var = self.kernel.value(X1, X2) - np.dot(self.kernel.value(X1, self.X),
                 self.model.solver.apply_inverse(self.kernel.value(self.X, X2)))
 
-        print var
-        KbX = self.kernel.value(X2, self.X)
-        Kx = self.kernel.value(X1, self.X).T
-        WiKx = self.model.solver.apply_inverse(Kx)
-        Kbx = self.kernel.value(X2, X1)
-        var = Kbx - np.dot(KbX, WiKx)
-        print var
+#       print var
+#        KbX = self.kernel.value(X2, self.X)
+#        Kx = self.kernel.value(X1, self.X).T
+#        WiKx = self.model.solver.apply_inverse(Kx)
+#        Kbx = self.kernel.value(X2, X1)
+#        var = Kbx - np.dot(KbX, WiKx)
+#        print var
         return var
 
     def predict(self, X, **kwargs):
@@ -114,4 +114,6 @@ class GaussianProcess(BaseModel):
 
         mu, var = self.model.predict(self.Y[:, 0], X)
 
+        # Clip negative variances
+        var[var < 0.0] = self.get_noise()
         return mu, var
