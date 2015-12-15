@@ -137,7 +137,6 @@ class EntropyMC(Entropy):
         dMdb = Lx / s * np.sqrt(v)
         # Sigma(x, zb) * (1 / sigma(x)^2) * Sigma(zb, x)
         dVdb = -Lx.dot(Lx.T)
-        print dVdb
         # Add the stochastic factor W to the innovations
         stoch_changes = dMdb.dot(self.W)
         # Update mean and variance of the posterior (at the representer points)

@@ -5,9 +5,9 @@ import numpy as np
 
 
 from robo.initial_design.init_random_uniform import init_random_uniform
-from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
-from robo.recommendation.incumbent import compute_incumbent
 from robo.solver.base_solver import BaseSolver
+from robo.incumbent.best_observation import BestObservation
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class BayesianOptimization(BaseSolver):
             save_dir=None,
             initial_design=None,
             initial_points=3,
-            recommendation_strategy=compute_incumbent,
+            incumbent_estimation=None,
             num_save=1,
             train_intervall=1,
             n_restarts=1):
@@ -75,7 +75,10 @@ class BayesianOptimization(BaseSolver):
         self.num_save = num_save
 
         self.model_untrained = True
-        self.recommendation_strategy = recommendation_strategy
+        if incumbent_estimation is None:
+            self.estimator= BestObservation(self.model, self.task.X_lower, self.task.X_upper)
+        else:
+            self.estimator= incumbent_estimation
         self.incumbent = None
         self.n_restarts = n_restarts
         self.init_points = initial_points
@@ -156,7 +159,12 @@ class BayesianOptimization(BaseSolver):
             new_x = self.choose_next(self.X, self.Y, do_optimize)
 
             # Estimate current incumbent
-            self._estimate_incumbent()
+            #self._estimate_incumbent()
+            start_time_inc = time.time()
+
+            startpoints = init_random_uniform(self.task.X_lower, self.task.X_upper, 10)
+            self.incumbent, self.incumbent_value = self.estimator.estimate_incumbent(startpoints)
+            logger.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
 
             time_overhead = time.time() - start_time
             self.time_overhead = np.append(self.time_overhead, np.array([time_overhead]))

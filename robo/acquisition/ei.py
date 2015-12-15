@@ -4,18 +4,17 @@ from scipy.stats import norm
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
+from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
 class EI(AcquisitionFunction):
 
-    def __init__(
-            self,
+    def __init__(self,
             model,
             X_lower,
             X_upper,
-            compute_incumbent,
             par=0.01,
             **kwargs):
 
@@ -48,11 +47,26 @@ class EI(AcquisitionFunction):
             and exploitation of the acquisition function. Default is 0.01
         """
 
-        self.par = par
-        self.compute_incumbent = compute_incumbent
         super(EI, self).__init__(model, X_lower, X_upper)
+        
+        self.par = par
+        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
 
         logger.debug("Test")
+
+    def update(self, model):
+        """
+        This method will be called if the model is updated. 
+        
+        Parameters
+        ----------
+        model : Model object
+            Models the objective function.
+        """
+
+        super(EI, self).update(model)
+        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
+
 
     def compute(self, X, derivative=False, **kwargs):
         """
@@ -94,7 +108,7 @@ class EI(AcquisitionFunction):
         m, v = self.model.predict(X, full_cov=True)
 
         # Use the best seen observation as incumbent
-        _, eta = self.compute_incumbent(self.model)
+        _, eta = self.rec.estimate_incumbent(None)
 
         s = np.sqrt(v)
 
@@ -114,14 +128,8 @@ class EI(AcquisitionFunction):
             if (f < 0).any():
                 logger.error("Expected Improvement is smaller than 0!")
                 raise Exception
-            if len(f.shape) == 1:
-                f = np.array([f])
-
+            
         if derivative:
-            if len(df.shape) == 3:
-                return_df = df
-            else:
-                return_df = np.array([df])
-            return f, return_df
+            return f, df
         else:
             return f

@@ -9,10 +9,9 @@ import emcee
 
 
 from robo.acquisition.log_ei import LogEI
-from robo.acquisition.ucb import UCB
+from robo.acquisition.lcb import LCB
 from robo.acquisition.base import AcquisitionFunction
-from robo.recommendation.incumbent import compute_incumbent
-from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
+
 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
@@ -57,7 +56,6 @@ class Entropy(AcquisitionFunction):
             X_lower,
             X_upper,
             Nb=10,
-            compute_inc=optimize_posterior_mean_and_std,
             sampling_acquisition=None,
             sampling_acquisition_kw={
                 "par": 0.0},
@@ -65,14 +63,13 @@ class Entropy(AcquisitionFunction):
             **kwargs):
         self.Nb = Nb
         super(Entropy, self).__init__(model, X_lower, X_upper)
-        self.compute_incumbent = compute_inc
         self.D = self.X_lower.shape[0]
         self.sn2 = None
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
         self.sampling_acquisition = sampling_acquisition(
-            model, self.X_lower, self.X_upper, compute_incumbent, **sampling_acquisition_kw)
+            model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
 
         self.Np = Np
 
@@ -339,7 +336,7 @@ class Entropy(AcquisitionFunction):
         v_projected = self.model.predict_variance(x, self.zb)
 
         Lx = v_projected / s
-        #Lx = Lx.T
+        Lx = Lx.T
         return Lx, s, v
 
     def _joint_min(self, mu, var, with_derivatives=False, **kwargs):

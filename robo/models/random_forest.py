@@ -47,13 +47,13 @@ class RandomForest(BaseModel):
 
     def __init__(self, types, num_trees=30,
                  do_bootstrapping=True,
-                 n_points_per_tree=0,
+                 n_points_per_tree=100,
                  ratio_features=0.5,
-                 min_samples_split=1,
-                 min_samples_leaf=1,
-                 max_depth=20,
+                 min_samples_split=15,
+                 min_samples_leaf=15,
+                 max_depth=100,
                  eps_purity=1e-8,
-                 max_num_nodes=1000,
+                 max_num_nodes=10,
                  seed=42):
 
         self.types = types
@@ -129,7 +129,7 @@ class RandomForest(BaseModel):
     def predict_each_tree(self, Xtest, **args):
         pass
 
-    def update(self, X, y):
+    def sample_functions(self, X_test, n_funcs=1):
         pass
 
 

@@ -192,9 +192,9 @@ class GaussianProcessMCMC(BaseModel):
 
         Returns
         ----------
-        np.array(1,)
+        np.array(N,1)
             predictive mean
-        np.array(1,)
+        np.array(N,1)
             predictive variance
 
         """
@@ -206,8 +206,8 @@ class GaussianProcessMCMC(BaseModel):
         for i, model in enumerate(self.models):
             mu[i], var[i] = model.predict(X)
 
-        # See Algorithm Runtime Prediction paper
+        # See algorithm runtime prediction paper
         # for the derivation of the variance
         m = np.array([[mu.mean()]])
         v = np.mean(mu ** 2 + var) - m ** 2
-        return m, v
+        return m[:, np.newaxis], v[:, np.newaxis]

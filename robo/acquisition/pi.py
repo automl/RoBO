@@ -3,13 +3,14 @@ from scipy.stats import norm
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
+from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
 class PI(AcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.1, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par=0.1, **kwargs):
         r"""
         Probability of Improvement solves the following equation
         :math:`PI(X) := \mathbb{P}\left( f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) > \xi\right)`, where
@@ -28,16 +29,29 @@ class PI(AcquisitionFunction):
             Lower bounds of the input space
         X_upper: np.ndarray (D)
             Upper bounds of the input space
-        compute_incumbent: func
-            A python function that takes as input a model and returns
-            a np.array as incumbent
         par: float
             Controls the balance between exploration
             and exploitation of the acquisition function. Default is 0.01
         """
-        self.par = par
-        self.compute_incumbent = compute_incumbent
         super(PI, self).__init__(model, X_lower, X_upper)
+        
+        self.par = par
+        self.rec = BestObservation(self.model,
+                                                 self.X_lower,
+                                                 self.X_upper)
+
+    def update(self, model):
+        """
+        This method will be called if the model is updated.
+        Parameters
+        ----------
+        model : Model object
+            Models the objective function.
+        """
+
+        super(PI, self).update(model)
+        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
+
 
     def compute(self, X, derivative=False, **kwargs):
         """
@@ -74,8 +88,8 @@ class PI(AcquisitionFunction):
                 return np.array([[0]])
 
         m, v = self.model.predict(X)
-        incumbent, _ = self.compute_incumbent(self.model)
-        eta, _ = self.model.predict(np.array([incumbent]))
+        _, eta = self.rec.estimate_incumbent(None)
+        
         s = np.sqrt(v)
         z = (eta - m - self.par) / s
         f = norm.cdf(z)
@@ -85,17 +99,6 @@ class PI(AcquisitionFunction):
             ds2dx = ds2dx[0][:, None]
             dsdx = ds2dx / (2 * s)
             df = (-(-norm.pdf(z) / s) * (dmdx + dsdx * z)).T
-
-        if len(f.shape) == 1:
-            return_f = np.array([f])
+            return f, df
         else:
-            return_f = f
-        if derivative:
-            if len(df.shape) == 3:
-                return_df = df
-            else:
-                return_df = np.array([df])
-
-            return return_f, return_df
-        else:
-            return return_f
+            return f
