@@ -258,7 +258,7 @@ class BayesianOptimization(BaseSolver):
 
             self.incumbent, self.incumbent_value = self.recommendation_strategy(
                 self.model, self.task.X_lower,
-                self.task.X_upper, startpoint=startpoints, with_gradients=True)
+                self.task.X_upper, startpoints=startpoints, with_gradients=False)
         else:
             startpoints = [
                 np.random.uniform(
