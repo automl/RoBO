@@ -6,10 +6,9 @@ Created on Oct 12, 2015
 
 import logging
 import george
-import emcee
 import numpy as np
-from scipy import optimize
 
+from scipy import optimize
 
 from robo.models.base_model import BaseModel
 
@@ -18,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 class GaussianProcess(BaseModel):
 
-    def __init__(self, kernel, prior=None, 
+    def __init__(self, kernel, prior=None,
                  yerr=1e-25, *args, **kwargs):
         """
-        Interface to the george GP library. The GP hyperparameter are obtained by
-	optimizing the marginal loglikelihood.
+        Interface to the george GP library. The GP hyperparameter are obtained
+        by optimizing the marginal loglikelihood.
 
         Parameters
         ----------
@@ -30,13 +29,11 @@ class GaussianProcess(BaseModel):
             Specifies the kernel that is used for all Gaussian Process
         prior : prior object
             Defines a prior for the hyperparameters of the GP. Make sure that
-            it implements the Prior interface. During MCMC sampling the
-            lnlikelihood is multiplied with the prior.
+            it implements the Prior interface.
         yerr : float
-	    Noise term that is added to the diagonal of the covariance matrix
-	    for the cholesky decomposition.
+            Noise term that is added to the diagonal of the covariance matrix
+            for the cholesky decomposition.
         """
-
 
         self.kernel = kernel
         self.model = None
@@ -49,9 +46,10 @@ class GaussianProcess(BaseModel):
 
     def train(self, X, Y, do_optimize=True):
         """
-        Computes the cholesky decomposition of the covariance of X and estimates the GP hyperparameter
-	by optiminzing the marginal loglikelihood. The piror mean of the GP is set to 
-	the empirical mean of the X.
+        Computes the cholesky decomposition of the covariance of X and
+        estimates the GP hyperparameter by optiminzing the marginal
+        loglikelihood. The piror mean of the GP is set to the empirical
+        mean of the X.
 
         Parameters
         ----------
@@ -99,8 +97,9 @@ class GaussianProcess(BaseModel):
 
     def nll(self, theta):
         """
-        Returns the negative marginal log likelihood (+ the prior) for a hyperparameter
-        configuration theta. (negative because we use scipy minimize for optimization)
+        Returns the negative marginal log likelihood (+ the prior) for
+        a hyperparameter configuration theta.
+        (negative because we use scipy minimize for optimization)
 
         Parameters
         ----------
@@ -114,7 +113,7 @@ class GaussianProcess(BaseModel):
             lnlikelihood + prior
         """
 
-      # Specify bounds to keep things sane
+        # Specify bounds to keep things sane
         if np.any((-10 > theta) + (theta > 10)):
             return 1e25
 
@@ -142,11 +141,12 @@ class GaussianProcess(BaseModel):
         return results.x
 
     def predict_variance(self, X1, X2):
-    	r"""
+        r"""
         Predicts the variance between two test points X1, X2 by
-           math: \sigma(X_1, X_2) = k_{X_1,X_2} - k_{X_1,X} * (K_{X,X} + \sigma^2*\mathds{I})^-1 * k_{X,X_2})
+           math: \sigma(X_1, X_2) = k_{X_1,X_2} - k_{X_1,X} * (K_{X,X}
+                       + \sigma^2*\mathds{I})^-1 * k_{X,X_2})
 
-	Parameters
+        Parameters
         ----------
         X1: np.ndarray (N, D)
             First test point
@@ -158,7 +158,7 @@ class GaussianProcess(BaseModel):
             predictive variance
 
         """
-	x_ = np.concatenate((X1, X2))
+        x_ = np.concatenate((X1, X2))
         _, var = self.predict(x_)
         var = var[:-1, -1, np.newaxis]
 
@@ -166,10 +166,10 @@ class GaussianProcess(BaseModel):
 
     def predict(self, X, **kwargs):
         r"""
-        Returns the predictive mean and variance of the objective function at 
-	the specified test point.
+        Returns the predictive mean and variance of the objective function at
+        the specified test point.
 
-	Parameters
+        Parameters
         ----------
         X: np.ndarray (N, D)
             Input test points
@@ -195,22 +195,21 @@ class GaussianProcess(BaseModel):
         return mu[:, np.newaxis], var
 
     def sample_functions(self, X_test, n_funcs=1):
-	"""
-        Samples F function values from the current posterior at the N 
-	specified test point.
+        """
+        Samples F function values from the current posterior at the N
+        specified test point.
 
-	Parameters
+        Parameters
         ----------
         X_test: np.ndarray (N, D)
             Input test points
-	n_funcs: int
-	    Number of function values that are drawn at each test point.
+        n_funcs: int
+        Number of function values that are drawn at each test point.
 
         Returns
         ----------
         np.array(F,N)
             The F function values drawn at the N test points.
         """
-
 
         return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)

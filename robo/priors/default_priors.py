@@ -19,11 +19,10 @@ class TophatPrior(BasePrior):
         ----------
         l_bound : float
             Lower bound of the prior. Note the log scale.
-	u_bound : float
+        u_bound : float
             Upper bound of the prior. Note the log scale.
 
-
-	"""
+        """
         self.min = l_bound
         self.max = u_bound
         if not (self.max > self.min):
@@ -45,7 +44,7 @@ class TophatPrior(BasePrior):
         float
             The log probabilty of theta
         """
-    
+
         if np.any(theta < self.min) or np.any(theta > self.max):
             return -np.inf
         else:
@@ -65,8 +64,8 @@ class TophatPrior(BasePrior):
         (N, D) np.array
             The samples from the prior.
         """
- 
-	p0 = self.min + np.random.rand(n_samples) * (self.max - self.min)
+
+        p0 = self.min + np.random.rand(n_samples) * (self.max - self.min)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -84,24 +83,25 @@ class TophatPrior(BasePrior):
         (D) np.array
 
             The gradient of the prior at theta.
-        """ 
-	if np.any(theta < self.min) or np.any(theta > self.max):
+        """
+        if np.any(theta < self.min) or np.any(theta > self.max):
             return -np.inf
         else:
             return 0
 
+
 class HorseshoePrior(BasePrior):
 
     def __init__(self, scale=0.1):
-	"""
+        """
         Horseshoe Prior as it is used in spearmint
 
-	Parameters
+        Parameters
         ----------
         scale: float
             Scaling parameter. See below how it is influenced
-	    the distribution.
-	"""
+            the distribution.
+        """
         self.scale = scale
 
     def lnprob(self, theta):
@@ -119,8 +119,8 @@ class HorseshoePrior(BasePrior):
         float
             The log probabilty of theta
         """
-	# We computed it exactly as in the original spearmint code
-	if np.any(theta == 0.0):
+        # We computed it exactly as in the original spearmint code
+        if np.any(theta == 0.0):
             return np.inf
         return np.log(np.log(1 + 3.0 * (self.scale / np.exp(theta)) ** 2))
 
@@ -158,25 +158,25 @@ class HorseshoePrior(BasePrior):
         -------
         (D) np.array
             The gradient of the prior at theta.
-        """ 
-	pass
+        """
+        pass
 
 
 class LognormalPrior(BasePrior):
     def __init__(self, sigma, mean=0):
-	"""
+        """
         Log normal prior
 
-	Parameters
+        Parameters
         ----------
         sigma: float
             Specifies the standard deviation of the normal
-	    distribution.
-	mean: float
-	    Specifies the mean of the normal distribution
-	"""
- 
-	self.sigma = sigma
+        distribution.
+        mean: float
+        Specifies the mean of the normal distribution
+        """
+
+        self.sigma = sigma
         self.mean = mean
 
     def lnprob(self, theta):
@@ -194,8 +194,8 @@ class LognormalPrior(BasePrior):
         float
             The log probabilty of theta
         """
- 
-	return sps.lognorm.logpdf(theta, self.sigma, loc=self.mean)
+
+        return sps.lognorm.logpdf(theta, self.sigma, loc=self.mean)
 
     def sample_from_prior(self, n_samples):
         """
@@ -211,7 +211,7 @@ class LognormalPrior(BasePrior):
         (N, D) np.array
             The samples from the prior.
         """
-    
+
         p0 = np.random.lognormal(mean=self.mean,
                                    sigma=self.sigma,
                                    size=n_samples)
@@ -231,5 +231,5 @@ class LognormalPrior(BasePrior):
         -------
         (D) np.array
             The gradient of the prior at theta.
-        """ 
-	pass
+        """
+        pass

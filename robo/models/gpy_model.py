@@ -14,8 +14,8 @@ class GPyModel(BaseModel):
 
     def __init__(self, kernel, noise_variance=None, num_restarts=10, *args, **kwargs):
         """
-        Interface to the GPy library. The GP hyperparameter are obtained by
-        optimizing the marginal loglikelihood.
+        Interface to the GPy library. The GP hyperparameter are
+        obtained by optimizing the marginal loglikelihood.
 
         Parameters
         ----------
@@ -33,7 +33,7 @@ class GPyModel(BaseModel):
             the marginal lln is restarted from different random points.
         """
 
-      self.kernel = kernel
+        self.kernel = kernel
         self.noise_variance = noise_variance
         self.num_restarts = num_restarts
         self.X_star = None
@@ -43,9 +43,10 @@ class GPyModel(BaseModel):
 
     def train(self, X, Y, do_optimize=True, **kwargs):
         """
-        Computes the cholesky decomposition of the covariance of X and estimates the GP hyperparameter
-	by optiminzing the marginal loglikelihood. The piror mean of the GP is set to 
-	the empirical mean of the X.
+        Computes the cholesky decomposition of the covariance of X and
+        estimates the GP hyperparameter by optiminzing the marginal
+        loglikelihood. The piror mean of the GP is set to the
+        empirical mean of X.
 
         Parameters
         ----------
@@ -69,8 +70,8 @@ class GPyModel(BaseModel):
             logger.warning("Do not optimize noise use fix value of %f" % (self.noise_variance))
             self.m.likelihood.variance.fix(self.noise_variance)
         else:
-            # Add an exponential prior for the noise in order to prevent that the GP
-            # explains everything with noise
+            # Add an exponential prior for the noise in order to prevent
+            # that the GP explains everything with noise
             self.m.likelihood.unconstrain()
             self.m.likelihood.variance.set_prior(GPy.priors.Exponential(1))
             self.m.likelihood.variance.constrain_positive()
@@ -90,11 +91,12 @@ class GPyModel(BaseModel):
         self.f_star = self.observation_means[index_min]
 
     def predict_variance(self, X1, X2):
-     	r"""
+        r"""
         Predicts the variance between two test points X1, X2 by
-           math: \sigma(X_1, X_2) = k_{X_1,X_2} - k_{X_1,X} * (K_{X,X} + \sigma^2*\mathds{I})^-1 * k_{X,X_2})
+           math: \sigma(X_1, X_2) = k_{X_1,X_2} - k_{X_1,X} * (K_{X,X}
+                + \sigma^2*\mathds{I})^-1 * k_{X,X_2})
 
-	Parameters
+        Parameters
         ----------
         X1: np.ndarray (N, D)
             First test point
@@ -106,7 +108,7 @@ class GPyModel(BaseModel):
             predictive variance
 
         """
-	kern = self.m.kern
+        kern = self.m.kern
         KbX = kern.K(X2, self.m.X).T
         Kx = kern.K(X1, self.m.X).T
         WiKx = np.dot(self.m.posterior.woodbury_inv, Kx)
@@ -116,16 +118,16 @@ class GPyModel(BaseModel):
 
     def predict(self, X, full_cov=False, **kwargs):
         """
-        Returns the predictive mean and variance of the objective function at 
-	the specified test point.
+        Returns the predictive mean and variance of the objective function at
+        the specified test point.
 
-	Parameters
+        Parameters
         ----------
         X: np.ndarray (N, D)
             Input test points
-	full_cov: bool
-	    If set to true the full covariance between 
-	    the test point and all observed points is returned
+        full_cov: bool
+            If set to true the full covariance between
+            the test point and all observed points is returned
 
         Returns
         ----------
@@ -136,22 +138,24 @@ class GPyModel(BaseModel):
 
         """
 
-       if self.m is None:
+        if self.m is None:
             logger.error("ERROR: Model has to be trained first.")
             return None
 
         mean, var = self.m.predict(X, full_cov=full_cov)
 
         if not full_cov:
-            # GPy sometimes returns negative variance if the noise level is too low,
-            # clip them to be in the interval between the smallest positive number and
-            # inf
+            # GPy sometimes returns negative variance if the noise level is
+            # too low clip them to be in the interval between the
+            # smallest positive number and inf
             return mean, np.clip(var, np.finfo(var.dtype).eps, np.inf)
 
         else:
-            # If we compute the full covariance matrix only clip the values on the diagonal
+            # If we compute the full covariance matrix only clip the values on
+            # the diagonal
             var[np.diag_indices(var.shape[0])] = np.clip(
-                var[np.diag_indices(var.shape[0])], np.finfo(var.dtype).eps, np.inf)
+                                            var[np.diag_indices(var.shape[0])],
+                                            np.finfo(var.dtype).eps, np.inf)
             var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
 
             return mean, var
@@ -165,15 +169,15 @@ class GPyModel(BaseModel):
 
     def sample_functions(self, X_test, n_funcs=1):
         """
-        Samples F function values from the current posterior at the N 
-	specified test point.
+        Samples F function values from the current posterior at the N
+        specified test point.
 
-	Parameters
+        Parameters
         ----------
         X_test: np.ndarray (N, D)
             Input test points
-	n_funcs: int
-	    Number of function values that are drawn at each test point.
+        n_funcs: int
+        Number of function values that are drawn at each test point.
 
         Returns
         ----------
@@ -181,4 +185,4 @@ class GPyModel(BaseModel):
             The F function values drawn at the N test points.
         """
 
-eturn self.m.posterior_samples_f(X_test, n_funcs).T
+        return self.m.posterior_samples_f(X_test, n_funcs).T
