@@ -47,8 +47,8 @@ class GaussianProcess(BaseModel):
     def train(self, X, Y, do_optimize=True):
         """
         Computes the cholesky decomposition of the covariance of X and
-        estimates the GP hyperparameter by optiminzing the marginal
-        loglikelihood. The piror mean of the GP is set to the empirical
+        estimates the GP hyperparameter by optimizing the marginal
+        loglikelihood. The prior mean of the GP is set to the empirical
         mean of the X.
 
         Parameters
@@ -164,14 +164,14 @@ class GaussianProcess(BaseModel):
 
         return var
 
-    def predict(self, X, **kwargs):
+    def predict(self, X_test, **kwargs):
         r"""
         Returns the predictive mean and variance of the objective function at
         the specified test point.
 
         Parameters
         ----------
-        X: np.ndarray (N, D)
+        X_test: np.ndarray (N, D)
             Input test points
 
         Returns
@@ -187,7 +187,7 @@ class GaussianProcess(BaseModel):
             logger.error("The model has to be trained first!")
             raise ValueError
 
-        mu, var = self.model.predict(self.Y[:, 0], X)
+        mu, var = self.model.predict(self.Y[:, 0], X_test)
 
         # Clip negative variances
         var[var < 0.0] = 0.0
@@ -204,7 +204,7 @@ class GaussianProcess(BaseModel):
         X_test: np.ndarray (N, D)
             Input test points
         n_funcs: int
-        Number of function values that are drawn at each test point.
+            Number of function values that are drawn at each test point.
 
         Returns
         ----------
