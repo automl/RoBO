@@ -8,9 +8,9 @@ from robo.models.random_forest import RandomForest
 from robo.acquisition.ei import EI
 #from robo.maximizers.direct import Direct
 from robo.maximizers.cmaes import CMAES
-from robo.recommendation.incumbent import compute_incumbent
 from robo.task.branin import Branin
 from robo.solver.bayesian_optimization import BayesianOptimization
+from robo.incumbent.posterior_optimization import PosteriorMeanAndStdOptimization
 
 
 # Specifies the task object that defines the objective functions and
@@ -25,8 +25,11 @@ model = RandomForest(branin.types)
 acquisition_func = EI(model,
                      X_upper=branin.X_upper,
                      X_lower=branin.X_lower,
-                     compute_incumbent=compute_incumbent,
                      par=0.1)
+
+# Strategy of estimating the incumbent
+rec = PosteriorMeanAndStdOptimization(model, branin.X_lower,
+                                      branin.X_upper, with_gradients=False)
 
 # Define the maximizer
 maximizer = CMAES(acquisition_func, branin.X_lower, branin.X_upper)
@@ -36,6 +39,6 @@ bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
                           maximize_func=maximizer,
                           task=branin,
-                          save_dir="/home/kleinaa/temp")
+                          incumbent_estimation=rec)
 
 bo.run(100)
