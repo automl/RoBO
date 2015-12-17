@@ -16,6 +16,7 @@ from robo.recommendation.incumbent import compute_incumbent
 from robo.task.base_task import BaseTask
 from robo.visualization.plotting import plot_objective_function, plot_model,\
     plot_acquisition_function
+from robo.initial_design.init_random_uniform import init_random_uniform
 
 
 # The optimization function that we want to optimize.
@@ -24,9 +25,9 @@ from robo.visualization.plotting import plot_objective_function, plot_model,\
 class ExampleTask(BaseTask):
 
     def __init__(self):
-        self.X_lower = np.array([0])
-        self.X_upper = np.array([7])
-        self.n_dims = 1
+        X_lower = np.array([0])
+        X_upper = np.array([7])
+        super(ExampleTask, self).__init__(X_lower, X_upper)
 
     def objective_function(self, x):
         return np.sin(3 * x) * 4 * (x - 1) * (x + 2)
@@ -47,9 +48,9 @@ acquisition_func = EI(model, X_upper=task.X_upper, X_lower=task.X_lower,
 maximizer = GridSearch(acquisition_func, task.X_lower, task.X_upper)
 
 
-# Draw one random point and evaluate it to initialize BO
-X = np.array([np.random.uniform(task.X_lower, task.X_upper, task.n_dims)])
-Y = task.objective_function(X)
+# Draw three random points and evaluate them to initialize BO
+X = init_random_uniform(task.X_lower, task.X_upper, 3)
+Y = task.evaluate(X)
 
 # This is the main Bayesian optimization loop
 for i in xrange(10):
@@ -63,14 +64,13 @@ for i in xrange(10):
     new_x = maximizer.maximize()
 
     # Evaluate the point and add the new observation to our set of observations
-    new_y = task.objective_function(np.array(new_x))
+    new_y = task.evaluate(np.array(new_x))
     X = np.append(X, new_x, axis=0)
     Y = np.append(Y, new_y, axis=0)
 
     # Visualize the objective function, model and the acquisition function
     f, (ax1, ax2) = plt.subplots(2, sharex=True)
-    ax1 = plot_objective_function(task.objective_function, task.X_lower,
-                                  task.X_upper, ax1, X, Y)
+    ax1 = plot_objective_function(task, ax1, X, Y)
     ax1 = plot_model(model, task.X_lower, task.X_upper, ax1)
     ax2 = plot_acquisition_function(acquisition_func, task.X_lower,
                                     task.X_upper, ax2)

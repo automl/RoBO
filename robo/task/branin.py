@@ -25,3 +25,19 @@ class Branin(BaseTask):
 
     def objective_function_test(self, x):
         return self.objective_function(x)
+
+
+class ShiftedBranin(Branin):
+    """
+    Shifted version of Branin where the original function is shifted by 10 %
+    at each axis.
+    """
+    def __init__(self):
+        self.shift = 1.5
+        super(ShiftedBranin, self).__init__()
+
+    def objective_function(self, x):
+        return super(ShiftedBranin, self).objective_function(x - self.shift)
+
+    def objective_function_test(self, x):
+        return super(ShiftedBranin, self).objective_function(x - 0.1)

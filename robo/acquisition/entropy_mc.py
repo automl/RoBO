@@ -58,7 +58,7 @@ class EntropyMC(Entropy):
         self.Nf = Nf
         self.Np = Np
 
-    def compute(self, X, **kwargs):
+    def compute(self, X, *args):
         """
         Computes the information gain at a point X by approximation pmin with
         MCMC sampling. Note: this EntropySearch variant does not support the
@@ -76,17 +76,19 @@ class EntropyMC(Entropy):
         np.ndarray(1,1)
             Information gain of X
         """
-        if 'derivative' in kwargs:
-            logger.error("EntropyMC does not support derivatives")
-            return
+        #if 'derivative' in kwargs:
+        #    logger.error("EntropyMC does not support derivatives")
+        #    return
         return self.dh_fun(X)
 
     def update(self, model):
-        super(EntropyMC, self).update(model)
-        self.sn2 = self._get_noise()
+        self.model = model
+        #super(EntropyMC, self).update(model)
+        self.sn2 = self.model.get_noise()
 
         self.sampling_acquisition.update(model)
         self.update_representer_points()
+
         # Omega values which are needed for the innovations
         # Estimate W by a uniform grid
         self.W = norm.ppf(np.linspace(1. / (self.Np + 1),
@@ -142,10 +144,22 @@ class EntropyMC(Entropy):
         Mb_new = self.Mb[:, None] + stoch_changes
         Vb_new = self.Vb + dVdb
 
-        try:
-            cVb_new = np.linalg.cholesky(Vb_new)
-        except np.linalg.LinAlgError:
-            cVb_new = np.linalg.cholesky(Vb_new + 1e-10 * np.eye(Vb_new.shape[0]))
+        noise = 0
+#         while(True):
+#             try:
+        cVb_new = np.linalg.cholesky(Vb_new + noise * np.eye(Vb_new.shape[0]))
+#                 break
+#             except np.linalg.LinAlgError:
+#                 if noise == 0:
+#                     noise = 1e-10
+#                 else:
+#                     noise *= 10
+#                 logger.error(
+#                              "Cholesky decomposition failed."
+#                              "Add %f noise on the diagonal." % noise)
+#                 print x
+#                 print self.Vb
+#                 print dVdb
 
         # Draw new function samples from the innovated GP
         # on the representer points

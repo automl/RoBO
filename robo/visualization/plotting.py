@@ -40,40 +40,35 @@ def plot_model(
 
     '''
 
-    X = np.arange(X_lower[0], X_upper[0], resolution)
+    X = np.arange(X_lower[0], X_upper[0] + resolution, resolution)
 
     mean = np.zeros([X.shape[0]])
     var = np.zeros([X.shape[0]])
     for i in xrange(X.shape[0]):
         mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
-
+    var[var < 0.0] = 0.0
     if plot_mean:
         ax.plot(X, mean, mean_color, label=label)
     if maximizer is not None:
         ax.axvline(maximizer, color='red')
-    ax.fill_between(
-        X,
-        mean +
-        std_scale *
-        np.sqrt(var),
-        mean -
-        std_scale *
-        np.sqrt(var),
+    ax.fill_between(X, mean + std_scale * np.sqrt(var),
+        mean - std_scale * np.sqrt(var),
         facecolor=uncertainity_color,
         alpha=0.2)
-    ax.legend()
+
+    if label != None:
+        ax.legend()
     return ax
 
 
 def plot_objective_function(
-        objective_function,
-        X_lower,
-        X_upper,
+        task,
         ax,
         X=None,
         Y=None,
         resolution=0.1,
         color='black',
+        color_points='blue',
         label='ObjectiveFunction'):
     ''' Plots the objective_function on the ax object passed to it
 
@@ -92,16 +87,17 @@ def plot_objective_function(
         ax ():
 
     '''
-    grid = np.arange(X_lower[0], X_upper[0], resolution)
+    grid = np.arange(task.X_lower[0], task.X_upper[0] + resolution, resolution)
 
     grid_values = np.zeros([grid.shape[0]])
     for i in xrange(grid.shape[0]):
-        grid_values[i] = objective_function(grid[i])
+        grid_values[i] = task.evaluate(np.array([[grid[i]]]))[0]
 
     ax.plot(grid, grid_values, color, label=label, linestyle="--")
     if X is not None and Y is not None:
-        ax.plot(X, Y, "bo")
-    ax.legend()
+        ax.scatter(X, Y, color=color_points)
+    if label != None:
+        ax.legend()
     return ax
 
 
@@ -128,14 +124,15 @@ def plot_acquisition_function(
         ax ():
 
     '''
-    grid = np.arange(X_lower[0], X_upper[0], resolution)
+    grid = np.arange(X_lower[0], X_upper[0] + resolution, resolution)
 
     grid_values = np.zeros([grid.shape[0]])
     for i in xrange(grid.shape[0]):
         grid_values[i] = acquisition_function(grid[i, np.newaxis])
-
+    #grid_values[grid_values < 0.0] = 0.0
     ax.plot(grid, grid_values, "g", label=label)
     if maximizer is not None:
         ax.axvline(maximizer, color='red')
-    ax.legend()
+    if label != None:
+        ax.legend()
     return ax

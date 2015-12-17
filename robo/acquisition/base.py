@@ -57,22 +57,30 @@ class AcquisitionFunction(object):
             function at X is returned
         """
 
+        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
+            raise("Test point is out of bounds")
+
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
 
         if derivative:
-            acq, grad = self.compute(X, derivative)
-            if np.isnan(acq):
-                return np.array([[-np.finfo(np.float).max]]
-                                ), np.array([[-np.inf]])
-            else:
-                return acq, grad
+            acq, grad = zip(*[self.compute(x[np.newaxis, :], derivative) for x in X])
+            acq = np.array(acq)[:, :, 0]
+            grad = np.array(grad)[:, :, 0]
+
+            if np.any(np.isnan(acq)):
+                idx = np.where(np.isnan(acq))[0]
+                acq[idx, :] = -np.finfo(np.float).max
+                grad[idx, :] = -np.inf
+            return acq, grad
+
         else:
-            acq = self.compute(X, derivative)
-            if np.isnan(acq):
-                return np.array([[-np.finfo(np.float).max]])
-            else:
-                return acq
+            acq = [self.compute(x[np.newaxis, :], derivative) for x in X]
+            acq = np.array(acq)[:, :, 0]            
+            if np.any(np.isnan(acq)):
+                idx = np.where(np.isnan(acq))[0]
+                acq[idx, :] = -np.finfo(np.float).max
+            return acq
 
     def compute(self, X, derivative=False):
         """

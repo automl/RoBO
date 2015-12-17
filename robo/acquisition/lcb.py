@@ -7,15 +7,16 @@ from robo.acquisition.base import AcquisitionFunction
 logger = logging.getLogger(__name__)
 
 
-class UCB(AcquisitionFunction):
+class LCB(AcquisitionFunction):
 
     def __init__(self, model, X_lower, X_upper, par=1.0, **kwargs):
         r"""
-        The upper confidence bound is in this case a lower confidence bound.
+        The lower confidence bound acquisition functions that computest for a 
+        test point the acquisition value by:
 
         .. math::
 
-        UCB(X) := \mu(X) + \kappa\sigma(X)
+        LCB(X) := \mu(X) + \kappa\sigma(X)
 
         Parameters
         ----------
@@ -35,12 +36,12 @@ class UCB(AcquisitionFunction):
             and exploitation of the acquisition function. Default is 0.01
         """
         self.par = par
-        super(UCB, self).__init__(model, X_lower, X_upper)
+        super(LCB, self).__init__(model, X_lower, X_upper)
 
     def compute(self, X, derivative=False, **kwargs):
 
         """
-        Computes the UCB value and its derivatives.
+        Computes the LCB acquisition value and its derivatives.
 
         Parameters
         ----------
@@ -51,24 +52,28 @@ class UCB(AcquisitionFunction):
 
         derivative: Boolean
             If is set to true also the derivative of the acquisition
-            function at X is returned
+            function at X is returned.
 
         Returns
         -------
         np.ndarray(1,1)
-            UCB value of X
+            LCB value of X
         np.ndarray(1,D)
-            Derivative of UCB at X (only if derivative=True)
+            Derivative of LCB at X (only if derivative=True)
         """
-
-        if derivative:
-            logger.error("UCB  does not support derivative calculation until now")
-            return
-        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
-            return np.array([[- np.finfo(np.float).max]])
         mean, var = self.model.predict(X)
-        # minimize in f so maximize negative lower bound
-        return -(mean - self.par * np.sqrt(var))
+
+        # Minimize in f so maximize negative lower bound
+        acq = -(mean - self.par * np.sqrt(var))
+        if derivative:
+            dm, dv = self.model.predictive_gradients(X)
+            #TODO: compute gradient here         
+            
+            #grad = -(dm - self.par * np.sqrt(dv))
+            grad = (-dm + self.par * np.sqrt(dv) + 2 * var)
+            return acq, grad
+        else:
+            return acq
 
     def update(self, model):
         self.model = model

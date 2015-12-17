@@ -3,14 +3,14 @@ from scipy.stats import norm
 import numpy as np
 
 from robo.acquisition.base import AcquisitionFunction
-
+from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
 class LogEI(AcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, compute_incumbent, par=0.01, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par=0.01, **kwargs):
 
         r"""
         Computes for a given x the logarithm expected improvement as
@@ -29,18 +29,30 @@ class LogEI(AcquisitionFunction):
             Lower bounds of the input space
         X_upper: np.ndarray (D)
             Upper bounds of the input space
-        compute_incumbent: func
-            A python function that takes as input a model and returns
-            a np.array as incumbent
         par: float
             Controls the balance between exploration
             and exploitation of the acquisition function. Default is 0.01
         """
-        self.par = par
-        self.compute_incumbent = compute_incumbent
 
         super(LogEI, self).__init__(model, X_lower, X_upper)
 
+        self.par = par
+        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
+
+    def update(self, model):
+        """
+        This method will be called if the model is updated.
+
+        Parameters
+        ----------
+        model : Model object
+            Models the objective function.
+        """
+
+        super(LogEI, self).update(model)
+        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
+        
+        
     def compute(self, X, derivative=False, **kwargs):
         """
         Computes the Log EI value and its derivatives.
@@ -74,9 +86,8 @@ class LogEI(AcquisitionFunction):
             return np.array([[- np.finfo(np.float).max]])
         m, v = self.model.predict(X)
 
-        incumbent, _ = self.compute_incumbent(self.model)
-        eta, _ = self.model.predict(np.array([incumbent]))
-
+        _, eta = self.rec.estimate_incumbent(None)
+        
         f_min = eta - self.par
 
         s = np.sqrt(v)

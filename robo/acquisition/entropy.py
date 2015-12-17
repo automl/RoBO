@@ -9,10 +9,9 @@ import emcee
 
 
 from robo.acquisition.log_ei import LogEI
-from robo.acquisition.ucb import UCB
+from robo.acquisition.lcb import LCB
 from robo.acquisition.base import AcquisitionFunction
-from robo.recommendation.incumbent import compute_incumbent
-from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
+
 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
@@ -57,7 +56,6 @@ class Entropy(AcquisitionFunction):
             X_lower,
             X_upper,
             Nb=10,
-            compute_inc=optimize_posterior_mean_and_std,
             sampling_acquisition=None,
             sampling_acquisition_kw={
                 "par": 0.0},
@@ -65,14 +63,13 @@ class Entropy(AcquisitionFunction):
             **kwargs):
         self.Nb = Nb
         super(Entropy, self).__init__(model, X_lower, X_upper)
-        self.compute_incumbent = compute_inc
         self.D = self.X_lower.shape[0]
         self.sn2 = None
         self.BestGuesses = np.zeros((0, X_lower.shape[0]))
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
         self.sampling_acquisition = sampling_acquisition(
-            model, self.X_lower, self.X_upper, compute_incumbent, **sampling_acquisition_kw)
+            model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
 
         self.Np = Np
 
@@ -81,17 +78,14 @@ class Entropy(AcquisitionFunction):
             This module contains the loss functions used in the
             calculation of the expected information gain.
             For the moment only the logloss function is implemented.
-            .. method:: __init__(model, X_lower, X_upper, Nb=100, sampling_acquisition=None,
-                                 sampling_acquisition_kw={"par":0.0}, Np=200,
-                                 loss_function=None, **kwargs)
+
             :param logP: Log-probability values.
             :param lmb: Log values of acquisition function at belief points.
             :param lPred: Log of the predictive distribution
             :param args: Additional parameters
             :return:
         """
-        H = - np.sum(np.multiply(np.exp(logP), (logP + lmb))
-                     )  # current entropy
+        H = -np.sum(np.multiply(np.exp(logP), (logP + lmb)))  # current entropy
         dHp = - np.sum(np.multiply(np.exp(lPred),
                                    np.add(lPred, lmb)), axis=0) - H
         return np.array([dHp])
@@ -171,6 +165,8 @@ class Entropy(AcquisitionFunction):
             return acq
 
     def sampling_acquisition_wrapper(self, x):
+        if np.any(x < self.X_lower) or np.any(x > self.X_upper):
+            return -np.inf
         return self.sampling_acquisition(np.array([x]))[0]
 
     def update_representer_points(self):
