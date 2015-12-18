@@ -11,11 +11,11 @@ from robo.incumbent.incumbent_estimation import IncumbentEstimation
 
 
 class BestObservation(IncumbentEstimation):
-    
+
     def __init__(self, model, X_lower, X_upper):
         """
         Defines the observed point that leaded to the best function
-	  value as the incumbent.
+        value as the incumbent.
 
         Parameters
         ----------
@@ -29,12 +29,12 @@ class BestObservation(IncumbentEstimation):
             corresponds to one dimension.
         """
         super(BestObservation, self).__init__(model, X_lower, X_upper)
-    
+
     def estimate_incumbent(self, startpoints=None):
         """
         Estimates the current incumbent. Note: this is just a lookup of
-	the observation that has been made so far and thus do not need
-	any startpoints.
+        the observation that has been made so far and thus do not need
+        any startpoints.
 
         Parameters
         ----------
@@ -49,8 +49,9 @@ class BestObservation(IncumbentEstimation):
         np.ndarray(1,1)
             Incumbent value
         """
- 	best = np.argmin(self.model.Y)
+
+        best = np.argmin(self.model.Y)
         incumbent = self.model.X[best]
         incumbent_value = self.model.Y[best]
 
-        return incumbent[:, np.newaxis], incumbent_value[:, np.newaxis]
+        return incumbent[np.newaxis, :], incumbent_value[:, np.newaxis]
