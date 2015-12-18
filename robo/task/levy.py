@@ -22,7 +22,7 @@ class Levy(BaseTask):
         s = np.power((np.sin(np.pi * z)), 2)
         y = (s + ((z - 1) ** 2) * (1 + np.power((np.sin(2 * np.pi * z)), 2)))
 
-        return y[:, np.newaxis]
+        return y
 
     def objective_function_test(self, x):
         return self.objective_function(x)
