@@ -32,7 +32,7 @@ class BaseTask(object):
             to the global optimum.
         fopt: (N, 1) numpy array
             Function value of the N global optima (if known). Useful
-            to compute the immediate or cummulativ regret.
+            to compute the immediate or cumulative regret.
         types: (D, ) numpy array
             It specifies the number of categorical values
             of each dimension:
@@ -43,7 +43,7 @@ class BaseTask(object):
             you use only GPs set it to None
         do_scaling: boolean
             If set to true the input space is scaled to [0, 1]. Useful
-            to specifiy priors for the kernel lengthscale.
+            to specify priors for the kernel lengthscale.
         """
 
         self.X_lower = X_lower
@@ -54,8 +54,10 @@ class BaseTask(object):
 
         if types is None:
             self.types = np.zeros([self.n_dims])
+            self.types.dtype = np.uint
         else:
             self.types = types
+            self.types.dtype = np.uint
 
         self.opt = opt
         self.fopt = fopt

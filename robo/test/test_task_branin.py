@@ -22,6 +22,7 @@ class TestTaskBranin(unittest.TestCase):
 
         y = branin.evaluate(X)
 
+        assert len(y.shape) == 2
         assert y.shape[0] == n_points
         assert y.shape[1] == 1
 

@@ -22,6 +22,7 @@ class TestTaskHartmann6(unittest.TestCase):
 
         assert y.shape[1] == 1
         assert y.shape[0] == n_points
+        assert len(y.shape) == 2
 
         # Check single computation
         X = np.array([np.random.rand(hartmann6.n_dims)])

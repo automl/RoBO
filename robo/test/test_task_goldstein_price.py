@@ -23,6 +23,7 @@ class TestTaskGoldsteinPrice(unittest.TestCase):
         y = goldstein_price.evaluate(X)
         assert y.shape[0] == n_points
         assert y.shape[1] == 1
+        assert len(y.shape) == 2
 
         # Check single computation
         X = np.array([np.random.rand(goldstein_price.n_dims)])

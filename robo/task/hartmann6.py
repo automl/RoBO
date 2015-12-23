@@ -10,9 +10,6 @@ from robo.task.base_task import BaseTask
 
 
 class Hartmann6(BaseTask):
-    '''
-    classdocs
-    '''
 
     def __init__(self):
         X_lower = np.array([0, 0, 0, 0, 0, 0])
