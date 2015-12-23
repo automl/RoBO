@@ -28,6 +28,8 @@ class AcquisitionFunction(object):
         self.X_lower = X_lower
         self.X_upper = X_upper
 
+        assert np.any(self.X_lower < self.X_upper)
+
     def update(self, model):
         """
         This method will be called if the model is updated. E.g.
@@ -56,9 +58,8 @@ class AcquisitionFunction(object):
             If is set to true also the derivative of the acquisition
             function at X is returned
         """
-
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
-            raise("Test point is out of bounds")
+            ValueError("Test point is out of bounds")
 
         if len(X.shape) == 1:
             X = X[np.newaxis, :]
@@ -76,7 +77,7 @@ class AcquisitionFunction(object):
 
         else:
             acq = [self.compute(x[np.newaxis, :], derivative) for x in X]
-            acq = np.array(acq)[:, :, 0]            
+            acq = np.array(acq)[:, :, 0]
             if np.any(np.isnan(acq)):
                 idx = np.where(np.isnan(acq))[0]
                 acq[idx, :] = -np.finfo(np.float).max
