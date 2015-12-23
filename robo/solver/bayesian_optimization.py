@@ -76,9 +76,11 @@ class BayesianOptimization(BaseSolver):
 
         self.model_untrained = True
         if incumbent_estimation is None:
-            self.estimator= BestObservation(self.model, self.task.X_lower, self.task.X_upper)
+            self.estimator = BestObservation(self.model,
+                                             self.task.X_lower,
+                                             self.task.X_upper)
         else:
-            self.estimator= incumbent_estimation
+            self.estimator = incumbent_estimation
         self.incumbent = None
         self.n_restarts = n_restarts
         self.init_points = initial_points
@@ -105,13 +107,13 @@ class BayesianOptimization(BaseSolver):
             self.X = np.zeros([1, self.task.n_dims])
             self.Y = np.zeros([1, 1])
 
+            start_time = time.time()
             init = self.initial_design(self.task.X_lower,
                                        self.task.X_upper,
                                        self.init_points)
+
             for i, x in enumerate(init):
                 x = x[np.newaxis, :]
-                start_time = time.time()
-
                 self.time_overhead[i] = time.time() - start_time
 
                 logger.info("Evaluate: %s" % x)
@@ -128,15 +130,16 @@ class BayesianOptimization(BaseSolver):
                     self.Y = np.append(self.Y, y, axis=0)
 
                 logger.info(
-                    "Configuration achieved a performance of %f in %f seconds" %
+                    "Configuration achieved a performance"
+                    "of %f in %f seconds" %
                     (self.Y[i], self.time_func_eval[i]))
 
                 # Use best point seen so far as incumbent
                 best_idx = np.argmin(self.Y)
-                self.incumbent = self.X[best_idx]
-                self.incumbent_value = self.Y[best_idx]
+                self.incumbent = np.array([self.X[best_idx]])
+                self.incumbent_value = np.array([self.Y[best_idx]])
 
-                if self.save_dir is not None and (0) % self.num_save == 0:
+                if self.save_dir is not None and (i) % self.num_save == 0:
                     self.save_iteration(i, hyperparameters=None,
                                         acquisition_value=0)
 
@@ -159,25 +162,34 @@ class BayesianOptimization(BaseSolver):
             new_x = self.choose_next(self.X, self.Y, do_optimize)
 
             # Estimate current incumbent
-            #self._estimate_incumbent()
             start_time_inc = time.time()
+            startpoints = init_random_uniform(self.task.X_lower,
+                                              self.task.X_upper,
+                                              self.n_restarts)
+            self.incumbent, self.incumbent_value = \
+                    self.estimator.estimate_incumbent(startpoints)
 
-            startpoints = init_random_uniform(self.task.X_lower, self.task.X_upper, 10)
-            self.incumbent, self.incumbent_value = self.estimator.estimate_incumbent(startpoints)
-            logger.info("New incumbent %s found in %f seconds with estimated performance %f", str(self.incumbent), time.time() - start_time_inc, self.incumbent_value)
+            logger.info("New incumbent %s found in %f seconds with"
+                        "estimated performance %f",
+                        str(self.incumbent), time.time() - start_time_inc,
+                        self.incumbent_value)
 
             time_overhead = time.time() - start_time
-            self.time_overhead = np.append(self.time_overhead, np.array([time_overhead]))
+            self.time_overhead = np.append(self.time_overhead,
+                                           np.array([time_overhead]))
 
-            logger.info("Optimization overhead was %f seconds" % (self.time_overhead[-1]))
+            logger.info("Optimization overhead was %f seconds" %
+                            (self.time_overhead[-1]))
 
             logger.info("Evaluate candidate %s" % (str(new_x)))
             start_time = time.time()
             new_y = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
-            self.time_func_eval = np.append(self.time_func_eval, np.array([time_func_eval]))
+            self.time_func_eval = np.append(self.time_func_eval,
+                                            np.array([time_func_eval]))
 
-            logger.info("Configuration achieved a performance of %f " % (new_y[0, 0]))
+            logger.info("Configuration achieved a performance of %f " %
+                        (new_y[0, 0]))
 
             logger.info("Evaluation of this configuration took %f seconds" %
                         (self.time_func_eval[-1]))
@@ -221,7 +233,6 @@ class BayesianOptimization(BaseSolver):
             try:
                 logger.info("Train model...")
                 t = time.time()
-
                 self.model.train(X, Y, do_optimize=do_optimize)
                 logger.info("Time to train the model: %f", (time.time() - t))
             except Exception as e:
@@ -237,44 +248,3 @@ class BayesianOptimization(BaseSolver):
             logger.info("Time to maximize the acquisition function: %f", (time.time() - t))
 
         return x
-
-    def _estimate_incumbent(self):
-        start_time_inc = time.time()
-        if self.recommendation_strategy is compute_incumbent:
-            logger.info("Use best point seen so far as incumbent.")
-            self.incumbent, self.incumbent_value = compute_incumbent(self.model)
-
-        elif self.recommendation_strategy is optimize_posterior_mean_and_std:
-            logger.info("Optimize the posterior mean and std to find a new incumbent")
-            # Start one local search from the best observed point and N - 1 from random points
-            startpoints = [
-                np.random.uniform(
-                    self.task.X_lower,
-                    self.task.X_upper,
-                    self.task.n_dims) for i in range(
-                    self.n_restarts)]
-            best_idx = np.argmin(self.Y)
-            startpoints.append(self.X[best_idx])
-
-            self.incumbent, self.incumbent_value = self.recommendation_strategy(
-                self.model, self.task.X_lower,
-                self.task.X_upper, startpoints=startpoints, with_gradients=False)
-        else:
-            startpoints = [
-                np.random.uniform(
-                    self.task.X_lower,
-                    self.task.X_upper,
-                    self.task.n_dims) for i in range(
-                    self.n_restarts)]
-            x_opt = np.zeros([len(startpoints), self.task.n_dims])
-            fval = np.zeros([len(startpoints)])
-            for i, startpoint in enumerate(startpoints):
-                x_opt[i], fval[i] = self.recommendation_strategy(
-                    self.model, self.task.X_lower, self.task.X_upper, startpoint=startpoint)
-
-            best = np.argmin(fval)
-            self.incumbent = x_opt[best]
-            self.incumbent_value = fval[best]
-        logger.info("New incumbent %s found in %f seconds with estimated performance %f", str(
-            self.incumbent), time.time() - start_time_inc, self.incumbent_value)
-
