@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 class GaussianProcess(BaseModel):
 
     def __init__(self, kernel, prior=None,
-                 yerr=1e-25, *args, **kwargs):
+                 yerr=1e-25, use_gradients=True,
+                 *args, **kwargs):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal loglikelihood.
@@ -33,12 +34,15 @@ class GaussianProcess(BaseModel):
         yerr : float
             Noise term that is added to the diagonal of the covariance matrix
             for the cholesky decomposition.
+        use_gradients : bool
+            Use gradient information to optimize the negative log likelihood
         """
 
         self.kernel = kernel
         self.model = None
         self.prior = prior
         self.yerr = yerr
+        self.use_gradients = use_gradients
 
     def scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) *
@@ -136,8 +140,10 @@ class GaussianProcess(BaseModel):
     def optimize(self):
         # Start optimization  from the previous hyperparameter configuration
         p0 = self.model.kernel.vector
-        results = optimize.minimize(self.nll, p0, jac=self.grad_nll)
-
+        if self.use_gradients:
+            results = optimize.minimize(self.nll, p0, jac=self.grad_nll)
+        else:
+            results = optimize.minimize(self.nll, p0)
         return results.x
 
     def predict_variance(self, X1, X2):
@@ -189,8 +195,15 @@ class GaussianProcess(BaseModel):
 
         mu, var = self.model.predict(self.Y[:, 0], X_test)
 
-        # Clip negative variances
-        var[var < 0.0] = 0.0
+        # Clip negative variances and set them to the smallest
+        # positive float values
+        if var.shape[0] == 1:
+            var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
+        else:
+            var[np.diag_indices(var.shape[0])] = np.clip(
+                                            var[np.diag_indices(var.shape[0])],
+                                            np.finfo(var.dtype).eps, np.inf)
+            var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
 
         return mu[:, np.newaxis], var
 
