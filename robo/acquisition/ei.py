@@ -48,7 +48,6 @@ class EI(AcquisitionFunction):
         """
 
         super(EI, self).__init__(model, X_lower, X_upper)
-        
         self.par = par
         self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
 
@@ -56,8 +55,7 @@ class EI(AcquisitionFunction):
 
     def update(self, model):
         """
-        This method will be called if the model is updated. 
-        
+        This method will be called if the model is updated.
         Parameters
         ----------
         model : Model object
@@ -66,7 +64,6 @@ class EI(AcquisitionFunction):
 
         super(EI, self).update(model)
         self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
-
 
     def compute(self, X, derivative=False, **kwargs):
         """
@@ -90,7 +87,6 @@ class EI(AcquisitionFunction):
         np.ndarray(1,D)
             Derivative of Expected Improvement at X (only if derivative=True)
         """
-
         if X.shape[0] > 1:
             raise ValueError("EI is only for single test points")
 
@@ -111,7 +107,6 @@ class EI(AcquisitionFunction):
         _, eta = self.rec.estimate_incumbent(None)
 
         s = np.sqrt(v)
-
         if (s == 0).any():
             f = np.array([[0]])
             df = np.zeros((1, X.shape[1]))
@@ -127,8 +122,8 @@ class EI(AcquisitionFunction):
                 df = (-dmdx * norm.cdf(z) + (dsdx * norm.pdf(z))).T
             if (f < 0).any():
                 logger.error("Expected Improvement is smaller than 0!")
-                raise Exception
-            
+                raise ValueError
+
         if derivative:
             return f, df
         else:

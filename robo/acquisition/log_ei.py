@@ -51,8 +51,7 @@ class LogEI(AcquisitionFunction):
 
         super(LogEI, self).update(model)
         self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
-        
-        
+
     def compute(self, X, derivative=False, **kwargs):
         """
         Computes the Log EI value and its derivatives.
@@ -87,7 +86,7 @@ class LogEI(AcquisitionFunction):
         m, v = self.model.predict(X)
 
         _, eta = self.rec.estimate_incumbent(None)
-        
+
         f_min = eta - self.par
 
         s = np.sqrt(v)

@@ -5,8 +5,9 @@ Created on Mon Dec  7 22:38:03 2015
 @author: aaron
 """
 
+
 class IncumbentEstimation(object):
-    
+
     def __init__(self, model, X_lower, X_upper):
         """
         A base class for estimate the global optimizer aka incumbent.
@@ -25,10 +26,10 @@ class IncumbentEstimation(object):
         self.model = model
         self.X_upper = X_upper
         self.X_lower = X_lower
-    
-    def estimate_incumbent(startpoints):
+
+    def estimate_incumbent(self, startpoints):
         """
-        Abstrach function that estimates the current incumbent.
+        Abstract function that estimates the current incumbent.
 
         Parameters
         ----------
@@ -43,5 +44,5 @@ class IncumbentEstimation(object):
         np.ndarray(1,1)
             Incumbent value
         """
-       
+
         pass

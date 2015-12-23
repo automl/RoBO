@@ -29,4 +29,4 @@ def init_grid(X_lower, X_upper, N):
     if np.power(N, n_dims) > 81 or n_dims > 4:
         raise AssertionError("Too many initial samples for grid")
     return np.array(itertools.product(
-        *[np.linspace(X_lower[i], X_upper[i], N) for i in range(n_dims)]))
+       *[np.linspace(X_lower[i], X_upper[i], N) for i in range(n_dims)]))

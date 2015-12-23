@@ -19,8 +19,8 @@ class Bohachevsky(BaseTask):
 
     def objective_function(self, x):
         y = 0.7 + x[:, 0] ** 2 + 2.0 * x[:, 1] ** 2
-        y -= 0.3 * np.cos(3 * np.pi * x[:, 0])
-        y -= 0.4 * np.cos(4 * np.pi * x[:, 1])
+        y -= 0.3 * np.cos(3.0 * np.pi * x[:, 0])
+        y -= 0.4 * np.cos(4.0 * np.pi * x[:, 1])
         return y[:, np.newaxis]
 
     def objective_function_test(self, x):

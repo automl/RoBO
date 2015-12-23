@@ -109,7 +109,7 @@ class Entropy(AcquisitionFunction):
         return _l
 
     def _get_most_probable_minimum(self):
-        acq = UCB(self.model, self.X_lower, self.X_upper, 0.0)
+        acq = LCB(self.model, self.X_lower, self.X_upper, 0.0)
         sc_fun = self._scipy_optimizer_fkt_wrapper(acq, derivative=False)
         minima = []
         for i in range(self.BestGuesses.shape[0]):
@@ -208,8 +208,7 @@ class Entropy(AcquisitionFunction):
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
 
-        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(
-            mu, var, with_derivatives=True)
+        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
         self.W = np.random.randn(1, self.zb.shape[0])
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
         self.update_best_guesses()
@@ -339,8 +338,10 @@ class Entropy(AcquisitionFunction):
         Lx = Lx.T
         return Lx, s, v
 
-    def _joint_min(self, mu, var, with_derivatives=False, **kwargs):
-
+    def _joint_min(self, mu, covar, with_derivatives=False, **kwargs):
+        """mu = mean representers
+        covar = covariance representers
+        """
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
         if with_derivatives:
@@ -350,7 +351,7 @@ class Entropy(AcquisitionFunction):
         for i in xrange(mu.shape[0]):
 
             # logP[k] ) self._min_faktor(mu, var, 0)
-            a = self._min_faktor(mu, var, i)
+            a = self._min_faktor(mu, covar, i)
 
             logP[i] = a.next()
             if with_derivatives:
@@ -387,8 +388,9 @@ class Entropy(AcquisitionFunction):
         dlogPdMudMu = dlogPdMudMuold + adds
         return logP, dlogPdMu, dlogPdSigma, dlogPdMudMu
 
+    # EP
     def _min_faktor(self, Mu, Sigma, k, gamma=1):
-
+        # k index that defines the representer points where we compute the cavity
         D = Mu.shape[0]
         logS = np.zeros((D - 1,))
         # mean time first moment
@@ -403,6 +405,7 @@ class Entropy(AcquisitionFunction):
         for count in xrange(50):
             diff = 0
             for i in range(D - 1):
+                # Take each dimension where i is not equal to k
                 l = i if i < k else i + 1
                 try:
                     M, V, P[i], MP[i], logS[i], d = self._lt_factor(
@@ -482,12 +485,15 @@ class Entropy(AcquisitionFunction):
             dlogZdSigma = np.rot90(dlogZdSigma, k=2)[np.triu_indices(D)][::-1]
             yield dlogZdSigma
 
-    def _lt_factor(self, s, l, M, V, mp, p, gamma):
-
-        cVc = (V[l, l] - 2 * V[s, l] + V[s, s]) / 2.0
-        Vc = (V[:, l] - V[:, s]) / sq2
-        cM = (M[l] - M[s]) / sq2
-        cVnic = np.max([cVc / (1 - p * cVc), 0])
+    def _lt_factor(self, k, i, M, V, mp, p, gamma):
+        # i is an index of a representer point
+        # p is equal to tau
+        # ci = is zeros everywhere except c[k] = -1 / sqrt(2) , c[i] = 1 / sqrt(2)
+        # Equation 51
+        cVc = (V[i, i] - 2 * V[k, i] + V[k, k]) / 2.0  # ci * Sigma * ciT
+        Vc = (V[:, i] - V[:, k]) / sq2
+        cM = (M[i] - M[k]) / sq2
+        cVnic = np.max([cVc / (1 - p * cVc), 0]) #sigma_/i ** 2
         cmni = cM + cVnic * (p * cM - mp)
         z = cmni / np.sqrt(cVnic)
         if np.isnan(z):

@@ -73,7 +73,8 @@ class IntegratedAcquisition(AcquisitionFunction):
             self.cost_model = cost_model
         for i in range(self.model.n_hypers):
             if cost_model is not None:
-                self.estimators[i].update(self.model.models[i], self.cost_model.models[i],)
+                self.estimators[i].update(self.model.models[i],
+                                          self.cost_model.models[i])
             else:
                 self.estimators[i].update(self.model.models[i])
 
@@ -104,6 +105,7 @@ class IntegratedAcquisition(AcquisitionFunction):
 
         # Integrate over the acquisition values
         for i in range(self.model.n_hypers):
-            acquisition_values[i] = self.estimators[i](X, derivative=False)
+            acquisition_values[i] = self.estimators[i](X,
+                                                    derivative=derivative)
 
         return np.array([[acquisition_values.mean()]])

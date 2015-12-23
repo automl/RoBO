@@ -34,7 +34,7 @@ class PI(AcquisitionFunction):
             and exploitation of the acquisition function. Default is 0.01
         """
         super(PI, self).__init__(model, X_lower, X_upper)
-        
+
         self.par = par
         self.rec = BestObservation(self.model,
                                                  self.X_lower,
@@ -51,7 +51,6 @@ class PI(AcquisitionFunction):
 
         super(PI, self).update(model)
         self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
-
 
     def compute(self, X, derivative=False, **kwargs):
         """
@@ -89,7 +88,7 @@ class PI(AcquisitionFunction):
 
         m, v = self.model.predict(X)
         _, eta = self.rec.estimate_incumbent(None)
-        
+
         s = np.sqrt(v)
         z = (eta - m - self.par) / s
         f = norm.cdf(z)

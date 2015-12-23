@@ -122,7 +122,7 @@ class GaussianProcessMCMC(BaseModel):
                 self.burned = True
 
             # Start sampling
-            pos, prob, state = self.sampler.run_mcmc(self.p0,
+            pos, _, _ = self.sampler.run_mcmc(self.p0,
                                                      self.chain_length)
 
             # Save the current position, it will be the startpoint in
