@@ -335,13 +335,12 @@ class Entropy(AcquisitionFunction):
         v_projected = self.model.predict_variance(x, self.zb)
 
         Lx = v_projected / s
-        Lx = Lx.T
+
         return Lx, s, v
 
     def _joint_min(self, mu, covar, with_derivatives=False, **kwargs):
-        """mu = mean representers
-        covar = covariance representers
-        """
+
+        mu = mu[:, 0]
         logP = np.zeros(mu.shape)
         D = mu.shape[0]
         if with_derivatives:
