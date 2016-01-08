@@ -4,6 +4,7 @@ Created on 13.07.2015
 @author: Aaron Klein
 '''
 import sys
+import os
 import logging
 import cma
 
@@ -14,7 +15,7 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 
 class CMAES(BaseMaximizer):
 
-    def __init__(self, objective_function, X_lower, X_upper):
+    def __init__(self, objective_function, X_lower, X_upper, verbose=True):
         """
         Interface for the  Covariance Matrix Adaptation Evolution Strategy
         python package
@@ -29,12 +30,16 @@ class CMAES(BaseMaximizer):
             Upper bounds of the input space
         n_func_evals: int
             The maximum number of function evaluations
+        verbose: bool
+            If set to False the CMAES output is disabled
         """
         if X_lower.shape[0] == 1:
             raise RuntimeError("CMAES does not works in a one \
                 dimensional function space")
 
         super(CMAES, self).__init__(objective_function, X_lower, X_upper)
+
+        self.verbose = verbose
 
     def _cma_fkt_wrapper(self, acq_f, derivative=False):
         def _l(x, *args, **kwargs):
@@ -51,6 +56,12 @@ class CMAES(BaseMaximizer):
         np.ndarray(N,D)
             Point with highest acquisition value.
         """
+
+        # All stdout and stderr is pointed to devnull during
+        # the optimization. (That is the only way to keep cmaes quiet)
+        if not self.verbose:
+            sys.stdout = os.devnull
+            sys.stderr = os.devnull
         res = cma.fmin(
             self._cma_fkt_wrapper(
                 self.objective_func),
@@ -68,4 +79,8 @@ class CMAES(BaseMaximizer):
             return np.array([np.random.uniform(self.X_lower,
                                                self.X_upper,
                                                self.X_lower.shape[0])])
+        if not self.verbose:
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+
         return np.array([res[0]])
