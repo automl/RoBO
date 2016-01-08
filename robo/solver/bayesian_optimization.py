@@ -1,4 +1,3 @@
-
 import time
 import logging
 import numpy as np
@@ -13,12 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class BayesianOptimization(BaseSolver):
-    """
-    Class implementing general Bayesian optimization.
-    """
 
-    def __init__(
-            self,
+    def __init__(self,
             acquisition_func,
             model,
             maximize_func,
@@ -31,35 +26,49 @@ class BayesianOptimization(BaseSolver):
             train_intervall=1,
             n_restarts=1):
         """
-        Initializes the Bayesian optimization.
-        Either acquisition function, model, maximization function,
-        bounds, dimensions and objective function are
-        specified or an existing run can be continued by specifying
-        only save_dir.
+        Implementation of the standard Bayesian optimization loop that uses
+        an acquisition function and a model to optimize a given task.
+        This module keeps track of additional information such as runtime,
+        optimization overhead, evaluated points and saves the output
+        in a csv file.
 
-        :param acquisition_funct: Any acquisition function
-        :param model: A model
-        :param maximize_func: The function for maximizing the acquisition function
-        :param initialization: The initialization strategy that to
-        find some starting points in order to train the model
-        :param task: The task (derived from BaseTask) that should be optimized
-        :param recommendation_strategy: A function that recommends
-        which configuration should be return at the end
-        :param save_dir: The directory to save the
-        iterations to (or to load an existing run from)
-        :param num_save: A number specifying the n-th iteration to be saved
+        Parameters
+        ----------
+        acquisition_func: AcquisitionFunctionObject
+            The acquisition function which will be maximized.
+        model: ModelObject
+            Model (i.e. GaussianProcess, RandomForest) that models our current
+            believe of the objective function.
+        task: TaskObject
+            Task object that contains the objective function and additional
+            meta information such as the lower and upper bound of the search
+            space.
+        save_dir: String
+            Output path
+        initial_design: function
+            Function that returns some points which will be evaluated before
+            the Bayesian optimization loop is started. This allows to
+            initialize the model.
+        initial_points: int
+            Defines the number of initial points that are evaluated before the
+            actual Bayesian optimization.
+        incumbent_estimation: IncumbentEstimationObject,
+            Object to estimate the incumbent based on the current model. The
+            incumbent is the current best guess of the global optimum and is
+            estimated in each iteration.
+        num_save: int
+            Defines after how many iteration the output is saved.
+        train_intervall: int
+            Specifies after how many iterations the model is retrained.
+        n_restarts: int
+            How often the incumbent estimation is repeated.
         """
 
-        logging.basicConfig(level=logging.INFO)
-
-        super(
-            BayesianOptimization,
-            self).__init__(
-            acquisition_func,
-            model,
-            maximize_func,
-            task,
-            save_dir)
+        super(BayesianOptimization, self).__init__(acquisition_func,
+                                                    model,
+                                                    maximize_func,
+                                                    task,
+                                                    save_dir)
 
         if initial_design == None:
             self.initial_design = init_random_uniform
@@ -89,14 +98,21 @@ class BayesianOptimization(BaseSolver):
         """
         The main Bayesian optimization loop
 
-        :param num_iterations: number of iterations to perform
-        :param X: (optional) Initial observations.
-            If a run continues these observations will be overwritten by the load
-        :param Y: (optional) Initial observations.
-            If a run continues these observations will be overwritten by the load
-        :param overwrite: data present in save_dir will be deleted and overwritten,
-                otherwise the run will be continued.
-        :return: the incumbent
+        Parameters
+        ----------
+        num_iterations: int
+            The number of iterations
+        X: np.ndarray(N,D)
+            Initial points that are already evaluated
+        Y: np.ndarray(N,1)
+            Function values of the already evaluated points
+
+        Returns
+        -------
+        np.ndarray(1,D)
+            Incumbent
+        np.ndarray(1,1)
+            (Estimated) function value of the incumbent
         """
         # Save the time where we start the Bayesian optimization procedure
         self.time_start = time.time()
@@ -107,14 +123,14 @@ class BayesianOptimization(BaseSolver):
             self.X = np.zeros([1, self.task.n_dims])
             self.Y = np.zeros([1, 1])
 
-            start_time = time.time()
+            start_time_overhead = time.time()
             init = self.initial_design(self.task.X_lower,
                                        self.task.X_upper,
                                        self.init_points)
 
             for i, x in enumerate(init):
                 x = x[np.newaxis, :]
-                self.time_overhead[i] = time.time() - start_time
+                self.time_overhead[i] = time.time() - start_time_overhead
 
                 logger.info("Evaluate: %s" % x)
 
@@ -129,8 +145,7 @@ class BayesianOptimization(BaseSolver):
                     self.X = np.append(self.X, x, axis=0)
                     self.Y = np.append(self.Y, y, axis=0)
 
-                logger.info(
-                    "Configuration achieved a performance"
+                logger.info("Configuration achieved a performance"
                     "of %f in %f seconds" %
                     (self.Y[i], self.time_func_eval[i]))
 
@@ -213,12 +228,26 @@ class BayesianOptimization(BaseSolver):
 
     def choose_next(self, X=None, Y=None, do_optimize=True):
         """
-        Chooses the next configuration by optimizing the acquisition function.
+        Suggests a new point to evaluate.
 
-        :param X: The point that have been where the objective function has been evaluated
-        :param Y: The function values of the evaluated points
-        :return: The next promising configuration
+        Parameters
+        ----------
+        num_iterations: int
+            The number of iterations
+        X: np.ndarray(N,D)
+            Initial points that are already evaluated
+        Y: np.ndarray(N,1)
+            Function values of the already evaluated points
+        do_optimize: bool
+            If true the hyperparameters of the model are
+            optimized before the acquisition function is
+            maximized.
+        Returns
+        -------
+        np.ndarray(1,D)
+            Suggested point
         """
+
         if X is None and Y is None:
             x = self.initial_design(self.task.X_lower,
                                     self.task.X_upper,
@@ -235,8 +264,8 @@ class BayesianOptimization(BaseSolver):
                 t = time.time()
                 self.model.train(X, Y, do_optimize=do_optimize)
                 logger.info("Time to train the model: %f", (time.time() - t))
-            except Exception as e:
-                logger.info("Model could not be trained", X, Y)
+            except:
+                logger.error("Model could not be trained", X, Y)
                 raise
             self.model_untrained = False
             self.acquisition_func.update(self.model)
@@ -245,6 +274,7 @@ class BayesianOptimization(BaseSolver):
             t = time.time()
             x = self.maximize_func.maximize()
 
-            logger.info("Time to maximize the acquisition function: %f", (time.time() - t))
+            logger.info("Time to maximize the acquisition function: %f", \
+                        (time.time() - t))
 
         return x

@@ -2,7 +2,6 @@
 import os
 import sys
 import logging
-from scipy.stats import norm
 import scipy
 import numpy as np
 import emcee
@@ -23,35 +22,38 @@ logger = logging.getLogger(__name__)
 
 class Entropy(AcquisitionFunction):
     """
-    The Entropy Search acquisition function
-        - predict(X)
-        - predict_variance(X1, X2)
-    :param X_lower: Lower bounds for the search,
-                    its shape should be 1xD (D = dimension of search space)
-    :type X_lower: np.ndarray (1,D)
-    :param X_upper: Upper bounds for the search,
-                    its shape should be 1xD (D = dimension of search space)
-    :type X_upper: np.ndarray (1,D)
-    :param Nb: Number of representer points to define pmin.
-    :type Nb: int
-    :param sampling_acquisition: A function to be used in calculating
-                    the density that representer points are to be sampled from.
-                    It uses
-    :type samping_acquisition: AcquisitionFunction
-    :param sampling_acquisition_kw: Additional keyword parameters to be passed to
-                                    sampling_acquisition, if they are required,
-                                    e.g. xi parameter for LogEI.
-    :type sampling_acquisition_kw: dict
-    :param Np: Number of prediction points at X to calculate stochastic changes
-                of the mean for the representer points
-    :type Np: int
-    :param loss_function: The loss function to be used in the calculation of the entropy.
-                    If not specified it defaults to log loss (cf. loss_functions module).
-    """
-    long_name = "Information gain over p_min(x)"
+    The Entropy Search acquisition function that approximates the
+    distribution pmin of the global minimum and tries to decrease its
+    entropy. See Hennig and Schuler for a more detailed view how it
+    works.
 
-    def __init__(
-            self,
+
+    Parameters
+    ----------
+    model: Model object
+        A model that implements at least
+             - predict(X)
+             - predict_variances(X1, X2)
+        If you want to calculate derivatives than it should also support
+             - predictive_gradients(X)
+    X_lower: np.ndarray (D)
+        Lower bounds of the input space
+    X_upper: np.ndarray (D)
+        Upper bounds of the input space
+    Nb: int
+        Number of representer points to define pmin.
+    Nb: int
+        Number of hallucinated values to compute the innovations
+        at the representer points
+    sampling_acquisition: function
+        Proposal measurement from which the representer points will
+        be samples
+    sampling_acquisition_kw: dist
+        Additional keyword parameters that are passed to the
+        acquisition function
+    """
+
+    def __init__(self,
             model,
             X_lower,
             X_upper,
@@ -74,17 +76,7 @@ class Entropy(AcquisitionFunction):
         self.Np = Np
 
     def loss_function(self, logP, lmb, lPred, *args):
-        """
-            This module contains the loss functions used in the
-            calculation of the expected information gain.
-            For the moment only the logloss function is implemented.
 
-            :param logP: Log-probability values.
-            :param lmb: Log values of acquisition function at belief points.
-            :param lPred: Log of the predictive distribution
-            :param args: Additional parameters
-            :return:
-        """
         H = -np.sum(np.multiply(np.exp(logP), (logP + lmb)))  # current entropy
         dHp = - np.sum(np.multiply(np.exp(lPred),
                                    np.add(lPred, lmb)), axis=0) - H
@@ -132,14 +124,28 @@ class Entropy(AcquisitionFunction):
 
     def compute(self, X, derivative=False, **kwargs):
         """
-        :param x: The point at which the function is to be evaluated.
-                  Its shape is (1,D), where D is the dimension of the search space.
-        :type x: np.ndarray (1, D)
-        :param derivative: Controls whether the derivative is calculated and returned.
-        :type derivative: Boolean
-        :return: The expected difference of the loss function at X and optionally its derivative.
-        :rtype: np.ndarray(1, 1) or (np.ndarray(1, 1), np.ndarray(1, D)).
-        :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
+        Computes the information gain of X and its derivatives
+
+        Parameters
+        ----------
+        X: np.ndarray(1, D), The input point where the acquisition function
+            should be evaluate. The dimensionality of X is (N, D), with N as
+            the number of points to evaluate at and D is the number of
+            dimensions of one X.
+
+        derivative: Boolean
+            If is set to true also the derivative of the acquisition
+            function at X is returned
+            Not implemented yet!
+
+        Returns
+        -------
+        np.ndarray(1,1)
+            Log Expected Improvement of X
+        np.ndarray(1,D)
+            Derivative of Log Expected Improvement at X
+            (only if derivative=True)
+
         """
         if X.shape[0] > 1:
             raise ValueError("Entropy is only for single test points")
@@ -173,7 +179,8 @@ class Entropy(AcquisitionFunction):
         self.sampling_acquisition.update(self.model)
         restarts = np.zeros((self.Nb, self.D))
         restarts[0:self.Nb, ] = self.X_lower + \
-            (self.X_upper - self.X_lower) * np.random.uniform(size=(self.Nb, self.D))
+            (self.X_upper - self.X_lower) * \
+             np.random.uniform(size=(self.Nb, self.D))
         sampler = emcee.EnsembleSampler(
             self.Nb, self.D, self.sampling_acquisition_wrapper)
         # zb are the representer points and lmb are their log EI values
@@ -208,7 +215,9 @@ class Entropy(AcquisitionFunction):
         self.update_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
 
-        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = self._joint_min(mu, var, with_derivatives=True)
+        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = \
+                self._joint_min(mu, var, with_derivatives=True)
+
         self.W = np.random.randn(1, self.zb.shape[0])
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
         self.update_best_guesses()
@@ -267,8 +276,8 @@ class Entropy(AcquisitionFunction):
                     np.where(
                         np.isinf(
                             self.lmb))])
-            raise Exception(
-                "lmb should not be infinite. This is not allowed to be sampled")
+            raise Exception("lmb should not be infinite."
+                "This is not allowed to be sampled")
 
         D = x.shape[1]
         # If x is a vector, convert it to a matrix (some functions are
@@ -314,15 +323,7 @@ class Entropy(AcquisitionFunction):
         return np.array([[dH]])
 
     def _gp_innovation_local(self, x):
-        """
-        :param x: The point at which the function is to be evaluated.
-                Its shape is (1,D), where D is the dimension of the search space.
-        :type x: np.ndarray (1, D)
-        :return: A vector that contains ..., the standard deviation at x (WITHOUT noise)
-                and the variance at x (PLUS noise).
-        :rtype: (np.ndarray(1, Nb), np.ndarray(1, 1), np.ndarray(1, 1)).
-        :raises BayesianOptimizationError: if X.shape[0] > 1. Only single X can be evaluated.
-        """
+
         if x.shape[0] > 1:
             logger.error("Expects single points as input")
             return
@@ -389,7 +390,8 @@ class Entropy(AcquisitionFunction):
 
     # EP
     def _min_faktor(self, Mu, Sigma, k, gamma=1):
-        # k index that defines the representer points where we compute the cavity
+        # k index that defines the representer points where we
+        # compute the cavity
         D = Mu.shape[0]
         logS = np.zeros((D - 1,))
         # mean time first moment
@@ -464,7 +466,8 @@ class Entropy(AcquisitionFunction):
                     else:
                         noise *= 10
                     logger.error(
-                        "Cholesky decomposition failed. Add %f noise on the diagonal." %
+                        "Cholesky decomposition failed. Add %f noise on"
+                        "the diagonal." %
                         noise)
             dts = 2 * np.sum(np.log(np.diagonal(cIRSR)))
             logZ = 0.5 * (rSr - np.dot(b.T, Ab) - dts) + \
@@ -487,12 +490,12 @@ class Entropy(AcquisitionFunction):
     def _lt_factor(self, k, i, M, V, mp, p, gamma):
         # i is an index of a representer point
         # p is equal to tau
-        # ci = is zeros everywhere except c[k] = -1 / sqrt(2) , c[i] = 1 / sqrt(2)
+        # ci = is zero everywhere except c[k] = -1 / sqrt(2) , c[i] = 1 / sqrt(2)
         # Equation 51
         cVc = (V[i, i] - 2 * V[k, i] + V[k, k]) / 2.0  # ci * Sigma * ciT
         Vc = (V[:, i] - V[:, k]) / sq2
         cM = (M[i] - M[k]) / sq2
-        cVnic = np.max([cVc / (1 - p * cVc), 0]) #sigma_/i ** 2
+        cVnic = np.max([cVc / (1 - p * cVc), 0])  # sigma_/i ** 2
         cmni = cM + cVnic * (p * cM - mp)
         z = cmni / np.sqrt(cVnic)
         if np.isnan(z):
@@ -521,12 +524,13 @@ class Entropy(AcquisitionFunction):
 
             Mnew = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
             if np.any(np.isnan(Vnew)):
-                raise Exception(
-                    "an error occurs while running expectation \
-                    propagation in entropy search. Resulting variance contains NaN")
-            # % there is a problem here, when z is very large
+                raise Exception("an error occurs while running expectation"
+                    "propagation in entropy search."
+                    "Resulting variance contains NaN")
+
+            # there is a problem here, when z is very large
             logS = lP - 0.5 * (np.log(beta) - np.log(pnew) -
-                               np.log(cVnic)) + (alpha * alpha) / (2 * beta) * cVnic
+                        np.log(cVnic)) + (alpha * alpha) / (2 * beta) * cVnic
 
         elif exit_flag == -1:
             d = np.NAN
