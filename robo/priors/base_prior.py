@@ -30,7 +30,7 @@ class BasePrior(object):
         Returns
         -------
         float
-            The log probabilty of theta
+            The log probability of theta
         """
         pass
 
@@ -101,7 +101,7 @@ class TophatPrior(BasePrior):
         Returns
         -------
         float
-            The log probabilty of theta
+            The log probability of theta
         """
 
         if np.any(theta < self.min) or np.any(theta > self.max):
@@ -176,7 +176,7 @@ class HorseshoePrior(BasePrior):
         Returns
         -------
         float
-            The log probabilty of theta
+            The log probability of theta
         """
         # We computed it exactly as in the original spearmint code
         if np.any(theta == 0.0):
@@ -251,7 +251,7 @@ class LognormalPrior(BasePrior):
         Returns
         -------
         float
-            The log probabilty of theta
+            The log probability of theta
         """
 
         return sps.lognorm.logpdf(theta, self.sigma, loc=self.mean)
