@@ -51,8 +51,6 @@ class EI(AcquisitionFunction):
         self.par = par
         self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
 
-        logger.debug("Test")
-
     def update(self, model):
         """
         This method will be called if the model is updated.

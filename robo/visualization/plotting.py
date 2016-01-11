@@ -9,15 +9,14 @@ Edits: Numair Mansur (numair.mansur@gmail.com)
 import numpy as np
 
 
-def plot_model(
-        model,
+def plot_model(model,
         X_lower,
         X_upper,
         ax,
         resolution=0.1,
         maximizer=None,
         mean_color='b',
-        uncertainity_color='blue',
+        uncertainty_color='blue',
         label="Model",
         std_scale=3,
         plot_mean=True):
@@ -53,7 +52,7 @@ def plot_model(
         ax.axvline(maximizer, color='red')
     ax.fill_between(X, mean + std_scale * np.sqrt(var),
         mean - std_scale * np.sqrt(var),
-        facecolor=uncertainity_color,
+        facecolor=uncertainty_color,
         alpha=0.2)
 
     if label != None:
@@ -61,8 +60,7 @@ def plot_model(
     return ax
 
 
-def plot_objective_function(
-        task,
+def plot_objective_function(task,
         ax,
         X=None,
         Y=None,
@@ -101,8 +99,7 @@ def plot_objective_function(
     return ax
 
 
-def plot_acquisition_function(
-        acquisition_function,
+def plot_acquisition_function(acquisition_function,
         X_lower,
         X_upper,
         ax,
@@ -136,3 +133,24 @@ def plot_acquisition_function(
     if label != None:
         ax.legend()
     return ax
+
+
+def plot_slice(model, fix_point, dim, X_lower, X_upper,
+               ax, resolution=100,
+               std_scale=2, mean_color="blue",
+               uncertainty_color="orange", label="Model"):
+
+    m = np.zeros([resolution])
+    v = np.zeros([resolution])
+    x = np.linspace(X_lower[dim], X_upper[dim], resolution)
+    for i, x_ in enumerate(x):
+        test_point = np.ones([1, 2]) * x_
+        test_point[0, dim] = fix_point
+        m[i], v[i] = model.predict(test_point)
+
+    ax.plot(x, m, mean_color, label=label)
+
+    ax.fill_between(x, m + std_scale * np.sqrt(v),
+        m - std_scale * np.sqrt(v),
+        facecolor=uncertainty_color,
+        alpha=0.2)

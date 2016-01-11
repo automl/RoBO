@@ -22,9 +22,9 @@ class GaussianProcessMCMC(BaseModel):
                  burnin_steps=2000, scaling=False, *args, **kwargs):
         """
         GaussianProcess model based on the george GP library that uses MCMC
-        sampling to marginalise the hyperparmeter. If you use this class
-        make sure that to use the IntegratedAcqusition function to integrate
-        over the GP's hyperparameter as proposed by Snoek et al.
+        sampling to marginalise over the hyperparmeters. If you use this class
+        make sure that you also use the IntegratedAcqusition function to
+        integrate over the GP's hyperparameter as proposed by Snoek et al.
 
         Parameters
         ----------

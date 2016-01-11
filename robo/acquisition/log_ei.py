@@ -21,7 +21,6 @@ class LogEI(AcquisitionFunction):
         model: Model object
             A model that implements at least
                  - predict(X)
-                 - getCurrentBestX().
             If you want to calculate derivatives than it should also support
                  - predictive_gradients(X)
 

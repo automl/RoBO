@@ -1,4 +1,4 @@
-import setup_logger
+
 import logging
 import unittest
 import numpy as np
@@ -9,7 +9,6 @@ import GPy
 
 from robo.models.gpy_model import GPyModel
 from robo.acquisition.pi import PI
-from robo.recommendation.incumbent import compute_incumbent
 from robo.initial_design.init_random_uniform import init_random_uniform
 
 logger = logging.getLogger(__name__)
@@ -28,14 +27,13 @@ class PITestCase(unittest.TestCase):
         self.model.train(self.X, self.Y)
         self.pi = PI(self.model,
                     X_upper=self.X_upper,
-                    X_lower=self.X_lower,
-                    compute_incumbent=compute_incumbent)
+                    X_lower=self.X_lower)
 
     def test_general_interface(self):
 
         X_test = init_random_uniform(self.X_lower, self.X_upper, 10)
         # Just check if PI is always greater equal than 0
-        
+
         a, dadx = self.pi(X_test, True)
 
         assert len(a.shape) == 2
@@ -48,7 +46,7 @@ class PITestCase(unittest.TestCase):
 
     def test_check_grads(self):
         x_ = np.array([[np.random.rand()]])
-        
+
         assert check_grad(self.pi, lambda x: -self.pi(x, True)[1], x_) < 1e-5
 
 if __name__ == "__main__":

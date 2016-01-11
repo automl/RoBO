@@ -15,7 +15,6 @@ from robo.maximizers.direct import Direct
 from robo.maximizers.grid_search import GridSearch
 from robo.maximizers.stochastic_local_search import StochasticLocalSearch
 from robo.acquisition.ei import EI
-from robo.recommendation.incumbent import compute_incumbent
 from robo.task.branin import Branin
 
 
@@ -45,7 +44,6 @@ class TestMaximizers1D(unittest.TestCase):
         self.model.train(self.X, self.Y)
         self.acquisition_func = EI(self.model, X_upper=self.X_upper,
                                    X_lower=self.X_lower,
-                                   compute_incumbent=compute_incumbent,
                                    par=0.1)
 
     def test_direct(self):
@@ -105,7 +103,6 @@ class TestMaximizers2D(unittest.TestCase):
         self.acquisition_func = EI(self.model,
                                    X_upper=self.branin.X_upper,
                                    X_lower=self.branin.X_lower,
-                                   compute_incumbent=compute_incumbent,
                                    par=0.1)
 
     def test_direct(self):
