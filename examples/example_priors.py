@@ -15,7 +15,6 @@ from robo.acquisition.ei import EI
 from robo.acquisition.integrated_acquisition import IntegratedAcquisition
 from robo.maximizers.direct import Direct
 from robo.solver.bayesian_optimization import BayesianOptimization
-from robo.recommendation.incumbent import compute_incumbent
 
 
 class MyPrior(BasePrior):
@@ -55,16 +54,6 @@ class MyPrior(BasePrior):
 
         return p0
 
-
-def global_optimize_posterior(model, X_lower, X_upper, startpoint):
-    def f(x):
-        mu, var = model.predict(x[np.newaxis, :])
-        return (mu + np.sqrt(var))[0, 0]
-    # Use CMAES to optimize the posterior mean + std
-    res = cma.fmin(f, startpoint, 0.6, options={"bounds": [X_lower, X_upper]})
-    return res[0], np.array([res[1]])
-
-
 burnin = 100
 chain_length = 200
 n_hypers = 20
@@ -83,8 +72,7 @@ prior = MyPrior(len(kernel))
 model = GaussianProcessMCMC(kernel, prior=prior, burnin=burnin,
                             chain_length=chain_length, n_hypers=n_hypers)
 
-ei = EI(model, X_upper=task.X_upper, X_lower=task.X_lower,
-                      compute_incumbent=compute_incumbent, par=0.1)
+ei = EI(model, X_upper=task.X_upper, X_lower=task.X_lower,)
 
 acquisition_func = IntegratedAcquisition(model, ei,
                                              task.X_lower, task.X_upper)
@@ -94,8 +82,7 @@ maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
 bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
                           maximize_func=maximizer,
-                          task=task,
-                          recommendation_strategy=global_optimize_posterior)
+                          task=task)
 
 bo.run(20)
 
