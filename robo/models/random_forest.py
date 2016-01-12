@@ -57,7 +57,6 @@ class RandomForest(BaseModel):
                  seed=42):
 
         self.types = types
-        self.types.dtype = np.uint
 
         self.rf = pyrfr.regression.binary_rss()
         self.rf.num_trees = num_trees

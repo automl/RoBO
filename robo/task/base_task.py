@@ -53,11 +53,9 @@ class BaseTask(object):
         assert self.n_dims == self.X_upper.shape[0]
 
         if types is None:
-            self.types = np.zeros([self.n_dims])
-            self.types.dtype = np.uint
+            self.types = np.zeros([self.n_dims], dtype=np.uint)
         else:
             self.types = types
-            self.types.dtype = np.uint
 
         self.opt = opt
         self.fopt = fopt
