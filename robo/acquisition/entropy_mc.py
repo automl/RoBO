@@ -4,7 +4,6 @@ import logging
 from scipy.stats import norm
 
 from robo.acquisition.entropy import Entropy
-from robo.recommendation.optimize_posterior import optimize_posterior_mean_and_std
 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)
@@ -46,14 +45,13 @@ class EntropyMC(Entropy):
 
     """
     def __init__(self, model, X_lower, X_upper,
-                 compute_inc=optimize_posterior_mean_and_std,
                  Nb=50, Nf=1000,
                  sampling_acquisition=None,
                  sampling_acquisition_kw={"par": 0.0},
                  Np=300, **kwargs):
 
         super(EntropyMC, self).__init__(model, X_lower, X_upper, Nb,
-                                        compute_inc, sampling_acquisition,
+                                        sampling_acquisition,
                                         sampling_acquisition_kw, Np, **kwargs)
         self.Nf = Nf
         self.Np = Np
