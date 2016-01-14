@@ -55,7 +55,7 @@ class BaseTask(object):
         if types is None:
             self.types = np.zeros([self.n_dims], dtype=np.uint)
         else:
-            self.types = types
+            self.types = np.array(types, dtype=np.uint)
 
         self.opt = opt
         self.fopt = fopt

@@ -6,7 +6,8 @@ python:
   - "3.5"
 os:
   - linux
-before_install: 
+before_install:
+  - sudo apt-get update
   - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
   - sudo apt-get install libeigen3-dev
   - sudo apt-get install -qq python-numpy python-scipy
@@ -14,4 +15,6 @@ install:
   - pip install --upgrade pip
   - travis_wait pip install -r requirements.txt
   - python setup.py install
-script: python -m unittest discover robo/test -v
+  - pip install coveralls
+script: coverage run --source=robo -m unittest discover robo/test -v
+after_success: coveralls

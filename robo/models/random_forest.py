@@ -56,7 +56,8 @@ class RandomForest(BaseModel):
                  max_num_nodes=10,
                  seed=42):
 
-        self.types = types
+        # make sure types are uint
+        self.types = np.array(types, dtype=np.uint)
 
         self.rf = pyrfr.regression.binary_rss()
         self.rf.num_trees = num_trees
