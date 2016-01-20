@@ -13,7 +13,7 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 class StochasticLocalSearch(BaseMaximizer):
 
     def __init__(self, objective_function, X_lower, X_upper,
-                 Ne=20, starts=None):
+                 Ne=20, starts=None, seed=42):
 
         """
         Stochastic local search.
@@ -28,9 +28,12 @@ class StochasticLocalSearch(BaseMaximizer):
             Upper bounds of the input space
         Ne: int
             Determines how often the local search is repeated
+        seed: int
+            Number that is passed to the numpy random number generator
         """
 
         self.Ne = Ne
+        self.rng = np.random.RandomState(seed)
         self.starts = starts
         super(StochasticLocalSearch, self).__init__(objective_function,
                                                     X_lower, X_upper)
@@ -70,7 +73,7 @@ class StochasticLocalSearch(BaseMaximizer):
             xx = np.add(
                 np.multiply(
                     (self.X_lower - self.X_upper),
-                    np.random.uniform(
+                    self.rng.uniform(
                         size=(
                             1,
                             self.X_lower.shape[0]))),
@@ -91,13 +94,13 @@ class StochasticLocalSearch(BaseMaximizer):
             self.starts = self.objective_func.BestGuesses
         if self.starts is not None and self.Ne > self.starts.shape[0]:
             restarts[self.starts.shape[0]:self.Ne, ] = self.X_lower + \
-                (self.X_upper - self.X_lower) * np.random.uniform(
+                (self.X_upper - self.X_lower) * self.rng.uniform(
                     size=(self.Ne - self.starts.shape[0], D))
         elif self.starts is not None:
             restarts[0:self.Ne] = self.starts[0:self.Ne]
         else:
             restarts = self.X_lower + (self.X_upper - self.X_lower) * \
-                np.random.uniform(size=(self.Ne, D))
+                self.rng.uniform(size=(self.Ne, D))
 
         sampler = emcee.EnsembleSampler(self.Ne, D, fun_p)
         Xstart, logYstart, _ = sampler.run_mcmc(restarts, 20)

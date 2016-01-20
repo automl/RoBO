@@ -5,7 +5,7 @@ __email__ = "voegtlel@tf.uni-freiburg.de"
 import numpy as np
 
 
-def init_random_uniform(X_lower, X_upper, N):
+def init_random_uniform(X_lower, X_upper, N, seed = 42):
     """
     Samples N data points uniformly.
 
@@ -17,11 +17,14 @@ def init_random_uniform(X_lower, X_upper, N):
         Upper bounds of the input space
     N: int
         The number of initial data points
+    seed: int
+        Number that is passed to the numpy random number generator
 
     Returns
     -------
     np.ndarray(N,D)
         The initial design data points
     """
+    rng = np.random.RandomState(seed)
     n_dims = X_lower.shape[0]
-    return np.array([np.random.uniform(X_lower, X_upper, n_dims) for _ in range(N)])
+    return np.array([rng.uniform(X_lower, X_upper, n_dims) for _ in range(N)])
