@@ -10,12 +10,17 @@ import scipy.stats as sps
 
 class BasePrior(object):
 
-    def __init__(self):
+    def __init__(self, seed=42):
         """
         Abstract base class to define the interface for priors
         of GP hyperparameter.
+        Parameters
+        ----------
+        seed: int
+            Number that is passed to the numpy random number generator
+
         """
-        pass
+        self.rng = np.random.RandomState(seed)
 
     def lnprob(self, theta):
         """
@@ -124,7 +129,7 @@ class TophatPrior(BasePrior):
             The samples from the prior.
         """
 
-        p0 = self.min + np.random.rand(n_samples) * (self.max - self.min)
+        p0 = self.min + self.rng.rand(n_samples) * (self.max - self.min)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -198,9 +203,9 @@ class HorseshoePrior(BasePrior):
             The samples from the prior.
         """
 
-        lamda = np.abs(np.random.standard_cauchy(size=n_samples))
+        lamda = np.abs(self.rng.standard_cauchy(size=n_samples))
 
-        p0 = np.log(np.abs(np.random.randn() * lamda * self.scale))
+        p0 = np.log(np.abs(self.rng.randn() * lamda * self.scale))
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -271,7 +276,7 @@ class LognormalPrior(BasePrior):
             The samples from the prior.
         """
 
-        p0 = np.random.lognormal(mean=self.mean,
+        p0 = self.rng.lognormal(mean=self.mean,
                                    sigma=self.sigma,
                                    size=n_samples)
         return p0[:, np.newaxis]
