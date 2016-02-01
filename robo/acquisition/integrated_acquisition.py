@@ -52,7 +52,7 @@ class IntegratedAcquisition(AcquisitionFunction):
 
         super(IntegratedAcquisition, self).__init__(model, X_lower, X_upper)
 
-    def update(self, model, cost_model=None):
+    def update(self, model, cost_model=None, **kwargs):
         '''
         Updates each acquisition function object if the models
         have changed
@@ -74,9 +74,9 @@ class IntegratedAcquisition(AcquisitionFunction):
         for i in range(self.model.n_hypers):
             if cost_model is not None:
                 self.estimators[i].update(self.model.models[i],
-                                          self.cost_model.models[i])
+                                          self.cost_model.models[i], **kwargs)
             else:
-                self.estimators[i].update(self.model.models[i])
+                self.estimators[i].update(self.model.models[i], **kwargs)
 
     def compute(self, X, derivative=False):
         """
