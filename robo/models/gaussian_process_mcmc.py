@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class GaussianProcessMCMC(BaseModel):
 
     def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
-                 burnin_steps=2000, scaling=False, *args, **kwargs):
+                 burnin_steps=2000, basis_func=None, dim=None, *args, **kwargs):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -55,10 +55,8 @@ class GaussianProcessMCMC(BaseModel):
         self.chain_length = chain_length
         self.burned = False
         self.burnin_steps = burnin_steps
-
-        # This flag is only need for environmental entropy search to transform
-        # s into (1 - s) ** 2
-        self.scaling = scaling
+        self.basis_func = basis_func
+        self.dim = dim
 
     def _scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
@@ -80,13 +78,12 @@ class GaussianProcessMCMC(BaseModel):
             hyperparameter specified in the kernel.
         """
         self.X = X
-        self.Y = Y
 
-        # Transform s to (1 - s) ** 2 only necessary for environmental
-        # entropy search
-        if self.scaling:
-            self.X = np.copy(X)
-            self.X[:, -1] = (1 - self.X[:, -1]) ** 2
+        # For EnvES we transform s to (1 - s)^2
+        if self.basis_func is not None:
+            self.X = deepcopy(X)
+            self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
+        self.Y = Y
 
         # Use the mean of the data as mean for the GP
         mean = np.mean(Y, axis=0)
@@ -108,8 +105,9 @@ class GaussianProcessMCMC(BaseModel):
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
-            self.sampler = emcee.EnsembleSampler(
-                self.n_hypers, len(self.kernel.pars), self.loglikelihood)
+            self.sampler = emcee.EnsembleSampler(self.n_hypers,
+                                                 len(self.kernel.pars),
+                                                 self.loglikelihood)
 
             # Do a burn-in in the first iteration
             if not self.burned:
@@ -136,13 +134,13 @@ class GaussianProcessMCMC(BaseModel):
             logging.info("Hypers: %s" % self.hypers)
             for sample in self.hypers:
 
-                # Instantiate a model for each hyperparam configuration
-                # TODO: Just keep one model and replace the hypers every
-                # time we need them
+                # Instantiate a model for each hyperparameter configuration
                 kernel = deepcopy(self.kernel)
                 kernel.pars = np.exp(sample)
 
-                model = GaussianProcess(kernel)
+                model = GaussianProcess(kernel,
+                                        basis_func=self.basis_func,
+                                        dim=self.dim)
                 model.train(self.X, self.Y, do_optimize=False)
                 self.models.append(model)
         else:
@@ -199,15 +197,31 @@ class GaussianProcessMCMC(BaseModel):
 
         """
 
-        if self.scaling:
-            X[:, -1] = (1 - X[:, -1]) ** 2
-        mu = np.zeros([self.n_hypers, X.shape[0]])
-        var = np.zeros([self.n_hypers, X.shape[0]])
-        for i, model in enumerate(self.models):
-            mu[i], var[i] = model.predict(X)
+        # For EnvES we transform s to (1 - s)^2
+        if self.basis_func is not None:
+            X_test = deepcopy(X)
+            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
+        else:
+            X_test = X
 
-        # See algorithm runtime prediction paper
-        # for the derivation of the variance
+        mu = np.zeros([self.n_hypers, X_test.shape[0]])
+        var = np.zeros([self.n_hypers, X_test.shape[0]])
+        for i, model in enumerate(self.models):
+            mu[i], var[i] = model.predict(X_test)
+
+        # See the algorithm runtime prediction paper by Hutter et al
+        # for the derivation of the total variance
         m = np.array([[mu.mean()]])
         v = np.mean(mu ** 2 + var) - m ** 2
-        return m[:, np.newaxis], v[:, np.newaxis]
+
+        # Clip negative variances and set them to the smallest
+        # positive float value
+        if v.shape[0] == 1:
+            v = np.clip(v, np.finfo(v.dtype).eps, np.inf)
+        else:
+            v[np.diag_indices(v.shape[0])] = \
+                    np.clip(v[np.diag_indices(v.shape[0])],
+                            np.finfo(v.dtype).eps, np.inf)
+            v[np.where((v < np.finfo(v.dtype).eps) & (v > -np.finfo(v.dtype).eps))] = 0
+
+        return m, v
