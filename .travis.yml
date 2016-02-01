@@ -13,6 +13,7 @@ before_install:
   - sudo apt-get install -qq python-numpy python-scipy
 install:
   - pip install --upgrade pip
+  - pip install cython
   - travis_wait pip install -r requirements.txt
   - python setup.py install
   - pip install coveralls
