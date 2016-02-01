@@ -5,7 +5,7 @@ __email__ = "voegtlel@tf.uni-freiburg.de"
 import numpy as np
 
 
-def init_random_normal(X_lower, X_upper, N, mean=None, std=None, seed=42):
+def init_random_normal(X_lower, X_upper, N, mean=None, std=None, rng=None):
     """
     Returns as initial design N data points sampled from a normal
     distribution.
@@ -30,7 +30,8 @@ def init_random_normal(X_lower, X_upper, N, mean=None, std=None, seed=42):
     np.ndarray(N,D)
         The initial design data points
     """
-    rng = np.random.RandomState(seed)
+    if rng is None:
+        rng = np.random.RandomState(42)
     if mean is None:
         mean = (X_upper + X_lower) * 0.5
     if std is None:

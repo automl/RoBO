@@ -13,7 +13,7 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 class StochasticLocalSearch(BaseMaximizer):
 
     def __init__(self, objective_function, X_lower, X_upper,
-                 Ne=20, starts=None, seed=42):
+                 Ne=20, starts=None, rng=None):
 
         """
         Stochastic local search.
@@ -32,8 +32,11 @@ class StochasticLocalSearch(BaseMaximizer):
             Number that is passed to the numpy random number generator
         """
 
+        if rng = None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         self.Ne = Ne
-        self.rng = np.random.RandomState(seed)
         self.starts = starts
         super(StochasticLocalSearch, self).__init__(objective_function,
                                                     X_lower, X_upper)

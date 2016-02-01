@@ -47,7 +47,7 @@ class CMAES(BaseMaximizer):
             return -acq_f(x, derivative=derivative, *args, **kwargs)[0]
         return _l
 
-    def maximize(self, seed = 42):
+    def maximize(self, rng = None):
         """
         Maximizes the given acquisition function.
 
@@ -66,7 +66,8 @@ class CMAES(BaseMaximizer):
 
         # All stdout and stderr is pointed to devnull during
         # the optimization. (That is the only way to keep cmaes quiet)
-        rng = np.random.RandomState(seed)
+        if rng is None:
+            rng = np.random.RandomState(42)
         if not self.verbose:
             sys.stdout = os.devnull
             sys.stderr = os.devnull

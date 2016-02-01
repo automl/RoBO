@@ -10,7 +10,7 @@ import scipy.stats as sps
 
 class BasePrior(object):
 
-    def __init__(self, seed=42):
+    def __init__(self, rng=None):
         """
         Abstract base class to define the interface for priors
         of GP hyperparameter.
@@ -20,7 +20,10 @@ class BasePrior(object):
             Number that is passed to the numpy random number generator
 
         """
-        self.rng = np.random.RandomState(seed)
+        if rng = None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
 
     def lnprob(self, theta):
         """

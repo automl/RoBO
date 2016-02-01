@@ -15,7 +15,7 @@ from _functools import partial
 class SciPyOptimizer(BaseMaximizer):
 
     def __init__(self, objective_function, X_lower,
-                 X_upper, n_restarts=10, verbosity=False, seed=42):
+                 X_upper, n_restarts=10, verbosity=False, rng=None):
         """
         Interface for scipy's LBFGS implementation.
 
@@ -34,7 +34,10 @@ class SciPyOptimizer(BaseMaximizer):
         seed: int
             Number that is passed to the numpy random number generator
         """
-        self.rng = np.random.RandomState(seed)
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         self.n_restarts = n_restarts
         self.verbosity = verbosity
         super(SciPyOptimizer, self).__init__(objective_function,

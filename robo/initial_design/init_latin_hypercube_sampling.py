@@ -5,7 +5,7 @@ __email__ = "voegtlel@tf.uni-freiburg.de"
 import numpy as np
 
 
-def init_latin_hypercube_sampling(X_lower, X_upper, N, seed=42):
+def init_latin_hypercube_sampling(X_lower, X_upper, N, rng=None):
     """
     Returns as initial design a N data points sampled from a latin hypercube.
 
@@ -25,7 +25,8 @@ def init_latin_hypercube_sampling(X_lower, X_upper, N, seed=42):
     np.ndarray(N,D)
         The initial design data points
     """
-    rng = np.random.RandomState(seed)
+    if rng is None:
+    	rng = np.random.RandomState(42)
     n_dims = X_lower.shape[0]
     # Generate bounds for random number generator
     s_bounds = np.array([np.linspace(X_lower[i], X_upper[i], N + 1) for i in range(n_dims)])
