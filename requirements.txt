@@ -6,4 +6,5 @@ cma
 direct
 george
 git+https://github.com/SheffieldML/GPy.git
+cython
 git+https://bitbucket.org/aadfreiburg/random_forest_run
