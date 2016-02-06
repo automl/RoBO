@@ -166,11 +166,15 @@ class ContextualBayesianOptimization(BayesianOptimization):
             num_save)
         self.recommendation_strategy = lambda model, acquisition_fkt: None
 
-    def initialize(self):
+    def initialize(self, rng=None):
         self.Z = self.context_fkt()
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         # Draw one random configuration
         self.X = np.concatenate(
-            (self.Z, np.array([np.random.uniform(self.S_lower, self.S_upper, self.dims_S)])), 1)
+            (self.Z, np.array([self.rng.uniform(self.S_lower, self.S_upper, self.dims_S)])), 1)
         print "Evaluate randomly chosen candidate %s" % (str(self.X[0]))
         self.Y = self.objective_fkt(self.X)
         print "Configuration achieved a performance of %f " % (self.Y[0])

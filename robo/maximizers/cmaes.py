@@ -50,9 +50,16 @@ class CMAES(BaseMaximizer):
             return -acq_f(x, derivative=derivative, *args, **kwargs)[0]
         return _l
 
-    def maximize(self):
+    def maximize(self, rng = None):
         """
         Maximizes the given acquisition function.
+
+        Parameters
+        ----------
+
+        seed: int
+            Number that is passed to the numpy random number generator
+
 
         Returns
         -------
@@ -62,6 +69,8 @@ class CMAES(BaseMaximizer):
 
         # All stdout and stderr is pointed to devnull during
         # the optimization. (That is the only way to keep cmaes quiet)
+        if rng is None:
+            rng = np.random.RandomState(42)
         if not self.verbose:
             sys.stdout = os.devnull
             sys.stderr = os.devnull
@@ -80,7 +89,7 @@ class CMAES(BaseMaximizer):
         if res[0] is None:
             logging.error("CMA-ES did not find anything. \
                 Return random configuration instead.")
-            return np.array([np.random.uniform(self.X_lower,
+            return np.array([rng.uniform(self.X_lower,
                                                self.X_upper,
                                                self.X_lower.shape[0])])
         if not self.verbose:

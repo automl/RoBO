@@ -30,12 +30,19 @@ class NoiseTask(BaseTask):
             super(NoiseTask, self).__init__(base_task.X_lower, base_task.X_upper,
                                             base_task.opt, base_task.fopt, base_task.do_scaling)
 
-    def objective_function(self, x):
+    def objective_function(self, x, rng = None):
         """
         Objective function delegates to the base task and adds noise.
+        Parameters
+        ----------
+        seed: int
+            Number that is passed to the numpy random number generator
+
         """
+        if rng is None:
+            rng = np.random.RandomState(42)
         res = self.base_task.objective_function(x)
-        res += np.random.normal(0, self.noise_scale, res.shape)
+        res += rng.normal(0, self.noise_scale, res.shape)
 
         return res
 
