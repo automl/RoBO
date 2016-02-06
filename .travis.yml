@@ -10,6 +10,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
   - sudo apt-get install libeigen3-dev
+  - sudo apt-get install gcc-4.9
   - gcc --version
   - sudo apt-get install -qq python-numpy python-scipy
 install:
