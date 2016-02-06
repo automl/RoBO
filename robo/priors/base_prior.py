@@ -20,7 +20,7 @@ class BasePrior(object):
             Number that is passed to the numpy random number generator
 
         """
-        if rng = None:
+        if rng is None:
             self.rng = np.random.RandomState(42)
         else:
             self.rng = rng
