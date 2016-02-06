@@ -238,7 +238,7 @@ class HorseshoePrior(BasePrior):
 
 
 class LognormalPrior(BasePrior):
-    def __init__(self, sigma, mean=0):
+    def __init__(self, sigma, mean=0, rng = None):
         """
         Log normal prior
 
@@ -250,6 +250,10 @@ class LognormalPrior(BasePrior):
         mean: float
         Specifies the mean of the normal distribution
         """
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
 
         self.sigma = sigma
         self.mean = mean
