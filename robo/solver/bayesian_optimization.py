@@ -69,6 +69,7 @@ class BayesianOptimization(BaseSolver):
                                                     maximize_func,
                                                     task,
                                                     save_dir)
+        self.start_time = time.time()
 
         if initial_design == None:
             self.initial_design = init_random_uniform
@@ -91,8 +92,11 @@ class BayesianOptimization(BaseSolver):
         else:
             self.estimator = incumbent_estimation
         self.incumbent = None
+        self.incumbents = []
+        self.incumbent_values = []
         self.n_restarts = n_restarts
         self.init_points = initial_points
+        self.runtime = []
 
     def run(self, num_iterations=10, X=None, Y=None):
         """
@@ -126,7 +130,7 @@ class BayesianOptimization(BaseSolver):
             start_time_overhead = time.time()
             init = self.initial_design(self.task.X_lower,
                                        self.task.X_upper,
-                                       self.init_points)
+                                       N=self.init_points)
 
             for i, x in enumerate(init):
                 x = x[np.newaxis, :]
@@ -154,6 +158,10 @@ class BayesianOptimization(BaseSolver):
                 self.incumbent = np.array([self.X[best_idx]])
                 self.incumbent_value = np.array([self.Y[best_idx]])
 
+                self.incumbents.append(self.incumbent)
+                self.incumbent_values.append(self.incumbent_value)
+                self.runtime.append(time.time() - self.start_time)
+
                 if self.save_dir is not None and (i) % self.num_save == 0:
                     self.save_iteration(i, hyperparameters=None,
                                         acquisition_value=0)
@@ -163,6 +171,13 @@ class BayesianOptimization(BaseSolver):
             self.Y = Y
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_overhead = np.zeros([self.X.shape[0]])
+
+            best = np.argmin(Y)
+            incumbent = X[best]
+            incumbent_value = Y[best]
+            self.incumbents.append(incumbent[np.newaxis, :])
+            self.incumbent_values.append(incumbent_value[np.newaxis, :])
+            self.runtime.append(time.time() - self.start_time)
 
         for it in range(self.init_points, num_iterations):
             logger.info("Start iteration %d ... ", it)
@@ -184,7 +199,10 @@ class BayesianOptimization(BaseSolver):
             self.incumbent, self.incumbent_value = \
                     self.estimator.estimate_incumbent(startpoints)
 
-            logger.info("New incumbent %s found in %f seconds with"
+            self.incumbents.append(self.incumbent)
+            self.incumbent_values.append(self.incumbent_value)
+
+            logger.info("New incumbent %s found in %f seconds with "
                         "estimated performance %f",
                         str(self.incumbent), time.time() - start_time_inc,
                         self.incumbent_value)
@@ -212,6 +230,8 @@ class BayesianOptimization(BaseSolver):
             # Update the data
             self.X = np.append(self.X, new_x, axis=0)
             self.Y = np.append(self.Y, new_y, axis=0)
+
+            self.runtime.append(time.time() - self.start_time)
 
             if self.save_dir is not None and (it) % self.num_save == 0:
                 hypers = self.model.hypers

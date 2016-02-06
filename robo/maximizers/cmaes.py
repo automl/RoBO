@@ -15,7 +15,7 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 
 class CMAES(BaseMaximizer):
 
-    def __init__(self, objective_function, X_lower, X_upper, verbose=True):
+    def __init__(self, objective_function, X_lower, X_upper, verbose=True, restarts=0):
         """
         Interface for the  Covariance Matrix Adaptation Evolution Strategy
         python package
@@ -32,6 +32,8 @@ class CMAES(BaseMaximizer):
             The maximum number of function evaluations
         verbose: bool
             If set to False the CMAES output is disabled
+        restarts: int
+            Number of restarts for CMAES
         """
         if X_lower.shape[0] == 1:
             raise RuntimeError("CMAES does not works in a one \
@@ -39,6 +41,7 @@ class CMAES(BaseMaximizer):
 
         super(CMAES, self).__init__(objective_function, X_lower, X_upper)
 
+        self.restarts = restarts
         self.verbose = verbose
 
     def _cma_fkt_wrapper(self, acq_f, derivative=False):
@@ -76,6 +79,7 @@ class CMAES(BaseMaximizer):
                 self.objective_func),
             (self.X_upper + self.X_lower) * 0.5,
             0.6,
+            restarts=self.restarts,
             options={
                 "bounds": [
                     self.X_lower,

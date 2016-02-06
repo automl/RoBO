@@ -9,6 +9,7 @@ import george
 import numpy as np
 
 from scipy import optimize
+from copy import deepcopy
 
 from robo.models.base_model import BaseModel
 
@@ -19,7 +20,7 @@ class GaussianProcess(BaseModel):
 
     def __init__(self, kernel, prior=None,
                  yerr=1e-25, use_gradients=True,
-                 *args, **kwargs):
+                 basis_func=None, dim=None, *args, **kwargs):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal loglikelihood.
@@ -43,6 +44,8 @@ class GaussianProcess(BaseModel):
         self.prior = prior
         self.yerr = yerr
         self.use_gradients = use_gradients
+        self.basis_func = basis_func
+        self.dim = dim
 
     def scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) *
@@ -66,6 +69,10 @@ class GaussianProcess(BaseModel):
             If set to true the hyperparameters are optimized.
         """
         self.X = X
+        # For EnvES we transform s to (1 - s)^2
+        if self.basis_func is not None:
+            self.X = deepcopy(X)
+            self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
         self.Y = Y
 
         # Use the mean of the data as mean for the GP
@@ -78,7 +85,10 @@ class GaussianProcess(BaseModel):
                 self.model.compute(self.X, yerr=self.yerr)
                 break
             except np.linalg.LinAlgError:
-                self.yerr *= 10
+                if self.yerr == 0.0:
+                    self.yerr = 1e-25
+                else:
+                    self.yerr *= 10
                 logger.error(
                     "Cholesky decomposition for the covariance matrix \
                     of the GP failed. \
@@ -125,7 +135,8 @@ class GaussianProcess(BaseModel):
         ll = self.model.lnlikelihood(self.Y[:, 0], quiet=True)
 
         # Add prior
-        ll += self.prior.lnprob(theta)
+        if self.prior is not None:
+            ll += self.prior.lnprob(theta)
 
         # We add a minus here because scipy is minimizing
         return -ll if np.isfinite(ll) else 1e25
@@ -134,7 +145,9 @@ class GaussianProcess(BaseModel):
         self.model.kernel[:] = theta
 
         gll = self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
-        gll += self.prior.gradient(theta)
+
+        if self.prior is not None:
+            gll += self.prior.gradient(theta)
         return -gll
 
     def optimize(self):
@@ -164,20 +177,29 @@ class GaussianProcess(BaseModel):
             predictive variance
 
         """
-        x_ = np.concatenate((X1, X2))
+        # For EnvES we transform s to (1 - s)^2
+        if self.basis_func is not None:
+            X_test_1 = deepcopy(X1)
+            X_test_1[:, self.dim] = self.basis_func(X_test_1[:, self.dim])
+            X_test_2 = deepcopy(X2)
+            X_test_2[:, self.dim] = self.basis_func(X_test_2[:, self.dim])
+        else:
+            X_test_1 = X1
+            X_test_2 = X2
+        x_ = np.concatenate((X_test_1, X_test_2))
         _, var = self.predict(x_)
         var = var[:-1, -1, np.newaxis]
 
         return var
 
-    def predict(self, X_test, **kwargs):
+    def predict(self, X, **kwargs):
         r"""
         Returns the predictive mean and variance of the objective function at
         the specified test point.
 
         Parameters
         ----------
-        X_test: np.ndarray (N, D)
+        X: np.ndarray (N, D)
             Input test points
 
         Returns
@@ -188,6 +210,12 @@ class GaussianProcess(BaseModel):
             predictive variance
 
         """
+        # For EnvES we transform s to (1 - s)^2
+        if self.basis_func is not None:
+            X_test = deepcopy(X)
+            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
+        else:
+            X_test = X
 
         if self.model is None:
             logger.error("The model has to be trained first!")
