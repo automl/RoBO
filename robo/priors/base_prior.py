@@ -78,7 +78,7 @@ class BasePrior(object):
 
 class TophatPrior(BasePrior):
 
-    def __init__(self, l_bound, u_bound):
+    def __init__(self, l_bound, u_bound, rng=None):
         """
         Tophat prior as it used in the original spearmint code.
 
@@ -90,6 +90,10 @@ class TophatPrior(BasePrior):
             Upper bound of the prior. Note the log scale.
 
         """
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         self.min = l_bound
         self.max = u_bound
         if not (self.max > self.min):
@@ -159,7 +163,7 @@ class TophatPrior(BasePrior):
 
 class HorseshoePrior(BasePrior):
 
-    def __init__(self, scale=0.1):
+    def __init__(self, scale=0.1, rng = None):
         """
         Horseshoe Prior as it is used in spearmint
 
@@ -169,6 +173,10 @@ class HorseshoePrior(BasePrior):
             Scaling parameter. See below how it is influenced
             the distribution.
         """
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         self.scale = scale
 
     def lnprob(self, theta):
