@@ -348,7 +348,7 @@ class Entropy(AcquisitionFunction):
             dlogPdMu = np.zeros((D, D))
             dlogPdSigma = np.zeros((D, 0.5 * D * (D + 1)))
             dlogPdMudMu = np.zeros((D, D, D))
-        for i in xrange(mu.shape[0]):
+        for i in range(mu.shape[0]):
 
             # logP[k] ) self._min_faktor(mu, var, 0)
             a = self._min_faktor(mu, covar, i)
@@ -403,7 +403,7 @@ class Entropy(AcquisitionFunction):
         M = np.copy(Mu)
         V = np.copy(Sigma)
         b = False
-        for count in xrange(50):
+        for count in range(50):
             diff = 0
             for i in range(D - 1):
                 # Take each dimension where i is not equal to k
