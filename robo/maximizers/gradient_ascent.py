@@ -44,9 +44,10 @@ class GradientAscent(BaseMaximizer):
         fx, gx = self.objective_func(x, derivative=True)
         return -fx[0], -gx[0, 0]
 
-    def maximize(self):
+    def maximize(self, rng=None):
         """
         Maximizes the given acquisition function.
+
 
         Returns
         -------
@@ -54,7 +55,10 @@ class GradientAscent(BaseMaximizer):
             Point with highest acquisition value.
         """
         # Draw N random configurations uniformly
-        random_points = np.random.uniform(
+
+        if rng is None:
+            rng = np.random.RandomState(42)
+        random_points = rng.uniform(
             self.X_lower, self.X_upper, (self.n_random, self.X_lower.shape[0]))
         fvals = np.zeros([self.n_random])
         for i in range(self.n_random):
