@@ -22,8 +22,6 @@ def init_random_normal(X_lower, X_upper, N, mean=None, std=None, rng=None):
         Mean of the normal distribution
     std: float
         Std of the normal distribution
-    seed: int
-    	Number that is passed to the numpy random number generator
 
     Returns
     -------

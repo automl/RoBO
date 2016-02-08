@@ -17,8 +17,6 @@ def init_latin_hypercube_sampling(X_lower, X_upper, N, rng=None):
         Upper bounds of the input space
     N: int
         The number of initial data points
-    seed: int
-        Number that is passed to the numpy random number generator
 
     Returns
     -------

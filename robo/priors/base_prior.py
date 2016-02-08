@@ -16,8 +16,6 @@ class BasePrior(object):
         of GP hyperparameter.
         Parameters
         ----------
-        seed: int
-            Number that is passed to the numpy random number generator
 
         """
         if rng is None:

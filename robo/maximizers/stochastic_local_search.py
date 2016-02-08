@@ -28,8 +28,6 @@ class StochasticLocalSearch(BaseMaximizer):
             Upper bounds of the input space
         Ne: int
             Determines how often the local search is repeated
-        seed: int
-            Number that is passed to the numpy random number generator
         """
 
         if rng is None:

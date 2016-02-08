@@ -48,8 +48,6 @@ class GradientAscent(BaseMaximizer):
         """
         Maximizes the given acquisition function.
 
-        seed: int
-            Number that is passed to the numpy random number generator
 
         Returns
         -------

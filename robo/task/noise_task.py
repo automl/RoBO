@@ -35,9 +35,6 @@ class NoiseTask(BaseTask):
         Objective function delegates to the base task and adds noise.
         Parameters
         ----------
-        seed: int
-            Number that is passed to the numpy random number generator
-
         """
         if rng is None:
             rng = np.random.RandomState(42)

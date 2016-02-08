@@ -31,8 +31,7 @@ class SciPyOptimizer(BaseMaximizer):
             Determines how often the local search is repeated.
         verbosity: bool
             Show scipy output.
-        seed: int
-            Number that is passed to the numpy random number generator
+
         """
         if rng is None:
             self.rng = np.random.RandomState(42)

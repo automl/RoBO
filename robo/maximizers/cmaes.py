@@ -57,9 +57,6 @@ class CMAES(BaseMaximizer):
         Parameters
         ----------
 
-        seed: int
-            Number that is passed to the numpy random number generator
-
 
         Returns
         -------
