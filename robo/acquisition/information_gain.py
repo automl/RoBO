@@ -81,7 +81,30 @@ class InformationGain(AcquisitionFunction):
         return np.array([dHp])
 
     def compute(self, X, derivative=False, **kwargs):
+        """
+        Computes the information gain of X and its derivatives
 
+        Parameters
+        ----------
+        X: np.ndarray(1, D), The input point where the acquisition function
+            should be evaluate. The dimensionality of X is (N, D), with N as
+            the number of points to evaluate at and D is the number of
+            dimensions of one X.
+
+        derivative: Boolean
+            If is set to true also the derivative of the acquisition
+            function at X is returned
+            Not implemented yet!
+
+        Returns
+        -------
+        np.ndarray(1,1)
+            Log Expected Improvement of X
+        np.ndarray(1,D)
+            Derivative of Log Expected Improvement at X
+            (only if derivative=True)
+
+        """
         if X.shape[0] > 1:
             raise ValueError("Entropy is only for single test points")
         if np.any(X < self.X_lower) or np.any(X > self.X_upper):
@@ -252,6 +275,7 @@ class InformationGain(AcquisitionFunction):
         return dm_rep, dv_rep
 
     def _joint_min(self, mu, covar, with_derivatives=False, **kwargs):
+
         mu = mu[:, 0]
         logP = np.zeros(mu.shape)
         D = mu.shape[0]

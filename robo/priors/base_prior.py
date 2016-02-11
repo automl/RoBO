@@ -10,12 +10,18 @@ import scipy.stats as sps
 
 class BasePrior(object):
 
-    def __init__(self):
+    def __init__(self, rng=None):
         """
         Abstract base class to define the interface for priors
         of GP hyperparameter.
+        Parameters
+        ----------
+
         """
-        pass
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
 
     def lnprob(self, theta):
         """
@@ -70,7 +76,7 @@ class BasePrior(object):
 
 class TophatPrior(BasePrior):
 
-    def __init__(self, l_bound, u_bound):
+    def __init__(self, l_bound, u_bound, rng=None):
         """
         Tophat prior as it used in the original spearmint code.
 
@@ -82,6 +88,10 @@ class TophatPrior(BasePrior):
             Upper bound of the prior. Note the log scale.
 
         """
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         self.min = l_bound
         self.max = u_bound
         if not (self.max > self.min):
@@ -124,7 +134,7 @@ class TophatPrior(BasePrior):
             The samples from the prior.
         """
 
-        p0 = self.min + np.random.rand(n_samples) * (self.max - self.min)
+        p0 = self.min + self.rng.rand(n_samples) * (self.max - self.min)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -151,7 +161,7 @@ class TophatPrior(BasePrior):
 
 class HorseshoePrior(BasePrior):
 
-    def __init__(self, scale=0.1):
+    def __init__(self, scale=0.1, rng = None):
         """
         Horseshoe Prior as it is used in spearmint
 
@@ -161,6 +171,10 @@ class HorseshoePrior(BasePrior):
             Scaling parameter. See below how it is influenced
             the distribution.
         """
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         self.scale = scale
 
     def lnprob(self, theta):
@@ -198,9 +212,9 @@ class HorseshoePrior(BasePrior):
             The samples from the prior.
         """
 
-        lamda = np.abs(np.random.standard_cauchy(size=n_samples))
+        lamda = np.abs(self.rng.standard_cauchy(size=n_samples))
 
-        p0 = np.log(np.abs(np.random.randn() * lamda * self.scale))
+        p0 = np.log(np.abs(self.rng.randn() * lamda * self.scale))
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -225,7 +239,7 @@ class HorseshoePrior(BasePrior):
 
 
 class LognormalPrior(BasePrior):
-    def __init__(self, sigma, mean=0):
+    def __init__(self, sigma, mean=0, rng = None):
         """
         Log normal prior
 
@@ -237,6 +251,10 @@ class LognormalPrior(BasePrior):
         mean: float
             Specifies the mean of the normal distribution
         """
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
 
         self.sigma = sigma
         self.mean = mean
@@ -274,7 +292,7 @@ class LognormalPrior(BasePrior):
             The samples from the prior.
         """
 
-        p0 = np.random.lognormal(mean=self.mean,
+        p0 = self.rng.lognormal(mean=self.mean,
                                    sigma=self.sigma,
                                    size=n_samples)
         return p0[:, np.newaxis]

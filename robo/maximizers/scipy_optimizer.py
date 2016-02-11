@@ -15,7 +15,7 @@ from _functools import partial
 class SciPyOptimizer(BaseMaximizer):
 
     def __init__(self, objective_function, X_lower,
-                 X_upper, n_restarts=10, verbosity=False):
+                 X_upper, n_restarts=10, verbosity=False, rng=None):
         """
         Interface for scipy's LBFGS implementation.
 
@@ -31,7 +31,12 @@ class SciPyOptimizer(BaseMaximizer):
             Determines how often the local search is repeated.
         verbosity: bool
             Show scipy output.
+
         """
+        if rng is None:
+            self.rng = np.random.RandomState(42)
+        else:
+            self.rng = rng
         self.n_restarts = n_restarts
         self.verbosity = verbosity
         super(SciPyOptimizer, self).__init__(objective_function,
@@ -55,7 +60,7 @@ class SciPyOptimizer(BaseMaximizer):
         f = partial(self._acquisition_fkt_wrapper, acq_f=self.objective_func)
 
         for i in range(self.n_restarts):
-            start = np.array([np.random.uniform(self.X_lower,
+            start = np.array([self.rng.uniform(self.X_lower,
                                                 self.X_upper,
                                                 self.X_lower.shape[0])])
 
@@ -119,7 +124,7 @@ class SciPyGlobalOptimizer(BaseMaximizer):
         f = partial(self._acquisition_fkt_wrapper, acq_f=self.objective_func)
 
         for i in range(self.n_restarts):
-            start = np.array([np.random.uniform(self.X_lower,
+            start = np.array([self.rng.uniform(self.X_lower,
                                                 self.X_upper,
                                                 self.X_lower.shape[0])])
             res = optimize.basinhopping(

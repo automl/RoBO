@@ -5,7 +5,7 @@ __email__ = "voegtlel@tf.uni-freiburg.de"
 import numpy as np
 
 
-def init_random_uniform(X_lower, X_upper, N):
+def init_random_uniform(X_lower, X_upper, N, rng=None):
     """
     Samples N data points uniformly.
 
@@ -23,5 +23,7 @@ def init_random_uniform(X_lower, X_upper, N):
     np.ndarray(N,D)
         The initial design data points
     """
+    if rng is None:
+        rng = np.random.RandomState(42)
     n_dims = X_lower.shape[0]
-    return np.array([np.random.uniform(X_lower, X_upper, n_dims) for _ in range(N)])
+    return np.array([rng.uniform(X_lower, X_upper, n_dims) for _ in range(N)])
