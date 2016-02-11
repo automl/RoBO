@@ -100,7 +100,7 @@ class GPyModel(BaseModel):
         ----------
         X1: np.ndarray (N, D)
             First test point
-        X2: np.ndarray (N, D)
+        X2: np.ndarray (1, D)
             Second test point
         Returns
         ----------
@@ -114,7 +114,8 @@ class GPyModel(BaseModel):
         WiKx = np.dot(self.m.posterior.woodbury_inv, Kx)
         Kbx = kern.K(X2, X1)
         var = Kbx - np.dot(KbX.T, WiKx)
-        return var
+
+        return var.T
 
     def predict(self, X, full_cov=False, **kwargs):
         """
