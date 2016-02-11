@@ -127,27 +127,32 @@ class BayesianOptimization(BaseSolver):
             self.X = np.zeros([1, self.task.n_dims])
             self.Y = np.zeros([1, 1])
 
-            start_time_overhead = time.time()
             init = self.initial_design(self.task.X_lower,
                                        self.task.X_upper,
                                        N=self.init_points)
 
             for i, x in enumerate(init):
                 x = x[np.newaxis, :]
-                self.time_overhead[i] = time.time() - start_time_overhead
 
                 logger.info("Evaluate: %s" % x)
 
                 start_time = time.time()
                 y = self.task.evaluate(x)
-                self.time_func_eval[i] = time.time() - start_time
 
                 if i == 0:
                     self.X[i] = x[0, :]
                     self.Y[i] = y[0, :]
+                    self.time_func_eval[i] = time.time() - start_time
+                    self.time_overhead[i] = 0.0
                 else:
                     self.X = np.append(self.X, x, axis=0)
                     self.Y = np.append(self.Y, y, axis=0)
+
+                    time_feval = np.array([time.time() - start_time])
+                    self.time_func_eval = np.append(self.time_func_eval,
+                                                    time_feval, axis=0)
+                    self.time_overhead = np.append(self.time_overhead,
+                                                   np.array([0]), axis=0)
 
                 logger.info("Configuration achieved a performance"
                     "of %f in %f seconds" %
