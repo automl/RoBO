@@ -24,7 +24,7 @@ class LCBTestCase(unittest.TestCase):
                     X_upper=self.X_upper,
                     X_lower=self.X_lower)
 
-    def xtest_general_interface(self):
+    def test_general_interface(self):
 
         X_test = init_random_uniform(self.X_lower, self.X_upper, 10)
 
