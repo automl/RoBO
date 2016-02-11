@@ -15,7 +15,8 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 
 class CMAES(BaseMaximizer):
 
-    def __init__(self, objective_function, X_lower, X_upper, verbose=True, restarts=0):
+    def __init__(self, objective_function, X_lower, X_upper,
+                 verbose=True, restarts=0, n_func_evals=1000):
         """
         Interface for the  Covariance Matrix Adaptation Evolution Strategy
         python package
@@ -43,6 +44,7 @@ class CMAES(BaseMaximizer):
 
         self.restarts = restarts
         self.verbose = verbose
+        self.n_func_evals = n_func_evals
 
     def _cma_fkt_wrapper(self, acq_f, derivative=False):
         def _l(x, *args, **kwargs):
@@ -65,18 +67,13 @@ class CMAES(BaseMaximizer):
         if not self.verbose:
             sys.stdout = os.devnull
             sys.stderr = os.devnull
-        res = cma.fmin(
-            self._cma_fkt_wrapper(
-                self.objective_func),
-            (self.X_upper + self.X_lower) * 0.5,
-            0.6,
-            restarts=self.restarts,
-            options={
-                "bounds": [
-                    self.X_lower,
-                    self.X_upper],
-                "verbose": 0,
-                "verb_log": sys.maxsize})
+        res = cma.fmin(self._cma_fkt_wrapper(self.objective_func),
+                x0=(self.X_upper + self.X_lower) * 0.5, sigma0=0.6,
+                restarts=self.restarts,
+                options={"bounds": [self.X_lower, self.X_upper],
+                         "verbose": 0,
+                         "verb_log": sys.maxsize,
+                         "maxfevals": self.n_func_evals})
         if res[0] is None:
             logging.error("CMA-ES did not find anything. \
                 Return random configuration instead.")

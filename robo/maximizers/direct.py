@@ -51,8 +51,9 @@ class Direct(BaseMaximizer):
             Point with highest acquisition value.
         """
         x, _, _ = DIRECT.solve(
-            self._direct_acquisition_fkt_wrapper(
-                self.objective_func), l=[
-                self.X_lower], u=[
-                self.X_upper], maxT=self.n_iters, maxf=self.n_func_evals)
+            self._direct_acquisition_fkt_wrapper(self.objective_func),
+                               l=[self.X_lower],
+                               u=[self.X_upper],
+                               maxT=self.n_iters,
+                               maxf=self.n_func_evals)
         return np.array([x])
