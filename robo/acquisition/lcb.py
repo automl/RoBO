@@ -11,12 +11,12 @@ class LCB(AcquisitionFunction):
 
     def __init__(self, model, X_lower, X_upper, par=1.0, **kwargs):
         r"""
-        The lower confidence bound acquisition functions that computest for a 
+        The lower confidence bound acquisition functions that computes for a
         test point the acquisition value by:
 
         .. math::
 
-        LCB(X) := \mu(X) + \kappa\sigma(X)
+        LCB(X) := \mu(X) - \kappa\sigma(X)
 
         Parameters
         ----------
@@ -63,15 +63,12 @@ class LCB(AcquisitionFunction):
         """
         mean, var = self.model.predict(X)
 
-        # Minimize in f so maximize negative lower bound
-        acq = -(mean - self.par * np.sqrt(var))
+        # Minimize in f so we maximize the negative lower bound
+        acq = - mean + self.par * np.sqrt(var)
         if derivative:
             dm, dv = self.model.predictive_gradients(X)
-            #TODO: compute gradient here         
-            
-            #grad = -(dm - self.par * np.sqrt(dv))
-            grad = (-dm + self.par * np.sqrt(dv) + 2 * var)
-            return acq, grad
+            grad = -dm + self.par * dv / (2 * np.sqrt(var))
+            return acq, -grad
         else:
             return acq
 

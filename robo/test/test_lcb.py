@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-import setup_logger
-
 import GPy
 import unittest
 import numpy as np
@@ -18,7 +14,7 @@ class LCBTestCase(unittest.TestCase):
     def setUp(self):
         self.X_lower = np.array([0])
         self.X_upper = np.array([1])
-        self.X = init_random_uniform(self.X_lower, self.X_upper, 10)
+        self.X = init_random_uniform(self.X_lower, self.X_upper, 4)
         self.Y = np.sin(self.X)
         self.kernel = GPy.kern.RBF(input_dim=1)
 
@@ -28,7 +24,7 @@ class LCBTestCase(unittest.TestCase):
                     X_upper=self.X_upper,
                     X_lower=self.X_lower)
 
-    def test_general_interface(self):
+    def xtest_general_interface(self):
 
         X_test = init_random_uniform(self.X_lower, self.X_upper, 10)
 
@@ -41,7 +37,7 @@ class LCBTestCase(unittest.TestCase):
         assert dadx.shape[0] == X_test.shape[0]
         assert dadx.shape[1] == X_test.shape[1]
 
-    def xtest_check_grads(self):
+    def test_check_grads(self):
         x_ = np.array([[np.random.rand()]])
 
         assert check_grad(self.lcb, lambda x: -self.lcb(x, True)[1], x_) < 1e-5
