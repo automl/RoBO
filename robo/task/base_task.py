@@ -1,9 +1,3 @@
-'''
-Created on 12.07.2015
-
-@author: Aaron Klein
-'''
-
 import numpy as np
 
 
@@ -67,8 +61,12 @@ class BaseTask(object):
             self.original_opt = opt
             self.original_fopt = fopt
 
-        self.X_lower = np.zeros(self.original_X_lower.shape)
-        self.X_upper = np.ones(self.original_X_upper.shape)
+            self.X_lower = np.zeros(self.original_X_lower.shape)
+            self.X_upper = np.ones(self.original_X_upper.shape)
+        else:
+            self.X_lower = self.X_lower
+            self.X_upper = self.X_upper
+
         if self.opt is not None:
             self.opt = self.transform(self.opt)
 

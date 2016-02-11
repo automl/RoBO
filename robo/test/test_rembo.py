@@ -1,13 +1,8 @@
-'''
-Created on Jul 21, 2015
-
-@author: Aaron Klein
-'''
-import setup_logger
 import unittest
 import numpy as np
 
 from robo.task.rembo import REMBO
+from robo.initial_design.init_random_uniform import init_random_uniform
 
 
 class Test(unittest.TestCase):
@@ -23,9 +18,11 @@ class Test(unittest.TestCase):
 
             def objective_function(self, x):
                 return x
+
         t = TestTask()
 
-        x = np.random.uniform(low=-1.0, high=1.0, size=(100, 1))
+        x = init_random_uniform(t.X_lower, t.X_lower, N=100)
+
         projected_scaled_x = t.evaluate(x)
 
         assert len(projected_scaled_x.shape) == 2
@@ -35,5 +32,4 @@ class Test(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.test_rembo']
     unittest.main()
