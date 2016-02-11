@@ -60,14 +60,10 @@ def plot_model(model,
     return ax
 
 
-def plot_objective_function(task,
-        ax,
-        X=None,
-        Y=None,
-        resolution=0.1,
-        color='black',
-        color_points='blue',
+def plot_objective_function(task, ax, X=None, Y=None,
+        resolution=0.1, color='black', color_points='blue',
         label='ObjectiveFunction'):
+
     ''' Plots the objective_function on the ax object passed to it
 
     Args:
