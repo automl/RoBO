@@ -89,8 +89,10 @@ class TestMaximizers2D(unittest.TestCase):
         n_points = 5
         self.X = np.random.rand(n_points, self.branin.n_dims)
 
-        self.X[:, 0] = self.X[:, 0].dot(self.branin.X_upper[0] - self.branin.X_lower[0]) + self.branin.X_lower[0]
-        self.X[:, 1] = self.X[:, 1].dot(self.branin.X_upper[1] - self.branin.X_lower[1]) + self.branin.X_lower[1]
+        self.X[:, 0] = self.X[:, 0].dot(self.branin.X_upper[0] \
+                        - self.branin.X_lower[0]) + self.branin.X_lower[0]
+        self.X[:, 1] = self.X[:, 1].dot(self.branin.X_upper[1] 
+                        - self.branin.X_lower[1]) + self.branin.X_lower[1]
 
         self.Y = self.branin.evaluate(self.X)
 
