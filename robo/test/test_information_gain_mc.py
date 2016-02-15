@@ -15,6 +15,7 @@ from robo.initial_design.init_random_uniform import init_random_uniform
 
 from robo.acquisition.information_gain_mc import InformationGainMC
 from robo.task.sin_func import SinFunction
+from robo.util import mc_part
 
 
 class InformationGainMCTestCase(unittest.TestCase):
@@ -52,7 +53,7 @@ class InformationGainMCTestCase(unittest.TestCase):
         m = np.ones([self.acquisition_func.Nb, 1])
         v = np.eye(self.acquisition_func.Nb)
 
-        pmin = self.acquisition_func.compute_pmin(m, v)
+        pmin = mc_part.joint_pmin(m, v, self.acquisition_func.Nf)
         uprob = 1. / self.acquisition_func.Nb
 
         assert pmin.shape[0] == self.acquisition_func.Nb
@@ -63,7 +64,7 @@ class InformationGainMCTestCase(unittest.TestCase):
         m[0] = 1
         v = np.eye(self.acquisition_func.Nb)
 
-        pmin = self.acquisition_func.compute_pmin(m, v)
+        pmin = mc_part.joint_pmin(m, v, self.acquisition_func.Nf)
         uprob = 1. / self.acquisition_func.Nb
         assert pmin[0] == 1.0
         assert np.any(pmin[:1] > 1e-10)
@@ -75,7 +76,7 @@ class InformationGainMCTestCase(unittest.TestCase):
 
         v = np.eye(self.acquisition_func.Nb)
 
-        pmin = self.acquisition_func.compute_pmin(m, v)
+        pmin = mc_part.joint_pmin(m, v, self.acquisition_func.Nf)
 
         assert pmin.shape[0] == self.acquisition_func.Nb
         assert np.any(pmin < (uprob + 0.03)) and np.any(pmin > uprob - 0.01)

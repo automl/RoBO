@@ -3,11 +3,10 @@ import emcee
 import logging
 from scipy.stats import norm
 
-import mc_part
-
 from robo.acquisition.log_ei import LogEI
 from robo.acquisition.base import AcquisitionFunction
 from robo.initial_design.init_random_uniform import init_random_uniform
+from robo.util import mc_part
 
 logger = logging.getLogger(__name__)
 
@@ -158,4 +157,4 @@ class InformationGainMC(AcquisitionFunction):
         Vb_new = self.Vb + dvdb
 
         # Return the fantasized pmin
-        return self.compute_pmin(Mb_new, Vb_new)
+        return mc_part.joint_pmin(Mb_new, Vb_new, self.Nf)

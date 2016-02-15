@@ -6,11 +6,11 @@ import logging
 import scipy
 import numpy as np
 import emcee
-import epmgp
+
 
 from robo.acquisition.log_ei import LogEI
 from robo.acquisition.base import AcquisitionFunction
-
+from robo.util import epmgp
 
 sq2 = np.sqrt(2)
 l2p = np.log(2) + np.log(np.pi)

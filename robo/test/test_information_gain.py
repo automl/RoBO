@@ -16,6 +16,7 @@ from robo.priors import default_priors
 
 from robo.acquisition.information_gain import InformationGain
 from robo.task.sin_func import SinFunction
+from robo.util import epmgp
 
 
 class InformationGainTestCase(unittest.TestCase):
@@ -53,7 +54,7 @@ class InformationGainTestCase(unittest.TestCase):
         m = np.ones([self.acquisition_func.Nb, 1])
         v = np.eye(self.acquisition_func.Nb)
 
-        pmin = self.acquisition_func._joint_min(m, v)
+        pmin = epmgp.joint_min(m, v)
         pmin = np.exp(pmin)
 
         uprob = 1. / self.acquisition_func.Nb
@@ -66,7 +67,7 @@ class InformationGainTestCase(unittest.TestCase):
         m[0] = 1
         v = np.eye(self.acquisition_func.Nb)
 
-        pmin = self.acquisition_func._joint_min(m, v)
+        pmin = epmgp.joint_min(m, v)
         pmin = np.exp(pmin)
         uprob = 1. / self.acquisition_func.Nb
         assert pmin[0] == 1.0

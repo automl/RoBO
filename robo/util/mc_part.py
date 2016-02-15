@@ -3,7 +3,29 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def joint_pmin(m, V, Nf):
+    """
+    Computes the probability of every given point to be the minimum
+    by sampling function and count how often each point has the
+    smallest function value.
+
+    Parameters
+    ----------
+    M: np.ndarray(N, 1)
+        Mean value of each of the N points.
+
+    V: np.ndarray(N, N)
+        Covariance matrix for all points
+
+    Nf: int 
+        Number of function samples that will be drawn at each point
+
+    Returns
+    -------
+    np.ndarray(N,1)
+        pmin distribution
+    """
     Nb = m.shape[0]
     noise = 0
     while(True):
