@@ -3,6 +3,8 @@ import emcee
 import logging
 from scipy.stats import norm
 
+import mc_part
+
 from robo.acquisition.log_ei import LogEI
 from robo.acquisition.base import AcquisitionFunction
 from robo.initial_design.init_random_uniform import init_random_uniform
@@ -119,72 +121,8 @@ class InformationGainMC(AcquisitionFunction):
 
         # Compute current posterior belief at the representer points
         self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True)
-
-        # Random samples that are used for drawing functions from the GP
-        self.F = np.random.multivariate_normal(mean=np.zeros(self.Nb),
-                                               cov=np.eye(self.Nb),
-                                               size=self.Nf)
-
-        # Compute the current pmin at the representer points
-        self.pmin = self.compute_pmin(self.Mb, self.Vb)
+        self.pmin = mc_part.joint_pmin(self.Mb, self.Vb, self.Nf)
         self.logP = np.log(self.pmin)
-
-    def compute_pmin(self, m, V):
-        """
-        Computes the distribution over the global minimum based on
-        functions drawn from a posterior distribution
-
-        Parameters
-        ----------
-        m: np.array(Nb, Np)
-            Mean of the representer point
-        V: np.array(Nb, Nb)
-            Variance of the representer point
-        Returns
-        -------
-        pmin: np.array(Nb)
-            Probability that the corresponding representer point is
-            the minimum
-
-        """
-        noise = 0
-        while(True):
-            try:
-                cV = np.linalg.cholesky(V + noise * np.eye(V.shape[0]))
-                break
-            except np.linalg.LinAlgError:
-
-                if noise == 0:
-                    noise = 1e-10
-                if noise == 10000:
-                    raise np.linalg.LinAlgError('Cholesky '
-                        'decomposition failed.')
-                else:
-                    noise *= 10
-
-        if noise > 0:
-            logger.error("Add %f noise on the diagonal." % noise)
-        # Draw new function samples from the innovated GP
-        # on the representer points
-        funcs = np.dot(cV, self.F.T)
-        funcs = funcs[:, :, None]
-
-        m = m[:, None, :]
-        funcs = m + funcs
-
-        funcs = funcs.reshape(funcs.shape[0], funcs.shape[1] * funcs.shape[2])
-
-        # Determine the minima for each function sample
-        mins = np.argmin(funcs, axis=0)
-        c = np.bincount(mins)
-
-        # Count how often each representer point was the minimum
-        min_count = np.zeros((self.Nb,))
-        min_count[:len(c)] += c
-        pmin = (min_count / funcs.shape[1])
-        pmin[np.where(pmin < 1e-70)] = 1e-70
-
-        return pmin
 
     def innovations(self, x, rep):
         # Get the variance at x with noise
