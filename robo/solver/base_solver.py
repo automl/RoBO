@@ -14,15 +14,31 @@ logger = logging.getLogger(__name__)
 
 
 class BaseSolver(object):
-    '''
-    classdocs
-    '''
 
     def __init__(self, acquisition_func=None, model=None,
                  maximize_func=None, task=None, save_dir=None):
-        '''
-        Constructor
-        '''
+        """
+        Base class which specifies the interface for solvers. Derive from
+        this class if you implement your own solver.
+
+        Parameters
+        ----------
+        acquisition_func: AcquisitionFunctionObject
+            The acquisition function which will be maximized.
+        model: ModelObject
+            Model (i.e. GaussianProcess, RandomForest) that models our current
+            believe of the objective function.
+        task: TaskObject
+            Task object that contains the objective function and additional
+            meta information such as the lower and upper bound of the search
+            space.
+        maximize_func: MaximizerObject
+            Optimization method that is used to maximize the acquisition
+            function
+        save_dir: String
+            Output path
+        """
+
         self.model = model
         self.acquisition_func = acquisition_func
         self.maximize_func = maximize_func
@@ -30,22 +46,6 @@ class BaseSolver(object):
         self.save_dir = save_dir
         if self.save_dir is not None:
             self.create_save_dir()
-
-    def init_last_iteration(self):
-        """
-        Loads the last iteration from a previously stored run
-        :return: the previous observations
-        """
-        raise("Not yet implemented")
-
-    def from_iteration(self, save_dir, i):
-        """
-        Loads the data from a previous run
-        :param save_dir: directory for the data
-        :param i: index of iteration
-        :return:
-        """
-        raise("Not yet implemented")
 
     def create_save_dir(self):
         """
@@ -69,32 +69,49 @@ class BaseSolver(object):
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
         """
-        The main Bayesian optimization loop
+        The main optimization loop
 
-        :param num_iterations: number of iterations to perform
-        :param X: (optional) Initial observations. If a run
-                continues these observations will be overwritten by the load
-        :param Y: (optional) Initial observations. If a run
-                continues these observations will be overwritten by the load
-        :param overwrite: data present in save_dir will be deleted
-                    and overwritten, otherwise the run will be continued.
-        :return: the incumbent
+        Parameters
+        ----------
+        num_iterations: int
+            The number of iterations
+        X: np.ndarray(N,D)
+            Initial points that are already evaluated
+        Y: np.ndarray(N,1)
+            Function values of the already evaluated points
+
+        Returns
+        -------
+        np.ndarray(1,D)
+            Incumbent
+        np.ndarray(1,1)
+            (Estimated) function value of the incumbent
         """
         pass
 
     def choose_next(self, X=None, Y=None):
         """
-        Chooses the next configuration by optimizing the acquisition function.
+        Suggests a new point to evaluate.
 
-        :param X: The point that have been where the objective function has been evaluated
-        :param Y: The function values of the evaluated points
-        :return: The next promising configuration
+        Parameters
+        ----------
+        num_iterations: int
+            The number of iterations
+        X: np.ndarray(N,D)
+            Initial points that are already evaluated
+        Y: np.ndarray(N,1)
+            Function values of the already evaluated points
+
+        Returns
+        -------
+        np.ndarray(1,D)
+            Suggested point
         """
         pass
 
     def save_iteration(self, it, **kwargs):
         """
-            Saves an iteration.
+        Saves the meta information of an iteration.
         """
 
         if self.csv_writer is None:
