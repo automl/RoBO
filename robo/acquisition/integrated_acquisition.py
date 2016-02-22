@@ -74,7 +74,8 @@ class IntegratedAcquisition(AcquisitionFunction):
         for i in range(self.model.n_hypers):
             if cost_model is not None:
                 self.estimators[i].update(self.model.models[i],
-                                          self.cost_model.models[i], **kwargs)
+                                          self.cost_model.models[i],
+                                          **kwargs)
             else:
                 self.estimators[i].update(self.model.models[i], **kwargs)
 

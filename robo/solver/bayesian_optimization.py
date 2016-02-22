@@ -154,7 +154,7 @@ class BayesianOptimization(BaseSolver):
                     self.time_overhead = np.append(self.time_overhead,
                                                    np.array([0]), axis=0)
 
-                logger.info("Configuration achieved a performance"
+                logger.info("Configuration achieved a performance "
                     "of %f in %f seconds" %
                     (self.Y[i], self.time_func_eval[i]))
 

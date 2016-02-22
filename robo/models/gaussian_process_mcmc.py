@@ -121,7 +121,7 @@ class GaussianProcessMCMC(BaseModel):
 
             # Start sampling
             pos, _, _ = self.sampler.run_mcmc(self.p0,
-                                                     self.chain_length)
+                                              self.chain_length)
 
             # Save the current position, it will be the startpoint in
             # the next iteration

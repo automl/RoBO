@@ -22,6 +22,7 @@ def init_random_normal(X_lower, X_upper, N, mean=None, std=None, rng=None):
         Mean of the normal distribution
     std: float
         Std of the normal distribution
+    rng: numpy.random.RandomState
 
     Returns
     -------
