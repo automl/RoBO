@@ -6,7 +6,7 @@ Created on 14.07.2015
 import setup_logger
 import unittest
 import numpy as np
-from robo.task.levy import Levy
+from robo.task.synthetic_functions.levy import Levy
 
 
 class TestTaskBranin(unittest.TestCase):

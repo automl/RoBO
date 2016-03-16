@@ -15,7 +15,7 @@ from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.priors import default_priors
 
 from robo.acquisition.information_gain import InformationGain
-from robo.task.sin_func import SinFunction
+from robo.task.synthetic_functions.sin_func import SinFunction
 from robo.util import epmgp
 
 

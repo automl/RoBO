@@ -7,7 +7,7 @@ import setup_logger
 import unittest
 import numpy as np
 
-from robo.task.hartmann6 import Hartmann6
+from robo.task.synthetic_functions.hartmann6 import Hartmann6
 
 
 class TestTaskHartmann6(unittest.TestCase):

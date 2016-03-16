@@ -8,7 +8,7 @@ from robo.models.random_forest import RandomForest
 from robo.acquisition.ei import EI
 #from robo.maximizers.direct import Direct
 from robo.maximizers.cmaes import CMAES
-from robo.task.branin import Branin
+from robo.task.synthetic_functions.branin import Branin
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.incumbent.posterior_optimization import PosteriorMeanAndStdOptimization
 

@@ -7,7 +7,7 @@ import setup_logger
 import unittest
 import numpy as np
 
-from robo.task.goldstein_price import GoldsteinPrice
+from robo.task.synthetic_functions.goldstein_price import GoldsteinPrice
 
 
 class TestTaskGoldsteinPrice(unittest.TestCase):

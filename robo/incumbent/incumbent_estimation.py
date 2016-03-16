@@ -10,7 +10,7 @@ class IncumbentEstimation(object):
 
     def __init__(self, model, X_lower, X_upper):
         """
-        A base class for estimate the global optimizer aka incumbent.
+        A base class to estimate the global optimizer aka incumbent.
 
         Parameters
         ----------
@@ -29,7 +29,8 @@ class IncumbentEstimation(object):
 
     def estimate_incumbent(self, startpoints):
         """
-        Abstract function that estimates the current incumbent.
+        Abstract function that estimates the current incumbent
+        by starting one local search from each of the startpoints.
 
         Parameters
         ----------

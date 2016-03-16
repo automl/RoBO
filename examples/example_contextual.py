@@ -10,11 +10,10 @@ import GPy
 from robo import BayesianOptimizationError
 from robo.contextual_bayesian_optimization import ContextualBayesianOptimization
 from robo.models.GPyModel import GPyModel
-from robo.acquisition.UCB import UCB
+from robo.acquisition.lcb import LCB
 from robo.maximizers.maximize import stochastic_local_search
 # from robo.util.loss_functions import logLoss
 # from robo.util.visualization import Visualization
-from robo.recommendation.incumbent import compute_incumbent
 from scipy.interpolate import griddata
 
 _branin_k1 = 5.1/(4*np.pi*np.pi)  # ~0.129185
@@ -105,7 +104,7 @@ kernel = GPy.kern.Matern52(input_dim=dims_Z, active_dims=list(range(dims_Z))) \
 model = GPyModel(kernel, optimize=True, noise_variance=1e-2, num_restarts=10)
 
 # The acquisition function that we optimize in order to pick a new x
-acquisition_func = UCB(model, X_lower=X_lower, X_upper=X_upper, par=1.0)
+acquisition_func = LCB(model, X_lower=X_lower, X_upper=X_upper, par=1.0)
 
 # Context function acquires random values
 def context_fkt():

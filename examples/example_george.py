@@ -8,7 +8,7 @@ import george
 
 from robo.maximizers.direct import Direct
 from robo.models.gaussian_process import GaussianProcess
-from robo.task.levy import Levy
+from robo.task.synthetic_functions.levy import Levy
 from robo.acquisition.ei import EI
 from robo.solver.bayesian_optimization import BayesianOptimization
 

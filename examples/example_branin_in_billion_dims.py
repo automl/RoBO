@@ -4,13 +4,11 @@ Created on Jul 23, 2015
 @author: Aaron Klein
 '''
 
-import setup_logger
-
 import GPy
 import numpy as np
 
 from robo.task.rembo import REMBO
-from robo.task.branin import Branin
+from robo.task.synthetic_functions.branin import Branin
 from robo.models.gpy_model import GPyModel
 from robo.maximizers.cmaes import CMAES
 from robo.solver.bayesian_optimization import BayesianOptimization

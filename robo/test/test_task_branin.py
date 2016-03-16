@@ -6,7 +6,7 @@ Created on 14.07.2015
 import setup_logger
 import unittest
 import numpy as np
-from robo.task.branin import Branin
+from robo.task.synthetic_functions.branin import Branin
 
 
 class TestTaskBranin(unittest.TestCase):

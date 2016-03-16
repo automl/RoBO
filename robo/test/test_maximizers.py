@@ -15,7 +15,7 @@ from robo.maximizers.direct import Direct
 from robo.maximizers.grid_search import GridSearch
 from robo.maximizers.stochastic_local_search import StochasticLocalSearch
 from robo.acquisition.ei import EI
-from robo.task.branin import Branin
+from robo.task.synthetic_functions.branin import Branin
 
 
 def objective_function(x):
