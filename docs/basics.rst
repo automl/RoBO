@@ -25,6 +25,7 @@ The you can start RoBO with the following command and it will return the best co
 
 	x_best, fval = fmin(objective_function, X_lower, X_upper)
 
+Note: Make sure that your objective functions always returns a 2 dimensional numpy array np.ndarray(N,D) where N corresponds to the number of data points and D of the number of objectives (normally D=1).
 
 Bayesian optimization with RoBO
 -------------------------------

@@ -254,3 +254,7 @@ class GaussianProcess(BaseModel):
         """
 
         return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)
+
+    def predictive_gradients(self, X_test):
+        dmdx, dvdx = self.m.predictive_gradients(Xnew)
+        return dmdx[:, 0, :], dvdx

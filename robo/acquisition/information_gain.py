@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class InformationGain(AcquisitionFunction):
 
     def __init__(self, model, X_lower, X_upper,
-            Nb=10, Np=400, sampling_acquisition=None,
+            Nb=50, Np=400, sampling_acquisition=None,
             sampling_acquisition_kw={"par": 0.0},
             **kwargs):
 

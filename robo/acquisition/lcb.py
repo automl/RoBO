@@ -39,7 +39,6 @@ class LCB(AcquisitionFunction):
         super(LCB, self).__init__(model, X_lower, X_upper)
 
     def compute(self, X, derivative=False, **kwargs):
-
         """
         Computes the LCB acquisition value and its derivatives.
 
