@@ -30,7 +30,7 @@ def init_random_normal(X_lower, X_upper, N, mean=None, std=None, rng=None):
         The initial design data points
     """
     if rng is None:
-        rng = np.random.RandomState(42)
+        rng = np.random.RandomState(np.random.randint(0, 10000))
     if mean is None:
         mean = (X_upper + X_lower) * 0.5
     if std is None:

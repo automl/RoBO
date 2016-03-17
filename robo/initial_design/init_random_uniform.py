@@ -24,6 +24,6 @@ def init_random_uniform(X_lower, X_upper, N, rng=None):
         The initial design data points
     """
     if rng is None:
-        rng = np.random.RandomState(42)
+        rng = np.random.RandomState(np.random.randint(0, 10000))
     n_dims = X_lower.shape[0]
     return np.array([rng.uniform(X_lower, X_upper, n_dims) for _ in range(N)])
