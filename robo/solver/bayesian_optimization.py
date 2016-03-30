@@ -124,8 +124,8 @@ class BayesianOptimization(BaseSolver):
         if X is None and Y is None:
             self.time_func_eval = np.zeros([self.init_points])
             self.time_overhead = np.zeros([self.init_points])
-            self.X = np.zeros([1, self.task.n_dims])
-            self.Y = np.zeros([1, 1])
+            self.X = np.zeros([self.init_points, self.task.n_dims])
+            self.Y = np.zeros([self.init_points, 1])
 
             init = self.initial_design(self.task.X_lower,
                                        self.task.X_upper,
@@ -139,20 +139,10 @@ class BayesianOptimization(BaseSolver):
                 start_time = time.time()
                 y = self.task.evaluate(x)
 
-                if i == 0:
-                    self.X[i] = x[0, :]
-                    self.Y[i] = y[0, :]
-                    self.time_func_eval[i] = time.time() - start_time
-                    self.time_overhead[i] = 0.0
-                else:
-                    self.X = np.append(self.X, x, axis=0)
-                    self.Y = np.append(self.Y, y, axis=0)
-
-                    time_feval = np.array([time.time() - start_time])
-                    self.time_func_eval = np.append(self.time_func_eval,
-                                                    time_feval, axis=0)
-                    self.time_overhead = np.append(self.time_overhead,
-                                                   np.array([0]), axis=0)
+                self.X[i] = x[0, :]
+                self.Y[i] = y[0, :]
+                self.time_func_eval[i] = time.time() - start_time
+                self.time_overhead[i] = 0.0
 
                 logger.info("Configuration achieved a performance "
                     "of %f in %f seconds" %
@@ -177,12 +167,12 @@ class BayesianOptimization(BaseSolver):
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_overhead = np.zeros([self.X.shape[0]])
 
-            best = np.argmin(Y)
-            incumbent = X[best]
-            incumbent_value = Y[best]
-            self.incumbents.append(incumbent[np.newaxis, :])
-            self.incumbent_values.append(incumbent_value[np.newaxis, :])
-            self.runtime.append(time.time() - self.start_time)
+#             best = np.argmin(Y)
+#             incumbent = X[best]
+#             incumbent_value = Y[best]
+#             self.incumbents.append(incumbent[np.newaxis, :])
+#             self.incumbent_values.append(incumbent_value[np.newaxis, :])
+#             self.runtime.append(time.time() - self.start_time)
 
         for it in range(self.init_points, num_iterations):
             logger.info("Start iteration %d ... ", it)

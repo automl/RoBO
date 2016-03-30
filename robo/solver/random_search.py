@@ -2,12 +2,14 @@
 import time
 import numpy as np
 import logging
+
+from robo.solver.base_solver import BaseSolver
 from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
-class RandomSearch(object):
+class RandomSearch(BaseSolver):
 
     def __init__(self, task=None, save_dir=None, num_save=1, rng=None):
         """
