@@ -24,7 +24,7 @@ def init_latin_hypercube_sampling(X_lower, X_upper, N, rng=None):
         The initial design data points
     """
     if rng is None:
-        rng = np.random.RandomState(42)
+        rng = np.random.RandomState(np.random.randint(0, 10000))
     n_dims = X_lower.shape[0]
     # Generate bounds for random number generator
     s_bounds = np.array([np.linspace(X_lower[i], X_upper[i], N + 1) for i in range(n_dims)])
