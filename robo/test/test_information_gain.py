@@ -13,7 +13,6 @@ from  scipy.optimize import check_grad
 from robo.models.gaussian_process import GaussianProcess
 from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.priors import default_priors
-
 from robo.acquisition.information_gain import InformationGain
 from robo.task.synthetic_functions.sin_func import SinFunction
 from robo.util import epmgp
