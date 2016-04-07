@@ -12,8 +12,7 @@ import numpy as np
 
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.initial_design.init_random_uniform import init_random_uniform
-
-from enves.env_posterior_opt import EnvPosteriorMeanAndStdOptimization
+from robo.incumbent.env_posterior_opt import EnvPosteriorMeanAndStdOptimization
 
 
 logger = logging.getLogger(__name__)
