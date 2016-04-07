@@ -6,22 +6,26 @@ Created on April 7th, 2016
 
 import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
 
-
-def bar_plot(
-        x,
-        curves,
-        title="",
-        width=0.10,
-        colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
-    	log_scale_y=False,
-    	log_scale_x=False,
-    	legend=True,
-    	x_title="X Label",
-    	y_title="Y Label"):
+def bar_plot(x, curves, title="", width=0.10,
+            colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
+            log_scale_y=False, log_scale_x=False, legend=True,
+            x_title="X Label", y_title="Y Label"):
+    
     '''
     Plots Mean and Standard Deviation with a Bar Graph
+
+    Example
+    -------    
+        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
+        curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
+        curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
+        curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
+        curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
+        curves = [curve1, curve2, curve3, curve4]
+
+        plot = bar_plot(x, curves, legend = True)
+        plot.show()
 
     Parameters
     -----------
@@ -100,31 +104,28 @@ def bar_plot(
     if log_scale_y:
         plt.yscale('log')
     return plt
-# EXAMPLE FOR bar_plt
-# x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
-# curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
-# curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
-# curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
-# curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
-# curves = [curve1, curve2, curve3, curve4]
-
-# plot = bar_plot(x, curves, legend = True)
-# plot.show()
 
 
-
-def point_plot(
-        x,
-        curves,
-        title="",
+def point_plot(x, curves, title="",
         colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
-        log_scale_y=False,
-        log_scale_x=False,
-        legend=True,
-        x_title="X Label",
-        y_title="Y Label"):
+        log_scale_y=False, log_scale_x=False, legend=True,
+        x_title="X Label", y_title="Y Label"):
+
     '''
     Plots Mean and Standard Deviation with an error bar graph
+
+    Example
+    -------    
+
+        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
+        curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
+        curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
+        curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
+        curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
+        curves = [curve1, curve2, curve3, curve4]
+
+        plot = point_plot(x, curves)
+        plot.show()
 
     Parameters
     ----------
@@ -190,49 +191,42 @@ def point_plot(
               y1 + plot_margin))
     return plt
 
-# EXAMPLE FOR plt_mean_std
-# x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
-# curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
-# curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
-# curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
-# curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
-# curves = [curve1, curve2, curve3, curve4]
 
-# plot = point_plot(x, curves)
-# plot.show()
-
-
-
-def latex_matrix_string(
-        mean,
-        error,
-        title,
-        row_labels,
-        col_labels,
-        best_bold_row=True,
-        best_bold_column=False):
+def latex_matrix_string(mean, error, title,
+        row_labels, col_labels, best_bold_row=True, best_bold_column=False):
+    
     '''
-Latex Matrix String Generator.
+    Latex Matrix String Generator.
+    
+    Example
+    -------
+        mean = [[1, 6, 5, 7], [12, 4, 6, 13], [9, 8, 7, 10]]
+        error = [[2, 6, 1, 5], [4, 8, 2, 3], [1, 4, 8, 2]]
 
-Parameters
-----------
-mean : array of float array
-        An array of float arrays containing mean values
-error : array of float array
-        An array of float array containing error values
-title : string
-        Title string of the table
-row_labels : string array
-        Array of strings for row names
-col_labels : string arrays
-        Array of strings for column names
-best_bold_row : boolean
-        If set to true, the minimum mean entry in each row will
-        be set to bold.
-best_bold_column :
-        If set to true, the minimum mean entry in each column will
-        be set to bold.
-'''
+
+        print(latex_matrix_string(mean, error, "Testing Testing", [
+                         "row1", "row2", "row3"], [
+                         "col1", "col2", "col3", "col4"]))
+
+    Parameters
+    ----------
+    mean : array of float array
+            An array of float arrays containing mean values
+    error : array of float array
+            An array of float array containing error values
+    title : string
+            Title string of the table
+    row_labels : string array
+            Array of strings for row names
+    col_labels : string arrays
+            Array of strings for column names
+    best_bold_row : boolean
+            If set to true, the minimum mean entry in each row will
+            be set to bold.
+    best_bold_column :
+            If set to true, the minimum mean entry in each column will
+            be set to bold.
+    '''
     matrix_string = '''\hline
 '''
     for i, row in enumerate(mean):
@@ -268,16 +262,4 @@ best_bold_column :
 \caption{''' + title + '''}
 \end{table}'''
     return latex_string1
-
-
-#EXAMPLE FOR latex_matrix_string
-# mean = [[1, 6, 5, 7], [12, 4, 6, 13], [9, 8, 7, 10]]
-# error = [[2, 6, 1, 5], [4, 8, 2, 3], [1, 4, 8, 2]]
-
-
-# print(
-#     latex_matrix_string(
-#         mean, error, "Testing Testing", [
-#             "row1", "row2", "row3"], [
-#                 "col1", "col2", "col3", "col4"]))
 
