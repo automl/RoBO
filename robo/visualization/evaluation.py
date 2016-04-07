@@ -108,7 +108,7 @@ def bar_plot(
 # curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
 # curves = [curve1, curve2, curve3, curve4]
 
-# plot = bar_plt(x, curves, legend = True)
+# plot = bar_plot(x, curves, legend = True)
 # plot.show()
 
 
@@ -191,15 +191,15 @@ def point_plot(
     return plt
 
 # EXAMPLE FOR plt_mean_std
-x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
-curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
-curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
-curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
-curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
-curves = [curve1, curve2, curve3, curve4]
+# x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
+# curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
+# curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
+# curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
+# curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
+# curves = [curve1, curve2, curve3, curve4]
 
-plot = plt_mean_std(x, curves)
-plot.show()
+# plot = point_plot(x, curves)
+# plot.show()
 
 
 
