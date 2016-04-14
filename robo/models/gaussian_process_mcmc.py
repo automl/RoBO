@@ -205,8 +205,8 @@ class GaussianProcessMCMC(BaseModel):
         else:
             X_test = X
 
-        mu = np.zeros([self.n_hypers, X_test.shape[0]])
-        var = np.zeros([self.n_hypers, X_test.shape[0]])
+        mu = np.zeros([len(self.models), X_test.shape[0]])
+        var = np.zeros([len(self.models), X_test.shape[0]])
         for i, model in enumerate(self.models):
             mu[i], var[i] = model.predict(X_test)
 
