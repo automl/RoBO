@@ -57,6 +57,7 @@ class GaussianProcessMCMC(BaseModel):
         self.burnin_steps = burnin_steps
         self.basis_func = basis_func
         self.dim = dim
+        self.models = []
 
     def _scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
@@ -131,20 +132,20 @@ class GaussianProcessMCMC(BaseModel):
             self.hypers = self.sampler.chain[:, -1]
 
             self.models = []
-            logging.info("Hypers: %s" % self.hypers)
-            for sample in self.hypers:
-
-                # Instantiate a model for each hyperparameter configuration
-                kernel = deepcopy(self.kernel)
-                kernel.pars = np.exp(sample)
-
-                model = GaussianProcess(kernel,
-                                        basis_func=self.basis_func,
-                                        dim=self.dim)
-                model.train(self.X, self.Y, do_optimize=False)
-                self.models.append(model)
         else:
-            self.hypers = self.gp.kernel[:]
+            self.hypers = [self.gp.kernel[:]]
+        logging.info("Hypers: %s" % self.hypers)
+        for sample in self.hypers:
+
+            # Instantiate a model for each hyperparameter configuration
+            kernel = deepcopy(self.kernel)
+            kernel.pars = np.exp(sample)
+
+            model = GaussianProcess(kernel,
+                                    basis_func=self.basis_func,
+                                    dim=self.dim)
+            model.train(self.X, self.Y, do_optimize=False)
+            self.models.append(model)
 
     def loglikelihood(self, theta):
         """
