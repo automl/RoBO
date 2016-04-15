@@ -10,7 +10,7 @@ import GPy
 from robo.models.gpy_model import GPyModel
 from robo.acquisition.ei import EI
 from robo.maximizers.cmaes import CMAES
-from robo.task.branin import Branin
+from robo.task.controlling_tasks import Walker
 from robo.solver.bayesian_optimization import BayesianOptimization
 
 

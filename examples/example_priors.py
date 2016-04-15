@@ -7,7 +7,7 @@ import george
 import cma
 import numpy as np
 
-from robo.task.branin import Branin
+from robo.task.synthetic_functions.branin import Branin
 from robo.priors.base_prior import BasePrior
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.priors import default_priors

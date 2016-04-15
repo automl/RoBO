@@ -25,6 +25,7 @@ The you can start RoBO with the following command and it will return the best co
 
 	x_best, fval = fmin(objective_function, X_lower, X_upper)
 
+Note: Make sure that your objective functions always returns a 2 dimensional numpy array np.ndarray(N,D) where N corresponds to the number of data points and D of the number of objectives (normally D=1).
 
 Bayesian optimization with RoBO
 -------------------------------
@@ -55,9 +56,9 @@ should contain the objective function and the bounds of the input space.
     class ExampleTask(BaseTask):
 
 	    def __init__(self):
-	        self.X_lower = np.array([0])
-	        self.X_upper = np.array([6])
-	        self.n_dims = 1
+	        X_lower = np.array([0])
+	        X_upper = np.array([6])
+	        super(ExampleTask, self).__init__(X_lower, X_upper)
 	
 	    def objective_function(self, x):
 	        return np.sin(3 * x) * 4 * (x - 1) * (x + 2)
@@ -103,15 +104,14 @@ In order to use an acquisition function (in this case Expected Improvement) you 
 
 .. code-block:: python
 	
-    from robo.acquisition.EI import EI
-    from robo.recommendation.incumbent import compute_incumbent
+    from robo.acquisition.ei import EI
 
-    acquisition_func = EI(model, X_upper=task.X_upper, X_lower=task.X_lower, compute_incumbent=compute_incumbent, par=0.1)
+    acquisition_func = EI(model, X_upper=task.X_upper, X_lower=task.X_lower, par=0.1)
 
 
 Expected Improvement as well as Probability of Improvement need as additional input the current best configuration (i.e. incumbent). There are different ways to determine 
-the incumbent. You can easily plug in any method by giving Expected Improvement a function handle (via compute_incumbent). This function is supposed to return a
-configuration and expects the model as input. In the case of EI and PI you additionally have to specify the parameter "par" which controls the balance between exploration and 
+the incumbent. You can easily plug in any method by giving Expected Improvement a module that is derived from the IncumbentEstimation interface. This module is supposed to return a
+configuration and expects the model as input (see the API for more information). In the case of EI and PI you additionally have to specify the parameter "par" which controls the balance between exploration and 
 exploitation of the acquisition function. 
 
 Maximizing the acquisition function
@@ -126,13 +126,13 @@ optimize the acquisition functions such as:
  - stochastic local search
  
 
-Here we will use a simple grid search to determine the configuration with the highest acquisition value:
+Here we will use the global optimization method Direct to determine the configuration with the highest acquisition value:
 
 .. code-block:: python
 
-	from robo.maximizers.grid_search import GridSearch
+	from robo.maximizers.direct import Direct
 
-	maximizer = GridSearch(acquisition_func, task.X_lower, task.X_upper)
+	maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
     
 Putting it all together
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -192,9 +192,8 @@ This example illustrates how you can implement the main Bayesian optimization lo
 	import numpy as np
 	
 	from robo.models.GPyModel import GPyModel
-	from robo.acquisition.EI import EI
-	from robo.maximizers.grid_search import GridSearch
-	from robo.recommendation.incumbent import compute_incumbent
+	from robo.acquisition.ei import EI
+	from robo.maximizers.direct import Direct
 	from robo.task.base_task import BaseTask
 
 	
@@ -215,11 +214,11 @@ This example illustrates how you can implement the main Bayesian optimization lo
 	model = GPyModel(kernel, optimize=True, noise_variance=1e-4, num_restarts=10)
 	
 	# The acquisition function that we optimize in order to pick a new x
-	acquisition_func = EI(model, X_upper=task.X_upper, X_lower=task.X_lower, compute_incumbent=compute_incumbent, par=0.1)  # par is the minimum improvement that a point has to obtain
+	acquisition_func = EI(model, X_upper=task.X_upper, X_lower=task.X_lower, par=0.1)  # par is the minimum improvement that a point has to obtain
 	
 	
 	# Set the method that we will use to optimize the acquisition function
-	maximizer = GridSearch(acquisition_func, task.X_lower, task.X_upper)
+	maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
 	
 	
 	# Draw one random point and evaluate it to initialize BO

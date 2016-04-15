@@ -1,19 +1,39 @@
-# imports
+
 import numpy as np
 from scipy import special
-# some variables 
+
+# some variables
 sq2 = np.sqrt(2)
 eps = np.finfo(np.float32).eps
 l2p = np.log(2) + np.log(np.pi)
 
 
-"""
-joint_min function takes the average (mu) and covariance as arguments
-and returns the predicted minimum.
-"""
-
 def joint_min(mu, var, with_derivatives=False, **kwargs):
+    """
+    Computes the probability of every given point to be the minimum
+    based on the EPMGP[1] algorithm.
 
+    [1] Cunningham, P. Hennig, and S. Lacoste-Julien.
+    Gaussian probabilities and expectation propagation.
+    under review. Preprint at arXiv, November 2011.
+
+    Parameters
+    ----------
+    M: np.ndarray(N, 1)
+        Mean value of each of the N points.
+
+    V: np.ndarray(N, N)
+        Covariance matrix for all points
+
+    with_derivatives: bool
+        If true than also the gradients are computed
+
+    Returns
+    -------
+    np.ndarray(N,1)
+        pmin distribution
+    """
+    mu = mu[:, 0]
     logP = np.zeros(mu.shape)
     D = mu.shape[0]
     if with_derivatives:
@@ -63,7 +83,8 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
 """
 min_factor
 """
-    
+
+
 def min_faktor(Mu, Sigma, k, gamma=1):
 
     D = Mu.shape[0]
@@ -82,7 +103,8 @@ def min_faktor(Mu, Sigma, k, gamma=1):
         for i in range(D - 1):
             l = i if  i < k else i + 1
             try:
-                M, V, P[i], MP[i], logS[i], d = lt_factor(k, l, M, V, MP[i], P[i], gamma)
+                M, V, P[i], MP[i], logS[i], d = lt_factor(k, l, M, V,
+                                                        MP[i], P[i], gamma)
             except Exception as e:
                 raise
 
@@ -142,7 +164,8 @@ def min_faktor(Mu, Sigma, k, gamma=1):
         yield dlogZdMu
         dlogZdMudMu = -A
         yield dlogZdMudMu
-        dlogZdSigma = -A - 2 * np.outer(r, Ab.T) + np.outer(r, r.T) + np.outer(btA.T, Ab.T)
+        dlogZdSigma = -A - 2 * np.outer(r, Ab.T) + np.outer(r, r.T)\
+                    + np.outer(btA.T, Ab.T)
         dlogZdSigma2 = np.zeros_like(dlogZdSigma)
         np.fill_diagonal(dlogZdSigma2, np.diagonal(dlogZdSigma))
         dlogZdSigma = 0.5 * (dlogZdSigma + dlogZdSigma.T - dlogZdSigma2)
@@ -151,7 +174,8 @@ def min_faktor(Mu, Sigma, k, gamma=1):
 
 """
 lt_factor
-"""    
+"""
+
 
 def lt_factor(s, l, M, V, mp, p, gamma):
 
@@ -186,9 +210,12 @@ def lt_factor(s, l, M, V, mp, p, gamma):
 
         Mnew = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
         if np.any(np.isnan(Vnew)):
-            raise Exception("an error occurs while running expectation propagation in entropy search. Resulting variance contains NaN")
+            raise Exception("an error occurs while running expectation "
+                            "propagation in entropy search. "
+                            "Resulting variance contains NaN")
         # % there is a problem here, when z is very large
-        logS = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic)) + (alpha * alpha) / (2 * beta) * cVnic
+        logS = lP - 0.5 * (np.log(beta) - np.log(pnew) - np.log(cVnic))\
+             + (alpha * alpha) / (2 * beta) * cVnic
 
     elif exit_flag == -1:
         d = np.NAN
@@ -212,11 +239,12 @@ def lt_factor(s, l, M, V, mp, p, gamma):
         Mnew = M + (dmp - cM * dp) / (1 + dp * cVc) * Vc
         logS = 0
     return Mnew, Vnew, pnew, mpnew, logS, d
-        
+
 """
 log_relative_gauss
 """
-        
+
+
 def log_relative_gauss(z):
     if z < -6:
         return 1, -1.0e12, -1

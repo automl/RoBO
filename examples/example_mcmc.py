@@ -1,11 +1,9 @@
-import setup_logger
-
 import george
 
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.acquisition.ei import EI
 from robo.maximizers.direct import Direct
-from robo.task.branin import Branin
+from robo.task.synthetic_functions.branin import Branin
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.priors.default_priors import DefaultPrior
 from robo.acquisition.integrated_acquisition import IntegratedAcquisition
