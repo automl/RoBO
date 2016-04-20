@@ -45,8 +45,8 @@ class Walker(BaseTask):
         '''
         You need pymatbridge library in order for it to work.
         '''
-        matlabpath = '/home/christina/Matlab/bin/matlab'
-        simulationpath = '/home/christina/HIWI/Three_link_walker/simulation'
+        matlabpath = '/path/to/Matlab/bin/matlab'
+        simulationpath = '/path/to/Three_link_walker/simulation'
         steps = 10        
         mlab = Matlab(executable= matlabpath)
         mlab.start()
@@ -57,7 +57,7 @@ class Walker(BaseTask):
                                
 
         answer = output['result']
-        simul_output = answer['ang2_vel']
+        simul_output = answer['speed']
         mlab.stop()
         
         return simul_output[:, np.newaxis]
