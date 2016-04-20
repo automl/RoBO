@@ -375,8 +375,10 @@ class ConvNetTask(BaseTask):
         nfilters4 = int(np.power(2.0, 4.0 + 5.0 * x[0, 15]))
 
         print("Config:")
-        print("LR_start=%f" % (LR_start))
-        print("LR_fin=%f" % (LR_fin))
+        print("LR_start:")
+        print(LR_start)
+        print("LR_fin:")
+        print(LR_fin)
         print("nfilters1=%f" % (nfilters1))
         print("nfilters2=%f" % (nfilters2))
         print("nfilters3=%f" % (nfilters3))
@@ -593,7 +595,7 @@ class ConvNetTask(BaseTask):
                                                     best_predicted_test_error))
 
             # Adapt the learning rate
-            print("Decay lr=%f by factor %f" % (LR.get_value(), LR_decay))
+            print("Decay lr=%.10f by factor %f" % (LR.get_value(), LR_decay))
             LR.set_value(np.float32(LR.get_value() * LR_decay))
 
         return best_validation_error / 100., learning_curve, best_predicted_test_error / 100.
