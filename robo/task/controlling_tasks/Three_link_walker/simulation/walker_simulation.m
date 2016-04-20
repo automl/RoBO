@@ -60,4 +60,19 @@ ang_vels = x(:,4:6);
 ang2_vel = x(:,5);
 output.ang2_vel = ang2_vel;
 
+a1_rad = x(:,4);
+a2_rad = x(:,5);
+a3_rad = x(:,6);
+
+% we have the angular velocities in rad/sec but in order to get the speed
+% we first need m/sec --> w*r. And we only need the legs.
+[r,m,Mh,Mt,L,g]=model_params;
+a1 = a1_rad*r;
+a2 = a2_rad*r;
+a3 = a3_rad*r;
+
+speed = (a1 + a2 + a3)/3;
+
+output.speed = speed;
+
 end
