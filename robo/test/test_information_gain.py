@@ -23,7 +23,7 @@ class InformationGainTestCase(unittest.TestCase):
 
     def setUp(self):
         self.task = SinFunction()
-
+        
         kernel = george.kernels.Matern52Kernel(np.ones([self.task.n_dims]) * 0.01,
                                                        ndim=self.task.n_dims)
 
@@ -32,7 +32,9 @@ class InformationGainTestCase(unittest.TestCase):
 
         prior = default_priors.TophatPrior(-2, 2)
         model = GaussianProcess(kernel, prior=prior)
-        X = init_random_uniform(self.task.X_lower, self.task.X_upper, 3)
+        X = init_random_uniform(self.task.X_lower,
+                                self.task.X_upper,
+                                3)
         Y = self.task.evaluate(X)
 
         model.train(X, Y, do_optimize=False)
@@ -101,8 +103,8 @@ class InformationGainTestCase(unittest.TestCase):
 
     def test_check_grads(self):
         x_ = np.array([[0.1]])
-
-        assert check_grad(self.acquisition_func, lambda x: -self.acquisition_func(x, True)[1], x_) < 1e-5
+        assert check_grad(self.acquisition_func,
+                lambda x: -self.acquisition_func(x, True)[1], x_) < 1e-3
 
 
 if __name__ == "__main__":

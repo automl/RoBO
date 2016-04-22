@@ -16,6 +16,7 @@ from robo.maximizers.grid_search import GridSearch
 from robo.maximizers.stochastic_local_search import StochasticLocalSearch
 from robo.acquisition.ei import EI
 from robo.task.synthetic_functions.branin import Branin
+from robo.initial_design.init_random_uniform import init_random_uniform
 
 
 def objective_function(x):
@@ -30,8 +31,7 @@ class TestMaximizers1D(unittest.TestCase):
         self.X_upper = np.array([6])
         self.dims = 1
 
-        n_points = 5
-        self.X = np.random.rand(n_points, self.dims)
+        self.X = np.array([[1], [3.8], [0.9], [5.2], [3.4]])
 
         self.X[:, 0] = self.X[:, 0].dot(self.X_upper[0] - self.X_lower[0]) + self.X_lower[0]
 
@@ -87,12 +87,12 @@ class TestMaximizers2D(unittest.TestCase):
         self.branin = Branin()
 
         n_points = 5
-        self.X = np.random.rand(n_points, self.branin.n_dims)
-
-        self.X[:, 0] = self.X[:, 0].dot(self.branin.X_upper[0] \
-                        - self.branin.X_lower[0]) + self.branin.X_lower[0]
-        self.X[:, 1] = self.X[:, 1].dot(self.branin.X_upper[1] 
-                        - self.branin.X_lower[1]) + self.branin.X_lower[1]
+        rng = np.random.RandomState(42)
+        self.X = init_random_uniform(self.branin.X_lower,
+                                     self.branin.X_upper,
+                                     n_points,
+                                     rng=rng)
+        
 
         self.Y = self.branin.evaluate(self.X)
 
