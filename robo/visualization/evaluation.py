@@ -106,10 +106,10 @@ def bar_plot(x, curves, title="", width=0.10,
     return plt
 
 
-def point_plot(x, curves, title="",
+def plot_mean_and_std(x, curves, title="",
         colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
         log_scale_y=False, log_scale_x=False, legend=True,
-        x_title="X Label", y_title="Y Label"):
+        x_title="X Label", y_title="Y Label", std_scale=1):
 
     '''
     Plots Mean and Standard Deviation with an error bar graph
