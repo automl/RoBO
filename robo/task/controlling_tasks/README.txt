@@ -1,6 +1,6 @@
 Important:
 
-Make sure you have the pymatbridge library installed and that walker_simulation.m and walker_simulation2.m are in the simulation folder of the three-link-walker simulator.
+Make sure you have pymatbridge installed and that walker_simulation.m and walker_simulation2.m are in the simulation folder of the three-link-walker simulator.
 
 walker_simulation.m and walker_simulation2.m make use of the simulator's functions and act as a bridge between RoBo and simulator.
 
