@@ -1,9 +1,8 @@
 function output = walker_simulation(args)
-% filename: test_full_simul
+% filename: walker_simulation
 % purpose: This file contains all the setup necessary to run a simulation of
-%          the three-link biped.  Note that this simulator will run any 
-%          given controller configuration, it need not be stable or
-%          physically feasible (ground penetrations are allowed).
+%          the three-link biped as a RoBo task.
+% The simulator which is called here is a software held by Professor Jessy Grizzle, University of Michigan, Professor Eric Westervelt, The Ohio State University, and Mr. Ben Morris, University of Michigan.
 
 % where to look for needed m-files 
 addpath ../functions_manual
@@ -15,11 +14,7 @@ q_minus = [pi/2-pi/8 -2*(pi/2-pi/8) -(pi/6-pi/8)]';
 dq_minus = [-1 2 1]'.*1.35;
 
 
-% choose what the 'free parameter' of the controller should be
-% note that the parameter 'a' does not contain all the information
-% necessary to describe the zero dyamics.  The values of 'theta_minus' 
-% must also % be passed everywhere
-
+% controller parameters
 a0 = args.arg1;
 a1 = args.arg2;
 a2 = args.arg3;
@@ -34,13 +29,6 @@ theta_minus = q_to_theta(q_minus);
 dtheta_minus = -dq_minus(1);
 x0 = find_ic(a,theta_minus,dtheta_minus);
 
-%----------------------------------------------------------------------------------------------
-% note: these same initial conditions may be found by the following
-% q_plus=delta_q(q_minus);
-% dq_plus=delta_dq(dq_minus);
-% x0=[q_plus dq_plus];
-% these two methods are only equivalent when q_minus and dq_minus are fully in the zero dynamics
-%-----------------------------------------------------------------------------------------------
 
 % execute the simulation 
 % parameters are as follows:  

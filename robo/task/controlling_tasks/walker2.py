@@ -3,7 +3,7 @@ import numpy as np
 from robo.task.base_task import BaseTask
 
 
-class Walker(BaseTask):
+class Walker2(BaseTask):
     
     def __init__(self):
         '''       
@@ -14,8 +14,6 @@ class Walker(BaseTask):
         The simulation code examples can be found in 
         http://web.eecs.umich.edu/~grizzle/biped_book_web/
         [three-link-walker simulation]
-        
-        Make sure walker_simulation.m is in the simulation folder
         
         The whole MATLAB code can also be found in 
         http://web.eecs.umich.edu/~grizzle/CDC2003Workshop/
@@ -28,32 +26,33 @@ class Walker(BaseTask):
         Alexandre Bouchard-Cote and Nando de Freitas. An Entropy Search 
         Portfolio for Bayesian Optimization. University of Oxford, 2014.
         "http://arxiv.org/abs/1406.4625"
+
+        Parameters
+        ----------
+        q_minus : desired state of position
+        dq_minus : desired velocity at impact
+        steps: # of impacts to simulate
         
-        The controller parameters are given directly without being calculated 
-        (like in walker_v2.py)
+        The controller parameters are calculated via q_minus and dq_minus
         '''
-        X_lower = np.array([-5,-5,-5,-5,-5,-5,-5,-5,-5,-5])
-        X_upper = np.array([5,5,5,5,5,5,5,5,5,5])        
-        super(Walker, self).__init__(X_lower, X_upper)
+        X_lower = np.array([-1,-1,-1,-1,-1,-1])
+        X_upper = np.array([3,3,3,3,3,3])        
+        super(Walker2, self).__init__(X_lower, X_upper)
         
     def objective_function(self, x):
         '''
         You need pymatbridge library in order for it to work.
-        matlabpath: we need the path to matlab since we need to run it.
         
-        IMPORTANT: walker_simulation.m must be included in the simulation file
+        IMPORTANT: walker_simulation2.m must be included in the simulation file
         of three-link-walker in order to work. So simply modify the path below.
         '''
-        matlabpath = '/path/to/Matlab/bin/matlab'
-        steps = 10  # can be changed       
-        mlab = Matlab(executable= matlabpath)
+        q_minus = x[0][:3]
+        dq_minus = x[0][3:]
+        steps = 10        
+        
+        mlab = Matlab(executable='/path/to/Matlab/bin/matlab')
         mlab.start()
-        output = mlab.run_func('walker_simulation.m', 
-                               {'arg1': np.asmatrix(x[0][:2]).T, 'arg2': np.asmatrix(x[0][2:4]).T, 
-                               'arg3': np.asmatrix(x[0][4:6]).T, 'arg4': np.asmatrix(x[0][6:8]).T,
-                               'arg5':np.asmatrix(x[0][8:]).T, 'arg6': steps})
-                               
-
+        output = mlab.run_func('walker_simulation2.m', {'arg1': q_minus, 'arg2': dq_minus, 'arg3': steps})
         answer = output['result']
         simul_output = answer['speed']
         mlab.stop()
