@@ -15,9 +15,6 @@ class Walker2(BaseTask):
         http://web.eecs.umich.edu/~grizzle/biped_book_web/
         [three-link-walker simulation]
         
-        The whole MATLAB code can also be found in 
-        http://web.eecs.umich.edu/~grizzle/CDC2003Workshop/
-
         [1] E. Westervelt and J. Grizzle. Feedback Control of Dynamic
         Bipedal Robot Locomotion. Control and Automation Series.
         CRC PressINC, 2007. ISBN 9781420053722.

@@ -15,10 +15,6 @@ class Walker(BaseTask):
         http://web.eecs.umich.edu/~grizzle/biped_book_web/
         [three-link-walker simulation]
         
-        Make sure walker_simulation.m is in the simulation folder
-        
-        The whole MATLAB code can also be found in 
-        http://web.eecs.umich.edu/~grizzle/CDC2003Workshop/
 
         [1] E. Westervelt and J. Grizzle. Feedback Control of Dynamic
         Bipedal Robot Locomotion. Control and Automation Series.
@@ -38,7 +34,6 @@ class Walker(BaseTask):
         
     def objective_function(self, x):
         '''
-        You need pymatbridge library in order for it to work.
         matlabpath: we need the path to matlab since we need to run it.
         
         IMPORTANT: walker_simulation.m must be included in the simulation file
