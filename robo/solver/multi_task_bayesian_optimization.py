@@ -209,13 +209,6 @@ class MultiTaskBO(BayesianOptimization):
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_overhead = np.zeros([self.X.shape[0]])
 
-#             best = np.argmin(Y)
-#             incumbent = X[best]
-#             incumbent_value = Y[best]
-#             self.incumbents.append(incumbent[np.newaxis, :])
-#             self.incumbent_values.append(incumbent_value[np.newaxis, :])
-#             self.runtime.append(time.time() - self.start_time)
-
         for it in range(self.init_points, num_iterations):
             logger.info("Start iteration %d ... ", it)
             # Choose a new configuration
