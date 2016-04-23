@@ -50,10 +50,13 @@ def fmin(objective_fkt,
 
     prior = DefaultPrior(len(kernel))
 
+    n_hypers = len(kernel) * 3
+    if n_hypers % 2 == 1:
+        n_hypers += 1
     model = GaussianProcessMCMC(kernel, prior=prior,
-                                n_hypers=20,
-                                chain_length=100,
-                                burnin_steps=50)
+                                n_hypers=n_hypers,
+                                chain_length=200,
+                                burnin_steps=100)
 
     if acquisition_fkt == "EI":
         a = EI(model, X_upper=task.X_upper, X_lower=task.X_lower)
@@ -93,4 +96,4 @@ def fmin(objective_fkt,
                               task=task)
 
     best_x, f_min = bo.run(num_iterations)
-    return best_x, f_min
+    return task.retransform(best_x), f_min
