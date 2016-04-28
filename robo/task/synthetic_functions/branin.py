@@ -39,4 +39,4 @@ class ShiftedBranin(Branin):
         return super(ShiftedBranin, self).objective_function(x - self.shift)
 
     def objective_function_test(self, x):
-        return super(ShiftedBranin, self).objective_function(x - self.shift)
+        return super(ShiftedBranin, self).objective_function(x - 0.1)
