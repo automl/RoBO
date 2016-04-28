@@ -12,7 +12,7 @@ class Camelback(BaseTask):
 
     def objective_function(self, x):
         y = (4-2.1*(x[:, 0]**2)+((x[:, 0]**4)/3))*(x[:, 0]**2)+ x[:, 0]*x[:, 1]+(-4+4*(x[:, 1]**2))*(x[:, 1]**2)
-        return y
+        return y[:, np.newaxis]
 
     def objective_function_test(self, x):
         return self.objective_function(x)
