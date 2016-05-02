@@ -61,7 +61,6 @@ class BaseModel(object):
         
         X: np.ndarray (N, D)
             The points to predict the gradient for
-
         Returns
         ----------
             The gradients at X

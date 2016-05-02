@@ -1,6 +1,5 @@
 '''
 Created on 12.07.2015
-
 @author: Aaron Klein
 '''
 import numpy as np
