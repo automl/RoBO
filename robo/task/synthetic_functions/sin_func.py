@@ -16,9 +16,9 @@ class SinFunction(BaseTask):
         X_upper = np.array([7])
 
         # Estimated via grid search
-        #opt = np.array([[0.82808280828082814]])
-        #fopt = np.array([[-148.66741422]])
-        super(SinFunction, self).__init__(X_lower, X_upper)
+        opt = np.array([[0.82808280828082814]])
+        fopt = np.array([[-148.66741422]])
+        super(SinFunction, self).__init__(X_lower, X_upper, opt=opt, fopt=fopt)
 
     def objective_function(self, x):
         y = 150 + np.sin(3 * x) * 4 * (x - 1) * (x + 2)

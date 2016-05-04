@@ -69,7 +69,7 @@ class GaussianProcess(BaseModel):
             If set to true the hyperparameters are optimized.
         """
         self.X = X
-        # For EnvES we transform s to (1 - s)^2
+        # For Fabolas we transform s to (1 - s)^2
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
@@ -256,5 +256,5 @@ class GaussianProcess(BaseModel):
         return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)
 
     def predictive_gradients(self, X_test):
-        dmdx, dvdx = self.m.predictive_gradients(Xnew)
+        dmdx, dvdx = self.m.predictive_gradients(X_test)
         return dmdx[:, 0, :], dvdx

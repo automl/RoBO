@@ -50,7 +50,7 @@ def fmin(objective_fkt,
 
     prior = DefaultPrior(len(kernel))
 
-    n_hypers = len(kernel) * 3
+    n_hypers = 3 * len(kernel)
     if n_hypers % 2 == 1:
         n_hypers += 1
     model = GaussianProcessMCMC(kernel, prior=prior,
