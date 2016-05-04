@@ -35,7 +35,7 @@ class RandomSearch(BaseSolver):
         """
 
         if rng is None:
-            self.rng = np.random.RandomState(42)
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
             self.rng = rng
 
@@ -149,5 +149,9 @@ class RandomSearch(BaseSolver):
         np.ndarray(1,D)
             Suggested point to evaluate
         """
-        return self.rng.uniform(self.task.X_lower,
-                                 self.task.X_upper)[np.newaxis, :]
+        x = self.rng.uniform(self.task.X_lower,
+                                 self.task.X_upper)
+        if type(x) == np.float:
+            return np.array([[x]])
+        else:                                 
+            return x[np.newaxis, :]

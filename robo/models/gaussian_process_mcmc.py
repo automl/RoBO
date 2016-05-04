@@ -48,7 +48,7 @@ class GaussianProcessMCMC(BaseModel):
 
         self.kernel = kernel
         if prior is None:
-            prior = lambda x: 0
+            self.prior = lambda x: 0
         else:
             self.prior = prior
         self.n_hypers = n_hypers
