@@ -1,11 +1,17 @@
-from pymatbridge import Matlab
+import os
 import numpy as np
+
+try:
+    from pymatbridge import Matlab
+except ImportError:
+    raise ImportError("For this task you have to install either MATLAB(R) and matpybridge or octave and oc2py")
+
 from robo.task.base_task import BaseTask
 
 
 class Walker(BaseTask):
     
-    def __init__(self):
+    def __init__(self, matlab_code_directory,num_steps = 10, matlab_executable='/usr/bin/matlab'):
         '''       
         This task is based on the Walker simulation which was originally used
         for experiments in [1].
@@ -26,6 +32,11 @@ class Walker(BaseTask):
         "http://arxiv.org/abs/1406.4625"
         
         '''
+        self.matlab_code_directory = matlab_code_directory
+        self.matlab_executable = matlab_executable
+        
+        self.num_steps = num_steps
+        
         X_lower = np.array([-3,-3,-3,-3,-3,-3,-3,-3])
         X_upper = np.array([3,3,3,3,3,3,3,3])        
         super(Walker, self).__init__(X_lower, X_upper)
@@ -38,20 +49,17 @@ class Walker(BaseTask):
         WGCCM_three_link_walker_example file in order to work. 
         So simply modify the path below.
         '''
-        matlabpath = '/path/to/Matlab/bin/matlab'
-        steps = 10  # can be changed       
-        mlab = Matlab(executable= matlabpath)
-        mlab.start()
-        output = mlab.run_func('/path/to/WGCCM_three_link_walker_example/walker_simulation.m', 
-                               {'arg1': x[:, 0],'arg2': x[:, 1],'arg3': x[:, 2],
-                               'arg4': x[:, 3],'arg5':x[:, 4],'arg6': x[:, 5],
-                               'arg7': x[:, 6],'arg8': x[:, 7],'arg9': steps})
-                               
+		mlab = Matlab(executable= matlabpath)
+		mlab.start()
+		output = mlab.run_func(os.path.join(self.matlab_code_directory, 'walker_simulation.m'), 
+						   {'arg1': x[:, 0],'arg2': x[:, 1],'arg3': x[:, 2],
+						   'arg4': x[:, 3],'arg5':x[:, 4],'arg6': x[:, 5],
+						   'arg7': x[:, 6],'arg8': x[:, 7],'arg9': self.num_steps})
+						   
 
-        answer = output['result']
-        simul_output = answer['speed']
-        mlab.stop()
-        
+		answer = output['result']
+		simul_output = answer['speed']
+		mlab.stop()
         return simul_output
         
         
