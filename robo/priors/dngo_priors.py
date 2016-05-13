@@ -8,6 +8,7 @@ import numpy as np
 
 from robo.priors.base_prior import BasePrior
 from robo.priors.base_prior import LognormalPrior
+from robo.priors.base_prior import HorseshoePrior
 
 class DNGOPrior(BasePrior):
 
@@ -27,8 +28,9 @@ class DNGOPrior(BasePrior):
         # Prior for the alpha
         self.ln_prior_alpha = LognormalPrior(sigma=0.1, mean=-10)
             
-        # Prior for the beta
-        self.ln_prior_beta = LognormalPrior(sigma=0.1, mean=2)
+        # Prior for the sigma^2
+        #self.ln_prior_beta = LognormalPrior(sigma=0.1, mean=2)
+        self.horseshoe = HorseshoePrior(scale=0.1)    
 
     def lnprob(self, theta):
         """
@@ -47,7 +49,8 @@ class DNGOPrior(BasePrior):
         """
         lp = 0
         lp += self.ln_prior_alpha.lnprob(theta[0])
-        lp += self.ln_prior_beta.lnprob(theta[-1])
+        #lp += self.ln_prior_beta.lnprob(theta[-1])
+        lp += self.horseshoe.lnprob(theta[-1])
         
         return lp        
         
@@ -55,7 +58,11 @@ class DNGOPrior(BasePrior):
     def sample_from_prior(self, n_samples):
         p0 = np.zeros([n_samples, 2])
         p0[:, 0] = self.ln_prior_alpha.sample_from_prior(n_samples)[:, 0]
-        p0[:, -1] = self.ln_prior_beta.sample_from_prior(n_samples)[:, 0]
+        #p0[:, -1] = self.ln_prior_beta.sample_from_prior(n_samples)[:, 0]
+        # Noise sigma^2
+        sigmas = self.horseshoe.sample_from_prior(n_samples)[:, 0]
+        # Betas
+        p0[:, -1] = np.log(1 / np.exp(sigmas))
 
         return p0
 

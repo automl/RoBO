@@ -115,9 +115,10 @@ class DNGO(BaseModel):
             batch_size = self.batch_size
 
         # Normalize ouputs
-        #self.Y_mean = np.mean(Y)
-        #self.Y_std = np.std(Y)
-        #self.Y = (Y - self.Y_mean) / self.Y_std
+
+        self.Y_mean = np.mean(Y)
+        self.Y_std = np.std(Y)
+        self.norm_Y = (Y - self.Y_mean) / self.Y_std
         self.Y = Y
         start_time = time.time()
 
@@ -163,7 +164,7 @@ class DNGO(BaseModel):
             train_err = 0
             train_batches = 0
 
-            for batch in self.iterate_minibatches(self.norm_X, self.Y,
+            for batch in self.iterate_minibatches(self.norm_X, self.norm_Y,
                                             batch_size, shuffle=True):
                 inputs, targets = batch
                 train_err += self.train_fn(inputs, targets)
@@ -233,7 +234,7 @@ class DNGO(BaseModel):
             model = BayesianLinearRegression(alpha=sample[0],
                                              beta=sample[1],
                                              basis_func=None)
-            model.train(self.Theta, self.Y, do_optimize=False)
+            model.train(self.Theta, self.norm_Y, do_optimize=False)
 
             self.models.append(model)
 
@@ -252,15 +253,16 @@ class DNGO(BaseModel):
         K += np.eye(self.Theta.shape[1]) * alpha**2
         K_inv = np.linalg.inv(K)
         m = beta * np.dot(K_inv, self.Theta.T)
-        m = np.dot(m, self.Y)
+        m = np.dot(m, self.norm_Y)
 
         mll = D / 2 * np.log(alpha)
         mll += N / 2 * np.log(beta)
         mll -= N / 2 * np.log(2 * np.pi)
-        mll -= beta / 2. * np.linalg.norm(self.Y - np.dot(self.Theta, m), 2)
+        mll -= beta / 2. * np.linalg.norm(self.norm_Y - np.dot(self.Theta, m), 2)
         mll -= alpha / 2. * np.dot(m.T, m)
         mll -= 0.5 * np.log(np.linalg.det(K))
-        l = mll + self.prior.lnprob(theta)
+        param = np.array([theta[0], np.log(1 / np.exp(theta[1]))])
+        l = mll + self.prior.lnprob(param)
 
         return l
 
