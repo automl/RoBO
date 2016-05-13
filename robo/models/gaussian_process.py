@@ -20,7 +20,8 @@ class GaussianProcess(BaseModel):
 
     def __init__(self, kernel, prior=None,
                  yerr=1e-25, use_gradients=True,
-                 basis_func=None, dim=None, *args, **kwargs):
+                 basis_func=None, dim=None, normalize_output=False,
+                 *args, **kwargs):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal loglikelihood.
@@ -46,6 +47,7 @@ class GaussianProcess(BaseModel):
         self.use_gradients = use_gradients
         self.basis_func = basis_func
         self.dim = dim
+        self.normalize_output = normalize_output
 
     def scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) *
@@ -73,7 +75,14 @@ class GaussianProcess(BaseModel):
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
+        
         self.Y = Y
+        if self.normalize_output:
+            self.Y_mean = np.mean(Y)
+            self.Y_std = np.std(Y)
+            self.norm_Y = (Y - self.Y_mean) / self.Y_std
+        else:
+            self.Y = self.norm_Y
 
         # Use the mean of the data as mean for the GP
         self.mean = np.mean(Y, axis=0)
@@ -132,7 +141,7 @@ class GaussianProcess(BaseModel):
             return 1e25
 
         self.model.kernel[:] = theta
-        ll = self.model.lnlikelihood(self.Y[:, 0], quiet=True)
+        ll = self.model.lnlikelihood(self.norm_Y[:, 0], quiet=True)
 
         # Add prior
         if self.prior is not None:
@@ -144,7 +153,7 @@ class GaussianProcess(BaseModel):
     def grad_nll(self, theta):
         self.model.kernel[:] = theta
 
-        gll = self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
+        gll = self.model.grad_lnlikelihood(self.norm_Y[:, 0], quiet=True)
 
         if self.prior is not None:
             gll += self.prior.gradient(theta)
@@ -210,6 +219,7 @@ class GaussianProcess(BaseModel):
             predictive variance
 
         """
+
         # For EnvES we transform s to (1 - s)^2
         if self.basis_func is not None:
             X_test = deepcopy(X)
@@ -221,7 +231,7 @@ class GaussianProcess(BaseModel):
             logger.error("The model has to be trained first!")
             raise ValueError
 
-        mu, var = self.model.predict(self.Y[:, 0], X_test)
+        mu, var = self.model.predict(self.norm_Y[:, 0], X_test)
 
         # Clip negative variances and set them to the smallest
         # positive float values
@@ -253,7 +263,7 @@ class GaussianProcess(BaseModel):
             The F function values drawn at the N test points.
         """
 
-        return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)
+        return self.model.sample_conditional(self.norm_Y[:, 0], X_test, n_funcs)
 
     def predictive_gradients(self, X_test):
         dmdx, dvdx = self.m.predictive_gradients(X_test)

@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 class GaussianProcessMCMC(BaseModel):
 
     def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
-                 burnin_steps=2000, basis_func=None, dim=None, *args, **kwargs):
+                 burnin_steps=2000, basis_func=None, dim=None,
+                 normalize_output=False, *args, **kwargs):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -58,6 +59,7 @@ class GaussianProcessMCMC(BaseModel):
         self.basis_func = basis_func
         self.dim = dim
         self.models = []
+        self.normalize_output = normalize_output        
 
     def _scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
@@ -81,10 +83,18 @@ class GaussianProcessMCMC(BaseModel):
         self.X = X
 
         # For Fabolas we transform s to (1 - s)^2
+
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
+        
         self.Y = Y
+        if self.normalize_output:
+            self.Y_mean = np.mean(Y)
+            self.Y_std = np.std(Y)
+            self.norm_Y = (Y - self.Y_mean) / self.Y_std
+        else:
+            self.Y = self.norm_Y
 
         # Use the mean of the data as mean for the GP
         mean = np.mean(Y, axis=0)
@@ -143,8 +153,9 @@ class GaussianProcessMCMC(BaseModel):
 
             model = GaussianProcess(kernel,
                                     basis_func=self.basis_func,
-                                    dim=self.dim)
-            model.train(self.X, self.Y, do_optimize=False)
+                                    dim=self.dim,
+                                    normalize_output=self.normalize_output)
+            model.train(X, self.Y, do_optimize=False)
             self.models.append(model)
 
     def loglikelihood(self, theta):
@@ -172,7 +183,7 @@ class GaussianProcessMCMC(BaseModel):
         # Update the kernel and compute the lnlikelihood.
         self.gp.kernel.pars = np.exp(theta[:])
 
-        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0],
+        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.norm_Y[:, 0],
                                                                 quiet=True)
 
     def predict(self, X, **kwargs):
