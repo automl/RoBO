@@ -5,6 +5,8 @@ Created on April 7th, 2016
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy import stats
 
 def bar_plot(x, curves, title="", width=0.10,
             colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
@@ -92,7 +94,7 @@ def bar_plot(x, curves, title="", width=0.10,
                    for i in x_location_map])
     ax.set_xticklabels([int(i) for i in x_location_map])
     if legend:
-    	ax.legend(bars, ["Curve " + str(i + 1) for i, j in enumerate(bars)], loc=0)
+    	ax.legend(bars, ["Method " + str(i + 1) for i, j in enumerate(bars)], loc=0)
     if log_scale_x:
         plt.xscale('log')
     if log_scale_y:
@@ -156,7 +158,7 @@ def point_plot(x, curves, title="",
                      yerr=curves[i][1],
                      fmt='-',
                      marker="o",
-                     label='curve' + str(i + 1),
+                     label='Method' + str(i + 1),
                      color=colors[i])
     
     plt.ylabel(y_title, fontsize = 14)
@@ -248,3 +250,156 @@ def latex_matrix_string(mean, error, title,
 \end{table}'''
     return latex_string1
 
+
+def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
+    colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
+    x_title="X Label", y_title="Y Label"):
+    '''
+    Plots Mean and Standard Deviation of Methods with multiple runs
+
+    Example
+    -------    
+        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+        methods = [method_1, method_2, method_3]
+
+        plot = plotMeanAndStd(x,methods,drawBarPlot = True)
+        plot.show()
+
+    Parameters
+    -----------
+    x : numpy array
+        For each curve, contains the x-coordinates. Each entry
+        corresponds to one method.
+    methods : list of numpy arrays
+        A list of numpy arrays of methods. Each method contains a numpy array
+        of several run of that corresponding method.
+    drawBarPlot : Bool
+        Should be True if a Bar Plot is expected.
+    drawPointPlot : Bool
+        Should be True if a Point Plot is expected.
+    title : string
+        Title of the graph
+    width : float
+        Width of the bars.
+    colors : string array
+        Color of the curve. Each entry corresponds to one curve
+    log_scale_y : Boolean
+        If set to true, changes the y-axis to log scale.
+    log_scale_x: Boolean
+        If set to true, change the x-axis to log scale.
+    legend : Boolean
+        If set to true, displays the legend.
+    x_title : String
+        X label string 
+    y_title : String
+        Y label string
+    Retrun
+    ----------
+    plt : object
+        Plot Object
+    '''
+    curves = []
+    for index,method in enumerate(methods):
+        mean = []
+        std = []
+        for j in range(0,len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            meanValue = np.mean(valueArray)
+            stdValue = np.std(valueArray)
+            mean.append(meanValue)
+            std.append(stdValue)
+        curves.append(np.array([mean,std]))
+    if(drawBarPlot):
+        barPlot = bar_plot(x,curves, title=title, width=width,
+            colors=colors,
+            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
+            x_title=x_title, y_title=y_title)
+        return barPlot
+    elif (drawPointPlot):
+        pointPlot = point_plot(x,curves,title=title,
+            colors=colors,
+            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
+            x_title=x_title, y_title=y_title)
+        return pointPlot
+    else:
+        raise NameError('Please select the type of the plot')
+
+
+def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
+    colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
+    x_title="X Label", y_title="Y Label"):
+    '''
+    Plots Mean and Standard Error of the mean for Methods with multiple runs
+
+    Example
+    -------    
+        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+        methods = [method_1, method_2, method_3]
+
+        plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
+        plot.show()
+
+    Parameters
+    -----------
+    x : numpy array
+        For each curve, contains the x-coordinates. Each entry
+        corresponds to one method.
+    methods : list of numpy arrays
+        A list of numpy arrays of methods. Each method contains a numpy array
+        of several run of that corresponding method.
+    drawBarPlot : Bool
+        Should be True if a Bar Plot is expected.
+    drawPointPlot : Bool
+        Should be True if a Point Plot is expected.
+    title : string
+        Title of the graph
+    width : float
+        Width of the bars.
+    colors : string array
+        Color of the curve. Each entry corresponds to one curve
+    log_scale_y : Boolean
+        If set to true, changes the y-axis to log scale.
+    log_scale_x: Boolean
+        If set to true, change the x-axis to log scale.
+    legend : Boolean
+        If set to true, displays the legend.
+    x_title : String
+        X label string 
+    y_title : String
+        Y label string
+    Retrun
+    ----------
+    plt : object
+        Plot Object
+    '''
+    curves = []
+    for index,method in enumerate(methods):
+        mean = []
+        sem = []
+        for j in range(0,len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            meanValue = np.mean(valueArray)
+            semValue = stats.sem(valueArray) #Standard Error of Mean
+            mean.append(meanValue)
+            sem.append(semValue)
+        curves.append(np.array([mean,sem]))
+    if(drawBarPlot):
+        barPlot = bar_plot(x,curves, title=title, width=width,
+            colors=colors,
+            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
+            x_title=x_title, y_title=y_title)
+        return barPlot
+    elif (drawPointPlot):
+        pointPlot = point_plot(x,curves,title=title,
+            colors=colors,
+            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
+            x_title=x_title, y_title=y_title)
+        return pointPlot
+    else:
+        raise NameError('Please select the type of the plot')
