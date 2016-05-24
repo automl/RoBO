@@ -151,6 +151,7 @@ class InformationGainPerUnitCost(InformationGain):
                                     self.sampling_acquisition_wrapper)
 
         self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
+
         if len(self.zb.shape) == 1:
             self.zb = self.zb[:, None]
         if len(self.lmb.shape) == 1:

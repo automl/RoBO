@@ -51,7 +51,7 @@ class DNGO(BaseModel):
 
     def __init__(self, batch_size, num_epochs, learning_rate,
                  momentum, l2, adapt_epoch,
-                 n_units_1=10, n_units_2=10, n_units_3=10,
+                 n_units_1=50, n_units_2=50, n_units_3=50,
                  alpha=1.0, beta=1000, do_optimize=True, do_mcmc=True,
                  prior=None, n_hypers=20, chain_length=2000,
                  burnin_steps=2000, *args, **kwargs):
@@ -115,11 +115,10 @@ class DNGO(BaseModel):
             batch_size = self.batch_size
 
         # Normalize ouputs
-
         self.Y_mean = np.mean(Y)
         self.Y_std = np.std(Y)
-        self.norm_Y = (Y - self.Y_mean) / self.Y_std
-        self.Y = Y
+        self.Y = (Y - self.Y_mean) / self.Y_std
+        #self.Y = Y
         start_time = time.time()
 
         # Create the neural network
@@ -164,7 +163,7 @@ class DNGO(BaseModel):
             train_err = 0
             train_batches = 0
 
-            for batch in self.iterate_minibatches(self.norm_X, self.norm_Y,
+            for batch in self.iterate_minibatches(self.norm_X, self.Y,
                                             batch_size, shuffle=True):
                 inputs, targets = batch
                 train_err += self.train_fn(inputs, targets)
@@ -234,7 +233,7 @@ class DNGO(BaseModel):
             model = BayesianLinearRegression(alpha=sample[0],
                                              beta=sample[1],
                                              basis_func=None)
-            model.train(self.Theta, self.norm_Y, do_optimize=False)
+            model.train(self.Theta, self.Y, do_optimize=False)
 
             self.models.append(model)
 
@@ -253,12 +252,12 @@ class DNGO(BaseModel):
         K += np.eye(self.Theta.shape[1]) * alpha**2
         K_inv = np.linalg.inv(K)
         m = beta * np.dot(K_inv, self.Theta.T)
-        m = np.dot(m, self.norm_Y)
+        m = np.dot(m, self.Y)
 
         mll = D / 2 * np.log(alpha)
         mll += N / 2 * np.log(beta)
         mll -= N / 2 * np.log(2 * np.pi)
-        mll -= beta / 2. * np.linalg.norm(self.norm_Y - np.dot(self.Theta, m), 2)
+        mll -= beta / 2. * np.linalg.norm(self.Y - np.dot(self.Theta, m), 2)
         mll -= alpha / 2. * np.dot(m.T, m)
         mll -= 0.5 * np.log(np.linalg.det(K))
         param = np.array([theta[0], np.log(1 / np.exp(theta[1]))])

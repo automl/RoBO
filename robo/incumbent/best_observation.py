@@ -101,9 +101,11 @@ class BestProjectedObservation(IncumbentEstimation):
         
         X_ = deepcopy(self.model.X)
         X_[:, self.is_env==1] = self.X_upper[self.is_env==1]
+
         y = np.zeros([X_.shape[0]])
         for i in range(y.shape[0]):
             y[i] = self.model.predict(X_[i, None, :])[0]
+
         best = np.argmin(y)
         incumbent = X_[best]
         incumbent_value = y[best]

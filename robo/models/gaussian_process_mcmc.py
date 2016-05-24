@@ -92,12 +92,14 @@ class GaussianProcessMCMC(BaseModel):
         if self.normalize_output:
             self.Y_mean = np.mean(Y)
             self.Y_std = np.std(Y)
-            self.norm_Y = (Y - self.Y_mean) / self.Y_std
-        else:
-            self.Y = self.norm_Y
+            #self.norm_Y = (Y - self.Y_mean) / self.Y_std
+            self.Y = (Y - self.Y_mean) / self.Y_std
+#        else:
+            #self.norm_Y = self.Y
+        
 
         # Use the mean of the data as mean for the GP
-        mean = np.mean(Y, axis=0)
+        mean = np.mean(self.Y, axis=0)
         self.gp = george.GP(self.kernel, mean=mean)
 
         # Precompute the covariance
@@ -155,7 +157,7 @@ class GaussianProcessMCMC(BaseModel):
                                     basis_func=self.basis_func,
                                     dim=self.dim,
                                     normalize_output=self.normalize_output)
-            model.train(X, self.Y, do_optimize=False)
+            model.train(X, Y, do_optimize=False)
             self.models.append(model)
 
     def loglikelihood(self, theta):
@@ -183,7 +185,7 @@ class GaussianProcessMCMC(BaseModel):
         # Update the kernel and compute the lnlikelihood.
         self.gp.kernel.pars = np.exp(theta[:])
 
-        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.norm_Y[:, 0],
+        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0],
                                                                 quiet=True)
 
     def predict(self, X, **kwargs):
@@ -210,12 +212,12 @@ class GaussianProcessMCMC(BaseModel):
         """
 
         # For EnvES we transform s to (1 - s)^2
-        if self.basis_func is not None:
-            X_test = deepcopy(X)
-            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
-        else:
-            X_test = X
-
+#        if self.basis_func is not None:
+#            X_test = deepcopy(X)
+#            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
+#        else:
+#            X_test = X
+        X_test = X
         mu = np.zeros([len(self.models), X_test.shape[0]])
         var = np.zeros([len(self.models), X_test.shape[0]])
         for i, model in enumerate(self.models):

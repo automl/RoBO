@@ -75,17 +75,17 @@ class GaussianProcess(BaseModel):
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
-        
+
         self.Y = Y
         if self.normalize_output:
             self.Y_mean = np.mean(Y)
             self.Y_std = np.std(Y)
-            self.norm_Y = (Y - self.Y_mean) / self.Y_std
-        else:
-            self.Y = self.norm_Y
+            self.Y = (Y - self.Y_mean) / self.Y_std
+        #else:
+            #self.norm_Y = self.Y
 
         # Use the mean of the data as mean for the GP
-        self.mean = np.mean(Y, axis=0)
+        self.mean = np.mean(self.Y, axis=0)
         self.model = george.GP(self.kernel, mean=self.mean)
 
         # Precompute the covariance
@@ -141,7 +141,7 @@ class GaussianProcess(BaseModel):
             return 1e25
 
         self.model.kernel[:] = theta
-        ll = self.model.lnlikelihood(self.norm_Y[:, 0], quiet=True)
+        ll = self.model.lnlikelihood(self.Y[:, 0], quiet=True)
 
         # Add prior
         if self.prior is not None:
@@ -153,7 +153,7 @@ class GaussianProcess(BaseModel):
     def grad_nll(self, theta):
         self.model.kernel[:] = theta
 
-        gll = self.model.grad_lnlikelihood(self.norm_Y[:, 0], quiet=True)
+        gll = self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
 
         if self.prior is not None:
             gll += self.prior.gradient(theta)
@@ -187,15 +187,15 @@ class GaussianProcess(BaseModel):
 
         """
         # For EnvES we transform s to (1 - s)^2
-        if self.basis_func is not None:
-            X_test_1 = deepcopy(X1)
-            X_test_1[:, self.dim] = self.basis_func(X_test_1[:, self.dim])
-            X_test_2 = deepcopy(X2)
-            X_test_2[:, self.dim] = self.basis_func(X_test_2[:, self.dim])
-        else:
-            X_test_1 = X1
-            X_test_2 = X2
-        x_ = np.concatenate((X_test_1, X_test_2))
+#        if self.basis_func is not None:
+#            X_test_1 = deepcopy(X1)
+#            X_test_1[:, self.dim] = self.basis_func(X_test_1[:, self.dim])
+#            X_test_2 = deepcopy(X2)
+#            X_test_2[:, self.dim] = self.basis_func(X_test_2[:, self.dim])
+#        else:
+#            X_test_1 = X1
+#            X_test_2 = X2
+        x_ = np.concatenate((X1, X2))
         _, var = self.predict(x_)
         var = var[:-1, -1, np.newaxis]
 
@@ -231,7 +231,7 @@ class GaussianProcess(BaseModel):
             logger.error("The model has to be trained first!")
             raise ValueError
 
-        mu, var = self.model.predict(self.norm_Y[:, 0], X_test)
+        mu, var = self.model.predict(self.Y[:, 0], X_test)
 
         # Clip negative variances and set them to the smallest
         # positive float values
@@ -263,7 +263,7 @@ class GaussianProcess(BaseModel):
             The F function values drawn at the N test points.
         """
 
-        return self.model.sample_conditional(self.norm_Y[:, 0], X_test, n_funcs)
+        return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)
 
     def predictive_gradients(self, X_test):
         dmdx, dvdx = self.m.predictive_gradients(X_test)

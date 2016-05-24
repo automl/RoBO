@@ -61,7 +61,7 @@ def plot_model(model, X_lower, X_upper, ax,
         mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
     var[var < 0.0] = 0.0
     if plot_mean:
-        ax.plot(X, mean, mean_color, label=label)
+        ax.plot(X, mean, mean_color, label=label, linewidth=3)
     if maximizer is not None:
         ax.axvline(maximizer, color='red')
     ax.fill_between(X, mean + std_scale * np.sqrt(var),
