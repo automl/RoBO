@@ -85,6 +85,7 @@ class EI(AcquisitionFunction):
         np.ndarray(1,D)
             Derivative of Expected Improvement at X (only if derivative=True)
         """
+
         if X.shape[0] > 1:
             raise ValueError("EI is only for single test points")
 
@@ -99,12 +100,13 @@ class EI(AcquisitionFunction):
             else:
                 return np.array([[0]])
 
-        m, v = self.model.predict(X, full_cov=True)
+        m, v = self.model.predict(X)
 
         # Use the best seen observation as incumbent
         _, eta = self.rec.estimate_incumbent(None)
 
         s = np.sqrt(v)
+
         if (s == 0).any():
             f = np.array([[0]])
             df = np.zeros((1, X.shape[1]))
@@ -112,6 +114,7 @@ class EI(AcquisitionFunction):
         else:
             z = (eta - m - self.par) / s
             f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)
+
             if derivative:
                 dmdx, ds2dx = self.model.predictive_gradients(X)
                 dmdx = dmdx[0]

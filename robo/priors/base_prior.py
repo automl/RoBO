@@ -19,7 +19,7 @@ class BasePrior(object):
 
         """
         if rng is None:
-            self.rng = np.random.RandomState(42)
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
             self.rng = rng
 

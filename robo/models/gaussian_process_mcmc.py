@@ -48,7 +48,7 @@ class GaussianProcessMCMC(BaseModel):
 
         self.kernel = kernel
         if prior is None:
-            prior = lambda x: 0
+            self.prior = lambda x: 0
         else:
             self.prior = prior
         self.n_hypers = n_hypers
@@ -57,6 +57,7 @@ class GaussianProcessMCMC(BaseModel):
         self.burnin_steps = burnin_steps
         self.basis_func = basis_func
         self.dim = dim
+        self.models = []
 
     def _scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
@@ -79,7 +80,7 @@ class GaussianProcessMCMC(BaseModel):
         """
         self.X = X
 
-        # For EnvES we transform s to (1 - s)^2
+        # For Fabolas we transform s to (1 - s)^2
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
@@ -131,20 +132,20 @@ class GaussianProcessMCMC(BaseModel):
             self.hypers = self.sampler.chain[:, -1]
 
             self.models = []
-            logging.info("Hypers: %s" % self.hypers)
-            for sample in self.hypers:
-
-                # Instantiate a model for each hyperparameter configuration
-                kernel = deepcopy(self.kernel)
-                kernel.pars = np.exp(sample)
-
-                model = GaussianProcess(kernel,
-                                        basis_func=self.basis_func,
-                                        dim=self.dim)
-                model.train(self.X, self.Y, do_optimize=False)
-                self.models.append(model)
         else:
-            self.hypers = self.gp.kernel[:]
+            self.hypers = [self.gp.kernel[:]]
+        logging.info("Hypers: %s" % self.hypers)
+        for sample in self.hypers:
+
+            # Instantiate a model for each hyperparameter configuration
+            kernel = deepcopy(self.kernel)
+            kernel.pars = np.exp(sample)
+
+            model = GaussianProcess(kernel,
+                                    basis_func=self.basis_func,
+                                    dim=self.dim)
+            model.train(self.X, self.Y, do_optimize=False)
+            self.models.append(model)
 
     def loglikelihood(self, theta):
         """
@@ -204,8 +205,8 @@ class GaussianProcessMCMC(BaseModel):
         else:
             X_test = X
 
-        mu = np.zeros([self.n_hypers, X_test.shape[0]])
-        var = np.zeros([self.n_hypers, X_test.shape[0]])
+        mu = np.zeros([len(self.models), X_test.shape[0]])
+        var = np.zeros([len(self.models), X_test.shape[0]])
         for i, model in enumerate(self.models):
             mu[i], var[i] = model.predict(X_test)
 
