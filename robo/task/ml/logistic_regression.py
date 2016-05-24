@@ -23,13 +23,13 @@ class LogisticRegression(BaseTask):
         error metric is the classification error of the test data.
 
         This benchmarks is based on the experiments conducted in the
-        MultiTaskBO paper by Swersky et. al. [1]. The implementation
+        Spearming paper by Snoek et. al. [1]. The implementation
         is mostly copied from the Theano tutorial page:
         http://deeplearning.net/tutorial/logreg.html
 
-        [1] Multi-Task Bayesian Optimization
-            Swersky, Kevin and Snoek, Jasper and Adams, Ryan P
-            Advances in Neural Information Processing Systems 26
+        [1] J. Snoek, H. Larochelle, and R.P. Adams.
+            Practical Bayesian optimization of machine learning algorithms.
+            In Proc. of NIPS 12
 
         Parameters
         ----------
@@ -88,8 +88,12 @@ class LogisticRegression(BaseTask):
 
         self.l2_sqr = (self.W ** 2).sum()
 
-        X_lower = np.array([1e-4, 0.0, 64, 25])
-        X_upper = np.array([1.0, 1.0, 1024, 1000])
+        # 1 Dim Learning Rate
+        # 2 Dim L2 regularization
+        # 3 Dim Batch size
+        # 4 Dim Number of epochs
+        X_lower = np.array([np.log(1e-10), 0.0, 20, 5])
+        X_upper = np.array([np.log(1.0), 1.0, 2000, 2000])
         super(LogisticRegression, self).__init__(X_lower, X_upper)
 
     def negative_log_likelihood(self, y):
@@ -108,10 +112,10 @@ class LogisticRegression(BaseTask):
 
     def objective_function(self, x):
 
-        learning_rate = x[0, 0]
-        l2_reg = x[0, 1]
-        batch_size = int(x[0, 2])
-        n_epochs = int(x[0, 3])
+        learning_rate = np.float32(np.exp(x[0, 0]))
+        l2_reg = np.float32(x[0, 1])
+        batch_size = np.int32(x[0, 2])
+        n_epochs = np.int32(x[0, 3])
 
         n_train_batches = self.train_set_x.get_value(borrow=True).shape[0] // batch_size
         n_valid_batches = self.valid_set_x.get_value(borrow=True).shape[0] // batch_size
@@ -211,4 +215,9 @@ class LogisticRegression(BaseTask):
             'with test performance %f %%') % (best_validation_loss * 100.,
                                               test_score * 100.))
 
-        return np.array([[test_score]])
+        self.test_error = np.array([[test_score]])
+        return np.array([[best_validation_loss]])
+        
+    def objective_function_test(self, x):        
+        self.objective_function(x)
+        return self.test_error

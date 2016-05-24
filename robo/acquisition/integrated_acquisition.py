@@ -8,7 +8,8 @@ import numpy as np
 
 from copy import deepcopy
 from robo.acquisition.base import AcquisitionFunction
-
+from robo.models.dngo import DNGO
+import lasagne
 logger = logging.getLogger(__name__)
 
 
@@ -104,9 +105,18 @@ class IntegratedAcquisition(AcquisitionFunction):
         """
         acquisition_values = np.zeros([self.model.n_hypers])
 
+        if isinstance(self.model, DNGO):
+            X_ = (X - self.model.X_mean) /  self.model.X_std 
+
+            # Get features from the net
+            layers = lasagne.layers.get_all_layers(self.model.network)        
+            theta = lasagne.layers.get_output(layers[:-1], X_)[-1].eval()
+        else:
+            theta = X
+
         # Integrate over the acquisition values
         for i in range(self.model.n_hypers):
-            acquisition_values[i] = self.estimators[i](X,
+            acquisition_values[i] = self.estimators[i](theta,
                                                     derivative=derivative)
-
+                                                 
         return np.array([[acquisition_values.mean()]])

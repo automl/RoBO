@@ -25,6 +25,7 @@ class MultiTaskBO(BayesianOptimization):
                  cost_model,
                  maximize_func,
                  task,
+                 n_tasks,
                  save_dir=None,
                  num_save=1,
                  train_intervall=1,
@@ -74,7 +75,7 @@ class MultiTaskBO(BayesianOptimization):
         self.model = model
         self.maximize_func = maximize_func
         self.task = task
-
+        self.n_tasks = n_tasks
         self.cost_model = cost_model
         self.save_dir = save_dir
         self.num_save = num_save
@@ -327,7 +328,8 @@ class MultiTaskBO(BayesianOptimization):
             # Maximize the acquisition function and return the suggested point
             t = time.time()
             x = self.maximize_func.maximize()
-            x[:, -1] = np.round(x[:, -1])
+            #x[:, -1] = np.round(x[:, -1])
+            #x[:, np.where(self.task.is_env == 1)] = np.floor(x[:, -1] * self.n_tasks)
             logger.info("Time to maximize the acquisition function: %f",
                         (time.time() - t))
 

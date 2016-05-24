@@ -89,7 +89,7 @@ class TophatPrior(BasePrior):
 
         """
         if rng is None:
-            self.rng = np.random.RandomState(42)
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
             self.rng = rng
         self.min = l_bound
@@ -172,7 +172,7 @@ class HorseshoePrior(BasePrior):
             the distribution.
         """
         if rng is None:
-            self.rng = np.random.RandomState(42)
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
             self.rng = rng
         self.scale = scale
@@ -252,7 +252,7 @@ class LognormalPrior(BasePrior):
             Specifies the mean of the normal distribution
         """
         if rng is None:
-            self.rng = np.random.RandomState(42)
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
             self.rng = rng
 

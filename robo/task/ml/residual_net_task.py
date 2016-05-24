@@ -189,12 +189,12 @@ class ResidualNetwork(BaseTask):
             yield inp_exc, targets[excerpt]
 
     def objective_function(self, x):
-        print x
+
         lr = np.float32(np.power(10, x[0, 0]))
         l2_fac = np.float32(np.power(10, x[0, 1]))
         lr_factor = np.float32(np.power(10, x[0, 2]))
         momentum = np.float32(x[0, 3])
-        print lr, l2_fac, lr_factor, momentum
+
         self.start_time = time.time()
 
         # Create neural network model

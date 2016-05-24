@@ -20,7 +20,8 @@ class GaussianProcess(BaseModel):
 
     def __init__(self, kernel, prior=None,
                  yerr=1e-25, use_gradients=True,
-                 basis_func=None, dim=None, *args, **kwargs):
+                 basis_func=None, dim=None, normalize_output=False,
+                 *args, **kwargs):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal loglikelihood.
@@ -46,6 +47,7 @@ class GaussianProcess(BaseModel):
         self.use_gradients = use_gradients
         self.basis_func = basis_func
         self.dim = dim
+        self.normalize_output = normalize_output
 
     def scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) *
@@ -73,10 +75,17 @@ class GaussianProcess(BaseModel):
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
+
         self.Y = Y
+        if self.normalize_output:
+            self.Y_mean = np.mean(Y)
+            self.Y_std = np.std(Y)
+            self.Y = (Y - self.Y_mean) / self.Y_std
+        #else:
+            #self.norm_Y = self.Y
 
         # Use the mean of the data as mean for the GP
-        self.mean = np.mean(Y, axis=0)
+        self.mean = np.mean(self.Y, axis=0)
         self.model = george.GP(self.kernel, mean=self.mean)
 
         # Precompute the covariance
@@ -178,15 +187,15 @@ class GaussianProcess(BaseModel):
 
         """
         # For EnvES we transform s to (1 - s)^2
-        if self.basis_func is not None:
-            X_test_1 = deepcopy(X1)
-            X_test_1[:, self.dim] = self.basis_func(X_test_1[:, self.dim])
-            X_test_2 = deepcopy(X2)
-            X_test_2[:, self.dim] = self.basis_func(X_test_2[:, self.dim])
-        else:
-            X_test_1 = X1
-            X_test_2 = X2
-        x_ = np.concatenate((X_test_1, X_test_2))
+#        if self.basis_func is not None:
+#            X_test_1 = deepcopy(X1)
+#            X_test_1[:, self.dim] = self.basis_func(X_test_1[:, self.dim])
+#            X_test_2 = deepcopy(X2)
+#            X_test_2[:, self.dim] = self.basis_func(X_test_2[:, self.dim])
+#        else:
+#            X_test_1 = X1
+#            X_test_2 = X2
+        x_ = np.concatenate((X1, X2))
         _, var = self.predict(x_)
         var = var[:-1, -1, np.newaxis]
 
@@ -210,6 +219,7 @@ class GaussianProcess(BaseModel):
             predictive variance
 
         """
+
         # For EnvES we transform s to (1 - s)^2
         if self.basis_func is not None:
             X_test = deepcopy(X)
