@@ -1,6 +1,5 @@
 '''
 Created on April 7th, 2016
-
 @author: Numair Mansur (numair.mansur@gmail.com)
 '''
 
@@ -14,7 +13,6 @@ def bar_plot(x, curves, title="", width=0.10,
     
     '''
     Plots Mean and Standard Deviation with a Bar Graph
-
     Example
     -------    
         x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
@@ -23,10 +21,8 @@ def bar_plot(x, curves, title="", width=0.10,
         curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
         curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
         curves = [curve1, curve2, curve3, curve4]
-
         plot = bar_plot(x, curves, legend = True)
         plot.show()
-
     Parameters
     -----------
     x : numpy array
@@ -52,11 +48,9 @@ def bar_plot(x, curves, title="", width=0.10,
     	X label string 
     y_title : String
     	Y label string
-
    	Retrun
    	----------
    	plt : object
-
     '''
     # Set Appearance properties using Seaborn
     sns.set(style="white", color_codes=True, font_scale=1.2)
@@ -106,27 +100,23 @@ def bar_plot(x, curves, title="", width=0.10,
     return plt
 
 
-def plot_mean_and_std(x, curves, title="",
+def point_plot(x, curves, title="",
         colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
         log_scale_y=False, log_scale_x=False, legend=True,
-        x_title="X Label", y_title="Y Label", std_scale=1):
+        x_title="X Label", y_title="Y Label"):
 
     '''
     Plots Mean and Standard Deviation with an error bar graph
-
     Example
     -------    
-
         x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
         curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
         curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
         curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
         curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
         curves = [curve1, curve2, curve3, curve4]
-
         plot = point_plot(x, curves)
         plot.show()
-
     Parameters
     ----------
     x : numpy array
@@ -150,11 +140,9 @@ def plot_mean_and_std(x, curves, title="",
         X label string 
     y_title : String
         Y label string
-
     Retrun
     ----------
     plt : object
-
     '''
     # Set Appearance properties using Seaborn
     sns.set(style="white", color_codes=True, font_scale=1.2)
@@ -202,12 +190,9 @@ def latex_matrix_string(mean, error, title,
     -------
         mean = [[1, 6, 5, 7], [12, 4, 6, 13], [9, 8, 7, 10]]
         error = [[2, 6, 1, 5], [4, 8, 2, 3], [1, 4, 8, 2]]
-
-
         print(latex_matrix_string(mean, error, "Testing Testing", [
                          "row1", "row2", "row3"], [
                          "col1", "col2", "col3", "col4"]))
-
     Parameters
     ----------
     mean : array of float array
