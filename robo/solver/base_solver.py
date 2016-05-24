@@ -127,12 +127,12 @@ class BaseSolver(object):
 
         output = dict()
         output["iteration"] = it
-        output['config'] = self.X[-1]
-        output['fval'] = self.Y[-1]
+        output['config'] = self.X[it]
+        output['fval'] = self.Y[it]
         output['incumbent'] = self.incumbent
         output['incumbent_val'] = self.incumbent_value
-        output['time_func_eval'] = self.time_func_eval[-1]
-        output['time_overhead'] = self.time_overhead[-1]
+        output['time_func_eval'] = self.time_func_eval[it]
+        output['time_overhead'] = self.time_overhead[it]
         output['runtime'] = time.time() - self.time_start
 
         if kwargs is not None:

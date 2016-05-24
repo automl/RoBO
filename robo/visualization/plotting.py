@@ -8,52 +8,66 @@ Edits: Numair Mansur (numair.mansur@gmail.com)
 
 import numpy as np
 
+try:
+    import seaborn
+    seaborn.set_style(style='darkgrid')
+except:
+    pass
 
-def plot_model(model,
-        X_lower,
-        X_upper,
-        ax,
-        resolution=0.1,
-        maximizer=None,
-        mean_color='b',
-        uncertainty_color='blue',
-        label="Model",
-        std_scale=3,
-        plot_mean=True):
-    ''' Plots the model on the ax object passed to it
 
-    Args:
-        model (object): Model of the objective funciton
-        X_lower (np.array): Upper bound of the input space
-        X_upper (np.array): Lower bound of the input space
-        ax (object): subplot for the model and the objective funciton
-        resolution (float): resolution for the subplot
-        mean_color (string): Color of the prosterior mean
-        uncertainity_color (string): Color of the model
-        label (string): Label string
-        std_scale (int): Standard Deviation Scale
-        plot_mean (bool): Bool flag, Plot the mean curve if value is True
+
+def plot_model(model, X_lower, X_upper, ax,
+        resolution=0.1, maximizer=None, mean_color='b',
+        uncertainty_color='orange', label="Model", std_scale=1,
+        plot_mean=True):            
+    """
+    Plots the mean and std of the model on a regular grid of input point
+
+    Parameters
+    ----------
+    model: BaseModel
+        The model that captures the posterior of the objective function
+    X_lower: np.array
+        Upper bound of the input space
+    X_upper: np.array
+        Lower bound of the input space
+    ax: matplotlib figure
+        Subplot for the model and the objective funciton
+    resolution: float
+        Resolution of the input points
+    mean_color: string
+        Specifies the color of the prosterior mean
+    uncertainity_color: string
+        Specifies the color of the model
+    label: string
+        Label that will appear in the legend
+    std_scale: int
+        Scales the standard deviation
+    plot_mean: bool
+        Bool flag, plots the mean curve if value is True
 
     Returns:
-        ax (object) : subplot for the model and the objective funciton
-
-    '''
+    --------        
+    ax: figure
+        subplot for the model and the objective funciton
+    """
 
     X = np.arange(X_lower[0], X_upper[0] + resolution, resolution)
 
     mean = np.zeros([X.shape[0]])
     var = np.zeros([X.shape[0]])
+    ax.grid()
     for i in xrange(X.shape[0]):
         mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
     var[var < 0.0] = 0.0
     if plot_mean:
-        ax.plot(X, mean, mean_color, label=label)
+        ax.plot(X, mean, mean_color, label=label, linewidth=3)
     if maximizer is not None:
         ax.axvline(maximizer, color='red')
     ax.fill_between(X, mean + std_scale * np.sqrt(var),
         mean - std_scale * np.sqrt(var),
         facecolor=uncertainty_color,
-        alpha=0.2)
+        alpha=0.4)
 
     if label != None:
         ax.legend()
@@ -61,26 +75,36 @@ def plot_model(model,
 
 
 def plot_objective_function(task, ax, X=None, Y=None,
-        resolution=0.1, color='black', color_points='blue',
+        resolution=0.1, color='black', color_points='red',
         label='ObjectiveFunction'):
+    """
+    Plots the objective function on a regular grid of input point
 
-    ''' Plots the objective_function on the ax object passed to it
+    Parameters
+    ----------
+    task: BaseTask
+        Task object that contains the objective function
+    ax: matplotlib figure
+        Subplot for the model and the objective funciton
+    X: np.ndarray(N, D)
+        The observed datapoints
+    Y: np.ndarray(N, 1)
+        The function values of the observed datapoints        
+    resolution: float
+        Resolution of the input points
+    color: string
+        Specifies the color of the objective function
+    color_points: string
+        Specifies the color of the observed points
+    label: string
+        Label that will appear in the legend
 
-    Args:
-        objective_function ():
-        X_lower ():
-        X_upper ():
-        X ():
-        Y ():
-        ax ():
-        resolution ():
-        color ():
-        label ():
-        maximizer_flag ():
+
     Returns:
-        ax ():
-
-    '''
+    --------        
+    ax: figure
+        subplot for the model and the objective funciton
+    """
     grid = np.arange(task.X_lower[0], task.X_upper[0] + resolution, resolution)
 
     grid_values = np.zeros([grid.shape[0]])
@@ -88,6 +112,7 @@ def plot_objective_function(task, ax, X=None, Y=None,
         grid_values[i] = task.evaluate(np.array([[grid[i]]]))[0]
 
     ax.plot(grid, grid_values, color, label=label, linestyle="--")
+    ax.grid()
     if X is not None and Y is not None:
         ax.scatter(X, Y, color=color_points)
     if label != None:
@@ -96,27 +121,34 @@ def plot_objective_function(task, ax, X=None, Y=None,
 
 
 def plot_acquisition_function(acquisition_function,
-        X_lower,
-        X_upper,
-        ax,
-        resolution=0.1,
-        label="AcquisitionFunction",
+        X_lower, X_upper, ax, resolution=0.1, label="AcquisitionFunction",
         maximizer=None):
-    ''' Plots the acquisition_function on the ax object passed to it
+    """
+    Plots the acquisition function on a regular grid of input point
 
-    Args:
-        acquisition_function ():
-        X_lower ():
-        X_upper ():
-        X ():
-        ax ():
-        resolution ():
-        label ():
-        maximizer_flag ():
+    Parameters
+    ----------
+    acquisition function: BaseAcquisition
+        The acquisition function object
+    X_lower: np.array
+        Upper bound of the input space
+    X_upper: np.array
+        Lower bound of the input space
+    ax: matplotlib figure
+        Subplot for the model and the objective funciton
+    resolution: float
+        Resolution of the input points
+    label: string
+        Label that will appear in the legend
+    maximizer: BaseMaximizer
+        Maxmimizer object, if not none this object is called to find
+        the max of the acquisition function
+
     Returns:
-        ax ():
-
-    '''
+    --------        
+    ax: figure
+        subplot for the model and the objective funciton
+    """
     grid = np.arange(X_lower[0], X_upper[0] + resolution, resolution)
 
     grid_values = np.zeros([grid.shape[0]])
@@ -124,29 +156,9 @@ def plot_acquisition_function(acquisition_function,
         grid_values[i] = acquisition_function(grid[i, np.newaxis])
     #grid_values[grid_values < 0.0] = 0.0
     ax.plot(grid, grid_values, "g", label=label)
+    ax.grid()
     if maximizer is not None:
         ax.axvline(maximizer, color='red')
     if label != None:
         ax.legend()
     return ax
-
-
-def plot_slice(model, fix_point, dim, X_lower, X_upper,
-               ax, resolution=100,
-               std_scale=2, mean_color="blue",
-               uncertainty_color="orange", label="Model"):
-
-    m = np.zeros([resolution])
-    v = np.zeros([resolution])
-    x = np.linspace(X_lower[dim], X_upper[dim], resolution)
-    for i, x_ in enumerate(x):
-        test_point = np.ones([1, 2]) * x_
-        test_point[0, dim] = fix_point
-        m[i], v[i] = model.predict(test_point)
-
-    ax.plot(x, m, mean_color, label=label)
-
-    ax.fill_between(x, m + std_scale * np.sqrt(v),
-        m - std_scale * np.sqrt(v),
-        facecolor=uncertainty_color,
-        alpha=0.2)

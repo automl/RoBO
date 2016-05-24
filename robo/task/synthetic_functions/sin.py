@@ -8,9 +8,11 @@ class SinOne(BaseTask):
     def __init__(self):
         """
         One dimensional sin function introduced in the paper:
-            K. Kawaguchi, L. P. Kaelbling, and T. Lozano-Pérez.
+
+            K. Kawaguchi, L. P. Kaelbling, and T. Lozano-Perez.
             Bayesian Optimization with Exponential Convergence.
-            In Advances in Neural Information Processing (NIPS), 2015.
+            In Advances in Neural Information Processing (NIPS), 2015
+            
         """
         X_lower = np.array([0])
         X_upper = np.array([1])
@@ -31,9 +33,11 @@ class SinTwo(BaseTask):
     def __init__(self):
         """
         Two dimensional sin function introduced in the paper:
-            K. Kawaguchi, L. P. Kaelbling, and T. Lozano-Pérez.
+            
+            K. Kawaguchi, L. P. Kaelbling, and T. Lozano-Perez.
             Bayesian Optimization with Exponential Convergence.
-            In Advances in Neural Information Processing (NIPS), 2015.
+            In Advances in Neural Information Processing (NIPS), 2015
+            
         """
         X_lower = np.array([0, 0])
         X_upper = np.array([1, 1])

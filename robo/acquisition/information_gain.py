@@ -202,14 +202,8 @@ class InformationGain(AcquisitionFunction):
     def dh_fun(self, x, derivative=False):
 
         if not (np.all(np.isfinite(self.lmb))):
-            logger.debug(
-                self.zb[
-                    np.where(
-                        np.isinf(
-                            self.lmb))], self.lmb[
-                    np.where(
-                        np.isinf(
-                            self.lmb))])
+            logger.debug(self.zb[np.where(np.isinf(self.lmb))],
+                        self.lmb[np.where(np.isinf(self.lmb))])
             raise Exception(
                 "lmb should not be infinite.")
 

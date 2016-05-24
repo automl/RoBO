@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 class GaussianProcessMCMC(BaseModel):
 
     def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
-                 burnin_steps=2000, basis_func=None, dim=None, *args, **kwargs):
+                 burnin_steps=2000, basis_func=None, dim=None,
+                 normalize_output=False, *args, **kwargs):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -48,7 +49,7 @@ class GaussianProcessMCMC(BaseModel):
 
         self.kernel = kernel
         if prior is None:
-            prior = lambda x: 0
+            self.prior = lambda x: 0
         else:
             self.prior = prior
         self.n_hypers = n_hypers
@@ -57,6 +58,8 @@ class GaussianProcessMCMC(BaseModel):
         self.burnin_steps = burnin_steps
         self.basis_func = basis_func
         self.dim = dim
+        self.models = []
+        self.normalize_output = normalize_output        
 
     def _scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
@@ -79,14 +82,24 @@ class GaussianProcessMCMC(BaseModel):
         """
         self.X = X
 
-        # For EnvES we transform s to (1 - s)^2
+        # For Fabolas we transform s to (1 - s)^2
+
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
+        
         self.Y = Y
+        if self.normalize_output:
+            self.Y_mean = np.mean(Y)
+            self.Y_std = np.std(Y)
+            #self.norm_Y = (Y - self.Y_mean) / self.Y_std
+            self.Y = (Y - self.Y_mean) / self.Y_std
+#        else:
+            #self.norm_Y = self.Y
+        
 
         # Use the mean of the data as mean for the GP
-        mean = np.mean(Y, axis=0)
+        mean = np.mean(self.Y, axis=0)
         self.gp = george.GP(self.kernel, mean=mean)
 
         # Precompute the covariance
@@ -131,20 +144,21 @@ class GaussianProcessMCMC(BaseModel):
             self.hypers = self.sampler.chain[:, -1]
 
             self.models = []
-            logging.info("Hypers: %s" % self.hypers)
-            for sample in self.hypers:
-
-                # Instantiate a model for each hyperparameter configuration
-                kernel = deepcopy(self.kernel)
-                kernel.pars = np.exp(sample)
-
-                model = GaussianProcess(kernel,
-                                        basis_func=self.basis_func,
-                                        dim=self.dim)
-                model.train(self.X, self.Y, do_optimize=False)
-                self.models.append(model)
         else:
-            self.hypers = self.gp.kernel[:]
+            self.hypers = [self.gp.kernel[:]]
+        logging.info("Hypers: %s" % self.hypers)
+        for sample in self.hypers:
+
+            # Instantiate a model for each hyperparameter configuration
+            kernel = deepcopy(self.kernel)
+            kernel.pars = np.exp(sample)
+
+            model = GaussianProcess(kernel,
+                                    basis_func=self.basis_func,
+                                    dim=self.dim,
+                                    normalize_output=self.normalize_output)
+            model.train(X, Y, do_optimize=False)
+            self.models.append(model)
 
     def loglikelihood(self, theta):
         """
@@ -198,14 +212,14 @@ class GaussianProcessMCMC(BaseModel):
         """
 
         # For EnvES we transform s to (1 - s)^2
-        if self.basis_func is not None:
-            X_test = deepcopy(X)
-            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
-        else:
-            X_test = X
-
-        mu = np.zeros([self.n_hypers, X_test.shape[0]])
-        var = np.zeros([self.n_hypers, X_test.shape[0]])
+#        if self.basis_func is not None:
+#            X_test = deepcopy(X)
+#            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
+#        else:
+#            X_test = X
+        X_test = X
+        mu = np.zeros([len(self.models), X_test.shape[0]])
+        var = np.zeros([len(self.models), X_test.shape[0]])
         for i, model in enumerate(self.models):
             mu[i], var[i] = model.predict(X_test)
 

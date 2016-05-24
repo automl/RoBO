@@ -12,7 +12,8 @@ requires = [
 	'numpy >= 1.7',
 	'scipy >= 0.12',
 	'matplotlib >= 1.3',
-	'cma'
+	'cma',
+	'pymatbridge'
     ]
 
 
