@@ -9,8 +9,8 @@ import numpy as np
 
 
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
-from robo.acquisition.entropy_mc import EntropyMC
-from robo.acquisition.entropy import Entropy
+from robo.acquisition.information_gain_mc import InformationGainMC
+from robo.acquisition.information_gain import InformationGain
 from robo.acquisition.ei import EI
 from robo.acquisition.lcb import LCB
 from robo.acquisition.pi import PI
@@ -50,10 +50,13 @@ def fmin(objective_fkt,
 
     prior = DefaultPrior(len(kernel))
 
+    n_hypers = 3 * len(kernel)
+    if n_hypers % 2 == 1:
+        n_hypers += 1
     model = GaussianProcessMCMC(kernel, prior=prior,
-                                n_hypers=20,
-                                chain_length=100,
-                                burnin_steps=50)
+                                n_hypers=n_hypers,
+                                chain_length=200,
+                                burnin_steps=100)
 
     if acquisition_fkt == "EI":
         a = EI(model, X_upper=task.X_upper, X_lower=task.X_lower)
@@ -61,10 +64,10 @@ def fmin(objective_fkt,
         a = PI(model, X_upper=task.X_upper, X_lower=task.X_lower)
     elif acquisition_fkt == "UCB":
         a = LCB(model, X_upper=task.X_upper, X_lower=task.X_lower)
-    elif acquisition_fkt == "Entropy":
-        a = Entropy(model, X_upper=task.X_upper, X_lower=task.X_lower)
-    elif acquisition_fkt == "EntropyMC":
-        a = EntropyMC(model, X_upper=task.X_upper, X_lower=task.X_lower,)
+    elif acquisition_fkt == "InformationGain":
+        a = InformationGain(model, X_upper=task.X_upper, X_lower=task.X_lower)
+    elif acquisition_fkt == "InformationGainMC":
+        a = InformationGainMC(model, X_upper=task.X_upper, X_lower=task.X_lower,)
     else:
         logger.error("ERROR: %s is not a"
                     "valid acquisition function!" % (acquisition_fkt))
@@ -93,4 +96,4 @@ def fmin(objective_fkt,
                               task=task)
 
     best_x, f_min = bo.run(num_iterations)
-    return best_x, f_min
+    return task.retransform(best_x), f_min
