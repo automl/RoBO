@@ -34,7 +34,7 @@ class BayesianOptimization(BaseSolver):
 
         Parameters
         ----------
-        acquisition_func: AcquisitionFunctionObject
+        acquisition_func: BaseAcquisitionFunctionObject
             The acquisition function which will be maximized.
         model: ModelObject
             Model (i.e. GaussianProcess, RandomForest) that models our current

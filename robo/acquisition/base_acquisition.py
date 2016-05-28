@@ -3,7 +3,7 @@
 import numpy as np
 
 
-class AcquisitionFunction(object):
+class BaseAcquisitionFunction(object):
     long_name = ""
 
     def __str__(self):

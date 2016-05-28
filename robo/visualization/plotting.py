@@ -121,7 +121,7 @@ def plot_objective_function(task, ax, X=None, Y=None,
 
 
 def plot_acquisition_function(acquisition_function,
-        X_lower, X_upper, ax, resolution=0.1, label="AcquisitionFunction",
+        X_lower, X_upper, ax, resolution=0.1, label="BaseAcquisitionFunction",
         maximizer=None):
     """
     Plots the acquisition function on a regular grid of input point

@@ -23,7 +23,7 @@ class BaseSolver(object):
 
         Parameters
         ----------
-        acquisition_func: AcquisitionFunctionObject
+        acquisition_func: BaseAcquisitionFunction Object
             The acquisition function which will be maximized.
         model: ModelObject
             Model (i.e. GaussianProcess, RandomForest) that models our current
