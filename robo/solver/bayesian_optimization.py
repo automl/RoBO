@@ -160,6 +160,7 @@ class BayesianOptimization(BaseSolver):
                 if self.save_dir is not None and (i) % self.num_save == 0:
                     self.save_iteration(i, hyperparameters=None,
                                         acquisition_value=0)
+                    self.save_json(i)
 
         else:
             self.X = X

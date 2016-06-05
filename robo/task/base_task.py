@@ -195,3 +195,17 @@ class BaseTask(object):
         if self.do_scaling:
             x = self.retransform(x)
         return self.objective_function_test(x)
+
+    def get_json_data(self):
+        """
+        Json getter function
+
+        :return: Dict() object
+        """
+        jsonData = dict()
+        jsonData ={'opt':self.opt.tolist(), 'fopt':self.fopt, 'original_X_lower':self.original_X_lower.tolist(),
+                   'original_X_upper':self.original_X_upper.tolist()}
+        return jsonData
+
+
+

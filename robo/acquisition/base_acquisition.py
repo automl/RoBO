@@ -100,3 +100,14 @@ class BaseAcquisitionFunction(object):
             function at X is returned
         """
         raise NotImplementedError()
+
+    def get_json_data(self):
+        """
+        Json getter function
+
+        :return: Dict() object
+        """
+
+        jsonData = dict()
+        jsonData ={"model":None}
+        return jsonData

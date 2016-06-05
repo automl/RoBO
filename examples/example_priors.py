@@ -82,8 +82,9 @@ maximizer = Direct(acquisition_func, task.X_lower, task.X_upper)
 bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
                           maximize_func=maximizer,
-                          task=task)
-
+                          task=task
+                          #,save_dir = '/location'
+                          )
 bo.run(20)
 
 

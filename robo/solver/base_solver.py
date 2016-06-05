@@ -9,6 +9,7 @@ import csv
 import time
 import errno
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,9 @@ class BaseSolver(object):
             if exception.errno != errno.EEXIST:
                 raise
         self.output_file = open(os.path.join(self.save_dir, 'results.csv'), 'w')
+        self.output_file_json = open(os.path.join(self.save_dir,'results.json'),'w')
         self.csv_writer = None
+        self.json_writer = None
 
     def get_observations(self):
         return self.X, self.Y
@@ -113,7 +116,6 @@ class BaseSolver(object):
         """
         Saves the meta information of an iteration.
         """
-
         if self.csv_writer is None:
             self.fieldnames = ['iteration', 'config', 'fval',
                                'incumbent', 'incumbent_val',
@@ -141,3 +143,37 @@ class BaseSolver(object):
 
         self.csv_writer.writerow(output)
         self.output_file.flush()
+
+
+    def get_json_data(self, it):
+        """
+        Json getter function
+
+        :return: dict() object
+        """
+
+        jsonData = dict()
+        jsonData = {"optimization_overhead":self.time_overhead[it], "runtime": time.time() - self.time_start,
+                    "incumbent": self.incumbent.tolist(), "incumbent_fval":self.incumbent_value.tolist(),"time_func_eval": self.time_func_eval[it],
+                    "iteration":it}
+        return jsonData
+
+    def save_json(self, it, **kwargs):
+        """
+        Saves meta information of an iteration in a Json file.
+        """
+        base_solver_data =self.get_json_data(it)
+        base_model_data = self.model.get_json_data()
+        base_task_data = self.task.get_json_data()
+        base_acquisition_data = self.acquisition_func.get_json_data()
+
+        data = [base_solver_data,
+                base_model_data,
+                base_task_data,
+                base_acquisition_data
+                ]
+
+        for j in data:
+            json.dump(j, self.output_file_json)
+            self.output_file_json.write('\n')
+        self.output_file_json.write('\n')  #Json more readable. Drop it?
