@@ -83,7 +83,6 @@ bo = BayesianOptimization(acquisition_func=acquisition_func,
                           model=model,
                           maximize_func=maximizer,
                           task=task
-                          #,save_dir = '/location'
                           )
 bo.run(20)
 

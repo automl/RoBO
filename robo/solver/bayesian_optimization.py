@@ -235,6 +235,7 @@ class BayesianOptimization(BaseSolver):
                     it,
                     hyperparameters=hypers,
                     acquisition_value=self.acquisition_func(new_x))
+                self.save_json(it)
 
         # TODO: Retrain model and then return the incumbent
         logger.info("Return %s as incumbent with predicted performance %f" %

@@ -74,6 +74,6 @@ class BaseModel(object):
         :return: Dict object
         """
         jsonData = dict()
-        jsonData = {'X': self.X, 'Y':self.Y, 'hyperparameters':" " }
+        jsonData = {'X': self.X if self.X is None else self.X.tolist(), 'Y':self.Y if self.Y is None else self.Y.tolist(), 'hyperparameters':" " }
         return jsonData
 

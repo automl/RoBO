@@ -48,6 +48,8 @@ class GaussianProcess(BaseModel):
         self.basis_func = basis_func
         self.dim = dim
         self.normalize_output = normalize_output
+        self.X = None
+        self.Y = None
 
     def scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) *
