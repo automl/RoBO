@@ -109,5 +109,5 @@ class BaseAcquisitionFunction(object):
         """
 
         jsonData = dict()
-        jsonData ={"model":None}
+        jsonData ={"type":__name__ }
         return jsonData

@@ -27,7 +27,7 @@ bo = BayesianOptimization(acquisition_func=ei,
                           model=model,
                           maximize_func=maximizer,
                           task=task
-                          ,save_dir= '/home/numair/Pictures/'
+                          ,save_dir='/home/numair/Pictures/'
                           )
 
 print bo.run(20)
