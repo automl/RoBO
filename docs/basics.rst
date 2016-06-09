@@ -181,30 +181,11 @@ RoBO will save then the following information in the CSV file:
 
 Following information will be saved in Json in below shown format.
 
-.. code-block:: javascript
 	{
-      "Acquisiton":{
-         "type":
-      },
-      "Model":{
-         "Y": ,
-         "X": ,
-         "hyperparameters":
-      },
-      "Task":{
-         "opt": ,
-         "fopt": ,
-         "original_X_lower": ,
-         "original_X_upper": ,
-	  },
-      "Solver":{
-         "optimization_overhead": ,
-         "incumbent_fval": ,
-         "iteration": ,
-         "time_func_eval": ,
-         "incumbent": ,
-         "runtime":
-      }
+      "Acquisiton":{"type" },
+      "Model":{"Y" ,"X" ,"hyperparameters" },
+      "Task":{"opt": ,"fopt": ,"original_X_lower": ,"original_X_upper": , },
+      "Solver":{"optimization_overhead" ,"incumbent_fval" ,"iteration" ,"time_func_eval" ,"incumbent" ,"runtime"  }
 	}
 
 
