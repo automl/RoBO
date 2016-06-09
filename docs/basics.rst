@@ -181,7 +181,7 @@ RoBO will save then the following information in the CSV file:
 
 Following information will be saved in Json in below shown format.
 
-.. code-block:: json
+.. code-block:: javascript
 	{
       "Acquisiton":{
          "type":
