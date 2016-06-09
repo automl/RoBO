@@ -83,6 +83,7 @@ class BayesianOptimization(BaseSolver):
         self.train_intervall = train_intervall
 
         self.num_save = num_save
+        self.time_start = None
 
         self.model_untrained = True
         if incumbent_estimation is None:
@@ -295,3 +296,20 @@ class BayesianOptimization(BaseSolver):
                         (time.time() - t))
 
         return x
+
+    def get_json_data(self, it):
+        '''
+
+        Overrides method in base solver.
+
+        '''
+        jsonData = dict()
+        jsonData = {
+                    "optimization_overhead":None if self.time_overhead is None else self.time_overhead[it],
+                    "runtime":None if self.time_start is None else time.time() - self.time_start,
+                    "incumbent":None if self.incumbent is None else self.incumbent.tolist(),
+                    "incumbent_fval":None if self.incumbent_value is None else self.incumbent_value.tolist(),
+                    "time_func_eval": self.time_func_eval[it],
+                    "iteration":it
+                    }
+        return jsonData

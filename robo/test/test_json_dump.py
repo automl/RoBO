@@ -6,18 +6,37 @@ Created on: June 5th, 2016
 '''
 import unittest
 import numpy as np
+import george
+from robo.maximizers.direct import Direct
+from robo.acquisition.ei import EI
+from robo.models.gaussian_process import GaussianProcess
+from robo.task.synthetic_functions.levy import Levy
 
 from robo.solver.base_solver import BaseSolver
 from robo.models.base_model import BaseModel
 from robo.task.base_task import BaseTask
 from robo.acquisition.base_acquisition import BaseAcquisitionFunction
+from robo.solver.bayesian_optimization import BayesianOptimization
 
 
 class TestJsonMethods(unittest.TestCase):
 
     def test_json_base_solver(self):
-        solver = BaseSolver()
-        assert True
+        task = Levy()
+        kernel = george.kernels.Matern52Kernel([1.0], ndim=1)
+        model = GaussianProcess(kernel)
+        ei = EI(model, task.X_lower, task.X_upper)
+        maximizer = Direct(ei, task.X_lower, task.X_upper)
+        solver = BayesianOptimization(acquisition_func=ei,
+                          model=model,
+                          maximize_func=maximizer,
+                          task=task
+                          )
+        solver.run(1,X =None, Y=None)
+        iteration = 0
+        data = solver.get_json_data(it=iteration)
+        #Todo: What else to put in assert statements ?
+        assert data['iteration'] == iteration
 
     def test_json_base_model(self):
         model = BaseModel()
@@ -56,7 +75,7 @@ class TestJsonMethods(unittest.TestCase):
                                              X_lower=X_lower,
                                              X_upper = X_upper)
         data = acquistion.get_json_data()
-        assert True # fix this !
+        assert data['type'] == 'robo.acquisition.base_acquisition'
 
 
 if __name__ == "__main__":

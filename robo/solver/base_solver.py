@@ -167,13 +167,12 @@ class BaseSolver(object):
         base_task_data = self.task.get_json_data()
         base_acquisition_data = self.acquisition_func.get_json_data()
 
-        data = [base_solver_data,
-                base_model_data,
-                base_task_data,
-                base_acquisition_data
-                ]
+        data = {'Solver': base_solver_data,
+                'Model': base_model_data,
+                'Task':base_task_data,
+                'Acquisiton':base_acquisition_data
+                }
 
-        for j in data:
-            json.dump(j, self.output_file_json)
-            self.output_file_json.write('\n')
+
+        json.dump(data, self.output_file_json)
         self.output_file_json.write('\n')  #Json more readable. Drop it?
