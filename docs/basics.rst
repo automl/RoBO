@@ -179,7 +179,8 @@ RoBO will save then the following information in the CSV file:
  - time_function: The time each function evaluation took
  - optimizer_overhead: The time RoBO needed to pick a new configuration
 
-Following information will be saved in Json in below shown format:
+Following information will be saved in Json in below shown format.
+
 .. code-block:: json
 	{
       "Acquisiton":{
