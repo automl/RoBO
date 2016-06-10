@@ -300,7 +300,7 @@ class BayesianOptimization(BaseSolver):
     def get_json_data(self, it):
         '''
 
-        Overrides method in base solver.
+        Overrides method in BaseSolver.
 
         '''
         jsonData = dict()
