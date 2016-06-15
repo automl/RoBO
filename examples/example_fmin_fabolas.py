@@ -3,15 +3,20 @@ import sys
 import time
 import numpy as np
 
-import logging
-logging.basicConfig(level=logging.INFO)
-
 from sklearn import svm
 
 from robo.fmin import fabolas_fmin
 
-# This function loads the MNIST data, its copied from the Lasagne tutorial
+
+# Example script to optimize the C and gamma parameter of a
+# support vector machine on MNIST with Fabolas.
+# Have a look into the paper " Fast Bayesian Optimization of Machine Learning
+# Hyperparameters on Large Datasets" (http://arxiv.org/abs/1605.07079)
+# to see how it works
+
+
 def load_dataset():
+    # This function loads the MNIST data, its copied from the Lasagne tutorial
     # We first define a download function, supporting both Python 2 and 3.
     if sys.version_info[0] == 2:
         from urllib import urlretrieve
