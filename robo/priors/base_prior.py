@@ -153,10 +153,7 @@ class TophatPrior(BasePrior):
 
             The gradient of the prior at theta.
         """
-        if np.any(theta < self.min) or np.any(theta > self.max):
-            return -np.inf
-        else:
-            return 0
+        return np.zeros([theta.shape[0]])
 
 
 class HorseshoePrior(BasePrior):

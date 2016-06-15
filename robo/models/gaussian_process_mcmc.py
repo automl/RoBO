@@ -92,34 +92,18 @@ class GaussianProcessMCMC(BaseModel):
         if self.normalize_output:
             self.Y_mean = np.mean(Y)
             self.Y_std = np.std(Y)
-            #self.norm_Y = (Y - self.Y_mean) / self.Y_std
             self.Y = (Y - self.Y_mean) / self.Y_std
-#        else:
-            #self.norm_Y = self.Y
         
 
         # Use the mean of the data as mean for the GP
         mean = np.mean(self.Y, axis=0)
         self.gp = george.GP(self.kernel, mean=mean)
 
-        # Precompute the covariance
-        yerr = 1e-25
-        while(True):
-            try:
-                self.gp.compute(self.X, yerr=yerr)
-                break
-            except np.linalg.LinAlgError:
-                yerr *= 10
-                logging.error(
-                    "Cholesky decomposition for the covariance matrix of \
-                     the GP failed. \
-                    Add %s noise on the diagonal." %
-                    yerr)
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
             self.sampler = emcee.EnsembleSampler(self.n_hypers,
-                                                 len(self.kernel.pars),
+                                                 len(self.kernel.pars) + 1,
                                                  self.loglikelihood)
 
             # Do a burn-in in the first iteration
@@ -146,17 +130,19 @@ class GaussianProcessMCMC(BaseModel):
             self.models = []
         else:
             self.hypers = [self.gp.kernel[:]]
-        logging.info("Hypers: %s" % self.hypers)
+
+
         for sample in self.hypers:
 
             # Instantiate a model for each hyperparameter configuration
             kernel = deepcopy(self.kernel)
-            kernel.pars = np.exp(sample)
-
+            kernel.pars = np.exp(sample[:-1])
+            noise = np.exp(sample[-1])
             model = GaussianProcess(kernel,
                                     basis_func=self.basis_func,
                                     dim=self.dim,
-                                    normalize_output=self.normalize_output)
+                                    normalize_output=self.normalize_output,
+                                    noise=noise)
             model.train(X, Y, do_optimize=False)
             self.models.append(model)
 
@@ -181,9 +167,16 @@ class GaussianProcessMCMC(BaseModel):
         # hyperparameters live on a log scale
         if np.any((-10 > theta) + (theta > 10)):
             return -np.inf
-
+            
+        # The last entry is always the noise
+        sigma_2 = np.exp(theta[-1])
         # Update the kernel and compute the lnlikelihood.
-        self.gp.kernel.pars = np.exp(theta[:])
+        self.gp.kernel.pars = np.exp(theta[:-1])
+        
+        try:
+            self.gp.compute(self.X, yerr=np.sqrt(sigma_2))
+        except:
+            return -np.inf
 
         return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0],
                                                                 quiet=True)
@@ -211,12 +204,6 @@ class GaussianProcessMCMC(BaseModel):
 
         """
 
-        # For EnvES we transform s to (1 - s)^2
-#        if self.basis_func is not None:
-#            X_test = deepcopy(X)
-#            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
-#        else:
-#            X_test = X
         X_test = X
         mu = np.zeros([len(self.models), X_test.shape[0]])
         var = np.zeros([len(self.models), X_test.shape[0]])

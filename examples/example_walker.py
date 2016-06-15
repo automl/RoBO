@@ -14,8 +14,8 @@ from robo.acquisition.integrated_acquisition import IntegratedAcquisition
 task = Walker()
 test = '/test'
 
-kernel = george.kernels.Matern52Kernel(np.ones([task.n_dims]),ndim=task.n_dims)
-prior = DefaultPrior(len(kernel))
+kernel = 1 * george.kernels.Matern52Kernel(np.ones([task.n_dims]),ndim=task.n_dims)
+prior = DefaultPrior(len(kernel) + 1)
 model = GaussianProcessMCMC(kernel, prior=prior,
                             chain_length=100, burnin_steps=200, n_hypers=8)
 
