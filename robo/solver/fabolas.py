@@ -210,7 +210,7 @@ class Fabolas(BayesianOptimization):
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_overhead = np.zeros([self.X.shape[0]])
 
-        for it in range(self.init_points, num_iterations):
+        for it in range(0, num_iterations):
             logger.info("Start iteration %d ... ", it)
             # Choose a new configuration
             start_time = time.time()
@@ -232,8 +232,10 @@ class Fabolas(BayesianOptimization):
             self.incumbents.append(self.incumbent)
             self.incumbent_values.append(self.incumbent_value)
 
-            logger.info("New incumbent %s found in %f seconds",
-                        str(self.incumbent), time.time() - start_time_inc)
+            logger.info("New incumbent %s found in %f seconds"\
+                        " with predicted performance %f",
+                        str(self.incumbent), time.time() - start_time_inc,
+                        self.incumbent_value)
 
             # Compute the time we needed to pick a new point
             time_overhead = time.time() - start_time
@@ -264,10 +266,10 @@ class Fabolas(BayesianOptimization):
 
             self.runtime.append(time.time() - self.start_time)
 
-            if self.save_dir is not None and (it) % self.num_save == 0:
+            if self.save_dir is not None and (it + self.init_points) % self.num_save == 0:
                 hypers = self.model.hypers
 
-                self.save_iteration(it, costs=self.C[-1],
+                self.save_iteration(it + self.init_points, costs=self.C[-1],
                                 hyperparameters=hypers,
                                 acquisition_value=self.acquisition_func(new_x))
 
