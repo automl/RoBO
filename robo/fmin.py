@@ -7,7 +7,6 @@ import logging
 import george
 import numpy as np
 
-
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.acquisition.information_gain_mc import InformationGainMC
 from robo.acquisition.information_gain import InformationGain

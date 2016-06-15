@@ -10,9 +10,8 @@ import numpy as np
 
 from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.solver.bayesian_optimization import BayesianOptimization
-
-from enves.extrapolative_initial_design import extrapolative_initial_design
-from enves.env_posterior_opt import EnvPosteriorMeanAndStdOptimization
+from robo.incumbent.best_observation import BestProjectedObservation
+from robo.initial_design.extrapolative_initial_design import extrapolative_initial_design
 
 logger = logging.getLogger(__name__)
 
@@ -103,11 +102,10 @@ class Fabolas(BayesianOptimization):
                                                 maximize_func, task, save_dir)
 
         if incumbent_estimation == None:
-            self.estimator = EnvPosteriorMeanAndStdOptimization(self.model,
+            self.estimator = BestProjectedObservation(self.model,
                                                             self.task.X_lower,
                                                             self.task.X_upper,
-                                                            self.task.is_env,
-                                                            method="cmaes")
+                                                            self.task.is_env)
         else:
             self.estimator = incumbent_estimation
         self.init_points = initial_points
