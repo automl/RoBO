@@ -191,12 +191,8 @@ class DNGO(BaseModel):
 
             #Adapt the learning rate
             if epoch % self.adapt_epoch == 0:
-                print "Adapt lr %f " % (self.init_learning_rate * 0.1)
                 self.learning_rate.set_value(
                             np.float32(self.init_learning_rate * 0.1))
-
-        logging.debug("Learning curve")
-        print(lc)
 
         # Design matrix
         layers = lasagne.layers.get_all_layers(self.network)
