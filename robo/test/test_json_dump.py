@@ -35,7 +35,6 @@ class TestJsonMethods(unittest.TestCase):
         solver.run(1,X =None, Y=None)
         iteration = 0
         data = solver.get_json_data(it=iteration)
-        #Todo: What else to put in assert statements ?
         assert data['iteration'] == iteration
 
     def test_json_base_model(self):
