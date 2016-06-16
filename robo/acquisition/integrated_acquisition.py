@@ -10,13 +10,14 @@ from copy import deepcopy
 from robo.acquisition.base_acquisition import BaseAcquisitionFunction
 from robo.models.dngo import DNGO
 import lasagne
+
 logger = logging.getLogger(__name__)
 
 
 class IntegratedAcquisition(BaseAcquisitionFunction):
 
     def __init__(self, model, acquisition_func,
-                 X_lower, X_upper, cost_model=None):
+                 X_lower, X_upper, cost_model=None, is_dngo=False):
         '''
         Meta acquisition function that allows to marginalise the
         acquisition function over GP hyperparameter.
@@ -32,9 +33,13 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
             If the acquisition function also takes the cost into account, we
             have to specify here the model for the cost function. cost_model
             has to be an instance of GaussianProcessMCMC or GPyModelMCMC.
+        is_dngo: boolean
+            If you use DNGO as model set this flag to true in order to 
+            apply first the basis functions to the input data point
         '''
 
         self.model = model
+        self.is_dngo = is_dngo
 
         # Save also the cost model if the acquisition function needs it
         if cost_model is not None:
@@ -105,7 +110,8 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
         """
         acquisition_values = np.zeros([self.model.n_hypers])
 
-        if isinstance(self.model, DNGO):
+        if self.is_dngo:
+            import lasagne
             X_ = (X - self.model.X_mean) /  self.model.X_std 
 
             # Get features from the net

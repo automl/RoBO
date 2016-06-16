@@ -64,10 +64,9 @@ cov_amp = 1.0
 config_kernel = george.kernels.Matern52Kernel(np.ones([task.n_dims]),
                                                ndim=task.n_dims)
 
-noise_kernel = george.kernels.WhiteKernel(0.01, ndim=task.n_dims)
-kernel = cov_amp * (config_kernel + noise_kernel)
+kernel = cov_amp * config_kernel
 
-prior = MyPrior(len(kernel))
+prior = MyPrior(len(kernel) + 1)
 
 model = GaussianProcessMCMC(kernel, prior=prior, burnin=burnin,
                             chain_length=chain_length, n_hypers=n_hypers)

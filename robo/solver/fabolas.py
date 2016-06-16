@@ -10,9 +10,8 @@ import numpy as np
 
 from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.solver.bayesian_optimization import BayesianOptimization
-
-from enves.extrapolative_initial_design import extrapolative_initial_design
-from enves.env_posterior_opt import EnvPosteriorMeanAndStdOptimization
+from robo.incumbent.best_observation import BestProjectedObservation
+from robo.initial_design.extrapolative_initial_design import extrapolative_initial_design
 
 logger = logging.getLogger(__name__)
 
@@ -103,11 +102,10 @@ class Fabolas(BayesianOptimization):
                                                 maximize_func, task, save_dir)
 
         if incumbent_estimation == None:
-            self.estimator = EnvPosteriorMeanAndStdOptimization(self.model,
+            self.estimator = BestProjectedObservation(self.model,
                                                             self.task.X_lower,
                                                             self.task.X_upper,
-                                                            self.task.is_env,
-                                                            method="cmaes")
+                                                            self.task.is_env)
         else:
             self.estimator = incumbent_estimation
         self.init_points = initial_points
@@ -210,7 +208,7 @@ class Fabolas(BayesianOptimization):
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_overhead = np.zeros([self.X.shape[0]])
 
-        for it in range(self.init_points, num_iterations):
+        for it in range(0, num_iterations):
             logger.info("Start iteration %d ... ", it)
             # Choose a new configuration
             start_time = time.time()
@@ -232,8 +230,10 @@ class Fabolas(BayesianOptimization):
             self.incumbents.append(self.incumbent)
             self.incumbent_values.append(self.incumbent_value)
 
-            logger.info("New incumbent %s found in %f seconds",
-                        str(self.incumbent), time.time() - start_time_inc)
+            logger.info("New incumbent %s found in %f seconds"\
+                        " with predicted performance %f",
+                        str(self.incumbent), time.time() - start_time_inc,
+                        self.incumbent_value)
 
             # Compute the time we needed to pick a new point
             time_overhead = time.time() - start_time
@@ -264,10 +264,10 @@ class Fabolas(BayesianOptimization):
 
             self.runtime.append(time.time() - self.start_time)
 
-            if self.save_dir is not None and (it) % self.num_save == 0:
+            if self.save_dir is not None and (it + self.init_points) % self.num_save == 0:
                 hypers = self.model.hypers
 
-                self.save_iteration(it, costs=self.C[-1],
+                self.save_iteration(it + self.init_points, costs=self.C[-1],
                                 hyperparameters=hypers,
                                 acquisition_value=self.acquisition_func(new_x))
 

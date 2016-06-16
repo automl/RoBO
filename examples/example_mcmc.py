@@ -14,10 +14,9 @@ task = Branin()
 noise = 1.0
 cov_amp = 2
 exp_kernel = george.kernels.Matern52Kernel([1.0, 1.0], ndim=2)
-noise_kernel = george.kernels.WhiteKernel(noise, ndim=2)
-kernel = cov_amp * (exp_kernel + noise_kernel)
+kernel = cov_amp * exp_kernel
 
-prior = DefaultPrior(len(kernel))
+prior = DefaultPrior(len(kernel) + 1)
 model = GaussianProcessMCMC(kernel, prior=prior,
                             chain_length=100, burnin_steps=200, n_hypers=20)
 

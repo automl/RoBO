@@ -12,26 +12,28 @@ requires = [
 	'numpy >= 1.7',
 	'scipy >= 0.12',
 	'matplotlib >= 1.3',
-	'cma',
-	'pymatbridge'
+	'cma'
     ]
+
 
 
 setup(name='robo',
       version='0.1',
-      description='',
+      description='Framework for Bayesian optimization',
       long_description='',
       classifiers=[
         "Programming Language :: Python",
         ],
-      author='',
-      author_email='',
+      author='Aaron Klein',
+      author_email='kleinaa@cs.uni-freiburg.de',
       url='',
-      keywords='',
+      keywords='Bayesian Optimization',
       packages=find_packages(),
       include_package_data=True,
       test_suite='robo',
       install_requires=requires,
+      extras_require = {
+        'pymatbridge':  ["pymatbridge"]},
       entry_points=dict(
       		console_scripts = [
 		'robo_visualize = robo.scripts.visualize_sh:main',

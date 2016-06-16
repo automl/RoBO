@@ -110,7 +110,7 @@ class BaseTask(object):
 
     def transform(self, x):
         """
-        Transforms from  original space to the space [0, 1]
+        Transforms from original space to the space [0, 1]
         Parameters
         ----------
         X: np.ndarray (1, D)

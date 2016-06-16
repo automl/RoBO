@@ -5,15 +5,12 @@ import lasagne
 import theano
 import theano.tensor as T
 import emcee
-import sys
-sys.path.insert(0, "/home/kleinaa/.local/lib/python2.7/site-packages/")
 
 from scipy import optimize
 
 from robo.models.base_model import BaseModel
 from robo.priors.dngo_priors import DNGOPrior
 from robo.models.bayesian_linear_regression import BayesianLinearRegression
-from functools import partial
 
 
 def sharedX(X, dtype=theano.config.floatX, name=None):
@@ -44,7 +41,6 @@ def smorms3(cost, params, lrate=1e-3, eps=1e-16, gather=False):
         updates.append((g2, g2_t))
         updates.append((p, p_t))
         updates.append((mem, mem_t))
-    
     return updates
 
 class DNGO(BaseModel):
@@ -55,25 +51,40 @@ class DNGO(BaseModel):
                  alpha=1.0, beta=1000, do_optimize=True, do_mcmc=True,
                  prior=None, n_hypers=20, chain_length=2000,
                  burnin_steps=2000, *args, **kwargs):
+        """
+        Deep Networks for Global Optimizatin [1]. This module performas
+        Bayesian Linear Regression with basis function extracted from a
+        neural network.
+        
+        [1] J. Snoek, O. Rippel, K. Swersky, R. Kiros, N. Satish, 
+            N. Sundaram, M.~M.~A. Patwary, Prabhat, R.~P. Adams
+            Scalable Bayesian Optimization Using Deep Neural Networks
+            Proc. of ICML'15
+            
+        Parameters
+        ----------
 
+            
+        """
+        
         self.X = None
         self.Y = None
         self.network = None
         self.alpha = alpha
         self.beta = beta
         self.do_optimize = do_optimize
-        
+
         # MCMC hyperparameters
         self.do_mcmc = do_mcmc
         self.n_hypers = n_hypers
         self.chain_length = chain_length
         self.burned = False
-        self.burnin_steps = burnin_steps 
+        self.burnin_steps = burnin_steps
         if prior is None:
             self.prior = DNGOPrior()
         else:
             self.prior = prior
-        
+
         # Network hyper parameters
         self.num_epochs = num_epochs
         self.batch_size = batch_size
@@ -143,7 +154,7 @@ class DNGO(BaseModel):
 
         params = lasagne.layers.get_all_params(self.network, trainable=True)
 
-        
+
         updates = lasagne.updates.adam(loss, params,
                                         learning_rate=self.learning_rate)
 
@@ -190,7 +201,7 @@ class DNGO(BaseModel):
         # Design matrix
         layers = lasagne.layers.get_all_layers(self.network)
         self.Theta = lasagne.layers.get_output(layers[:-1], self.norm_X)[-1].eval()
-        
+
         if self.do_optimize:
             if self.do_mcmc:
                 self.sampler = emcee.EnsembleSampler(self.n_hypers,
@@ -204,27 +215,27 @@ class DNGO(BaseModel):
                     # Run MCMC sampling
                     self.p0, _, _ = self.sampler.run_mcmc(self.p0,
                                                           self.burnin_steps)
-    
+
                     self.burned = True
-    
+
                 # Start sampling
                 pos, _, _ = self.sampler.run_mcmc(self.p0,
                                                   self.chain_length)
-    
+
                 # Save the current position, it will be the startpoint in
                 # the next iteration
                 self.p0 = pos
-    
+
                 # Take the last samples from each walker
                 self.hypers = np.exp(self.sampler.chain[:, -1])
             else:
-                # Optimize hyperparameters of the Bayesian linear regression        
+                # Optimize hyperparameters of the Bayesian linear regression
                 res = optimize.fmin(self.nll, np.random.rand(2))
                 self.hypers = [[np.exp(res[0]), np.exp(res[1])]]
         else:
 
             self.hypers = [[self.alpha, self.beta]]
-        
+
         logging.info("Hypers: %s" % self.hypers)
         self.models = []
         for sample in self.hypers:
@@ -238,7 +249,7 @@ class DNGO(BaseModel):
             self.models.append(model)
 
     def marginal_log_likelihood(self, theta):
-        
+
         if np.any((-5 > theta) + (theta > 10)):
             return -1e25
 
@@ -286,21 +297,21 @@ class DNGO(BaseModel):
         X = np.append(self.X, X, axis=0)
         y = np.append(self.Y, y, axis=0)
         self.train(X, y)
-        
+
     def predict(self, X_test, **kwargs):
 
         # Normalize input data to 0 mean and unit std
-        X_ = (X_test - self.X_mean) /  self.X_std 
+        X_ = (X_test - self.X_mean) /  self.X_std
 
         # Get features from the net
 
-        layers = lasagne.layers.get_all_layers(self.network)        
+        layers = lasagne.layers.get_all_layers(self.network)
         theta = lasagne.layers.get_output(layers[:-1], X_)[-1].eval()
 
         # Marginalise predictions over hyperparameters of the BLR
         mu = np.zeros([len(self.models), X_test.shape[0]])
         var = np.zeros([len(self.models), X_test.shape[0]])
-    
+
         for i, m in enumerate(self.models):
             mu[i], var[i] = m.predict(theta)
 
@@ -346,7 +357,7 @@ class DNGO(BaseModel):
 
         network = lasagne.layers.DenseLayer(
  #            lasagne.layers.dropout(network, p=0.1),
-             network,        
+             network,
              num_units=self.n_units_3,
              W=lasagne.init.HeNormal(),
              b=lasagne.init.Constant(val=0.0),
@@ -375,4 +386,4 @@ class DNGO(BaseModel):
             The gradients at X
         """
         raise NotImplementedError()
-        
+
