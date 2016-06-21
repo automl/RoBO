@@ -10,7 +10,7 @@ import numpy as np
 
 try:
     import seaborn
-    seaborn.set_style(style='darkgrid')
+    seaborn.set_style(style='whitegrid')
 except:
     pass
 
