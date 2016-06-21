@@ -34,7 +34,7 @@ class BayesianOptimization(BaseSolver):
 
         Parameters
         ----------
-        acquisition_func: AcquisitionFunctionObject
+        acquisition_func: BaseAcquisitionFunctionObject
             The acquisition function which will be maximized.
         model: ModelObject
             Model (i.e. GaussianProcess, RandomForest) that models our current
@@ -83,6 +83,7 @@ class BayesianOptimization(BaseSolver):
         self.train_intervall = train_intervall
 
         self.num_save = num_save
+        self.time_start = None
 
         self.model_untrained = True
         if incumbent_estimation is None:
@@ -160,6 +161,7 @@ class BayesianOptimization(BaseSolver):
                 if self.save_dir is not None and (i) % self.num_save == 0:
                     self.save_iteration(i, hyperparameters=None,
                                         acquisition_value=0)
+                    self.save_json(i)
 
         else:
             self.X = X
@@ -234,6 +236,7 @@ class BayesianOptimization(BaseSolver):
                     it,
                     hyperparameters=hypers,
                     acquisition_value=self.acquisition_func(new_x))
+                self.save_json(it)
 
         # TODO: Retrain model and then return the incumbent
         logger.info("Return %s as incumbent with predicted performance %f" %
@@ -293,3 +296,20 @@ class BayesianOptimization(BaseSolver):
                         (time.time() - t))
 
         return x
+
+    def get_json_data(self, it):
+        '''
+
+        Overrides method in BaseSolver.
+
+        '''
+        jsonData = dict()
+        jsonData = {
+                    "optimization_overhead":None if self.time_overhead is None else self.time_overhead[it],
+                    "runtime":None if self.time_start is None else time.time() - self.time_start,
+                    "incumbent":None if self.incumbent is None else self.incumbent.tolist(),
+                    "incumbent_fval":None if self.incumbent_value is None else self.incumbent_value.tolist(),
+                    "time_func_eval": self.time_func_eval[it],
+                    "iteration":it
+                    }
+        return jsonData

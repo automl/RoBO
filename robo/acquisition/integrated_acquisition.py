@@ -7,12 +7,14 @@ import logging
 import numpy as np
 
 from copy import deepcopy
-from robo.acquisition.base import AcquisitionFunction
+from robo.acquisition.base_acquisition import BaseAcquisitionFunction
+from robo.models.dngo import DNGO
+import lasagne
 
 logger = logging.getLogger(__name__)
 
 
-class IntegratedAcquisition(AcquisitionFunction):
+class IntegratedAcquisition(BaseAcquisitionFunction):
 
     def __init__(self, model, acquisition_func,
                  X_lower, X_upper, cost_model=None, is_dngo=False):
@@ -25,7 +27,7 @@ class IntegratedAcquisition(AcquisitionFunction):
         model: Model object
             The model of the objective function, it has to be an instance of
             GaussianProcessMCMC or GPyModelMCMC.
-        acquisition_func: AcquisitionFunction object
+        acquisition_func: BaseAcquisitionFunction object
             The acquisition function that will be integrated.
         cost_model: Model object
             If the acquisition function also takes the cost into account, we

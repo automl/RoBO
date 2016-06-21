@@ -60,6 +60,8 @@ class GaussianProcessMCMC(BaseModel):
         self.dim = dim
         self.models = []
         self.normalize_output = normalize_output        
+        self.X = None
+        self.Y = None
 
     def _scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min

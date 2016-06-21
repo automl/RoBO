@@ -3,7 +3,7 @@
 import numpy as np
 
 
-class AcquisitionFunction(object):
+class BaseAcquisitionFunction(object):
     long_name = ""
 
     def __str__(self):
@@ -100,3 +100,14 @@ class AcquisitionFunction(object):
             function at X is returned
         """
         raise NotImplementedError()
+
+    def get_json_data(self):
+        """
+        Json getter function
+
+        :return: Dict() object
+        """
+
+        jsonData = dict()
+        jsonData ={"type":__name__ }
+        return jsonData
