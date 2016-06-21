@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class LogEI(AcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=0.01, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par=1.0, **kwargs):
 
         r"""
         Computes for a given x the logarithm expected improvement as

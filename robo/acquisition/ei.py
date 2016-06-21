@@ -15,7 +15,7 @@ class EI(AcquisitionFunction):
             model,
             X_lower,
             X_upper,
-            par=0.01,
+            par=1.0,
             **kwargs):
 
         r"""

@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class PI(AcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=0.1, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par=1.0, **kwargs):
         r"""
         Probability of Improvement solves the following equation
         :math:`PI(X) := \mathbb{P}\left( f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) > \xi\right)`, where
