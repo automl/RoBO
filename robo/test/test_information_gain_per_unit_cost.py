@@ -12,14 +12,42 @@ from robo.priors import default_priors
 from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.acquisition.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.task.synthetic_functions.sin_func import SinFunction
-from robo.task.environmental_synthetic_function import SyntheticFunctionWrapper
+from robo.task.base_task import BaseTask
+
+class TestTask(BaseTask):
+
+    def __init__(self):
+        self.original_task = SinFunction()
+
+        # Add an additional dimension for the system size
+        X_lower = np.concatenate((self.original_task.original_X_lower,
+                                  np.array([0])))
+
+        X_upper = np.concatenate((self.original_task.original_X_upper,
+                                  np.array([1])))
+
+        self.is_env = np.zeros([self.original_task.n_dims])
+        self.is_env = np.concatenate((self.is_env, np.ones([1])))
+
+        super(TestTask, self).__init__(X_lower, X_upper)
+
+    def objective_function(self, x):
+        y = self.original_task.objective_function(x[:, self.is_env == 0]) \
+            * np.exp(-(x[:, np.newaxis, -1] - 1))
+
+        cost = np.exp(x[:, self.is_env == 1])
+
+        return y, cost
+
+    def objective_function_test(self, x):
+        return self.original_task.objective_function(x[:, self.is_env == 0])
 
 
 class Test(unittest.TestCase):
 
     def setUp(self):
-        s = SinFunction()
-        self.task = SyntheticFunctionWrapper(s)
+
+        self.task = TestTask()
 
         kernel = george.kernels.Matern52Kernel(np.ones([self.task.n_dims]) * 0.01,
                                                        ndim=self.task.n_dims)
