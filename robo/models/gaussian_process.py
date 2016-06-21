@@ -91,7 +91,6 @@ class GaussianProcess(BaseModel):
             self.model.kernel[:] = self.hypers[:-1]
             self.noise = np.exp(self.hypers[-1]) ## sigma^2
         else:
-            self.model.compute(self.X, yerr=np.sqrt(self.noise))
             self.hypers = self.model.kernel[:]
             self.hypers = np.append(self.hypers, np.log(self.noise))
         logger.info("HYPERS: " + str(self.hypers))            

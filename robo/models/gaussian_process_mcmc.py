@@ -165,7 +165,7 @@ class GaussianProcessMCMC(BaseModel):
 
         # Bound the hyperparameter space to keep things sane. Note all
         # hyperparameters live on a log scale
-        if np.any((-10 > theta) + (theta > 10)):
+        if np.any((-20 > theta) + (theta > 20)):
             return -np.inf
             
         # The last entry is always the noise
