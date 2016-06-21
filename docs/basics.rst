@@ -159,7 +159,7 @@ Saving output
 ^^^^^^^^^^^^^
 
 You can save RoBO's output by passing the parameters 'save_dir' and 'num_save'. The first parameter 'save_dir' specifies where the results will be saved and
-the second parameter 'num_save' after how many iterations the output should be saved. 
+the second parameter 'num_save' after how many iterations the output should be saved. RoBO will save the ouput both in .csv and Json format.
 
 .. code-block:: python
 
@@ -170,7 +170,7 @@ the second parameter 'num_save' after how many iterations the output should be s
                       		  save_dir="path_to_directory",
                       		  num_save=1)
 
-RoBO will save then the following information:
+RoBO will save then the following information in the CSV file:
 
  - X: The configuration it evaluated so far
  - y: Their corresponding function values
@@ -178,6 +178,17 @@ RoBO will save then the following information:
  - incumbent_value: Its function value 
  - time_function: The time each function evaluation took
  - optimizer_overhead: The time RoBO needed to pick a new configuration
+
+Following information will be saved in Json in below shown format.
+
+.. code-block:: javascript
+	{
+	"Acquisiton":{"type" },
+	"Model":{"Y" ,"X" ,"hyperparameters" },
+	"Task":{"opt": ,"fopt": ,"original_X_lower": ,"original_X_upper": , },
+	"Solver":{"optimization_overhead" ,"incumbent_fval" ,"iteration" ,"time_func_eval" ,"incumbent" ,"runtime"  }
+	}
+
 
     
 Implementing the Bayesian optimization loop

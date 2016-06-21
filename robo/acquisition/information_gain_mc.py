@@ -4,14 +4,14 @@ import logging
 from scipy.stats import norm
 
 from robo.acquisition.log_ei import LogEI
-from robo.acquisition.base import AcquisitionFunction
+from robo.acquisition.base_acquisition import BaseAcquisitionFunction
 from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.util import mc_part
 
 logger = logging.getLogger(__name__)
 
 
-class InformationGainMC(AcquisitionFunction):
+class InformationGainMC(BaseAcquisitionFunction):
     def __init__(self, model, X_lower, X_upper,
                  Nb=50, Nf=500,
                  sampling_acquisition=None,
@@ -45,7 +45,7 @@ class InformationGainMC(AcquisitionFunction):
             of the mean for the representer points
         Nf: int
             Number of functions that are sampled to approximate pmin
-        sampling_acquisition: AcquisitionFunction
+        sampling_acquisition: BaseAcquisitionFunction
             A function to be used in calculating the density that
             representer points are to be sampled from. It uses
         sampling_acquisition_kw: dict

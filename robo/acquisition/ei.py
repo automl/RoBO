@@ -3,13 +3,13 @@ import logging
 from scipy.stats import norm
 import numpy as np
 
-from robo.acquisition.base import AcquisitionFunction
+from robo.acquisition.base_acquisition import BaseAcquisitionFunction
 from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
-class EI(AcquisitionFunction):
+class EI(BaseAcquisitionFunction):
 
     def __init__(self,
             model,
