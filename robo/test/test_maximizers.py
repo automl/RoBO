@@ -53,7 +53,7 @@ class TestMaximizers1D(unittest.TestCase):
         assert x.shape[1] == self.dims
         assert np.all(x[:, 0] >= self.X_lower[0])
         assert np.all(x[:, 0] <= self.X_upper[0])
-        assert np.all(x < self.X_upper)
+
 
     def test_stochastic_local_search(self):
         maximizer = StochasticLocalSearch(self.acquisition_func,
@@ -64,7 +64,7 @@ class TestMaximizers1D(unittest.TestCase):
         assert x.shape[1] == self.dims
         assert np.all(x[:, 0] >= self.X_lower[0])
         assert np.all(x[:, 0] <= self.X_upper[0])
-        assert np.all(x < self.X_upper)
+
 
     def test_grid_search(self):
         maximizer = GridSearch(self.acquisition_func,
@@ -76,7 +76,6 @@ class TestMaximizers1D(unittest.TestCase):
         assert x.shape[1] == self.dims
         assert np.all(x[:, 0] >= self.X_lower[0])
         assert np.all(x[:, 0] <= self.X_upper[0])
-        assert np.all(x < self.X_upper)
 
 
 class TestMaximizers2D(unittest.TestCase):
@@ -118,7 +117,6 @@ class TestMaximizers2D(unittest.TestCase):
         assert np.all(x[:, 1] >= self.branin.X_lower[1])
         assert np.all(x[:, 0] <= self.branin.X_upper[0])
         assert np.all(x[:, 1] <= self.branin.X_upper[1])
-        assert np.all(x < self.branin.X_upper)
 
     def test_stochastic_local_search(self):
         maximizer = StochasticLocalSearch(self.acquisition_func,
@@ -132,7 +130,6 @@ class TestMaximizers2D(unittest.TestCase):
         assert np.all(x[:, 1] >= self.branin.X_lower[1])
         assert np.all(x[:, 0] <= self.branin.X_upper[0])
         assert np.all(x[:, 1] <= self.branin.X_upper[1])
-        assert np.all(x < self.branin.X_upper)
 
     def test_cmaes(self):
         maximizer = CMAES(self.acquisition_func,
@@ -147,7 +144,6 @@ class TestMaximizers2D(unittest.TestCase):
         assert np.all(x[:, 1] >= self.branin.X_lower[1])
         assert np.all(x[:, 0] <= self.branin.X_upper[0])
         assert np.all(x[:, 1] <= self.branin.X_upper[1])
-        assert np.all(x < self.branin.X_upper)
 
 
 if __name__ == "__main__":
