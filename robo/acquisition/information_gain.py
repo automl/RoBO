@@ -23,7 +23,7 @@ class InformationGain(BaseAcquisitionFunction):
 
     def __init__(self, model, X_lower, X_upper,
             Nb=50, Np=400, sampling_acquisition=None,
-            sampling_acquisition_kw={"par": 1.0},
+            sampling_acquisition_kw={"par": 0.0},
             **kwargs):
 
         """

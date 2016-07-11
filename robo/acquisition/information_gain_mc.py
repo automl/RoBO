@@ -15,7 +15,7 @@ class InformationGainMC(BaseAcquisitionFunction):
     def __init__(self, model, X_lower, X_upper,
                  Nb=50, Nf=500,
                  sampling_acquisition=None,
-                 sampling_acquisition_kw={"par": 1.0},
+                 sampling_acquisition_kw={"par": 0.0},
                  Np=50, **kwargs):
 
         """

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class LCB(BaseAcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=1.0, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par=0.0, **kwargs):
         r"""
         The lower confidence bound acquisition functions that computes for a
         test point the acquisition value by:
