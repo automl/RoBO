@@ -35,7 +35,7 @@ class RandomSearch(BaseSolver):
         """
 
         if rng is None:
-            self.rng = np.random.RandomState(42)
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
             self.rng = rng
 
@@ -48,8 +48,8 @@ class RandomSearch(BaseSolver):
         self.estimator = BestObservation(self,
                                          self.task.X_lower,
                                          self.task.X_upper)
-        self.time_func_eval = None
-        self.time_overhead = None
+        self.time_func_eval = []
+        self.time_overhead = []
 
         self.num_save = num_save
 
@@ -89,8 +89,7 @@ class RandomSearch(BaseSolver):
             new_x = self.choose_next()
 
             time_overhead = time.time() - start_time
-            self.time_overhead = np.append(self.time_overhead,
-                                           np.array([time_overhead]))
+            self.time_overhead.append(time_overhead)
 
             logger.info("Optimization overhead was %f seconds" %
                             (self.time_overhead[-1]))
@@ -99,8 +98,7 @@ class RandomSearch(BaseSolver):
             start_time = time.time()
             new_y = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
-            self.time_func_eval = np.append(self.time_func_eval,
-                                            np.array([time_func_eval]))
+            self.time_func_eval.append(time_func_eval)
 
             logger.info("Configuration achieved a performance of %f " %
                         (new_y[0, 0]))
@@ -149,5 +147,9 @@ class RandomSearch(BaseSolver):
         np.ndarray(1,D)
             Suggested point to evaluate
         """
-        return self.rng.uniform(self.task.X_lower,
-                                 self.task.X_upper)[np.newaxis, :]
+        x = self.rng.uniform(self.task.X_lower,
+                                 self.task.X_upper)
+        if type(x) == np.float:
+            return np.array([[x]])
+        else:                                 
+            return x[np.newaxis, :]

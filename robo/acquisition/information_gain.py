@@ -9,7 +9,7 @@ import emcee
 
 
 from robo.acquisition.log_ei import LogEI
-from robo.acquisition.base import AcquisitionFunction
+from robo.acquisition.base_acquisition import BaseAcquisitionFunction
 from robo.util import epmgp
 
 sq2 = np.sqrt(2)
@@ -19,7 +19,7 @@ eps = np.finfo(np.float32).eps
 logger = logging.getLogger(__name__)
 
 
-class InformationGain(AcquisitionFunction):
+class InformationGain(BaseAcquisitionFunction):
 
     def __init__(self, model, X_lower, X_upper,
             Nb=50, Np=400, sampling_acquisition=None,
@@ -202,14 +202,8 @@ class InformationGain(AcquisitionFunction):
     def dh_fun(self, x, derivative=False):
 
         if not (np.all(np.isfinite(self.lmb))):
-            logger.debug(
-                self.zb[
-                    np.where(
-                        np.isinf(
-                            self.lmb))], self.lmb[
-                    np.where(
-                        np.isinf(
-                            self.lmb))])
+            logger.debug(self.zb[np.where(np.isinf(self.lmb))],
+                        self.lmb[np.where(np.isinf(self.lmb))])
             raise Exception(
                 "lmb should not be infinite.")
 

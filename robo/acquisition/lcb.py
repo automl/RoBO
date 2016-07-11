@@ -1,15 +1,15 @@
 import logging
 import numpy as np
 
-from robo.acquisition.base import AcquisitionFunction
+from robo.acquisition.base_acquisition import BaseAcquisitionFunction
 
 
 logger = logging.getLogger(__name__)
 
 
-class LCB(AcquisitionFunction):
+class LCB(BaseAcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=1.0, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par=0.0, **kwargs):
         r"""
         The lower confidence bound acquisition functions that computes for a
         test point the acquisition value by:

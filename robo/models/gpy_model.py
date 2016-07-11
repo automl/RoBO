@@ -1,5 +1,4 @@
-import sys
-#import StringIO
+
 import numpy as np
 import GPy
 import logging

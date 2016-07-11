@@ -26,7 +26,7 @@ def sample_from_measure(model, xmin, xmax, n_representers, BestGuesses, acquisit
                         the objective function's extremum.
     :param acquisition_fn: The acquisition function to be used in
                         the sampling of the representer points.
-    :type acquisition_fn: AcquisitionFunction
+    :type acquisition_fn: BaseAcquisitionFunction
     :return:
     """
 

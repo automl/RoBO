@@ -46,5 +46,8 @@ class DefaultPrior(BasePrior):
         p0[:, 1:(self.n_dims - 1)] = ls_sample
         # Noise
         p0[:, -1] = self.horseshoe.sample_from_prior(n_samples)[:, 0]
-
         return p0
+
+    def gradient(self, theta):
+        #TODO: Implement real gradient here
+        return np.zeros([theta.shape[0]])

@@ -19,8 +19,9 @@ logger = logging.getLogger(__name__)
 class GaussianProcess(BaseModel):
 
     def __init__(self, kernel, prior=None,
-                 yerr=1e-25, use_gradients=True,
-                 basis_func=None, dim=None, *args, **kwargs):
+                 noise=1e-3, use_gradients=False,
+                 basis_func=None, dim=None, normalize_output=False,
+                 *args, **kwargs):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal loglikelihood.
@@ -32,7 +33,7 @@ class GaussianProcess(BaseModel):
         prior : prior object
             Defines a prior for the hyperparameters of the GP. Make sure that
             it implements the Prior interface.
-        yerr : float
+        noise : float
             Noise term that is added to the diagonal of the covariance matrix
             for the cholesky decomposition.
         use_gradients : bool
@@ -42,10 +43,13 @@ class GaussianProcess(BaseModel):
         self.kernel = kernel
         self.model = None
         self.prior = prior
-        self.yerr = yerr
+        self.noise = noise
         self.use_gradients = use_gradients
         self.basis_func = basis_func
         self.dim = dim
+        self.normalize_output = normalize_output
+        self.X = None
+        self.Y = None
 
     def scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) *
@@ -69,45 +73,33 @@ class GaussianProcess(BaseModel):
             If set to true the hyperparameters are optimized.
         """
         self.X = X
-        # For EnvES we transform s to (1 - s)^2
+        # For Fabolas we transform s to (1 - s)^2
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
+
         self.Y = Y
+        if self.normalize_output:
+            self.Y_mean = np.mean(Y)
+            self.Y_std = np.std(Y)
+            self.Y = (Y - self.Y_mean) / self.Y_std
 
-        # Use the mean of the data as mean for the GP
-        self.mean = np.mean(Y, axis=0)
+        # Use the empirical mean of the data as mean for the GP
+        self.mean = np.mean(self.Y, axis=0)
         self.model = george.GP(self.kernel, mean=self.mean)
-
-        # Precompute the covariance
-        while(True):
-            try:
-                self.model.compute(self.X, yerr=self.yerr)
-                break
-            except np.linalg.LinAlgError:
-                if self.yerr == 0.0:
-                    self.yerr = 1e-25
-                else:
-                    self.yerr *= 10
-                logger.error(
-                    "Cholesky decomposition for the covariance matrix \
-                    of the GP failed. \
-                    Add %s noise on the diagonal." %
-                    self.yerr)
 
         if do_optimize:
             self.hypers = self.optimize()
-            logger.info("HYPERS: " + str(self.hypers))
-            self.model.kernel[:] = self.hypers
+            self.model.kernel[:] = self.hypers[:-1]
+            self.noise = np.exp(self.hypers[-1]) ## sigma^2
         else:
             self.hypers = self.model.kernel[:]
+            self.hypers = np.append(self.hypers, np.log(self.noise))
+        logger.info("HYPERS: " + str(self.hypers))            
+        self.model.compute(self.X, yerr=np.sqrt(self.noise))
 
     def get_noise(self):
-        # Assumes a kernel of the form amp * (kernel1 + noise_kernel)
-        # FIXME: How to determine the noise of george gp in general?
-        return self.yerr
-        assert self.kernel.k2.k2.kernel_type == 1
-        return self.kernel.k2.k2.pars[0]
+        return self.noise
 
     def nll(self, theta):
         """
@@ -126,12 +118,15 @@ class GaussianProcess(BaseModel):
         float
             lnlikelihood + prior
         """
-
         # Specify bounds to keep things sane
-        if np.any((-10 > theta) + (theta > 10)):
+        if np.any((-20 > theta) + (theta > 20)):
             return 1e25
 
-        self.model.kernel[:] = theta
+        # The last entry of theta is always the noise
+        self.model.kernel[:] = theta[:-1]
+        noise = np.exp(theta[-1])  # sigma^2
+        
+        self.model.compute(self.X, yerr=np.sqrt(noise))
         ll = self.model.lnlikelihood(self.Y[:, 0], quiet=True)
 
         # Add prior
@@ -142,22 +137,45 @@ class GaussianProcess(BaseModel):
         return -ll if np.isfinite(ll) else 1e25
 
     def grad_nll(self, theta):
-        self.model.kernel[:] = theta
 
-        gll = self.model.grad_lnlikelihood(self.Y[:, 0], quiet=True)
+        self.model.kernel[:] = theta[:-1]
+        noise = np.exp(theta[-1])
+        
+        self.model.compute(self.X, yerr=np.sqrt(noise))
+        
+        self.model._compute_alpha(self.Y[:, 0])
+        K_inv = self.model.solver.apply_inverse(np.eye(self.model._alpha.size),
+                                          in_place=True)
+
+        # The gradients of the Gram matrix, for the noise this is just 
+        # the identiy matrix
+        Kg = self.model.kernel.gradient(self.model._x)
+        Kg = np.concatenate((Kg, np.eye(Kg.shape[0])[:, :, None]), axis=2)
+
+        # Calculate the gradient.
+        A = np.outer(self.model._alpha, self.model._alpha) - K_inv
+        g = 0.5 * np.einsum('ijk,ij', Kg, A)
+        
 
         if self.prior is not None:
-            gll += self.prior.gradient(theta)
-        return -gll
+            g += self.prior.gradient(theta)
+
+        return -g
 
     def optimize(self):
         # Start optimization  from the previous hyperparameter configuration
         p0 = self.model.kernel.vector
+        p0 = np.append(p0, np.log(self.noise))
+
         if self.use_gradients:
-            results = optimize.minimize(self.nll, p0, jac=self.grad_nll)
+            bounds = [(-10, 10)] * (len(self.kernel) + 1)
+            theta, _, _ = optimize.fmin_l_bfgs_b(self.nll, p0,
+                                             fprime=self.grad_nll,
+                                             bounds=bounds)
         else:
             results = optimize.minimize(self.nll, p0)
-        return results.x
+            theta = results.x
+        return theta
 
     def predict_variance(self, X1, X2):
         r"""
@@ -177,16 +195,7 @@ class GaussianProcess(BaseModel):
             predictive variance
 
         """
-        # For EnvES we transform s to (1 - s)^2
-        if self.basis_func is not None:
-            X_test_1 = deepcopy(X1)
-            X_test_1[:, self.dim] = self.basis_func(X_test_1[:, self.dim])
-            X_test_2 = deepcopy(X2)
-            X_test_2[:, self.dim] = self.basis_func(X_test_2[:, self.dim])
-        else:
-            X_test_1 = X1
-            X_test_2 = X2
-        x_ = np.concatenate((X_test_1, X_test_2))
+        x_ = np.concatenate((X1, X2))
         _, var = self.predict(x_)
         var = var[:-1, -1, np.newaxis]
 
@@ -210,7 +219,8 @@ class GaussianProcess(BaseModel):
             predictive variance
 
         """
-        # For EnvES we transform s to (1 - s)^2
+
+        # For Fabolas we transform s to (1 - s)^2
         if self.basis_func is not None:
             X_test = deepcopy(X)
             X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
@@ -256,5 +266,5 @@ class GaussianProcess(BaseModel):
         return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)
 
     def predictive_gradients(self, X_test):
-        dmdx, dvdx = self.m.predictive_gradients(Xnew)
+        dmdx, dvdx = self.m.predictive_gradients(X_test)
         return dmdx[:, 0, :], dvdx

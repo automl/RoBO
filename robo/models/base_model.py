@@ -9,9 +9,9 @@ class BaseModel(object):
 
     def __init__(self, *args, **kwargs):
         self.X = None
-        self.y = None
+        self.Y = None
 
-    def train(self, X, y):
+    def train(self, X, Y):
         """
         Trains the model on the provided data.
             
@@ -26,12 +26,12 @@ class BaseModel(object):
             match the number of points of X and T is the number of objectives
         """
         self.X = X
-        self.y = y
+        self.Y = Y
 
-    def update(self, X, y):
+    def update(self, X, Y):
         X = np.append(self.X, X, axis=0)
-        y = np.append(self.Y, y, axis=0)
-        self.train(X, y)
+        Y = np.append(self.Y, Y, axis=0)
+        self.train(X, Y)
 
     def predict(self, X):
         """
@@ -61,9 +61,19 @@ class BaseModel(object):
         
         X: np.ndarray (N, D)
             The points to predict the gradient for
-
         Returns
         ----------
             The gradients at X
         """
         raise NotImplementedError()
+
+    def get_json_data(self):
+        """
+        Json getter function'
+
+        :return: Dict object
+        """
+        jsonData = dict()
+        jsonData = {'X': self.X if self.X is None else self.X.tolist(), 'Y':self.Y if self.Y is None else self.Y.tolist(), 'hyperparameters':" " }
+        return jsonData
+

@@ -24,8 +24,7 @@ model = RandomForest(branin.types)
 # Define the acquisition function
 acquisition_func = EI(model,
                      X_upper=branin.X_upper,
-                     X_lower=branin.X_lower,
-                     par=0.1)
+                     X_lower=branin.X_lower)
 
 # Strategy of estimating the incumbent
 rec = PosteriorMeanAndStdOptimization(model, branin.X_lower,

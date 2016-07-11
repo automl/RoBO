@@ -110,7 +110,7 @@ class BaseTask(object):
 
     def transform(self, x):
         """
-        Transforms from  original space to the space [0, 1]
+        Transforms from original space to the space [0, 1]
         Parameters
         ----------
         X: np.ndarray (1, D)
@@ -195,3 +195,17 @@ class BaseTask(object):
         if self.do_scaling:
             x = self.retransform(x)
         return self.objective_function_test(x)
+
+    def get_json_data(self):
+        """
+        Json getter function
+
+        :return: Dict() object
+        """
+        jsonData = dict()
+        jsonData ={'opt':self.opt if self.opt is None else self.opt.tolist(), 'fopt':self.fopt , 'original_X_lower':self.original_X_lower.tolist(),
+                   'original_X_upper':self.original_X_upper.tolist()}
+        return jsonData
+
+
+

@@ -47,9 +47,9 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
 
         logP[i] = next(a)
         if with_derivatives:
-            dlogPdMu[i, :] = a.next().T
+            dlogPdMu[i, :] = next(a).T
             dlogPdMudMu[i, :, :] = next(a)
-            dlogPdSigma[i, :] = a.next().T
+            dlogPdSigma[i, :] = next(a).T
 
     logP[np.isinf(logP)] = -500
     # re-normalize at the end, to smooth out numerical imbalances:

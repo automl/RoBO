@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from robo.acquisition.base import AcquisitionFunction
+from robo.acquisition.base_acquisition import BaseAcquisitionFunction
 
 try:
     import cpickle as pickle
@@ -13,7 +13,7 @@ from argparse import ArgumentError
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-class _ContextualAcquisitionFunction(AcquisitionFunction):
+class _ContextualAcquisitionFunction(BaseAcquisitionFunction):
     """
     Composite acquisition function for contextual bayesian optimization.
     Calculates the acquisition function by prepending the context to the input.
@@ -54,7 +54,7 @@ class _ContextualAcquisitionFunction(AcquisitionFunction):
         return type(self).__name__ + " (Wraps " + self.acquisition_fkt + ")"
 
 
-class MeanAcquisitionFunction(AcquisitionFunction):
+class MeanAcquisitionFunction(BaseAcquisitionFunction):
     """
     Returns the mean of the model
 

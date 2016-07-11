@@ -2,15 +2,15 @@ import logging
 from scipy.stats import norm
 import numpy as np
 
-from robo.acquisition.base import AcquisitionFunction
+from robo.acquisition.base_acquisition import BaseAcquisitionFunction
 from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
-class PI(AcquisitionFunction):
+class PI(BaseAcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=0.1, **kwargs):
+    def __init__(self, model, X_lower, X_upper, par=0.0, **kwargs):
         r"""
         Probability of Improvement solves the following equation
         :math:`PI(X) := \mathbb{P}\left( f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) > \xi\right)`, where
