@@ -119,7 +119,7 @@ class GaussianProcess(BaseModel):
             lnlikelihood + prior
         """
         # Specify bounds to keep things sane
-        if np.any((-10 > theta) + (theta > 10)):
+        if np.any((-20 > theta) + (theta > 20)):
             return 1e25
 
         # The last entry of theta is always the noise

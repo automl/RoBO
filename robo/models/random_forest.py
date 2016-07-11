@@ -47,13 +47,13 @@ class RandomForest(BaseModel):
 
     def __init__(self, types, num_trees=30,
                  do_bootstrapping=True,
-                 n_points_per_tree=100,
+                 n_points_per_tree=0,
                  ratio_features=0.5,
-                 min_samples_split=15,
-                 min_samples_leaf=15,
+                 min_samples_split=2,
+                 min_samples_leaf=5,
                  max_depth=100,
                  eps_purity=1e-8,
-                 max_num_nodes=10,
+                 max_num_nodes=0,
                  seed=42):
 
         # make sure types are uint
