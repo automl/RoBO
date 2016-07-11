@@ -2,8 +2,11 @@
 Basic Usage
 ===========
 
+
+.. _fmin:
+
 RoBO in a few lines of code
--------------------------
+---------------------------
 
 RoBO offers a simple interface such that you can use it as a optimizer for black box function without knowing what's going on inside. In order to do that you first have to 
 define the objective function and the bounds of the configuration space:
