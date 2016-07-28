@@ -145,6 +145,7 @@ class Fabolas(BayesianOptimization):
             init = extrapolative_initial_design(self.task.X_lower,
                                        self.task.X_upper,
                                        self.task.is_env,
+                                       self.task,
                                        N=self.init_points)
 
             for i, x in enumerate(init):
@@ -154,6 +155,7 @@ class Fabolas(BayesianOptimization):
                 logger.info("Evaluate: %s" % x)
 
                 start_time = time.time()
+
                 y, c = self.task.evaluate(x)
 
                 # Transform cost to log scale
