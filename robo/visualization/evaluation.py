@@ -403,3 +403,82 @@ def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False
         return pointPlot
     else:
         raise NameError('Please select the type of the plot')
+
+
+def plot_over_time(time,methods,error_random_config):
+    """
+        method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
+        method2 = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12]])
+        time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]],
+                 [[2,3,4,5], [4,5,6,7], [6,7,8,9]]])
+        methods = [method1,method2]
+        plot_over_time(time,methods,0.9)
+    :return:
+    """
+    # We are going to make a dictionary from the given information.
+    # The structure of the dictionary you already know.
+    # Cool !
+    data = dict()
+    time_point_union = dict()
+    # Initializing the dictionary with data already available
+    for i,method in enumerate(methods):
+        data[i] = {}
+        time_point_union[i] = list() # It is going to be a dictionary of lists.
+        for j,runs in enumerate(method):
+            data[i][j] =dict()
+            time_point_union[i] = np.union1d(time_point_union[i],time[i][j])
+            time_point_union[i] = map(int,time_point_union[i])
+            for k,y_value in enumerate(runs):
+                data[i][j][time[i][j][k]]={}
+                data[i][j][time[i][j][k]]= methods[i][j][k]
+    # Now edit the original data
+    # all of the methods should have runs on the same time point
+    # i.e for each time point in the time_points_union array, there should be a y value.
+
+    for method_number in time_point_union:
+        #print method_number
+        #print time_point_union[method_number]
+        for time_point in time_point_union[method_number]:
+           # print "time point --> " +str(time_point)
+            for run_number in data[method_number]:
+               # print "run number" + str(run_number)
+                #print data[method_number][run_number]
+                if time_point in data[method_number][run_number]:
+                    a=10 #Do nothing...
+                else:
+                    #Did not find the key
+                    y_value_of_new_point = sorted([i for i in data[method_number][run_number] if i < time_point])
+                    if not y_value_of_new_point:
+                        #y_value_of_new_point = 0
+                        y_value_of_new_point = sorted([i for i in data[method_number][run_number]])[-1]
+                    else:
+                        y_value_of_new_point = y_value_of_new_point[-1]
+                    data[method_number][run_number][time_point] = {}
+                    data[method_number][run_number][time_point] = data[method_number][run_number][y_value_of_new_point]
+    # Now transform this dictionary into the original array format so that it can be visualised.
+    # Make time list
+    time1 = list()
+    methods1 = list()
+    method_numbers = sorted(data.keys()) # A sorted list of method numbers
+    for i in method_numbers:
+        time1.append([time_point_union[i] for j in data[i]])
+    time1 = np.asarray(time1)
+    # Done :)
+    # Use the dictionary to generate the new methods array
+    for i in method_numbers:
+        method1 = list()
+        run_numbers = sorted(data[i].keys())
+        for runs in run_numbers:
+            array = [data[i][runs][time_point_union[i][o]] for o in [n for n in range(0,len(time_point_union[i]))]]
+            method1.append(array)
+        methods1.append(method1)
+    print time1
+    print methods1
+    # update the old data to the new data.
+    time = time1
+    methods = methods1
+
+    for i,j in enumerate(methods):
+        for l,m in enumerate(methods[i]):
+            plt.step(time[i][l],m,where='post')#,color='r')
+    plt.show()
