@@ -18,13 +18,18 @@ Median
 Mean and Standard Deviation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 **bar plot**
+...
 **point plot**
+...
 
 
 Standard Error of Mean
 ^^^^^^^^^^^^^^^^^^^^^^
 **bar plot**
+...
+
 **point plot**
+..
 
 Plot Over Time
 ^^^^^^^^^^^^^^
