@@ -251,7 +251,7 @@ def latex_matrix_string(mean, error, title,
     return latex_string1
 
 
-def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
+def plot_mean_and_std(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
     colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
     x_title="X Label", y_title="Y Label"):
     '''
@@ -265,7 +265,7 @@ def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="
         method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
         methods = [method_1, method_2, method_3]
 
-        plot = plotMeanAndStd(x,methods,drawBarPlot = True)
+        plot = plot_mean_and_std(x,methods,drawBarPlot = True)
         plot.show()
 
     Parameters
@@ -405,25 +405,58 @@ def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False
         raise NameError('Please select the type of the plot')
 
 
-def plot_over_time(time,methods,error_random_config):
+def time_interpolation(time_point_union,data):
+    '''
+    Interpolates data over time points.
+    Edits the original data dictionary. All of the methods should have runs on the same time point.
+    i.e for each time point in the time_points_union array there should be a y value.
+
+    :return:
+
+    '''
+    for method_number in time_point_union:
+        for time_point in time_point_union[method_number]:
+            for run_number in data[method_number]:
+                if time_point in data[method_number][run_number]:
+                    pass #Do nothing
+                else:
+                    #Did not find the key
+                    y_value_of_new_point = sorted([i for i in data[method_number][run_number] if i < time_point])
+                    if not y_value_of_new_point:
+                        y_value_of_new_point = sorted([i for i in data[method_number][run_number]])[-1]
+                    else:
+                        y_value_of_new_point = y_value_of_new_point[-1]
+                    data[method_number][run_number][time_point] = {}
+                    data[method_number][run_number][time_point] = data[method_number][run_number][y_value_of_new_point]
+    return data
+
+
+
+def plot_over_time(time,methods,error_random_config,agglomeration="mean"):
     """
+    Example:
+    ---------
         method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
         method2 = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12]])
         time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]],
-                 [[2,3,4,5], [4,5,6,7], [6,7,8,9]]])
+                [[2,3,4,5], [4,5,6,7], [6,7,8,9]]])
         methods = [method1,method2]
-        plot_over_time(time,methods,0.9)
+        plot = plot_over_time(time,methods,0.9)
+        plot.show()
+    Parameters:
+    -----------
+
+
     :return:
+
     """
-    # We are going to make a dictionary from the given information.
-    # The structure of the dictionary you already know.
-    # Cool !
+    # Transform data into a dictionary for more efficent and easy pre-processing.
     data = dict()
     time_point_union = dict()
     # Initializing the dictionary with data already available
     for i,method in enumerate(methods):
         data[i] = {}
-        time_point_union[i] = list() # It is going to be a dictionary of lists.
+        time_point_union[i] = list() # A dictionary of lists.
         for j,runs in enumerate(method):
             data[i][j] =dict()
             time_point_union[i] = np.union1d(time_point_union[i],time[i][j])
@@ -431,54 +464,165 @@ def plot_over_time(time,methods,error_random_config):
             for k,y_value in enumerate(runs):
                 data[i][j][time[i][j][k]]={}
                 data[i][j][time[i][j][k]]= methods[i][j][k]
-    # Now edit the original data
-    # all of the methods should have runs on the same time point
-    # i.e for each time point in the time_points_union array, there should be a y value.
 
-    for method_number in time_point_union:
-        #print method_number
-        #print time_point_union[method_number]
-        for time_point in time_point_union[method_number]:
-           # print "time point --> " +str(time_point)
-            for run_number in data[method_number]:
-               # print "run number" + str(run_number)
-                #print data[method_number][run_number]
-                if time_point in data[method_number][run_number]:
-                    a=10 #Do nothing...
-                else:
-                    #Did not find the key
-                    y_value_of_new_point = sorted([i for i in data[method_number][run_number] if i < time_point])
-                    if not y_value_of_new_point:
-                        #y_value_of_new_point = 0
-                        y_value_of_new_point = sorted([i for i in data[method_number][run_number]])[-1]
-                    else:
-                        y_value_of_new_point = y_value_of_new_point[-1]
-                    data[method_number][run_number][time_point] = {}
-                    data[method_number][run_number][time_point] = data[method_number][run_number][y_value_of_new_point]
-    # Now transform this dictionary into the original array format so that it can be visualised.
-    # Make time list
-    time1 = list()
-    methods1 = list()
-    method_numbers = sorted(data.keys()) # A sorted list of method numbers
+
+    data = time_interpolation(time_point_union,data) #Interpolating data on time points.
+    # Transforming this dictionary into array format so that it can be visualised.
+    new_time = list()
+    new_methods = list()
+    method_numbers = sorted(data.keys()) # A sorted list of method numbers.
     for i in method_numbers:
-        time1.append([time_point_union[i] for j in data[i]])
-    time1 = np.asarray(time1)
-    # Done :)
-    # Use the dictionary to generate the new methods array
+        new_time.append([time_point_union[i] for j in data[i]])
+    new_time = np.asarray(new_time)
+    # Use the dictionary to generate the new and interpolated methods array.
     for i in method_numbers:
         method1 = list()
         run_numbers = sorted(data[i].keys())
         for runs in run_numbers:
             array = [data[i][runs][time_point_union[i][o]] for o in [n for n in range(0,len(time_point_union[i]))]]
             method1.append(array)
-        methods1.append(method1)
-    print time1
-    print methods1
-    # update the old data to the new data.
-    time = time1
-    methods = methods1
-
+        new_methods.append(method1)
+    # Update the old data to the new data.
+    time = new_time
+    methods = new_methods
     for i,j in enumerate(methods):
         for l,m in enumerate(methods[i]):
-            plt.step(time[i][l],m,where='post')#,color='r')
-    plt.show()
+            plt.step(time[i][l],m,where='post') #,color='r')
+    return plt
+
+
+
+def plot_median_and_percentiles(x,method):
+    '''
+Example:
+-----------
+x = np.array([[1, 3, 4, 5]])
+method = np.array([[1,14,20,2], [10,4,24,3] , [15,6,27,5]])
+plot = plot_median_and_percentiles(x,[method])
+plot.show()
+
+
+Plots the mean and the 5th and 95th percentile.
+
+:return:
+    '''
+    curves = []
+    for index,method in enumerate(method):
+        median = []
+        fifth_percentile = []
+        ninty_fifth_percentile = []
+        for j in range(0,len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            medianValue = np.median(valueArray)
+            fifth_value = np.percentile(valueArray, 5)
+            ninty_fifth_value = np.percentile(valueArray, 95)
+            ninty_fifth_percentile.append(ninty_fifth_value)
+            fifth_percentile.append(fifth_value)
+            median.append(medianValue)
+        median_curve =np.array(median)
+        ninty_fifth_percentile_curve = np.array(ninty_fifth_percentile)
+        fifth_percentile_curve = np.array(fifth_percentile)
+        plt.plot(x[0],median_curve, label = "median")
+        plt.plot(x[0],ninty_fifth_percentile_curve, label = "95th Percentile")
+        plt.plot(x[0],fifth_percentile_curve, label = "5th Percentile")
+        plt.legend()
+    return plt
+
+
+
+
+def plot_median(x,methods):
+    '''
+    Plots the median and the percentile value given.
+    Example:
+    ----------------------------
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+methods = [method_1, method_2, method_3]
+plot = plot_median(x,methods)
+plot.show()
+    Parameters:
+    ----------------------------
+        x : numpy array
+            For each curve, contains the x-coordinates. Each entry
+            corresponds to one method.
+        methods : list of numpy arrays
+            A list of numpy arrays of methods. Each method contains a numpy array
+            of several run of that corresponding method.
+    :return:
+        plt : object
+            Plot Object
+    '''
+    curves = []
+    for index,method in enumerate(methods):
+        median = []
+        fifth_percentile = []
+        ninty_fifth_percentile = []
+        for j in range(0,len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            medianValue = np.median(valueArray)
+            fifth_value = np.percentile(valueArray, 5)
+            ninty_fifth_value = np.percentile(valueArray, 95)
+            ninty_fifth_percentile.append(ninty_fifth_value)
+            fifth_percentile.append(fifth_value)
+            median.append(medianValue)
+        curves.append(np.array(median))
+        print ("5th-->" ,fifth_percentile)
+        print ("95th --> " , ninty_fifth_percentile)
+        print ("median --> " , median)
+    for index,curve in enumerate(curves):
+        plt.plot(x[index],curve)
+    return plt
+
+
+
+
+
+def plot_mean(x,methods):
+    '''
+    Example:
+    ----------------------------
+        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+        methods = [method_1, method_2, method_3]
+
+        plot = plot_mean(x,methods)
+        plot.show()
+
+    Parameters:
+    ----------------------------
+        x : numpy array
+            For each curve, contains the x-coordinates. Each entry
+            corresponds to one method.
+        methods : list of numpy arrays
+            A list of numpy arrays of methods. Each method contains a numpy array
+            of several run of that corresponding method.
+
+    :return:
+        plt : object
+            Plot Object
+    '''
+    curves = []
+    for index,method in enumerate(methods):
+        mean = []
+        for j in range(0,len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            meanValue = np.mean(valueArray)
+            mean.append(meanValue)
+        curves.append(np.array(mean))
+    for index,curve in enumerate(curves):
+        plt.plot(x[index],curve)
+    return plt
+
+
+
+'''
+another heading called visualizations in the contents.
+functionality
+examples
+containing plots.
+'''
