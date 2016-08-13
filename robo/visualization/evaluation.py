@@ -17,14 +17,14 @@ def bar_plot(x, curves, title="", width=0.10,
     Plots Mean and Standard Deviation with a Bar Graph
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
-        curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
-        curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
-        curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
-        curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
-        curves = [curve1, curve2, curve3, curve4]
-        plot = bar_plot(x, curves, legend = True)
-        plot.show()
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
+curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
+curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
+curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
+curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
+curves = [curve1, curve2, curve3, curve4]
+plot = bar_plot(x, curves, legend = True)
+plot.show()
     Parameters
     -----------
     x : numpy array
@@ -259,14 +259,14 @@ def plot_mean_and_std(x,methods,drawBarPlot = False, drawPointPlot = False, titl
 
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
-        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
-        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
-        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
-        methods = [method_1, method_2, method_3]
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+methods = [method_1, method_2, method_3]
 
-        plot = plot_mean_and_std(x,methods,drawBarPlot = True)
-        plot.show()
+plot = plot_mean_and_std(x,methods,drawBarPlot = True)
+plot.show()
 
     Parameters
     -----------
@@ -419,8 +419,7 @@ def time_interpolation(time_point_union,data):
             for run_number in data[method_number]:
                 if time_point in data[method_number][run_number]:
                     pass #Do nothing
-                else:
-                    #Did not find the key
+                else: #Did not find the key
                     y_value_of_new_point = sorted([i for i in data[method_number][run_number] if i < time_point])
                     if not y_value_of_new_point:
                         y_value_of_new_point = sorted([i for i in data[method_number][run_number]])[-1]
@@ -494,6 +493,7 @@ def plot_over_time(time,methods,error_random_config,agglomeration="mean"):
 
 def plot_median_and_percentiles(x,method):
     '''
+    By defualt, plot 5th and 95h percentile.
 Example:
 -----------
 x = np.array([[1, 3, 4, 5]])
@@ -533,7 +533,7 @@ Plots the mean and the 5th and 95th percentile.
 
 def plot_median(x,methods):
     '''
-    Plots the median and the percentile value given.
+    Plots the median [ and the percentile value given? ]
     Example:
     ----------------------------
 x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
@@ -584,14 +584,13 @@ def plot_mean(x,methods):
     '''
     Example:
     ----------------------------
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
-        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
-        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
-        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
-        methods = [method_1, method_2, method_3]
-
-        plot = plot_mean(x,methods)
-        plot.show()
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+methods = [method_1, method_2, method_3]
+plot = plot_mean(x,methods)
+plot.show()
 
     Parameters:
     ----------------------------
@@ -618,6 +617,10 @@ def plot_mean(x,methods):
         plt.plot(x[index],curve)
     return plt
 
+x = np.array([[1, 3, 4, 5]])
+method = np.array([[1,14,20,2], [10,4,24,3] , [15,6,27,5]])
+plot = plot_median_and_percentiles(x,[method])
+plot.show()
 
 
 '''
