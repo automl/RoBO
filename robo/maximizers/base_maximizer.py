@@ -1,15 +1,9 @@
-'''
-Created on 13.07.2015
-
-@author: Aaron Klein
-'''
-
 import numpy as np
 
 
 class BaseMaximizer(object):
 
-    def __init__(self, objective_function, X_lower, X_upper, rng):
+    def __init__(self, objective_function, X_lower, X_upper, rng=None):
         """
         Interface for optimizers that maximizing the
         acquisition function.
