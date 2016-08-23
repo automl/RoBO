@@ -142,11 +142,8 @@ class Fabolas(BayesianOptimization):
             self.Y = np.zeros([1, 1])
             self.C = np.zeros([1, 1])
 
-            init = extrapolative_initial_design(self.task.X_lower,
-                                       self.task.X_upper,
-                                       self.task.is_env,
-                                       self.task,
-                                       N=self.init_points)
+            init = extrapolative_initial_design(self.task,
+	                                       N=self.init_points)
 
             for i, x in enumerate(init):
                 x = x[np.newaxis, :]
