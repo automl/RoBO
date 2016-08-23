@@ -4,19 +4,23 @@ import numpy as np
 from robo.initial_design.init_random_uniform import init_random_uniform
 
 
-def extrapolative_initial_design(X_lower, X_upper, is_env, task, N):
+def extrapolative_initial_design(task, N):
 
-    # Create grid for the system size
-    idx = is_env == 1
-    X_upper_re = np.exp(task.retransform(X_upper))
+    # Index of the environmental variable
+    idx = task.is_env == 1
+    # Upper bound of the dataset size on a linear scale
+    X_upper_re = np.exp(task.retransform(task.X_upper))[idx]
+    # Compute the dataset size on a linear scale for a 1/4, 1/8, 1/16 and 1/32 of the data
+    s = np.array([X_upper_re / float(i) for i in [4, 8, 16, 32]])[:, 0]
+    log_s = np.log(s)
 
-    g = np.array([X_upper_re[idx] / float(i) for i in [4, 8, 16, 32]])[:, 0]
-    g = np.true_divide((np.log(g) - task.original_X_lower[idx]),
+    # Transform it back to [0, 1] space
+    s = np.true_divide((log_s - task.original_X_lower[idx]),
            (task.original_X_upper[idx] - task.original_X_lower[idx]))
 
-    X = init_random_uniform(X_lower, X_upper, N)
-
-    X[:, is_env == 1] = \
-        np.tile(g, np.ceil(X.shape[0] / 4.))[:X.shape[0], np.newaxis]
+    # Draw random points in the configuration space and evaluate them on the predifined data subsets
+    X = init_random_uniform(task.X_lower, task.X_upper, N)
+    X[:, task.is_env == 1] = \
+        np.tile(s, np.ceil(X.shape[0] / 4.))[:X.shape[0], np.newaxis]
 
     return X
