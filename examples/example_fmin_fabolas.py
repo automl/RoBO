@@ -103,7 +103,7 @@ def objective_function(x, s):
 
     return np.array([[np.log(y)]]), np.array([[c]])
 
-# Load the data, change that to 
+# Load the data
 X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
 
 
@@ -119,7 +119,8 @@ X_lower = np.array([-10, -10, s_min])
 X_upper = np.array([10, 10, s_max])
 
 # Start Fabolas to optimize the objective function
-x_best = fabolas_fmin(objective_function, X_lower, X_upper, num_iterations=100)
+res = fabolas_fmin(objective_function, X_lower, X_upper, num_iterations=100)
 
+x_best = res["x_opt"]
 print x_best
 print objective_function(x_best[:, :-1], s=x_best[:, None, -1])

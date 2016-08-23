@@ -4,8 +4,8 @@ import numpy as np
 class BaseTask(object):
 
     def __init__(self, X_lower, X_upper,
-        opt=None, fopt=None,
-        types=None, do_scaling=True):
+            opt=None, fopt=None,
+            types=None, do_scaling=True):
         """
         Defines the interface of tasks. A task contains a function
         handle that calls the objective function and and the input
@@ -37,7 +37,7 @@ class BaseTask(object):
             you use only GPs set it to None
         do_scaling: boolean
             If set to true the input space is scaled to [0, 1]. Useful
-            to specify priors for the kernel lengthscale.
+            to specify priors for the kernel length scale.
         """
 
         self.X_lower = X_lower
@@ -140,13 +140,13 @@ class BaseTask(object):
             Input point in original input space
         """
 
-        return (self.original_X_lower + (self.original_X_upper - self.original_X_lower) * x)
+        return(self.original_X_lower + (self.original_X_upper - self.original_X_lower) * x)
 
     def evaluate(self, x):
         """
         Wrapper function of the objective function that is used
         inside the solver to evaluate x. It rescales x from [0,1]
-        to the original space and makes sure the x inside the
+        to the original space and makes sure the x is inside the
         bounds.
 
         Parameters
@@ -167,7 +167,8 @@ class BaseTask(object):
 
         if self.do_scaling:
             x = self.retransform(x)
-        return (self.objective_function(x))
+
+        return(self.objective_function(x))
 
     def evaluate_test(self, x):
         """
@@ -194,6 +195,7 @@ class BaseTask(object):
 
         if self.do_scaling:
             x = self.retransform(x)
+
         return self.objective_function_test(x)
 
     def get_json_data(self):
@@ -203,8 +205,10 @@ class BaseTask(object):
         :return: Dict() object
         """
         jsonData = dict()
-        jsonData ={'opt':self.opt if self.opt is None else self.opt.tolist(), 'fopt':self.fopt , 'original_X_lower':self.original_X_lower.tolist(),
-                   'original_X_upper':self.original_X_upper.tolist()}
+        jsonData = {'opt': self.opt if self.opt is None else self.opt.tolist(),
+                    'fopt': self.fopt,
+                    'original_X_lower': self.original_X_lower.tolist(),
+                    'original_X_upper': self.original_X_upper.tolist()}
         return jsonData
 
 

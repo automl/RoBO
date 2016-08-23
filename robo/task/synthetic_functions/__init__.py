@@ -6,3 +6,5 @@ from robo.task.synthetic_functions.levy import Levy
 from robo.task.synthetic_functions.bohachevsky import Bohachevsky
 from robo.task.synthetic_functions.rosenbrock import Rosenbrock
 from robo.task.synthetic_functions.camelback import Camelback
+from robo.task.synthetic_functions.sin import SinOne
+from robo.task.synthetic_functions.sin import SinTwo

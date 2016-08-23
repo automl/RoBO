@@ -5,7 +5,6 @@ import theano
 import theano.tensor as T
 
 from robo.task.base_task import BaseTask
-from model_zoo import batch_norm
 
 
 class ConvNetTask2D(BaseTask):

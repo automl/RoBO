@@ -89,18 +89,16 @@ class GaussianProcessMCMC(BaseModel):
         if self.basis_func is not None:
             self.X = deepcopy(X)
             self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
-        
+
         self.Y = Y
         if self.normalize_output:
             self.Y_mean = np.mean(Y)
             self.Y_std = np.std(Y)
             self.Y = (Y - self.Y_mean) / self.Y_std
-        
 
         # Use the mean of the data as mean for the GP
         mean = np.mean(self.Y, axis=0)
         self.gp = george.GP(self.kernel, mean=mean)
-
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
@@ -132,7 +130,6 @@ class GaussianProcessMCMC(BaseModel):
             self.models = []
         else:
             self.hypers = [self.gp.kernel[:]]
-
 
         for sample in self.hypers:
 

@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Nov  7 17:08:04 2015
-
-@author: aaron
-"""
-
-
 import time
 import logging
 import numpy as np
@@ -28,7 +20,7 @@ class MultiTaskBO(BayesianOptimization):
                  n_tasks,
                  save_dir=None,
                  num_save=1,
-                 train_intervall=1,
+                 train_interval=1,
                  n_restarts=1,
                  initial_points=15,
                  incumbent_estimation=None):
@@ -43,7 +35,7 @@ class MultiTaskBO(BayesianOptimization):
         model : Model object
             Models the objective function. The model has to be a
             Gaussian process. If MCMC sampling of the model's hyperparameter is
-            performed, make sure that the acquistion_func is of an instance of
+            performed, make sure that the acquisition_func is of an instance of
             IntegratedAcquisition to marginalise over the GP's hyperparameter.
         cost_model : model
             Models the cost function. The model has to be a Gaussian Process.
@@ -58,7 +50,7 @@ class MultiTaskBO(BayesianOptimization):
         num_save : int, optional
             Specifies after how many iterations the results will be written to
             the output file
-        train_intervall : int, optional
+        train_interval : int, optional
             Specified after how many iterations the model will be retrained
         n_restarts : int, optional
             How many local searches are performed to estimate the incumbent.
@@ -70,7 +62,7 @@ class MultiTaskBO(BayesianOptimization):
             estimated in each iteration.
 
         """
-        self.train_intervall = train_intervall
+        self.train_interval = train_interval
         self.acquisition_func = acquisition_func
         self.model = model
         self.maximize_func = maximize_func
@@ -98,11 +90,11 @@ class MultiTaskBO(BayesianOptimization):
         self.n_restarts = n_restarts
 
         super(MultiTaskBO, self).__init__(acquisition_func, model,
-                                                maximize_func, task, save_dir)
+                                          maximize_func, task, save_dir)
 
         # Posterior optimization only over the posterior of the last task,
         # which is assumed to be the most difficult one
-        if incumbent_estimation == None:
+        if incumbent_estimation is None:
             self.estimator = BestProjectedObservation(self.model,
                                                             self.task.X_lower,
                                                             self.task.X_upper,
@@ -153,7 +145,7 @@ class MultiTaskBO(BayesianOptimization):
             for i, x in enumerate(init):
                 x = x[np.newaxis, :]
 
-                logger.info("Evaluate: %s" % x)
+                logger.info("Evaluate candidate %s" % (str(self.task.retransform(x))))
 
                 start_time = time.time()
                 y, c = self.task.evaluate(x)
@@ -177,12 +169,11 @@ class MultiTaskBO(BayesianOptimization):
                                                     time_feval, axis=0)
                     self.time_overhead = np.append(self.time_overhead,
                                                    np.array([0]), axis=0)
-                logger.info("Configuration achieved a"
+                logger.info("Configuration achieved a "
                             "performance of %f and %f costs in %f seconds" %
                             (self.Y[i], self.C[i], self.time_func_eval[i]))
 
                 # Use best point seen so far as incumbent
-                best_idx = np.argmin(self.Y)
                 best_idx = np.argmin(self.Y)
                 # Copy because we are going to change the system size to smax
                 self.incumbent = np.copy(self.X[best_idx])
@@ -213,7 +204,7 @@ class MultiTaskBO(BayesianOptimization):
             logger.info("Start iteration %d ... ", it)
             # Choose a new configuration
             start_time = time.time()
-            if it % self.train_intervall == 0:
+            if it % self.train_interval == 0:
                 do_optimize = True
             else:
                 do_optimize = False
@@ -228,7 +219,8 @@ class MultiTaskBO(BayesianOptimization):
             self.incumbent, self.incumbent_value = \
                 self.estimator.estimate_incumbent(startpoints)
 
-            self.incumbents.append(self.incumbent)
+            self.incumbents.append(self.task.retransform(self.incumbent))
+
             self.incumbent_values.append(self.incumbent_value)
 
             logger.info("New incumbent %s found in %f seconds",
@@ -239,10 +231,10 @@ class MultiTaskBO(BayesianOptimization):
             self.time_overhead = np.append(self.time_overhead,
                                            np.array([time_overhead]))
             logger.info("Optimization overhead was "
-                            "%f seconds" % (self.time_overhead[-1]))
+                        "%f seconds" % (self.time_overhead[-1]))
 
             # Evaluate the configuration
-            logger.info("Evaluate candidate %s" % (str(new_x)))
+            logger.info("Evaluate candidate %s" % (str(self.task.retransform(new_x))))
             start_time = time.time()
             new_y, new_cost = self.task.evaluate(new_x)
             time_func_eval = time.time() - start_time
@@ -254,7 +246,7 @@ class MultiTaskBO(BayesianOptimization):
                                             np.array([time_func_eval]))
 
             logger.info("Configuration achieved a performance "
-                    "of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
+                        "of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
 
             # Add the new observations to the data
             self.X = np.append(self.X, new_x, axis=0)
@@ -327,8 +319,7 @@ class MultiTaskBO(BayesianOptimization):
             # Maximize the acquisition function and return the suggested point
             t = time.time()
             x = self.maximize_func.maximize()
-            #x[:, -1] = np.round(x[:, -1])
-            #x[:, np.where(self.task.is_env == 1)] = np.floor(x[:, -1] * self.n_tasks)
+
             logger.info("Time to maximize the acquisition function: %f",
                         (time.time() - t))
 

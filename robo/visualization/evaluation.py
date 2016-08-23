@@ -3,7 +3,8 @@ Created on April 7th, 2016
 @author: Numair Mansur (numair.mansur@gmail.com)
 '''
 
-import seaborn as sns
+#import seaborn as sns
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
@@ -55,8 +56,8 @@ def bar_plot(x, curves, title="", width=0.10,
    	plt : object
     '''
     # Set Appearance properties using Seaborn
-    sns.set(style="white", color_codes=True, font_scale=1.2)
-    sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
+    #sns.set(style="white", color_codes=True, font_scale=1.2)
+    #sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
     #sns.set_titles(col_template = "{col_name}", fontweight = 'bold', size = 18)
     # - - - - - - - -- - - - - - - - -
     x = x.astype(float)
@@ -147,12 +148,13 @@ def point_plot(x, curves, title="",
     plt : object
     '''
     # Set Appearance properties using Seaborn
-    sns.set(style="white", color_codes=True, font_scale=1.2)
-    sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
+    #sns.set(style="white", color_codes=True, font_scale=1.2)
+    #sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
     # - - - - - - - - - - - - - - - - - - -
     plt.figure()
 
     for i, j in enumerate(x):
+
         plt.errorbar(j,
                      curves[i][0],
                      yerr=curves[i][1],
@@ -161,8 +163,8 @@ def point_plot(x, curves, title="",
                      label='Method' + str(i + 1),
                      color=colors[i])
     
-    plt.ylabel(y_title, fontsize = 14)
-    plt.xlabel(x_title, fontsize=13)    
+    #plt.ylabel(y_title, fontsize = 14)
+    #plt.xlabel(x_title, fontsize=13)    
     plt.title(title)
     plt.grid()
     if log_scale_x:
@@ -251,7 +253,7 @@ def latex_matrix_string(mean, error, title,
     return latex_string1
 
 
-def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
+def plotMeanAndStd(x,methods,drawBarPlot=False, drawPointPlot=False, title="", width=0.10,
     colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
     x_title="X Label", y_title="Y Label"):
     '''
@@ -302,6 +304,7 @@ def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="
         Plot Object
     '''
     curves = []
+
     for index,method in enumerate(methods):
         mean = []
         std = []
@@ -318,7 +321,7 @@ def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
             x_title=x_title, y_title=y_title)
         return barPlot
-    elif (drawPointPlot):
+    elif(drawPointPlot):
         pointPlot = point_plot(x,curves,title=title,
             colors=colors,
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
@@ -395,7 +398,7 @@ def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
             x_title=x_title, y_title=y_title)
         return barPlot
-    elif (drawPointPlot):
+    elif(drawPointPlot):
         pointPlot = point_plot(x,curves,title=title,
             colors=colors,
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,

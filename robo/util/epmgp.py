@@ -38,7 +38,7 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
     D = mu.shape[0]
     if with_derivatives:
         dlogPdMu = np.zeros((D, D))
-        dlogPdSigma = np.zeros((D, 0.5 * D * (D + 1)))
+        dlogPdSigma = np.zeros((D, int(0.5 * D * (D + 1))))
         dlogPdMudMu = np.zeros((D, D, D))
     for i in range(mu.shape[0]):
 
@@ -124,7 +124,7 @@ def min_faktor(Mu, Sigma, k, gamma=1):
 
         dlogZdMudMu = np.zeros((D, D))
         yield dlogZdMudMu
-        dlogZdSigma = np.zeros((0.5 * (D * (D + 1)), 1))
+        dlogZdSigma = np.zeros((int(0.5 * (D * (D + 1))), 1))
         yield dlogZdSigma
         mvmin = [Mu[k], Sigma[k, k]]
         yield mvmin
