@@ -91,7 +91,7 @@ class InformationGainTestCase(unittest.TestCase):
 
     def test_general_interface(self):
 
-        X_test = init_random_uniform(self.task.X_lower, self.task.X_upper, 1)
+        X_test = np.ones([self.task.n_dims]) * 0.5
 
         a = self.acquisition_func(X_test, False)
 
