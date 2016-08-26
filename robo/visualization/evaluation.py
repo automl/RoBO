@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
+
 def bar_plot(x, curves, title="", width=0.10,
             colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
             log_scale_y=False, log_scale_x=False, legend=True,
@@ -111,14 +112,14 @@ def point_plot(x, curves, title="",
     Plots Mean and Standard Deviation with an error bar graph
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
-        curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
-        curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
-        curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
-        curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
-        curves = [curve1, curve2, curve3, curve4]
-        plot = point_plot(x, curves)
-        plot.show()
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
+curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
+curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
+curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
+curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
+curves = [curve1, curve2, curve3, curve4]
+plot = point_plot(x, curves)
+plot.show()
     Parameters
     ----------
     x : numpy array
@@ -251,6 +252,7 @@ def latex_matrix_string(mean, error, title,
     return latex_string1
 
 
+
 def plot_mean_and_std(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
     colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
     x_title="X Label", y_title="Y Label"):
@@ -336,14 +338,14 @@ def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False
 
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
-        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
-        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
-        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
-        methods = [method_1, method_2, method_3]
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+methods = [method_1, method_2, method_3]
 
-        plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
-        plot.show()
+plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
+plot.show()
 
     Parameters
     -----------
@@ -410,7 +412,6 @@ def time_interpolation(time_point_union,data):
     Interpolates data over time points.
     Edits the original data dictionary. All of the methods should have runs on the same time point.
     i.e for each time point in the time_points_union array there should be a y value.
-
     :return:
 
     '''
@@ -435,13 +436,13 @@ def plot_over_time(time,methods,error_random_config,agglomeration="mean"):
     """
     Example:
     ---------
-        method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
-        method2 = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12]])
-        time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]],
-                [[2,3,4,5], [4,5,6,7], [6,7,8,9]]])
-        methods = [method1,method2]
-        plot = plot_over_time(time,methods,0.9)
-        plot.show()
+method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
+method2 = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12]])
+time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]],
+        [[2,3,4,5], [4,5,6,7], [6,7,8,9]]])
+methods = [method1,method2]
+plot = plot_over_time(time,methods,0.9)
+plot.show()
     Parameters:
     -----------
 
@@ -463,8 +464,6 @@ def plot_over_time(time,methods,error_random_config,agglomeration="mean"):
             for k,y_value in enumerate(runs):
                 data[i][j][time[i][j][k]]={}
                 data[i][j][time[i][j][k]]= methods[i][j][k]
-
-
     data = time_interpolation(time_point_union,data) #Interpolating data on time points.
     # Transforming this dictionary into array format so that it can be visualised.
     new_time = list()
@@ -489,16 +488,17 @@ def plot_over_time(time,methods,error_random_config,agglomeration="mean"):
             plt.step(time[i][l],m,where='post') #,color='r')
     return plt
 
-
-
 def plot_median_and_percentiles(x,method):
     '''
     By defualt, plot 5th and 95h percentile.
 Example:
 -----------
-x = np.array([[1, 3, 4, 5]])
-method = np.array([[1,14,20,2], [10,4,24,3] , [15,6,27,5]])
-plot = plot_median_and_percentiles(x,[method])
+x = np.array([[10, 50, 70, 100 ], [10, 50, 70, 100], [10, 50, 70, 100]])
+method_1 = np.array([[100,70,90,80], [110,70,100,70] , [90,70,80,85]])
+method_2 = np.array([[50,58,65,45], [60,48,65,45] , [40,68,65,55]])
+method_3 = np.array([[9,13,12,11], [11,13,9,11] , [12,13,5,11]])
+methods = [method_1, method_2, method_3]
+plot = plot_median_and_percentiles(x,methods)
 plot.show()
 
 
@@ -506,7 +506,9 @@ Plots the mean and the 5th and 95th percentile.
 
 :return:
     '''
-    curves = []
+    sns.set(style="white", color_codes=True, font_scale=1.2)
+    color_above =['#e9967a', '#fa8072', '#ffa07a', '#ff8c00', '#ff7f50', '#f08080', '#ff6347','#ff4500','#ff0000']
+    color_below = ['#6495ed', '#6a5acd', '#7b68ee', '#8470ff', '#4169e1', '#1e90ff', '#00bfff', '#87ceeb','#87cefa','#b0c4de','#add8e6','#b0e0e6','#afeeee','#00ced1']
     for index,method in enumerate(method):
         median = []
         fifth_percentile = []
@@ -522,12 +524,12 @@ Plots the mean and the 5th and 95th percentile.
         median_curve =np.array(median)
         ninty_fifth_percentile_curve = np.array(ninty_fifth_percentile)
         fifth_percentile_curve = np.array(fifth_percentile)
-        plt.plot(x[0],median_curve, label = "median")
-        plt.plot(x[0],ninty_fifth_percentile_curve, label = "95th Percentile")
-        plt.plot(x[0],fifth_percentile_curve, label = "5th Percentile")
-        plt.legend()
+        plt.plot(x[index],median_curve, label = "median")
+        plt.plot(x[index],ninty_fifth_percentile_curve, label = "95th Percentile",color = color_below[index])
+        plt.plot(x[index],fifth_percentile_curve, label = "5th Percentile", color = color_above[index])
+        plt.fill_between(x[index],median_curve,ninty_fifth_percentile_curve,color = color_below[index])
+        plt.fill_between(x[index],median_curve,fifth_percentile_curve,color=color_above[index])
     return plt
-
 
 
 
@@ -579,9 +581,9 @@ plot.show()
 
 
 
-
-def plot_mean(x,methods):
+def plot_mean(x,methods,method_names=[]):
     '''
+    Plots the mean of different runs of a mehtod for a given time point.
     Example:
     ----------------------------
 x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
@@ -589,7 +591,8 @@ method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
 method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
 method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
 methods = [method_1, method_2, method_3]
-plot = plot_mean(x,methods)
+method_names = ['test method 1','test method 2','test method 3']
+plot = plot_mean(x,methods,method_names)
 plot.show()
 
     Parameters:
@@ -614,12 +617,17 @@ plot.show()
             mean.append(meanValue)
         curves.append(np.array(mean))
     for index,curve in enumerate(curves):
-        plt.plot(x[index],curve)
+        plt.plot(x[index],curve,label=method_names[index]) if len(method_names)!=0 else plt.plot(x[index],curve)
+        plt.legend()
     return plt
 
-x = np.array([[1, 3, 4, 5]])
-method = np.array([[1,14,20,2], [10,4,24,3] , [15,6,27,5]])
-plot = plot_median_and_percentiles(x,[method])
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+methods = [method_1, method_2, method_3]
+method_names = ['test method 1','test method 2','test method 3']
+plot = plot_mean(x,methods,method_names)
 plot.show()
 
 
