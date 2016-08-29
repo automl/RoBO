@@ -329,15 +329,6 @@ plot.show()
     else:
         raise NameError('Please select the type of the plot')
 
-x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
-method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
-method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
-method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
-methods = [method_1, method_2, method_3]
-
-plot = plot_mean_and_std(x,methods,drawPointPlot = True)
-plot.show()
-
 
 def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
     colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
@@ -415,7 +406,14 @@ plot.show()
     else:
         raise NameError('Please select the type of the plot')
 
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+methods = [method_1, method_2, method_3]
 
+plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
+plot.show()
 def time_interpolation(time_point_union,data):
     '''
     Interpolates data over time points.
