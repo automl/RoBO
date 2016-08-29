@@ -11,12 +11,13 @@ import cma
 import numpy as np
 
 from robo.maximizers.base_maximizer import BaseMaximizer
+from robo.initial_design.init_random_uniform import init_random_uniform
 
 
 class CMAES(BaseMaximizer):
 
     def __init__(self, objective_function, X_lower, X_upper,
-                 verbose=True, restarts=0, n_func_evals=1000):
+                 verbose=True, restarts=0, n_func_evals=1000, rng=None):
         """
         Interface for the  Covariance Matrix Adaptation Evolution Strategy
         python package
@@ -35,59 +36,58 @@ class CMAES(BaseMaximizer):
             If set to False the CMAES output is disabled
         restarts: int
             Number of restarts for CMAES
+        rng: numpy.random.RandomState
+            Random number generator
         """
         if X_lower.shape[0] == 1:
             raise RuntimeError("CMAES does not works in a one \
                 dimensional function space")
 
-        super(CMAES, self).__init__(objective_function, X_lower, X_upper)
+        super(CMAES, self).__init__(objective_function, X_lower, X_upper, rng)
 
         self.restarts = restarts
         self.verbose = verbose
         self.n_func_evals = n_func_evals
 
-    def _cma_fkt_wrapper(self, acq_f):
-        def _l(x, *args, **kwargs):
-            x = np.array([x])
-            return -acq_f(x, *args, **kwargs)[0]
-        return _l
+    # def _cma_fkt_wrapper(self, acq_f):
+    #     def _l(x, *args, **kwargs):
+    #         x = np.array([x])
+    #         return -acq_f(x, *args, **kwargs)[0]
+    #     res = _l
+    #     print res
+    #     return res
 
-    def maximize(self, rng = None):
+    def maximize(self):
         """
         Maximizes the given acquisition function.
-
-        Parameters
-        ----------
-
 
         Returns
         -------
         np.ndarray(N,D)
-            Point with highest acquisition value.
+            Point with the highest acquisition value.
         """
 
-        # All stdout and stderr is pointed to devnull during
-        # the optimization. (That is the only way to keep cmaes quiet)
-        if rng is None:
-            rng = np.random.RandomState(42)
-        if not self.verbose:
-            sys.stdout = os.devnull
-            sys.stderr = os.devnull
-        res = cma.fmin(self._cma_fkt_wrapper(self.objective_func),
-                x0=(self.X_upper + self.X_lower) * 0.5, sigma0=0.6,
+        verbose_level = -9
+        if self.verbose:
+            verbose_level = 0
+
+        start_point = init_random_uniform(self.X_lower, self.X_upper, 1, self.rng)
+
+        def obj_func(x):
+            a = self.objective_func(x)[0, 0]
+            return a
+
+        res = cma.fmin(obj_func,
+                x0=start_point[0],
+                sigma0=0.6,
                 restarts=self.restarts,
                 options={"bounds": [self.X_lower, self.X_upper],
-                         "verbose": 0,
+                         "verbose": verbose_level,
                          "verb_log": sys.maxsize,
                          "maxfevals": self.n_func_evals})
         if res[0] is None:
             logging.error("CMA-ES did not find anything. \
                 Return random configuration instead.")
-            return np.array([rng.uniform(self.X_lower,
-                                               self.X_upper,
-                                               self.X_lower.shape[0])])
-        if not self.verbose:
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
+            return start_point
 
         return np.array([res[0]])

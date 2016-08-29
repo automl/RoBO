@@ -14,17 +14,17 @@ logger = logging.getLogger(__name__)
 class BayesianOptimization(BaseSolver):
 
     def __init__(self,
-            acquisition_func,
-            model,
-            maximize_func,
-            task,
-            save_dir=None,
-            initial_design=None,
-            initial_points=3,
-            incumbent_estimation=None,
-            num_save=1,
-            train_intervall=1,
-            n_restarts=1):
+                 acquisition_func,
+                 model,
+                 maximize_func,
+                 task,
+                 save_dir=None,
+                 initial_design=None,
+                 initial_points=3,
+                 incumbent_estimation=None,
+                 num_save=1,
+                 train_interval=1,
+                 n_restarts=1):
         """
         Implementation of the standard Bayesian optimization loop that uses
         an acquisition function and a model to optimize a given task.
@@ -58,20 +58,20 @@ class BayesianOptimization(BaseSolver):
             estimated in each iteration.
         num_save: int
             Defines after how many iteration the output is saved.
-        train_intervall: int
+        train_interval: int
             Specifies after how many iterations the model is retrained.
         n_restarts: int
             How often the incumbent estimation is repeated.
         """
 
         super(BayesianOptimization, self).__init__(acquisition_func,
-                                                    model,
-                                                    maximize_func,
-                                                    task,
-                                                    save_dir)
+                                                   model,
+                                                   maximize_func,
+                                                   task,
+                                                   save_dir)
         self.start_time = time.time()
 
-        if initial_design == None:
+        if initial_design is None:
             self.initial_design = init_random_uniform
         else:
             self.initial_design = initial_design
@@ -80,7 +80,7 @@ class BayesianOptimization(BaseSolver):
         self.Y = None
         self.time_func_eval = None
         self.time_overhead = None
-        self.train_intervall = train_intervall
+        self.train_interval = train_interval
 
         self.num_save = num_save
         self.time_start = None
@@ -146,8 +146,8 @@ class BayesianOptimization(BaseSolver):
                 self.time_overhead[i] = 0.0
 
                 logger.info("Configuration achieved a performance "
-                    "of %f in %f seconds" %
-                    (self.Y[i], self.time_func_eval[i]))
+                            "of %f in %f seconds" %
+                            (self.Y[i], self.time_func_eval[i]))
 
                 # Use best point seen so far as incumbent
                 best_idx = np.argmin(self.Y)
@@ -169,19 +169,12 @@ class BayesianOptimization(BaseSolver):
             self.time_func_eval = np.zeros([self.X.shape[0]])
             self.time_overhead = np.zeros([self.X.shape[0]])
 
-#             best = np.argmin(Y)
-#             incumbent = X[best]
-#             incumbent_value = Y[best]
-#             self.incumbents.append(incumbent[np.newaxis, :])
-#             self.incumbent_values.append(incumbent_value[np.newaxis, :])
-#             self.runtime.append(time.time() - self.start_time)
-
         for it in range(self.init_points, num_iterations):
             logger.info("Start iteration %d ... ", it)
 
             start_time = time.time()
             # Choose next point to evaluate
-            if it % self.train_intervall == 0:
+            if it % self.train_interval == 0:
                 do_optimize = True
             else:
                 do_optimize = False
@@ -238,7 +231,6 @@ class BayesianOptimization(BaseSolver):
                     acquisition_value=self.acquisition_func(new_x))
                 self.save_json(it)
 
-        # TODO: Retrain model and then return the incumbent
         logger.info("Return %s as incumbent with predicted performance %f" %
                     (str(self.incumbent), self.incumbent_value))
 
@@ -299,9 +291,7 @@ class BayesianOptimization(BaseSolver):
 
     def get_json_data(self, it):
         '''
-
         Overrides method in BaseSolver.
-
         '''
         jsonData = dict()
         jsonData = {

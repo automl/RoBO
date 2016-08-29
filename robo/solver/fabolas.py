@@ -26,7 +26,7 @@ class Fabolas(BayesianOptimization):
                  save_dir=None,
                  initialization=None,
                  num_save=1,
-                 train_intervall=1,
+                 train_interval=1,
                  n_restarts=1,
                  incumbent_estimation=None,
                  initial_points=15):
@@ -59,7 +59,7 @@ class Fabolas(BayesianOptimization):
         num_save : int, optional
             Specifies after how many iterations the results will be written to
             the output file
-        train_intervall : int, optional
+        train_interval : int, optional
             Specified after how many iterations the model will be retrained
         n_restarts : int, optional
             How many local searches are performed to estimate the incumbent.
@@ -72,7 +72,7 @@ class Fabolas(BayesianOptimization):
 
         """
         self.start_time = time.time()
-        self.train_intervall = train_intervall
+        self.train_interval = train_interval
         self.acquisition_func = acquisition_func
         self.model = model
         self.maximize_func = maximize_func
@@ -91,6 +91,7 @@ class Fabolas(BayesianOptimization):
         self.C = None
         self.model_untrained = True
         self.incumbent = None
+        self.incumbent_value = None
         self.incumbents = []
         self.incumbent_values = []
         self.runtime = []
@@ -99,13 +100,13 @@ class Fabolas(BayesianOptimization):
         self.n_restarts = n_restarts
 
         super(Fabolas, self).__init__(acquisition_func, model,
-                                                maximize_func, task, save_dir)
+                                      maximize_func, task, save_dir)
 
-        if incumbent_estimation == None:
+        if incumbent_estimation is None:
             self.estimator = BestProjectedObservation(self.model,
-                                                            self.task.X_lower,
-                                                            self.task.X_upper,
-                                                            self.task.is_env)
+                                                      self.task.X_lower,
+                                                      self.task.X_upper,
+                                                      self.task.is_env)
         else:
             self.estimator = incumbent_estimation
         self.init_points = initial_points
@@ -142,10 +143,8 @@ class Fabolas(BayesianOptimization):
             self.Y = np.zeros([1, 1])
             self.C = np.zeros([1, 1])
 
-            init = extrapolative_initial_design(self.task.X_lower,
-                                       self.task.X_upper,
-                                       self.task.is_env,
-                                       N=self.init_points)
+            init = extrapolative_initial_design(self.task,
+                                                N=self.init_points)
 
             for i, x in enumerate(init):
                 x = x[np.newaxis, :]
@@ -153,7 +152,6 @@ class Fabolas(BayesianOptimization):
 
                 logger.info("Evaluate: %s" % x)
 
-                start_time = time.time()
                 y, c = self.task.evaluate(x)
 
                 # Transform cost to log scale
@@ -182,7 +180,6 @@ class Fabolas(BayesianOptimization):
 
                 # Use best point seen so far as incumbent
                 best_idx = np.argmin(self.Y)
-                best_idx = np.argmin(self.Y)
                 # Copy because we are going to change the system size to smax
                 self.incumbent = np.copy(self.X[best_idx])
                 self.incumbent_value = self.Y[best_idx]
@@ -196,7 +193,7 @@ class Fabolas(BayesianOptimization):
                 self.incumbent_values.append(self.incumbent_value)
                 self.runtime.append(time.time() - self.start_time)
 
-                if self.save_dir is not None and (i) % self.num_save == 0:
+                if self.save_dir is not None and i % self.num_save == 0:
                     self.save_iteration(i, costs=self.C[-1],
                                         hyperparameters=None,
                                         acquisition_value=0)
@@ -212,7 +209,7 @@ class Fabolas(BayesianOptimization):
             logger.info("Start iteration %d ... ", it)
             # Choose a new configuration
             start_time = time.time()
-            if it % self.train_intervall == 0:
+            if it % self.train_interval == 0:
                 do_optimize = True
             else:
                 do_optimize = False
@@ -240,7 +237,7 @@ class Fabolas(BayesianOptimization):
             self.time_overhead = np.append(self.time_overhead,
                                            np.array([time_overhead]))
             logger.info("Optimization overhead was "
-                            "%f seconds" % (self.time_overhead[-1]))
+                        "%f seconds" % (self.time_overhead[-1]))
 
             # Evaluate the configuration
             logger.info("Evaluate candidate %s" % (str(new_x)))
@@ -255,7 +252,7 @@ class Fabolas(BayesianOptimization):
                                             np.array([time_func_eval]))
 
             logger.info("Configuration achieved a performance "
-                    "of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
+                        "of %f in %s seconds" % (new_y[0, 0], new_cost[0]))
 
             # Add the new observations to the data
             self.X = np.append(self.X, new_x, axis=0)
@@ -268,8 +265,8 @@ class Fabolas(BayesianOptimization):
                 hypers = self.model.hypers
 
                 self.save_iteration(it + self.init_points, costs=self.C[-1],
-                                hyperparameters=hypers,
-                                acquisition_value=self.acquisition_func(new_x))
+                                    hyperparameters=hypers,
+                                    acquisition_value=self.acquisition_func(new_x))
 
         logger.info("Return %s as incumbent" % (str(self.incumbent)))
         return self.incumbent
@@ -290,7 +287,7 @@ class Fabolas(BayesianOptimization):
         C : (N, D) numpy array, optional
             The costs of the observed points. Make sure the number of
             points is the same.
-        do_optimze : bool, optional
+        do_optimize : bool, optional
             Specifies if the hyperparamter of the Gaussian process should be
             optimized.
 
@@ -302,9 +299,9 @@ class Fabolas(BayesianOptimization):
 
         if X is None and Y is None and C is None:
             x = extrapolative_initial_design(self.task.X_lower,
-                                       self.task.X_upper,
-                                       self.task.is_env,
-                                       N=1)
+                                             self.task.X_upper,
+                                             self.task.is_env,
+                                             N=1)
         elif X.shape[0] == 1:
             # We need at least 2 data points to train a GP
             x = extrapolative_initial_design(self.task.X_lower,

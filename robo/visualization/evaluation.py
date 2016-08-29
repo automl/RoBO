@@ -3,7 +3,7 @@ Created on April 7th, 2016
 @author: Numair Mansur (numair.mansur@gmail.com)
 '''
 
-import seaborn as sns
+#import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
@@ -56,8 +56,8 @@ plot.show()
    	plt : object
     '''
     # Set Appearance properties using Seaborn
-    sns.set(style="white", color_codes=True, font_scale=1.2)
-    sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
+    #sns.set(style="white", color_codes=True, font_scale=1.2)
+    #sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
     #sns.set_titles(col_template = "{col_name}", fontweight = 'bold', size = 18)
     # - - - - - - - -- - - - - - - - -
     x = x.astype(float)
@@ -148,12 +148,13 @@ plot.show()
     plt : object
     '''
     # Set Appearance properties using Seaborn
-    sns.set(style="white", color_codes=True, font_scale=1.2)
-    sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
+    #sns.set(style="white", color_codes=True, font_scale=1.2)
+    #sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
     # - - - - - - - - - - - - - - - - - - -
     plt.figure()
 
     for i, j in enumerate(x):
+
         plt.errorbar(j,
                      curves[i][0],
                      yerr=curves[i][1],
@@ -162,8 +163,8 @@ plot.show()
                      label='Method' + str(i + 1),
                      color=colors[i])
     
-    plt.ylabel(y_title, fontsize = 14)
-    plt.xlabel(x_title, fontsize=13)    
+    #plt.ylabel(y_title, fontsize = 14)
+    #plt.xlabel(x_title, fontsize=13)    
     plt.title(title)
     plt.grid()
     if log_scale_x:
@@ -252,7 +253,6 @@ def latex_matrix_string(mean, error, title,
     return latex_string1
 
 
-
 def plot_mean_and_std(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
     colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
     x_title="X Label", y_title="Y Label"):
@@ -304,6 +304,7 @@ plot.show()
         Plot Object
     '''
     curves = []
+
     for index,method in enumerate(methods):
         mean = []
         std = []
@@ -320,7 +321,7 @@ plot.show()
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
             x_title=x_title, y_title=y_title)
         return barPlot
-    elif (drawPointPlot):
+    elif(drawPointPlot):
         pointPlot = point_plot(x,curves,title=title,
             colors=colors,
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
@@ -397,7 +398,7 @@ plot.show()
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
             x_title=x_title, y_title=y_title)
         return barPlot
-    elif (drawPointPlot):
+    elif(drawPointPlot):
         pointPlot = point_plot(x,curves,title=title,
             colors=colors,
             log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
@@ -406,14 +407,6 @@ plot.show()
     else:
         raise NameError('Please select the type of the plot')
 
-x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
-method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
-method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
-method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
-methods = [method_1, method_2, method_3]
-
-plot = plotStandardErrorOfMean(x,methods,drawPointPlot = True)
-plot.show()
 def time_interpolation(time_point_union,data):
     '''
     Interpolates data over time points.
@@ -541,7 +534,7 @@ plot.show()
         Plot Object
 
     '''
-    sns.set(style="white", color_codes=True, font_scale=1.2)
+    #sns.set(style="white", color_codes=True, font_scale=1.2)
     color_above =['#e9967a', '#fa8072', '#ffa07a', '#ff8c00', '#ff7f50', '#f08080', '#ff6347','#ff4500','#ff0000']
     color_below = ['#6495ed', '#6a5acd', '#7b68ee', '#8470ff', '#4169e1', '#1e90ff', '#00bfff', '#87ceeb','#87cefa','#b0c4de','#add8e6','#b0e0e6','#afeeee','#00ced1']
     for index,method in enumerate(method):

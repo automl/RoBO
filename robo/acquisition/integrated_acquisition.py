@@ -59,7 +59,7 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
         super(IntegratedAcquisition, self).__init__(model, X_lower, X_upper)
 
     def update(self, model, cost_model=None, **kwargs):
-        '''
+        """
         Updates each acquisition function object if the models
         have changed
 
@@ -72,7 +72,7 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
             If the acquisition function also takes the cost into account, we
             have to specify here the model for the cost function. cost_model
             has to be an instance of GaussianProcessMCMC or GPyModelMCMC.
-        '''
+        """
 
         self.model = model
         if cost_model is not None:
@@ -112,7 +112,7 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
 
         if self.is_dngo:
             import lasagne
-            X_ = (X - self.model.X_mean) /  self.model.X_std 
+            X_ = (X - self.model.X_mean) / self.model.X_std
 
             # Get features from the net
             layers = lasagne.layers.get_all_layers(self.model.network)        
