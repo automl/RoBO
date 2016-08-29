@@ -329,6 +329,15 @@ plot.show()
     else:
         raise NameError('Please select the type of the plot')
 
+x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+methods = [method_1, method_2, method_3]
+
+plot = plot_mean_and_std(x,methods,drawPointPlot = True)
+plot.show()
+
 
 def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
     colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
@@ -489,11 +498,7 @@ plot.show()
         for l,m in enumerate(methods[i]):
             plt.step(time[i][l],m,where='post') #,color='r')
     return plt
-method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
-time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]]])
-methods = [method1]
-plot = plot_over_time(time,methods,0.9)
-plot.show()
+
 
 
 
