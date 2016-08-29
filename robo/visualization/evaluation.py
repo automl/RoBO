@@ -488,9 +488,10 @@ plot.show()
             plt.step(time[i][l],m,where='post') #,color='r')
     return plt
 
-def plot_median_and_percentiles(x,method):
+def plot_median_and_percentiles(x,method, first_percentile = 5, second_percentile = 95):
     '''
-    By defualt, plot 5th and 95h percentile.
+    Plots the median and the percentiles of different runs of a method for a given time point.
+    By default plots the 5th and 95th percentile, if values not given.
 Example:
 -----------
 x = np.array([[10, 50, 70, 100 ], [10, 50, 70, 100], [10, 50, 70, 100]])
@@ -500,9 +501,6 @@ method_3 = np.array([[9,13,12,11], [11,13,9,11] , [12,13,5,11]])
 methods = [method_1, method_2, method_3]
 plot = plot_median_and_percentiles(x,methods)
 plot.show()
-
-
-Plots the mean and the 5th and 95th percentile.
 
 :return:
     '''
@@ -516,8 +514,8 @@ Plots the mean and the 5th and 95th percentile.
         for j in range(0,len(x[index])):
             valueArray = np.array([el[j] for el in method])
             medianValue = np.median(valueArray)
-            fifth_value = np.percentile(valueArray, 5)
-            ninty_fifth_value = np.percentile(valueArray, 95)
+            fifth_value = np.percentile(valueArray, first_percentile)
+            ninty_fifth_value = np.percentile(valueArray, second_percentile)
             ninty_fifth_percentile.append(ninty_fifth_value)
             fifth_percentile.append(fifth_value)
             median.append(medianValue)
@@ -530,7 +528,13 @@ Plots the mean and the 5th and 95th percentile.
         plt.fill_between(x[index],median_curve,ninty_fifth_percentile_curve,color = color_below[index])
         plt.fill_between(x[index],median_curve,fifth_percentile_curve,color=color_above[index])
     return plt
-
+x = np.array([[10, 50, 70, 100 ], [10, 50, 70, 100], [10, 50, 70, 100]])
+method_1 = np.array([[100,70,90,80], [110,70,100,70] , [90,70,80,85]])
+method_2 = np.array([[50,58,65,45], [60,48,65,45] , [40,68,65,55]])
+method_3 = np.array([[9,13,12,11], [11,13,9,11] , [12,13,5,11]])
+methods = [method_1, method_2, method_3]
+plot = plot_median_and_percentiles(x,methods)
+plot.show()
 
 
 def plot_median(x,methods, method_names=[]):

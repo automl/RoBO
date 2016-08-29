@@ -41,7 +41,7 @@ Plots the median of different runs of a method for a given time point.
     plot = plot_median(x,methods)
     plot.show()
 
-.. image:: mean_example.png
+.. image:: median_example.png
 
 Mean and Standard Deviation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -68,5 +68,20 @@ Plot Over Time
 
 Median and Percentiles
 ^^^^^^^^^^^^^^^^^^^^^^
+Plots the median and the percentiles of different runs of a method for a given time point.
+By default plots the 5th and 95th percentile, if values not given.
+
+.. code-block:: python
+
+    #Example
+    x = np.array([[10, 50, 70, 100 ], [10, 50, 70, 100], [10, 50, 70, 100]])
+    method_1 = np.array([[100,70,90,80], [110,70,100,70] , [90,70,80,85]])
+    method_2 = np.array([[50,58,65,45], [60,48,65,45] , [40,68,65,55]])
+    method_3 = np.array([[9,13,12,11], [11,13,9,11] , [12,13,5,11]])
+    methods = [method_1, method_2, method_3]
+    plot = plot_median_and_percentiles(x,methods)
+    plot.show()
+
+.. image:: median_percentile_example.png
 
 
