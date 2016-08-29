@@ -453,10 +453,19 @@ methods = [method1,method2]
 plot = plot_over_time(time,methods,0.9)
 plot.show()
     Parameters:
-    -----------
-
+    time : numpy array
+        For each method and for each run of the method, contains the time points.
+    methods : list of numpy arrays
+        A list of numpy arrays of methods. Each method contains a numpy array
+        of several run of that corresponding method.
+    error_random_config: float
+        ...
+    agglomeration: string
+        ...
 
     :return:
+    plt : object
+        Plot Object
 
     """
     # Transform data into a dictionary for more efficent and easy pre-processing.
@@ -514,7 +523,23 @@ methods = [method_1, method_2, method_3]
 plot = plot_median_and_percentiles(x,methods)
 plot.show()
 
-:return:
+    Parameters:
+    ----------
+    x : numpy array
+        For each curve, contains the x-coordinates. Each entry
+        corresponds to one method.
+    method : list of numpy arrays
+        A list of numpy arrays of methods. Each method contains a numpy array
+        of several run of that corresponding method.
+    first_percentile : int
+        First percentile value, 5th percentile by defualt.
+    second_percentile : int
+        Second percentile value, 95th percentile by defualt.
+
+    :return:
+    plt : object
+        Plot Object
+
     '''
     sns.set(style="white", color_codes=True, font_scale=1.2)
     color_above =['#e9967a', '#fa8072', '#ffa07a', '#ff8c00', '#ff7f50', '#f08080', '#ff6347','#ff4500','#ff0000']
@@ -563,6 +588,8 @@ plot.show()
         methods : list of numpy arrays
             A list of numpy arrays of methods. Each method contains a numpy array
             of several run of that corresponding method.
+        method_names: List of Strings
+            A list of names for the methods
     :return:
         plt : object
             Plot Object
@@ -613,6 +640,8 @@ plot.show()
         methods : list of numpy arrays
             A list of numpy arrays of methods. Each method contains a numpy array
             of several run of that corresponding method.
+        method_names: List of Strings
+            A list of names for the methods
 
     :return:
         plt : object
@@ -630,13 +659,3 @@ plot.show()
         plt.plot(x[index],curve,label=method_names[index]) if len(method_names)!=0 else plt.plot(x[index],curve)
         plt.legend()
     return plt
-
-
-
-
-'''
-another heading called visualizations in the contents.
-functionality
-examples
-containing plots.
-'''

@@ -46,6 +46,7 @@ Plots the median of different runs of a method for a given time point.
 Mean and Standard Deviation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Plots Mean and Standard Deviation of methods with multiple runs
+
 **bar plot**
     Plots in a bar format.
 
