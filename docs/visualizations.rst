@@ -106,7 +106,7 @@ Standard Error of Mean
     plot = plotStandardErrorOfMean(x,methods,drawPointPlot = True)
     plot.show()
 
-.. image:: std_error_mean_bar.png
+.. image:: std_error_mean_point.png
 
 Plot Over Time
 ^^^^^^^^^^^^^^
