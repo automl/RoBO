@@ -63,7 +63,19 @@ Standard Error of Mean
 
 Plot Over Time
 ^^^^^^^^^^^^^^
+Takes different runs of a method with different time points and interpolates each run so that all the runs have a value
+at all the time points.
 
+.. code-block:: python
+
+    #Example
+    method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
+    time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]]])
+    methods = [method1]
+    plot = plot_over_time(time,methods,0.9)
+    plot.show()
+
+.. image:: plot_over_time_example.png
 
 
 Median and Percentiles

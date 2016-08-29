@@ -434,6 +434,8 @@ def time_interpolation(time_point_union,data):
 
 def plot_over_time(time,methods,error_random_config,agglomeration="mean"):
     """
+    Takes different runs of a method with different time points and interpolates each run so that all the runs have a value
+    at all the time points.
     Example:
     ---------
 method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
@@ -487,6 +489,13 @@ plot.show()
         for l,m in enumerate(methods[i]):
             plt.step(time[i][l],m,where='post') #,color='r')
     return plt
+method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
+time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]]])
+methods = [method1]
+plot = plot_over_time(time,methods,0.9)
+plot.show()
+
+
 
 def plot_median_and_percentiles(x,method, first_percentile = 5, second_percentile = 95):
     '''
@@ -523,18 +532,12 @@ plot.show()
         ninty_fifth_percentile_curve = np.array(ninty_fifth_percentile)
         fifth_percentile_curve = np.array(fifth_percentile)
         plt.plot(x[index],median_curve, label = "median")
-        plt.plot(x[index],ninty_fifth_percentile_curve, label = "95th Percentile",color = color_below[index])
-        plt.plot(x[index],fifth_percentile_curve, label = "5th Percentile", color = color_above[index])
+        plt.plot(x[index],ninty_fifth_percentile_curve, color = color_below[index])
+        plt.plot(x[index],fifth_percentile_curve, color = color_above[index])
         plt.fill_between(x[index],median_curve,ninty_fifth_percentile_curve,color = color_below[index])
         plt.fill_between(x[index],median_curve,fifth_percentile_curve,color=color_above[index])
     return plt
-x = np.array([[10, 50, 70, 100 ], [10, 50, 70, 100], [10, 50, 70, 100]])
-method_1 = np.array([[100,70,90,80], [110,70,100,70] , [90,70,80,85]])
-method_2 = np.array([[50,58,65,45], [60,48,65,45] , [40,68,65,55]])
-method_3 = np.array([[9,13,12,11], [11,13,9,11] , [12,13,5,11]])
-methods = [method_1, method_2, method_3]
-plot = plot_median_and_percentiles(x,methods)
-plot.show()
+
 
 
 def plot_median(x,methods, method_names=[]):
