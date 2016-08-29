@@ -412,7 +412,7 @@ method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
 method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
 methods = [method_1, method_2, method_3]
 
-plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
+plot = plotStandardErrorOfMean(x,methods,drawPointPlot = True)
 plot.show()
 def time_interpolation(time_point_union,data):
     '''

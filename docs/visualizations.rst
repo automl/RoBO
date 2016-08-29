@@ -91,10 +91,22 @@ Standard Error of Mean
     plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
     plot.show()
 
-.. image:: mean_std_point_example.png
+.. image:: std_error_mean_bar.png
 
 **point plot**
     Plots with a point plot.
+.. code-block:: python
+
+    #Example
+    x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+    method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+    method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+    method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+    methods = [method_1, method_2, method_3]
+    plot = plotStandardErrorOfMean(x,methods,drawPointPlot = True)
+    plot.show()
+
+.. image:: std_error_mean_bar.png
 
 Plot Over Time
 ^^^^^^^^^^^^^^
