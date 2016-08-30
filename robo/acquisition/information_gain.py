@@ -24,7 +24,7 @@ class InformationGain(BaseAcquisitionFunction):
     def __init__(self, model, X_lower, X_upper,
             Nb=50, Np=400, sampling_acquisition=None,
             sampling_acquisition_kw={"par": 0.0},
-            **kwargs):
+            rng=None, **kwargs):
 
         """
         The Information Gain acquisition function for Entropy Search [1].
@@ -72,6 +72,11 @@ class InformationGain(BaseAcquisitionFunction):
             model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
 
         self.Np = Np
+
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
     def loss_function(self, logP, lmb, lPred, *args):
 
@@ -137,7 +142,7 @@ class InformationGain(BaseAcquisitionFunction):
         self.sampling_acquisition.update(self.model)
         restarts = np.zeros((self.Nb, self.D))
         restarts[0:self.Nb, ] = self.X_lower + (self.X_upper - self.X_lower) \
-                    * np.random.uniform(size=(self.Nb, self.D))
+                                               * self.rng.uniform(size=(self.Nb, self.D))
         sampler = emcee.EnsembleSampler(
             self.Nb, self.D, self.sampling_acquisition_wrapper)
         # zb are the representer points and lmb are their log EI values
