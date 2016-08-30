@@ -127,6 +127,6 @@ class EI(BaseAcquisitionFunction):
                 raise ValueError
 
         if derivative:
-            return f, df
+            return f, -df
         else:
             return f
