@@ -5,7 +5,6 @@ import theano
 import theano.tensor as T
 import numpy as np
 
-from copy import deepcopy
 from collections import deque
 from sgmcmc.theano_mcmc import SGLDSampler
 from sgmcmc.utils import floatX
@@ -15,7 +14,8 @@ class SGLDNet(object):
 
     def __init__(self, n_inputs, scale_grad, get_net=None,
                  n_nets=100, l_rate=1e-3, n_iters=5 * 10**4,
-                 noise_std=0.1, wd=1e-5, bsize=10, burn_in=1000):
+                 noise_std=0.1, wd=1e-5, bsize=10, burn_in=1000,
+                 precondition=True):
         """
         Constructor
 
@@ -32,6 +32,8 @@ class SGLDNet(object):
         self.bsize = bsize
         self.scale_grad = scale_grad
         self.burn_in = burn_in
+        self.precondition = precondition
+        self.is_trained = False
 
         self.samples = deque(maxlen=n_nets)
 
@@ -40,7 +42,7 @@ class SGLDNet(object):
         else:
             self.net = get_net()
 
-        self.sampler = SGLDSampler(precondition=True)
+        self.sampler = SGLDSampler(precondition=self.precondition)
 
         Xt = T.matrix()
         Yt = T.matrix()
@@ -105,8 +107,14 @@ class SGLDNet(object):
             match the number of points of X and T is the number of objectives
         """
 
-        self.X, self.x_mean, self.x_std = self.normalize_inputs(X)
-        self.Y, self.y_mean, self.y_std = self.normalize_targets(Y)
+        # Clear old samples
+        self.samples.clear()
+
+        self.X = X
+        self.Y = Y
+
+        #self.X, self.x_mean, self.x_std = self.normalize_inputs(X)
+        #self.Y, self.y_mean, self.y_std = self.normalize_targets(Y)
 
         logging.info("Starting sampling")
         start_time = time.time()
@@ -140,6 +148,7 @@ class SGLDNet(object):
                 self.samples.append(lasagne.layers.get_all_param_values(self.net))
 
             i += 1
+        self.is_trained = True
 
     def negativ_log_likelihood(self, net, X, Y, Xsize=1, wd=1, noise_std=0.1):
         """
@@ -182,8 +191,10 @@ class SGLDNet(object):
             lnlikelihood + prior
         """
         # Normalize input
-        X_, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
+        #X_, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
+        X_ = X_test
         p = []
+
         for sample in self.samples:
             lasagne.layers.set_all_param_values(self.net, sample)
             out = self.single_predict(X_)[:, 0]
@@ -193,9 +204,38 @@ class SGLDNet(object):
         v = np.var(np.asarray(p), axis=0)
 
         # denormalize output
-        m = self.denormalize(m, self.y_mean, self.y_std)
+#        m = self.denormalize(m, self.y_mean, self.y_std)
 
         return m[:, None], v[:, None]
+
+    def sample_functions(self, X_test, n_funcs=1):
+        """
+        Samples F function values from the current posterior at the N
+        specified test point.
+
+        Parameters
+        ----------
+        X_test: np.ndarray (N, D)
+            Input test points
+        n_funcs: int
+            Number of function values that are drawn at each test point.
+
+        Returns
+        ----------
+        np.array(F,N)
+            The F function values drawn at the N test points.
+        """
+        #X_test_norm, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
+        X_test_norm = X_test
+        f = np.zeros([n_funcs, X_test_norm.shape[0]])
+        for i in range(n_funcs):
+            lasagne.layers.set_all_param_values(self.net, self.samples[i])
+            out = self.single_predict(X_test_norm)[:, 0]
+            f[i, :] = out
+            #f[i, :] = self.denormalize(out, self.y_mean, self.y_std)
+
+        return f
+
 
     @staticmethod
     def normalize_inputs(x, mean=None, std=None):
@@ -249,7 +289,7 @@ class SGLDNet(object):
         x : np.ndarray
             Data point
 
-x : np.ndarray
+        x : np.ndarray
             Data point
 
         Returns
@@ -258,17 +298,3 @@ x : np.ndarray
             lnlikelihood + prior
         """
         return mean + x * std
-
-
-class LCNet(SGLDNet):
-    @staticmethod
-    def normalize_inputs(x, mean=None, std=None):
-        if mean is None:
-            mean = np.mean(x, axis=0)
-        if std is None:
-            std = np.std(x, axis=0)
-
-        x_norm = deepcopy(x)
-        x_norm[:, :-1] = (x[:, :-1] - mean[:-1]) / std[:-1]
-        return x_norm, mean, std
-
