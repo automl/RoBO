@@ -54,7 +54,6 @@ class TestMaximizers1D(unittest.TestCase):
         assert np.all(x[:, 0] >= self.X_lower[0])
         assert np.all(x[:, 0] <= self.X_upper[0])
 
-
     def test_stochastic_local_search(self):
         maximizer = StochasticLocalSearch(self.acquisition_func,
                                           self.X_lower, self.X_upper)
@@ -64,7 +63,6 @@ class TestMaximizers1D(unittest.TestCase):
         assert x.shape[1] == self.dims
         assert np.all(x[:, 0] >= self.X_lower[0])
         assert np.all(x[:, 0] <= self.X_upper[0])
-
 
     def test_grid_search(self):
         maximizer = GridSearch(self.acquisition_func,
@@ -90,7 +88,6 @@ class TestMaximizers2D(unittest.TestCase):
                                      self.branin.X_upper,
                                      n_points,
                                      rng=rng)
-        
 
         self.Y = self.branin.evaluate(self.X)
 

@@ -97,7 +97,7 @@ class PI(BaseAcquisitionFunction):
             dmdx = dmdx[0]
             ds2dx = ds2dx[0][:, None]
             dsdx = ds2dx / (2 * s)
-            df = (-(-norm.pdf(z) / s) * (dmdx + dsdx * z)).T
+            df = ((-norm.pdf(z) / s) * (dmdx + dsdx * z)).T
             return f, df
         else:
             return f

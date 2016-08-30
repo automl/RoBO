@@ -21,8 +21,8 @@ class LCBTestCase(unittest.TestCase):
         self.model = GPyModel(self.kernel)
         self.model.train(self.X, self.Y)
         self.lcb = LCB(self.model,
-                    X_upper=self.X_upper,
-                    X_lower=self.X_lower)
+                       X_upper=self.X_upper,
+                       X_lower=self.X_lower)
 
     def test_general_interface(self):
 
@@ -40,7 +40,7 @@ class LCBTestCase(unittest.TestCase):
     def test_check_grads(self):
         x_ = np.array([[np.random.rand()]])
 
-        assert check_grad(self.lcb, lambda x: -self.lcb(x, True)[1], x_) < 1e-5
+        assert check_grad(self.lcb, lambda x: self.lcb(x, True)[1], x_) < 1e-5
 
 if __name__ == "__main__":
     unittest.main()

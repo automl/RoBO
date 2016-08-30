@@ -67,7 +67,7 @@ class LCB(BaseAcquisitionFunction):
         if derivative:
             dm, dv = self.model.predictive_gradients(X)
             grad = -dm + self.par * dv / (2 * np.sqrt(var))
-            return acq, -grad
+            return acq, grad
         else:
             return acq
 

@@ -113,8 +113,7 @@ class EI(BaseAcquisitionFunction):
 
         else:
             z = (eta - m - self.par) / s
-#            f = (eta - m - self.par) * norm.cdf(z) + s * norm.pdf(z)
-            f = s * ( z * norm.cdf(z) +  norm.pdf(z))
+            f = s * (z * norm.cdf(z) + norm.pdf(z))
 
             if derivative:
                 dmdx, ds2dx = self.model.predictive_gradients(X)

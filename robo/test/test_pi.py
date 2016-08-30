@@ -47,7 +47,7 @@ class PITestCase(unittest.TestCase):
     def test_check_grads(self):
         x_ = np.array([[np.random.rand()]])
 
-        assert check_grad(self.pi, lambda x: -self.pi(x, True)[1], x_) < 1e-5
+        assert check_grad(self.pi, lambda x: self.pi(x, True)[1], x_) < 1e-5
 
 if __name__ == "__main__":
     unittest.main()

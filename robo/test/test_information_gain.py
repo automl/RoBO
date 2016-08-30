@@ -91,7 +91,7 @@ class InformationGainTestCase(unittest.TestCase):
 
     def test_general_interface(self):
 
-        X_test = np.ones([self.task.n_dims]) * 0.5
+        X_test = init_random_uniform(self.task.X_lower, self.task.X_upper, 1)
 
         a = self.acquisition_func(X_test, False)
 
@@ -100,7 +100,7 @@ class InformationGainTestCase(unittest.TestCase):
         assert a.shape[1] == 1
 
     def test_check_grads(self):
-        x_ = np.array([[0.1]])
+        x_ = np.array([[np.random.rand()]])
         assert check_grad(self.acquisition_func,
                 lambda x: -self.acquisition_func(x, True)[1], x_) < 1e-3
 
