@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Dec  6 14:51:37 2015
-
-@author: aaron
-"""
 
 import george
 import unittest
 import numpy as np
-from  scipy.optimize import check_grad
 
 from robo.models.gaussian_process import GaussianProcess
 from robo.priors.default_priors import TophatPrior
@@ -69,26 +63,26 @@ class TestGaussianProcess(unittest.TestCase):
 
         # Check compatibility with all acquisition functions
         acq_func = EI(model,
-                     X_upper=X_upper,
-                     X_lower=X_lower)
+                      X_upper=X_upper,
+                      X_lower=X_lower)
         acq_func.update(model)
         acq_func(x_test)
 
         acq_func = PI(model,
-                     X_upper=X_upper,
-                     X_lower=X_lower)
+                      X_upper=X_upper,
+                      X_lower=X_lower)
         acq_func.update(model)
         acq_func(x_test)
 
         acq_func = LCB(model,
-                     X_upper=X_upper,
-                     X_lower=X_lower)
+                       X_upper=X_upper,
+                       X_lower=X_lower)
         acq_func.update(model)
         acq_func(x_test)
 
         acq_func = InformationGain(model,
-                     X_upper=X_upper,
-                     X_lower=X_lower)
+                                   X_upper=X_upper,
+                                   X_lower=X_lower)
         acq_func.update(model)
         acq_func(x_test)
         # Check compatibility with all incumbent estimation methods
