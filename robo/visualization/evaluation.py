@@ -1,7 +1,3 @@
-'''
-Created on April 7th, 2016
-@author: Numair Mansur (numair.mansur@gmail.com)
-'''
 
 #import seaborn as sns
 import matplotlib.pyplot as plt

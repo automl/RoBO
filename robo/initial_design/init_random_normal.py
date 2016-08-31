@@ -1,6 +1,3 @@
-# encoding=utf8
-__author__ = "Lukas Voegtle"
-__email__ = "voegtlel@tf.uni-freiburg.de"
 
 import numpy as np
 

@@ -1,8 +1,4 @@
-'''
-Created on 13.07.2015
 
-@author: Aaron Klein
-'''
 import sys
 import os
 import logging

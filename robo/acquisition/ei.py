@@ -1,4 +1,3 @@
-# encoding=utf8
 import logging
 from scipy.stats import norm
 import numpy as np

@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Dec  7 22:38:03 2015
-
-@author: aaron
-"""
 
 
 class IncumbentEstimation(object):

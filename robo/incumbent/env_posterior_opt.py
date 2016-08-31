@@ -1,10 +1,3 @@
-'''
-Created on Dec 16, 2015
-
-@author: Aaron Klein
-'''
-
-
 import cma
 import numpy as np
 from scipy import optimize

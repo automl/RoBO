@@ -1,8 +1,3 @@
-'''
-Created on Aug 21, 2015
-
-@author: Aaron Klein
-'''
 
 import os
 import csv

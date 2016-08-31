@@ -1,8 +1,3 @@
-'''
-Created on Aug 11, 2015
-
-@author: Aaron Klein
-'''
 import logging
 import numpy as np
 

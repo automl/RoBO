@@ -1,8 +1,3 @@
-'''
-Created on Jun 11, 2015
-
-@author: Aaron Klein
-'''
 
 import time
 import logging

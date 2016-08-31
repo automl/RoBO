@@ -1,8 +1,3 @@
-'''
-Created on Oct 12, 2015
-
-@author: Aaron Klein
-'''
 
 import logging
 import george

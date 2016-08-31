@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Aug 23 17:00:02 2015
 
-@author: aaron
-"""
 import csv
 import numpy as np
 

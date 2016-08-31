@@ -1,8 +1,3 @@
-'''
-Created on 13.07.2015
-
-@author: Aaron Klein
-'''
 import numpy as np
 
 from robo.maximizers.base_maximizer import BaseMaximizer
