@@ -57,7 +57,7 @@ def plot_model(model, X_lower, X_upper, ax,
     mean = np.zeros([X.shape[0]])
     var = np.zeros([X.shape[0]])
     ax.grid()
-    for i in xrange(X.shape[0]):
+    for i in range(X.shape[0]):
         mean[i], var[i] = model.predict(X[i, np.newaxis, np.newaxis])
     var[var < 0.0] = 0.0
     if plot_mean:
@@ -108,7 +108,7 @@ def plot_objective_function(task, ax, X=None, Y=None,
     grid = np.arange(task.X_lower[0], task.X_upper[0] + resolution, resolution)
 
     grid_values = np.zeros([grid.shape[0]])
-    for i in xrange(grid.shape[0]):
+    for i in range(grid.shape[0]):
         grid_values[i] = task.evaluate(np.array([[grid[i]]]))[0]
 
     ax.plot(grid, grid_values, color, label=label, linestyle="--")
@@ -152,7 +152,7 @@ def plot_acquisition_function(acquisition_function,
     grid = np.arange(X_lower[0], X_upper[0] + resolution, resolution)
 
     grid_values = np.zeros([grid.shape[0]])
-    for i in xrange(grid.shape[0]):
+    for i in range(grid.shape[0]):
         grid_values[i] = acquisition_function(grid[i, np.newaxis])
     #grid_values[grid_values < 0.0] = 0.0
     ax.plot(grid, grid_values, "g", label=label)

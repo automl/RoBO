@@ -42,8 +42,7 @@ class EITestCase(unittest.TestCase):
     def test_check_grads(self):
         x_ = np.array([[self.rng.rand()]])
 
-        assert check_grad(self.ei, lambda x: -self.ei(x, True)[1], x_, epsilon=1e-4) < 1e-5
-
+        assert check_grad(self.ei, lambda x: self.ei(x, True)[1], x_) < 1e-5
 
 if __name__ == "__main__":
     unittest.main()
