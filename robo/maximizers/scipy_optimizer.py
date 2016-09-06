@@ -1,15 +1,10 @@
-'''
-Created on Jul 30, 2015
-
-@author: Aaron Klein
-'''
 
 import numpy as np
 
 from scipy import optimize
 
 from robo.maximizers.base_maximizer import BaseMaximizer
-from _functools import partial
+from functools import partial
 
 
 class SciPyOptimizer(BaseMaximizer):

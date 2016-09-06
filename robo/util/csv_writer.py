@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 import csv
 import os
 from collections import Counter

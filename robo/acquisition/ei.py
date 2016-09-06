@@ -1,4 +1,3 @@
-# encoding=utf8
 import logging
 from scipy.stats import norm
 import numpy as np
@@ -126,6 +125,6 @@ class EI(BaseAcquisitionFunction):
                 raise ValueError
 
         if derivative:
-            return f, df
+            return f, -df
         else:
             return f

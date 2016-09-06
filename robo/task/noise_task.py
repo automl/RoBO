@@ -1,8 +1,4 @@
-'''
-Created on 28.10.2015
 
-@author: Lukas Voegtle
-'''
 import numpy as np
 
 from robo.task.base_task import BaseTask

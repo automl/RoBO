@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Apr 25 18:06:59 2016
 
-@author: kleinaa
-"""
 import numpy as np
 
 from robo.priors.base_prior import BasePrior

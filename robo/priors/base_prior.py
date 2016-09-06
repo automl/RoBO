@@ -1,8 +1,3 @@
-'''
-Created on Oct 14, 2015
-
-@author: Aaron Klein
-'''
 
 import numpy as np
 import scipy.stats as sps

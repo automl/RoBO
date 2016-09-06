@@ -1,8 +1,3 @@
-'''
-Created on Dec 16, 2015
-
-@author: Aaron Klein
-'''
 
 import numpy as np
 from robo.priors.base_prior import BasePrior, TophatPrior, \
