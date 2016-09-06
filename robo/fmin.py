@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 
 
 def fmin(objective_func,
-        X_lower,
-        X_upper,
-        num_iterations=30,
-        maximizer="cmaes",
-        acquisition="LogEI"):
+         X_lower,
+         X_upper,
+         num_iterations=30,
+         maximizer="cmaes",
+         acquisition="LogEI"):
 
     assert X_upper.shape[0] == X_lower.shape[0]
 
@@ -72,7 +72,7 @@ def fmin(objective_func,
         a = InformationGainMC(model, X_upper=task.X_upper, X_lower=task.X_lower,)
     else:
         logger.error("ERROR: %s is not a"
-                    "valid acquisition function!" % (acquisition))
+                     "valid acquisition function!" % acquisition)
         return None
         
     acquisition_func = IntegratedAcquisition(model, a,
@@ -85,8 +85,8 @@ def fmin(objective_func,
         max_fkt = direct.Direct(acquisition_func, task.X_lower, task.X_upper)
     elif maximizer == "stochastic_local_search":
         max_fkt = stochastic_local_search.StochasticLocalSearch(acquisition_func,
-                                                    task.X_lower,
-                                                    task.X_upper)
+                                                                task.X_lower,
+                                                                task.X_upper)
     elif maximizer == "grid_search":
         max_fkt = grid_search.GridSearch(acquisition_func,
                                          task.X_lower,
@@ -94,8 +94,7 @@ def fmin(objective_func,
     else:
         logger.error(
             "ERROR: %s is not a valid function"
-            "to maximize the acquisition function!" %
-            (acquisition))
+            "to maximize the acquisition function!" % acquisition)
         return None
 
     bo = BayesianOptimization(acquisition_func=acquisition_func,
@@ -158,7 +157,7 @@ def fabolas_fmin(objective_func,
     Returns
     -------
     x : (1, D) numpy array
-        The estimated global optimium also called incumbent
+        The estimated global optimum also called incumbent
 
     """                     
                      
@@ -193,14 +192,14 @@ def fabolas_fmin(objective_func,
     # ARD Kernel for the configuration space
     for d in range(task.n_dims - 1):
         kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                          ndim=task.n_dims, dim=d)
+                                                ndim=task.n_dims, dim=d)
 
     # Kernel for the environmental variable
     # We use (1-s)**2 as basis function for the Bayesian linear kernel
     degree = 1
     env_kernel = george.kernels.BayesianLinearRegressionKernel(task.n_dims,
-                                                    dim=task.n_dims - 1,
-                                                    degree=degree)
+                                                               dim=task.n_dims - 1,
+                                                               degree=degree)
     env_kernel[:] = np.ones([degree + 1]) * 0.1
 
     kernel *= env_kernel
@@ -215,10 +214,10 @@ def fabolas_fmin(objective_func,
                      n_lr=(degree + 1))
 
     model = GaussianProcessMCMC(kernel, prior=prior, burnin=burnin,
-                            chain_length=chain_length,
-                            n_hypers=n_hypers,
-                            basis_func=basis_function,
-                            dim=task.n_dims - 1)
+                                chain_length=chain_length,
+                                n_hypers=n_hypers,
+                                basis_func=basis_function,
+                                dim=task.n_dims - 1)
 
     # Define model for the cost function
     cost_cov_amp = 3000
@@ -227,7 +226,7 @@ def fabolas_fmin(objective_func,
     
     for d in range(task.n_dims - 1):
         cost_kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.1,
-                                                  ndim=task.n_dims, dim=d)
+                                                     ndim=task.n_dims, dim=d)
 
     cost_degree = 1
     cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(
@@ -249,8 +248,8 @@ def fabolas_fmin(objective_func,
 
     # Define acquisition function and maximizer
     es = InformationGainPerUnitCost(model, cost_model,
-                              task.X_lower, task.X_upper,
-                              task.is_env, Nb=Nb)
+                                    task.X_lower, task.X_upper,
+                                    task.is_env, Nb=Nb)
 
     acquisition_func = IntegratedAcquisition(model, es,
                                              task.X_lower,
@@ -265,12 +264,12 @@ def fabolas_fmin(objective_func,
                                    task.is_env)
                                    
     bo = Fabolas(acquisition_func=acquisition_func,
-                  model=model,
-                  cost_model=cost_model,
-                  maximize_func=maximizer,
-                  task=task,
-                  initial_points=n_init,
-                  incumbent_estimation=rec)
+                 model=model,
+                 cost_model=cost_model,
+                 maximize_func=maximizer,
+                 task=task,
+                 initial_points=n_init,
+                 incumbent_estimation=rec)
     x_best = bo.run(num_iterations)
                      
     results = dict()
@@ -282,15 +281,15 @@ def fabolas_fmin(objective_func,
     
     
 def mtbo_fmin(objective_func,
-                 X_lower,
-                 X_upper,
-                 num_iterations=100,
-                 n_init=40,
-                 burnin=100,
-                 chain_length=200,
-                 Nb=50):
+              X_lower,
+              X_upper,
+              num_iterations=100,
+              n_init=40,
+              burnin=100,
+              chain_length=200,
+              Nb=50):
     """
-    Interface to MTBO[1] which uses an auxiallary cheaper task to speed up the optimization
+    Interface to MTBO[1] which uses an auxiliary cheaper task to speed up the optimization
     of a more expensive task.
 
     [1] Multi-Task Bayesian Optimization
@@ -364,7 +363,7 @@ def mtbo_fmin(objective_func,
     # ARD Kernel for the configuration space
     for d in range(task.n_dims - 1):
         kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                          ndim=task.n_dims, dim=d)
+                                                ndim=task.n_dims, dim=d)
 
     task_kernel = george.kernels.TaskKernel(task.n_dims, task.n_dims - 1, num_tasks)
     kernel *= task_kernel
@@ -380,8 +379,8 @@ def mtbo_fmin(objective_func,
         return res
 
     prior = MTBOPrior(len(kernel) + 1,
-                    n_ls=task.n_dims - 1,
-                    n_kt=len(task_kernel))
+                      n_ls=task.n_dims - 1,
+                      n_kt=len(task_kernel))
     
     model = GaussianProcessMCMC(kernel, prior=prior,
                                 burnin=burnin,
@@ -398,25 +397,25 @@ def mtbo_fmin(objective_func,
     # ARD Kernel for the configuration space
     for d in range(task.n_dims - 1):
         cost_kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                          ndim=task.n_dims, dim=d)
+                                                     ndim=task.n_dims, dim=d)
 
     cost_task_kernel = george.kernels.TaskKernel(task.n_dims, task.n_dims - 1, num_tasks)
     cost_kernel *= cost_task_kernel
 
     cost_prior = MTBOPrior(len(cost_kernel) + 1,
-                          n_ls=task.n_dims - 1,
-                          n_kt=len(task_kernel))
+                           n_ls=task.n_dims - 1,
+                           n_kt=len(task_kernel))
     
     cost_model = GaussianProcessMCMC(cost_kernel, prior=cost_prior,
-                                    burnin=burnin,
-                                    chain_length=chain_length,
-                                    n_hypers=n_hypers,
-                                    basis_func=bf,
-                                    dim=task.n_dims - 1)
+                                     burnin=burnin,
+                                     chain_length=chain_length,
+                                     n_hypers=n_hypers,
+                                     basis_func=bf,
+                                     dim=task.n_dims - 1)
 
     # Define acquisition function and maximizer
     es = InformationGainPerUnitCost(model, cost_model, task.X_lower,
-                                        task.X_upper, task.is_env, Nb=Nb)
+                                    task.X_upper, task.is_env, Nb=Nb)
     acquisition_func = IntegratedAcquisition(model, es,
                                              task.X_lower,
                                              task.X_upper,
@@ -429,13 +428,13 @@ def mtbo_fmin(objective_func,
                                        
     maximizer = cmaes.CMAES(acquisition_func, task.X_lower, task.X_upper, verbose=False)
     bo = MultiTaskBO(acquisition_func=acquisition_func,
-                      model=model,
-                      cost_model=cost_model,
-                      maximize_func=maximizer,
-                      task=task,
-                      n_tasks=num_tasks,
-                      initial_points=n_init,
-                      incumbent_estimation=rec)
+                     model=model,
+                     cost_model=cost_model,
+                     maximize_func=maximizer,
+                     task=task,
+                     n_tasks=num_tasks,
+                     initial_points=n_init,
+                     incumbent_estimation=rec)
                           
     x_best = bo.run(num_iterations)
 
