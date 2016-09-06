@@ -12,10 +12,10 @@ from sgmcmc.utils import floatX
 
 class SGLDNet(object):
 
-    def __init__(self, n_inputs, scale_grad, get_net=None,
-                 n_nets=100, l_rate=1e-3, n_iters=5 * 10**4,
+    def __init__(self, n_nets=100, l_rate=1e-3, n_iters=5 * 10**4,
                  noise_std=0.1, wd=1e-5, bsize=10, burn_in=1000,
-                 precondition=True):
+                 precondition=True, normalize_output=True,
+                 normalize_input=True, rng=None):
         """
         Constructor
 
@@ -24,35 +24,33 @@ class SGLDNet(object):
         n_inputs : int
             Number of input features
         """
+
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(100000))
+        else:
+            self.rng = rng
+        lasagne.random.set_rng(self.rng)
+
         self.n_nets = n_nets
         self.l_rate = l_rate
         self.n_iters = n_iters
         self.noise_std = noise_std
         self.wd = wd
         self.bsize = bsize
-        self.scale_grad = scale_grad
         self.burn_in = burn_in
         self.precondition = precondition
         self.is_trained = False
+        self.normalize_output = normalize_output
+        self.normalize_input = normalize_input
 
         self.samples = deque(maxlen=n_nets)
 
-        if get_net is None:
-            self.net = self.get_net(n_inputs=n_inputs)
-        else:
-            self.net = get_net()
 
-        self.sampler = SGLDSampler(precondition=self.precondition)
 
-        Xt = T.matrix()
-        Yt = T.matrix()
+        self.Xt = T.matrix()
+        self.Yt = T.matrix()
 
-        nll, params = self.negativ_log_likelihood(self.net, Xt, Yt, Xsize=scale_grad, wd=wd, noise_std=noise_std)
-        updates = self.sampler.prepare_updates(nll, params, self.l_rate, inputs=[Xt, Yt], scale_grad=scale_grad)
-        err = T.sum(T.square(lasagne.layers.get_output(self.net, Xt) - Yt))
-        self.compute_err = theano.function([Xt, Yt], err)
-        self.single_predict = theano.function([Xt], lasagne.layers.get_output(self.net, Xt))
-        self.train_fn = theano.function([Xt, Yt], nll, updates=updates)
+
 
         self.X = None
         self.x_mean = None
@@ -60,6 +58,7 @@ class SGLDNet(object):
         self.Y = None
         self.y_mean = None
         self.y_std = None
+
 
     @staticmethod
     def get_net(n_inputs):
@@ -108,16 +107,39 @@ class SGLDNet(object):
         """
 
         # Clear old samples
+        start_time = time.time()
+
+        #if get_net is None:
+        self.net = self.get_net(n_inputs=X.shape[1])
+        err = T.sum(T.square(lasagne.layers.get_output(self.net, self.Xt) - self.Yt))
+        self.sampler = SGLDSampler(precondition=self.precondition)
+        self.compute_err = theano.function([self.Xt, self.Yt], err)
+        self.single_predict = theano.function([self.Xt], lasagne.layers.get_output(self.net, self.Xt))
+        #else:
+        #    self.net = get_net()
+
         self.samples.clear()
 
-        self.X = X
-        self.Y = Y
+        if self.normalize_input:
+            self.X, self.x_mean, self.x_std = self.normalize_inputs(X)
+        else:
+            self.X = X
 
-        #self.X, self.x_mean, self.x_std = self.normalize_inputs(X)
-        #self.Y, self.y_mean, self.y_std = self.normalize_targets(Y)
+        if self.normalize_output:
+            self.Y, self.y_mean, self.y_std = self.normalize_targets(Y)
+        else:
+            self.Y = Y
+
+        # Scale the gradient by the number of datapoints
+        scale_grad = self.X.shape[0]
+
+        nll, params = self.negativ_log_likelihood(self.net, self.Xt, self.Yt,
+                                                  Xsize=scale_grad, wd=self.wd, noise_std=self.noise_std)
+
+        updates = self.sampler.prepare_updates(nll, params, self.l_rate,
+                                               inputs=[self.Xt, self.Yt], scale_grad=scale_grad)
 
         logging.info("Starting sampling")
-        start_time = time.time()
 
         # Check if we have enough data points to form a minibatch
         # otherwise set the batchsize equal to the number of input points
@@ -190,9 +212,17 @@ class SGLDNet(object):
         float
             lnlikelihood + prior
         """
+
+        if not self.is_trained:
+            logging.error("Model is not trained!")
+            return
+
         # Normalize input
-        #X_, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
-        X_ = X_test
+        if self.normalize_input:
+            X_, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
+        else:
+            X_ = X_test
+
         p = []
 
         for sample in self.samples:
@@ -204,7 +234,8 @@ class SGLDNet(object):
         v = np.var(np.asarray(p), axis=0)
 
         # denormalize output
-#        m = self.denormalize(m, self.y_mean, self.y_std)
+        if self.normalize_output:
+            m = self.denormalize(m, self.y_mean, self.y_std)
 
         return m[:, None], v[:, None]
 
@@ -225,17 +256,20 @@ class SGLDNet(object):
         np.array(F,N)
             The F function values drawn at the N test points.
         """
-        #X_test_norm, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
-        X_test_norm = X_test
+        if self.normalize_input:
+            X_test_norm, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
+        else:
+            X_test_norm = X_test
         f = np.zeros([n_funcs, X_test_norm.shape[0]])
         for i in range(n_funcs):
             lasagne.layers.set_all_param_values(self.net, self.samples[i])
             out = self.single_predict(X_test_norm)[:, 0]
-            f[i, :] = out
-            #f[i, :] = self.denormalize(out, self.y_mean, self.y_std)
+            if self.normalize_output:
+                f[i, :] = self.denormalize(out, self.y_mean, self.y_std)
+            else:
+                f[i, :] = out
 
         return f
-
 
     @staticmethod
     def normalize_inputs(x, mean=None, std=None):
