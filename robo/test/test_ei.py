@@ -1,8 +1,7 @@
 import GPy
 import unittest
 import numpy as np
-from  scipy.optimize import check_grad
-
+from scipy.optimize import check_grad
 from robo.models.gpy_model import GPyModel
 from robo.acquisition.ei import EI
 from robo.initial_design.init_random_uniform import init_random_uniform
