@@ -154,7 +154,7 @@ class BayesianOptimization(BaseSolver):
                 self.incumbent = np.array([self.X[best_idx]])
                 self.incumbent_value = np.array([self.Y[best_idx]])
 
-                self.incumbents.append(self.incumbent)
+                self.incumbents.append(self.incumbent[0, :])
                 self.incumbent_values.append(self.incumbent_value)
                 self.runtime.append(time.time() - self.start_time)
 
@@ -189,7 +189,7 @@ class BayesianOptimization(BaseSolver):
             self.incumbent, self.incumbent_value = \
                     self.estimator.estimate_incumbent(startpoints)
 
-            self.incumbents.append(self.incumbent)
+            self.incumbents.append(self.incumbent[0, :])
             self.incumbent_values.append(self.incumbent_value)
 
             logger.info("New incumbent %s found in %f seconds with "

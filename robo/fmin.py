@@ -107,7 +107,7 @@ def fmin(objective_func,
     results = dict()
     results["x_opt"] = task.retransform(x_best)
     results["f_opt"] = f_min
-    results["trajectory"] = task.retransform(bo.incumbents)
+    results["trajectory"] = [task.retransform(inc) for inc in bo.incumbents]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
     return results
@@ -274,7 +274,7 @@ def fabolas_fmin(objective_func,
                      
     results = dict()
     results["x_opt"] = task.retransform(x_best)
-    results["trajectory"] = task.retransform(bo.incumbents)
+    results["trajectory"] = [task.retransform(inc) for inc in bo.incumbents]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
     return results
@@ -440,7 +440,7 @@ def mtbo_fmin(objective_func,
 
     results = dict()
     results["x_opt"] = task.retransform(x_best)
-    results["trajectory"] = task.retransform(bo.incumbents)
+    results["trajectory"] = [task.retransform(inc) for inc in bo.incumbents]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
     return results
