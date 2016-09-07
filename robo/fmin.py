@@ -28,7 +28,7 @@ def fmin(objective_func,
          X_lower,
          X_upper,
          num_iterations=30,
-         maximizer="cmaes",
+         maximizer="direct",
          acquisition="LogEI"):
 
     assert X_upper.shape[0] == X_lower.shape[0]

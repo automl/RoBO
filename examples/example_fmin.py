@@ -16,4 +16,7 @@ X_lower = np.array([0])
 X_upper = np.array([6])
 
 # Start Bayesian optimization to optimize the objective function
-x_best, fval = fmin(objective_function, X_lower, X_upper)
+results = fmin(objective_function, X_lower, X_upper)
+print(results["x_opt"])
+print(results["f_opt"])
+
