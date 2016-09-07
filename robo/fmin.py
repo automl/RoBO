@@ -106,7 +106,7 @@ def fmin(objective_func,
 
     results = dict()
     results["x_opt"] = task.retransform(x_best)
-    results["f_opt"] = task.retransform(f_min)
+    results["f_opt"] = f_min
     results["trajectory"] = task.retransform(bo.incumbents)
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
