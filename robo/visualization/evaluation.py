@@ -517,14 +517,6 @@ def plot_over_time(time, methods, error_random_config, agglomeration="mean"):
             plt.step(time[i][l], m, where='post') #,color='r')
     return plt
 
-method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
-method2 = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12]])
-time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]],
-        [[2,3,4,5], [4,5,6,7], [6,7,8,9]]])
-methods = [method1,method2]
-plot = plot_over_time(time,methods,0.9)
-plot.show()
-
 def plot_median_and_percentiles(x, method, first_percentile=5, second_percentile=95):
     """
     Plots the median and the percentiles of different runs of a method for a given time point.
