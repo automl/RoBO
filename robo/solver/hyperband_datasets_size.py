@@ -110,7 +110,7 @@ class HyperBand_DataSubsets(BaseSolver):
 			# compute the the value of s for this iteration
 			s = num_subsets - 1 - ( it % (num_subsets) )
 
-			n = int(np.floor( num_subsets/(s+1)))* eta**s
+			n = int( num_subsets/(s+1))* eta**s
 
 			subsets = subset_fractions[(-s-1):]
 
