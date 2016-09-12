@@ -21,22 +21,42 @@ from robo.solver.base_solver import BaseSolver
 import numpy as np
 
 
+import multibeep as mb
+
+
 logger = logging.getLogger(__name__)
+
+
+
+class hyperband_arm(mb.arms.python):
+	def __init__(self, task, configuration, subset_fractions):
+		self.task = task
+		self.configuration = configuration
+		self.subset_fractions = subset_fractions
+		self.costs = []
+		self.i = 0
+		super().__init__(self, b"Hyperband arm wrapper")
+		
+	def pull(self):
+		if self.i == len(self.subset_fractions):
+			raise("Ooops, that shouldn't happen. Trying to pull this arme too many times.")
+		onyx = self.task.objective_function(self.configuration,
+			dataset_fraction = self.subset_fractions[self.i])
+		self.i += 1
+		self.costs.append(onyx['cost'])
+		return(-onyx['function_value'])
+	# rest of the methods don't have to be specified here
+
+
 
 
 class HyperBand_DataSubsets(BaseSolver):
 	"""
 	variables to use the save_iteration function of the BaseSolver class:
 	
-		self.X = []
-		self.Y = []
-		self.incumbent = None
-		self.incumbent_value = None
-		self.time_func_eval = []
-		self.time_overhead = []
-		self.time_start = None
+
 	"""
-	def __init__ (self, task, eta, num_subsets, save_dir=None, num_save=1, rng=None):
+	def __init__ (self, task, eta, min_subset_fraction, save_dir=None, num_save=1, rng=None):
 		"""
 		Parameters
 		----------
@@ -48,9 +68,11 @@ class HyperBand_DataSubsets(BaseSolver):
 			after evaluating each configuration on the same subset size, only a fraction of 
 			1/eta of them 'advances' to the next round.
 			Must be greater or equal to 2.
-		num_subset : int
-			number of subsets to consider. The sizes will be distributed geometrically
-			$\sim \eta^k$ for $k\in [0, 1, ... , num_subsets - 1]$
+		min_subset_fraction : float
+			size of the smallest subset to consider. The sizes will be
+			geometrically distributed $\sim \eta^k$ for
+			$k\in [0, 1, ... , num_subsets - 1]$ where
+			$\eta^{num_subsets - 1} \geq min_subset_fraction$
 		num_save: int
 			Defines after how many iteration the output is saved.
 			The execution of a Successive Halving run is considered
@@ -63,7 +85,7 @@ class HyperBand_DataSubsets(BaseSolver):
 
 		self.task = task
 		self.eta = eta
-		self.num_subsets = num_subsets
+		self.min_subset_fraction = min_subset_fraction
 		self.save_dir = save_dir
 		self.num_save = num_save
 
@@ -71,7 +93,20 @@ class HyperBand_DataSubsets(BaseSolver):
 			self.rng = np.random.RandomState(np.random.randint(0, 10000))
 		else:
 			self.rng = rng
+		#TODO: set seed of the configuration space
 
+
+		self.X = []
+		self.Y = []
+		self.incumbent = None
+		self.incumbent_value = float('inf')
+		self.incumbents = []
+		self.incumbent_values = []
+		self.time_func_eval = []
+		self.time_overhead = []
+		self.time_start = None
+
+		
 
 	def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
 		"""
@@ -97,8 +132,7 @@ class HyperBand_DataSubsets(BaseSolver):
 
 
 		eta = self.eta
-		num_subsets = self.num_subsets
-
+		num_subsets = -int(np.log(self.min_subset_fraction)/np.log(eta)) + 1
 		subset_fractions = np.power(eta, -np.linspace(num_subsets-1, 0, num_subsets))
 
 	
@@ -110,17 +144,53 @@ class HyperBand_DataSubsets(BaseSolver):
 			# compute the the value of s for this iteration
 			s = num_subsets - 1 - ( it % (num_subsets) )
 
+			# the number of initial configurations
 			n = int( num_subsets/(s+1))* eta**s
+			configurations = [self.choose_next() for i in range(n)]
 
-			subsets = subset_fractions[(-s-1):]
+			print(n)
+			print(configurations)
+			print(subset_fractions[(-s-1):])
 
-			print("="*50)
-			print("s=%f"%s)
-			print("n=%i"%n)
-			print("subsets:{}".format(subsets))
+			arms = [hyperband_arm( self.task, c,
+				subset_fractions[(-s-1):]) for c in configurations]
 
-		from IPython import embed
-		embed()
+			bandit = mb.bandits.last_n_pulls_bandit(n=1)
+
+			ids = [bandit.add_arm(a) for a in arms]
+			print(ids)
+
+			policy = mb.policies.successive_halving(
+				bandit, 1, eta, factor_pulls = 1)
+
+			policy.play_n_rounds(s+1)
+
+
+			est_means = [bandit[i].estimated_mean for i in range(bandit.number_of_active_arms())]
+			pulls = [bandit[i].num_pulls for i in range(bandit.number_of_arms())]
+			print(est_means)
+			print(pulls)
+
+			bandit.sort_active_arms_by_mean()
+
+			best_config_index = bandit[0].identifier
+			
+			c = configurations[best_config_index]
+			v = - bandit[0].estimated_mean
+
+			if v < self.incumbent_value:
+				self.incumbent = c
+				self.incumbent_value = v
+
+			# bookkeeping
+			self.incumbents.append(self.incumbent)
+			self.incumbent_values.append(self.incumbent_value)
+			self.time_func_eval.append(sum([sum(a.costs) for a in arms]))
+			
+			for i in range(len(arms)):
+				if (len(arms[bandit[i].identifier].costs) == bandit[0].num_pulls):
+					self.X.append(arms[bandit[i].identifier].configuration)
+					self.Y.append(bandit[i].estimated_mean)
 
 
 			
@@ -139,11 +209,7 @@ class HyperBand_DataSubsets(BaseSolver):
 
 		Returns
 		-------
-		np.ndarray(1,D)
+		ConfigSpace.Configuration
 			Suggested point
 		"""
-
-		bounds = np.array(self.task.get_meta_information()['bounds'])
-
-		x = self.rng.uniform(bounds[:,0],bounds[:,1])
-		return(x)
+		return(self.task.configuration_space.sample_configuration())
