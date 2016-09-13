@@ -45,12 +45,8 @@ class SGLDNet(object):
 
         self.samples = deque(maxlen=n_nets)
 
-
-
         self.Xt = T.matrix()
         self.Yt = T.matrix()
-
-
 
         self.X = None
         self.x_mean = None
@@ -109,14 +105,11 @@ class SGLDNet(object):
         # Clear old samples
         start_time = time.time()
 
-        #if get_net is None:
         self.net = self.get_net(n_inputs=X.shape[1])
         err = T.sum(T.square(lasagne.layers.get_output(self.net, self.Xt) - self.Yt))
         self.sampler = SGLDSampler(precondition=self.precondition)
         self.compute_err = theano.function([self.Xt, self.Yt], err)
         self.single_predict = theano.function([self.Xt], lasagne.layers.get_output(self.net, self.Xt))
-        #else:
-        #    self.net = get_net()
 
         self.samples.clear()
 
@@ -135,7 +128,6 @@ class SGLDNet(object):
 
         nll, params = self.negativ_log_likelihood(self.net, self.Xt, self.Yt,
                                                   Xsize=scale_grad, wd=self.wd, noise_std=self.noise_std)
-
         updates = self.sampler.prepare_updates(nll, params, self.l_rate,
                                                inputs=[self.Xt, self.Yt], scale_grad=scale_grad)
 
@@ -153,7 +145,7 @@ class SGLDNet(object):
             start = (i * self.bsize) % (self.X.shape[0])
 
             xmb = floatX(self.X[start:start + self.bsize])
-            ymb = floatX(self.Y[start:start + self.bsize]).reshape((-1, 1))
+            ymb = floatX(self.Y[start:start + self.bsize])
 
             _, nll_value = self.sampler.step(xmb, ymb)
 
@@ -172,7 +164,7 @@ class SGLDNet(object):
             i += 1
         self.is_trained = True
 
-    def negativ_log_likelihood(self, net, X, Y, Xsize=1, wd=1, noise_std=0.1):
+    def negativ_log_likelihood(self, net, X, Y, Xsize=1, wd=1., noise_std=0.1):
         """
         Negative log likelihood of the data
 
