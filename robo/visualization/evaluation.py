@@ -489,7 +489,7 @@ def plot_over_time(time, methods, error_random_config, agglomeration="mean"):
         for j, runs in enumerate(method):
             data[i][j] = dict()
             time_point_union[i] = np.union1d(time_point_union[i], time[i][j])
-            time_point_union[i] = map(int, time_point_union[i])
+            time_point_union[i] = list(map(int, time_point_union[i]))
             for k, y_value in enumerate(runs):
                 data[i][j][time[i][j][k]] = {}
                 data[i][j][time[i][j][k]] = methods[i][j][k]
@@ -516,7 +516,6 @@ def plot_over_time(time, methods, error_random_config, agglomeration="mean"):
         for l,m in enumerate(methods[i]):
             plt.step(time[i][l], m, where='post') #,color='r')
     return plt
-
 
 def plot_median_and_percentiles(x, method, first_percentile=5, second_percentile=95):
     """
