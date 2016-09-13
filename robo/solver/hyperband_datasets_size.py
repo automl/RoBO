@@ -96,6 +96,8 @@ class HyperBand_DataSubsets(BaseSolver):
 		#TODO: set seed of the configuration space
 
 
+		task.configuration_space.seed( self.rng.randint(np.iinfo(np.int16).max))
+
 		self.X = []
 		self.Y = []
 		self.incumbent = None
@@ -130,12 +132,10 @@ class HyperBand_DataSubsets(BaseSolver):
 		"""
 		self.time_start = time.time()
 
-
 		eta = self.eta
 		num_subsets = -int(np.log(self.min_subset_fraction)/np.log(eta)) + 1
 		subset_fractions = np.power(eta, -np.linspace(num_subsets-1, 0, num_subsets))
 
-	
 		for it in range(num_iterations):
 			logger.info("Start iteration %d ... ", it)
 
@@ -145,53 +145,45 @@ class HyperBand_DataSubsets(BaseSolver):
 			s = num_subsets - 1 - ( it % (num_subsets) )
 
 			# the number of initial configurations
-			n = int( num_subsets/(s+1))* eta**s
+			n = int(np.floor( (num_subsets)/(s+1) )* eta**s)
+
+
+
+			# set up the arms with random configurations
 			configurations = [self.choose_next() for i in range(n)]
-
-			print(n)
-			print(configurations)
-			print(subset_fractions[(-s-1):])
-
 			arms = [hyperband_arm( self.task, c,
 				subset_fractions[(-s-1):]) for c in configurations]
 
+			#set up the bandit and the policy and play
 			bandit = mb.bandits.last_n_pulls_bandit(n=1)
-
-			ids = [bandit.add_arm(a) for a in arms]
-			print(ids)
-
+			[bandit.add_arm(a) for a in arms]
+			
 			policy = mb.policies.successive_halving(
 				bandit, 1, eta, factor_pulls = 1)
 
 			policy.play_n_rounds(s+1)
 
-
-			est_means = [bandit[i].estimated_mean for i in range(bandit.number_of_active_arms())]
-			pulls = [bandit[i].num_pulls for i in range(bandit.number_of_arms())]
-			print(est_means)
-			print(pulls)
-
-			bandit.sort_active_arms_by_mean()
-
+			# the best configuration is the first arm
 			best_config_index = bandit[0].identifier
-			
+
 			c = configurations[best_config_index]
 			v = - bandit[0].estimated_mean
+
+
 
 			if v < self.incumbent_value:
 				self.incumbent = c
 				self.incumbent_value = v
 
-			# bookkeeping
+			# book keeping
 			self.incumbents.append(self.incumbent)
 			self.incumbent_values.append(self.incumbent_value)
 			self.time_func_eval.append(sum([sum(a.costs) for a in arms]))
-			
+
 			for i in range(len(arms)):
 				if (len(arms[bandit[i].identifier].costs) == bandit[0].num_pulls):
 					self.X.append(arms[bandit[i].identifier].configuration)
 					self.Y.append(bandit[i].estimated_mean)
-
 
 			
 	def choose_next(self, X=None, Y=None):
