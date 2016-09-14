@@ -147,20 +147,18 @@ class HyperBand_DataSubsets(BaseSolver):
 			# the number of initial configurations
 			n = int(np.floor( (num_subsets)/(s+1) )* eta**s)
 
-
-
 			# set up the arms with random configurations
 			configurations = [self.choose_next() for i in range(n)]
 			arms = [hyperband_arm( self.task, c,
 				subset_fractions[(-s-1):]) for c in configurations]
 
 			#set up the bandit and the policy and play
-			bandit = mb.bandits.last_n_pulls_bandit(n=1)
+			bandit = mb.bandits.last_n_pulls(n=1)
 			[bandit.add_arm(a) for a in arms]
 			
 			policy = mb.policies.successive_halving(
 				bandit, 1, eta, factor_pulls = 1)
-
+			
 			policy.play_n_rounds(s+1)
 
 			# the best configuration is the first arm
@@ -179,6 +177,7 @@ class HyperBand_DataSubsets(BaseSolver):
 			self.incumbents.append(self.incumbent)
 			self.incumbent_values.append(self.incumbent_value)
 			self.time_func_eval.append(sum([sum(a.costs) for a in arms]))
+
 
 			for i in range(len(arms)):
 				if (len(arms[bandit[i].identifier].costs) == bandit[0].num_pulls):
