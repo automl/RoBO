@@ -524,10 +524,10 @@ def plot_median_and_percentiles(x, method, first_percentile=5, second_percentile
 
     Example:
     -----------
-    x = np.array([[10, 50, 70, 100 ], [10, 50, 70, 100], [10, 50, 70, 100]])
-    method_1 = np.array([[100,70,90,80], [110,70,100,70] , [90,70,80,85]])
-    method_2 = np.array([[50,58,65,45], [60,48,65,45] , [40,68,65,55]])
-    method_3 = np.array([[9,13,12,11], [11,13,9,11] , [12,13,5,11]])
+    x = np.array([[10,30,  50, 70,90, 100 ,120 ], [10, 50, 70, 90, 100, 120], [10, 50, 70, 90, 100, 120]])
+    method_1 = np.array([[100,70,90,100, 80,120,140], [110,70,100,120,70,70,130] , [90,70,80,90,85,110,120]])
+    method_2 = np.array([[50,58,65,70,45,70,75], [60,48,65,60,45, 65,70] , [40,68,65,55, 55,60,85]])
+    method_3 = np.array([[9,13,12,10,11,15,20], [11,13,9,9,11,20,25] , [12,13,5,7,11,11,11]])
     methods = [method_1, method_2, method_3]
     plot = plot_median_and_percentiles(x,methods)
     plot.show()
@@ -552,9 +552,7 @@ def plot_median_and_percentiles(x, method, first_percentile=5, second_percentile
         Plot Object
 
     """
-
-    color_above =['#e9967a', '#fa8072', '#ffa07a', '#ff8c00', '#ff7f50', '#f08080', '#ff6347','#ff4500','#ff0000']
-    color_below = ['#6495ed', '#6a5acd', '#7b68ee', '#8470ff', '#4169e1', '#1e90ff', '#00bfff', '#87ceeb','#87cefa','#b0c4de','#add8e6','#b0e0e6','#afeeee','#00ced1']
+    markers = ["+","x","o","v","<",">","*",",","."]
     for index,method in enumerate(method):
         median = []
         fifth_percentile = []
@@ -570,13 +568,20 @@ def plot_median_and_percentiles(x, method, first_percentile=5, second_percentile
         median_curve =np.array(median)
         ninty_fifth_percentile_curve = np.array(ninty_fifth_percentile)
         fifth_percentile_curve = np.array(fifth_percentile)
-        plt.plot(x[index],median_curve, label = "median")
-        plt.plot(x[index],ninty_fifth_percentile_curve, color = color_below[index])
-        plt.plot(x[index],fifth_percentile_curve, color = color_above[index])
-        plt.fill_between(x[index],median_curve,ninty_fifth_percentile_curve,color = color_below[index])
-        plt.fill_between(x[index],median_curve,fifth_percentile_curve,color=color_above[index])
+        plt.plot(x[index],median_curve, label = "median", color = "#4169e1", linewidth=1, marker = markers[index])
+        plt.plot(x[index],ninty_fifth_percentile_curve, color = "#6495ed", alpha=0.2)
+        plt.plot(x[index],fifth_percentile_curve,color = "#6495ed", alpha=0.2)
+        plt.fill_between(x[index],median_curve,ninty_fifth_percentile_curve, alpha=0.2, color = "#6495ed")
+        plt.fill_between(x[index],median_curve,fifth_percentile_curve,alpha=0.2, color = "#6495ed")
     return plt
 
+x = np.array([[10,30,  50, 70,90, 100 ,120 ], [10, 50, 70, 90, 100, 120], [10, 50, 70, 90, 100, 120]])
+method_1 = np.array([[100,70,90,100, 80,120,140], [110,70,100,120,70,70,130] , [90,70,80,90,85,110,120]])
+method_2 = np.array([[50,58,65,70,45,70,75], [60,48,65,60,45, 65,70] , [40,68,65,55, 55,60,85]])
+method_3 = np.array([[9,13,12,10,11,15,20], [11,13,9,9,11,20,25] , [12,13,5,7,11,11,11]])
+methods = [method_1, method_2, method_3]
+plot = plot_median_and_percentiles(x,methods)
+plot.show()
 
 def plot_median(x, methods, method_names=[]):
     """
