@@ -1,7 +1,9 @@
 import GPy
 import unittest
 import numpy as np
+
 from scipy.optimize import check_grad
+
 from robo.models.gpy_model import GPyModel
 from robo.acquisition.ei import EI
 from robo.initial_design.init_random_uniform import init_random_uniform
@@ -41,7 +43,7 @@ class EITestCase(unittest.TestCase):
     def test_check_grads(self):
         x_ = np.array([[self.rng.rand()]])
 
-        assert check_grad(self.ei, lambda x: self.ei(x, True)[1], x_) < 1e-5
+        assert check_grad(self.ei, lambda x: self.ei(x, True)[1], x_) < 1e-3
 
 if __name__ == "__main__":
     unittest.main()
