@@ -45,6 +45,7 @@ class GaussianProcess(BaseModel):
         self.normalize_output = normalize_output
         self.X = None
         self.Y = None
+        self.hypers = []
 
     def scale(self, x, new_min, new_max, old_min, old_max):
         return ((new_max - new_min) *
@@ -67,7 +68,9 @@ class GaussianProcess(BaseModel):
         do_optimize: boolean
             If set to true the hyperparameters are optimized.
         """
+
         self.X = X
+
         # For Fabolas we transform s to (1 - s)^2
         if self.basis_func is not None:
             self.X = deepcopy(X)
@@ -150,7 +153,6 @@ class GaussianProcess(BaseModel):
         # Calculate the gradient.
         A = np.outer(self.model._alpha, self.model._alpha) - K_inv
         g = 0.5 * np.einsum('ijk,ij', Kg, A)
-        
 
         if self.prior is not None:
             g += self.prior.gradient(theta)
@@ -158,7 +160,7 @@ class GaussianProcess(BaseModel):
         return -g
 
     def optimize(self):
-        # Start optimization  from the previous hyperparameter configuration
+        # Start optimization from the previous hyperparameter configuration
         p0 = self.model.kernel.vector
         p0 = np.append(p0, np.log(self.noise))
 

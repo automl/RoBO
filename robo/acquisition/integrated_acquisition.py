@@ -3,8 +3,6 @@ import numpy as np
 
 from copy import deepcopy
 from robo.acquisition.base_acquisition import BaseAcquisitionFunction
-from robo.models.dngo import DNGO
-import lasagne
 
 logger = logging.getLogger(__name__)
 
