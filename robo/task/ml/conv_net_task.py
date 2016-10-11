@@ -6,6 +6,9 @@ import theano.tensor as T
 
 from robo.task.base_task import BaseTask
 
+from hpolib.benchmarks.ml import batch_norm
+
+
 
 class ConvNetTask2D(BaseTask):
 
@@ -392,7 +395,7 @@ class ConvNetTask(BaseTask):
 
         if self.do_enves or self.multitask:
             size = int(np.exp(x[0, -1]))
-            print "Size: %f" % size
+            print("Size: %f" % size)
             shuffle = np.random.permutation(np.arange(int(np.exp(self.s_max))))
 
             X_train = self.X_train[shuffle[:size]]

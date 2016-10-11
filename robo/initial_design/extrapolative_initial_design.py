@@ -18,7 +18,7 @@ def extrapolative_initial_design(task, N):
     s = np.true_divide((log_s - task.original_X_lower[idx]),
            (task.original_X_upper[idx] - task.original_X_lower[idx]))
 
-    # Draw random points in the configuration space and evaluate them on the predifined data subsets
+    # Draw random points in the configuration space and evaluate them on the predefined data subsets
     X = init_random_uniform(task.X_lower, task.X_upper, N)
     X[:, task.is_env == 1] = \
         np.tile(s, np.ceil(X.shape[0] / 4.))[:X.shape[0], np.newaxis]
