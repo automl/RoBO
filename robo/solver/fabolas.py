@@ -169,7 +169,7 @@ class Fabolas(BayesianOptimization):
                     self.time_overhead = np.append(self.time_overhead,
                                                    np.array([0]), axis=0)
 
-                logger.info("Configuration achieved a"
+                logger.info("Configuration achieved a "
                             "performance of %f and %f costs in %f seconds" %
                             (self.Y[i], self.C[i], self.time_func_eval[i]))
 

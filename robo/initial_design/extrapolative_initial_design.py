@@ -10,8 +10,9 @@ def extrapolative_initial_design(task, N):
     idx = task.is_env == 1
     # Upper bound of the dataset size on a linear scale
     X_upper_re = np.exp(task.retransform(task.X_upper))[idx]
-    # Compute the dataset size on a linear scale for a 1/4, 1/8, 1/16 and 1/32 of the data
-    s = np.array([X_upper_re / float(i) for i in [4, 8, 16, 32]])[:, 0]
+    # Compute the dataset size on a linear scale
+    s = np.array([X_upper_re / float(i) for i in [16, 32, 64, 128]])[:, 0]
+
     log_s = np.log(s)
 
     # Transform it back to [0, 1] space
