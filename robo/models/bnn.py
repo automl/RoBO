@@ -1,18 +1,26 @@
 import time
-import lasagne
 import logging
-import theano
-import theano.tensor as T
 import numpy as np
 
 from collections import deque
-from sgmcmc.theano_mcmc import SGLDSampler
-from sgmcmc.utils import floatX
+
+try:
+    import theano
+    import theano.tensor as T
+    import lasagne
+    from sgmcmc.theano_mcmc import SGLDSampler, SGHMCSampler
+    from sgmcmc.utils import floatX
+except ImportError as e:
+    print(str(e))
+    print("If you want to use Bayesian Neural Networks you have to install the following dependencies:")
+    print("Theano (pip install theano)")
+    print("Lasagne (pip install lasagne)")
+    print("sgmcmc (see https://github.com/stokasto/sgmcmc)")
 
 
-class SGLDNet(object):
+class BayesianNeuralNetwork(object):
 
-    def __init__(self, n_nets=100, l_rate=1e-3, n_iters=5 * 10**4,
+    def __init__(self, sampling_method="sghmc", n_nets=100, l_rate=1e-3, n_iters=5 * 10**4,
                  noise_std=0.1, wd=1e-5, bsize=10, burn_in=1000,
                  precondition=True, normalize_output=True,
                  normalize_input=True, rng=None):
@@ -29,8 +37,10 @@ class SGLDNet(object):
             self.rng = np.random.RandomState(np.random.randint(100000))
         else:
             self.rng = rng
+
         lasagne.random.set_rng(self.rng)
 
+        self.sampling_method = sampling_method
         self.n_nets = n_nets
         self.l_rate = l_rate
         self.n_iters = n_iters
@@ -54,7 +64,6 @@ class SGLDNet(object):
         self.Y = None
         self.y_mean = None
         self.y_std = None
-
 
     @staticmethod
     def get_net(n_inputs):
@@ -107,7 +116,15 @@ class SGLDNet(object):
 
         self.net = self.get_net(n_inputs=X.shape[1])
         err = T.sum(T.square(lasagne.layers.get_output(self.net, self.Xt) - self.Yt))
-        self.sampler = SGLDSampler(precondition=self.precondition)
+
+        seed = self.rng.randint(1, 100000)
+        srng = theano.sandbox.rng_mrg.MRG_RandomStreams(seed)
+
+        if self.sampling_method == "sghmc":
+            self.sampler = SGHMCSampler(rng=srng, precondition=self.precondition)
+        elif self.sampling_method == "sgld":
+            self.sampler = SGLDSampler(rng=srng, precondition=self.precondition)
+
         self.compute_err = theano.function([self.Xt, self.Yt], err)
         self.single_predict = theano.function([self.Xt], lasagne.layers.get_output(self.net, self.Xt))
 
@@ -137,8 +154,8 @@ class SGLDNet(object):
         # otherwise set the batchsize equal to the number of input points
         if self.X.shape[0] < self.bsize:
             self.bsize = self.X.shape[0]
-            logging.info("Not enough datapoint to form a minibatch. "
-                         "Set the batchsize to {}".format(self.bsize))
+            logging.error("Not enough datapoint to form a minibatch. "
+                          "Set the batchsize to {}".format(self.bsize))
 
         i = 0
         while i < self.n_iters and len(self.samples) < self.n_nets:
