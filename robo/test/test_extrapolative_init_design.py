@@ -1,8 +1,4 @@
-'''
-Created on Dec 21, 2015
 
-@author: Aaron Klein
-'''
 import unittest
 import numpy as np
 
@@ -32,7 +28,7 @@ class TestEnvInitDesign(unittest.TestCase):
         assert X.shape[1] == 2
         for i in range(N):
             s = np.exp(task.retransform(X[i])[-1])
-            assert np.round(s, 0) == np.round(1000. / float(2 ** (i % 4 + 2)), 0)
+            assert np.round(s, 0) == np.round(1000. / float(2 ** (i % 4 + 4)), 0)
 
 if __name__ == "__main__":
     unittest.main()
