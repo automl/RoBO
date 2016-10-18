@@ -9,9 +9,10 @@ import numpy as np
 class SGDNet(object):
 
     def __init__(self, n_inputs,  n_epochs=100, l_rate=1e-3,
-                 n_units_1=10, n_units_2=10, n_units_3=10,
-                 noise_std=0.1, wd=1e-5, bsize=10, burn_in=1000,
-                 precondition=True, normalize_output=True,
+                 n_units= [10, 10, 10],
+                 dropout = [0.5,0.5,0.5],
+                 batch_size=10, shuffle_batches = False,
+                 normalize_output=True,
                  normalize_input=True, rng=None):
         """
         Constructor
@@ -23,38 +24,41 @@ class SGDNet(object):
         """
 
         if rng is None:
-            self.rng = np.random.RandomState(np.random.randint(100000))
+            self.rng = np.random.RandomState()
         else:
             self.rng = rng
         lasagne.random.set_rng(self.rng)
 
+        self.n_inputs = n_inputs
         self.n_epochs = n_epochs
         self.l_rate = l_rate
-        self.n_units_1 = n_units_1
-        self.n_units_2 = n_units_2
-        self.n_units_3 = n_units_3
-        self.noise_std = noise_std
-        self.wd = wd
-        self.bsize = bsize
-        self.burn_in = burn_in
-        self.precondition = precondition
+        self.n_units = n_units
+
+
+        # bring the dropout parameters in a common form
+        try:
+            if len(dropout) != len(n_units):
+                raise ValueError("Number of dropout rates must match the number of layers")
+            self.dropout = dropout
+        except TypeError as e:
+            self.dropout = [dropout] * len(n_units)
+        except:
+            raise
+        
+        self.batch_size = batch_size
+        self.shuffle_batches = shuffle_batches
         self.is_trained = False
         self.normalize_output = normalize_output
         self.normalize_input = normalize_input
 
-        self.Xt = T.matrix()
-        self.Yt = T.matrix()
-
-        self.X = None
         self.x_mean = None
         self.x_std = None
-        self.Y = None
         self.y_mean = None
         self.y_std = None
         self.input_var = T.matrix('inputs')
         target_var = T.matrix('targets')
 
-        self.network = self.get_net(n_inputs, self.input_var, self.n_units_1, self.n_units_2, self.n_units_3)
+        self.initialize_weights()
 
         prediction = lasagne.layers.get_output(self.network)
         loss = lasagne.objectives.squared_error(prediction, target_var)
@@ -71,39 +75,25 @@ class SGDNet(object):
 
         self.val_fn = theano.function([self.input_var, target_var], test_loss)
 
-    @staticmethod
-    def get_net(n_inputs, input_var, n_units_1, n_units_2, n_units_3):
-        network = lasagne.layers.InputLayer(shape=(None, n_inputs), input_var=input_var)
+    def initialize_weights(self):
+        self.network = lasagne.layers.InputLayer(shape=(None, self.n_inputs), input_var=self.input_var)
 
-        network = lasagne.layers.DenseLayer(
-            network,
-            num_units=n_units_1,
-            W=lasagne.init.HeNormal(),
-            b=lasagne.init.Constant(val=0.0),
-            nonlinearity=lasagne.nonlinearities.tanh)
-        network = lasagne.layers.dropout(network, p=.5)
-        network = lasagne.layers.DenseLayer(
-            network,
-            num_units=n_units_2,
-            W=lasagne.init.HeNormal(),
-            b=lasagne.init.Constant(val=0.0),
-            nonlinearity=lasagne.nonlinearities.tanh)
-        network = lasagne.layers.dropout(network, p=.5)
-        network = lasagne.layers.DenseLayer(
-            network,
-            num_units=n_units_3,
-            W=lasagne.init.HeNormal(),
-            b=lasagne.init.Constant(val=0.0),
-            nonlinearity=lasagne.nonlinearities.tanh)
-        network = lasagne.layers.dropout(network, p=.5)
-        network = lasagne.layers.DenseLayer(
-            network,
+        for n,p in zip(self.n_units, self.dropout):
+            self.network = lasagne.layers.DenseLayer(
+                self.network,
+                num_units=n,
+                W=lasagne.init.HeNormal(),
+                b=lasagne.init.Constant(val=0.0),
+                nonlinearity=lasagne.nonlinearities.tanh)
+            self.network = lasagne.layers.dropout(self.network, p=p)
+
+        self.network = lasagne.layers.DenseLayer(
+            self.network,
             num_units=1,
             W=lasagne.init.HeNormal(),
             b=lasagne.init.Constant(val=0.0),
             nonlinearity=lasagne.nonlinearities.linear)
 
-        return network
 
     def train(self, X, Y, X_valid, Y_valid):
         """
@@ -121,33 +111,34 @@ class SGDNet(object):
         """
 
         if self.normalize_input:
-            self.X, self.x_mean, self.x_std = self.normalize_inputs(X)
+            X, self.x_mean, self.x_std = self.normalize_inputs(X)
+            X_valid = self.normalize_inputs(X_valid, self.x_mean, self.x_std)[0]
         else:
-            self.X = X
+            self.x_mean, self.x_std = None, None
 
         if self.normalize_output:
-            self.Y, self.y_mean, self.y_std = self.normalize_targets(Y)
+            Y, self.y_mean, self.y_std = self.normalize_targets(Y)
+            Y_valid = self.normalize_targets(Y_valid, self.y_mean, self.y_std)[0]
+            
         else:
-            self.Y = Y
+            self.Y, self.y_mean, self.y_std = Y, None, None
 
-        # Discard old weights
-        if self.is_trained:
-            self.network = self.get_net(X.shape[1], self.input_var, self.n_units_1, self.n_units_2, self.n_units_3)
+        self.initialize_weights()
         logging.info("Starting training...")
 
-        if X.shape[0] < self.bsize:
+        if X.shape[0] < self.batch_size:
             batch_size = X.shape[0]
         else:
-            batch_size = self.bsize
+            batch_size = self.batch_size
 
         for epoch in range(self.n_epochs):
 
             train_err = 0
             train_batches = 0
             start_time = time.time()
-            for batch in self.iterate_minibatches(self.X, self.Y, batch_size, shuffle=True):
+            for batch in self.iterate_minibatches(X, Y, batch_size, shuffle=self.shuffle_batches):
                 inputs, targets = batch
-                train_err += self.train_fn(inputs, targets)
+                train_err += self.train_fn(inputs, targets[:,None])
                 train_batches += 1
 
             logging.info("Epoch {} of {} took {:.3f}s".format(epoch + 1, self.n_epochs, time.time() - start_time))
@@ -158,7 +149,7 @@ class SGDNet(object):
         val_batches = 0
         for batch in self.iterate_minibatches(X_valid, Y_valid, batch_size, shuffle=False):
             inputs, targets = batch
-            err = self.val_fn(inputs, targets)
+            err = self.val_fn(inputs, targets[:,None])
             val_err += err
             val_batches += 1
         logging.info("  valid loss:\t\t{:.6f}".format(val_err / val_batches))
@@ -169,31 +160,28 @@ class SGDNet(object):
 
     def predict(self, X_test):
         """
-        Negative log likelihood of the data
+        makes predictions for all given points
 
         Parameters
         ----------
-        n_inputs : int
-            Number of input features
+        X_test : numpy.array
+            2d matrix with points as rows
 
         Returns
         ----------
         float
-            lnlikelihood + prior
+            predictions for all points
         """
 
         if not self.is_trained:
             logging.error("Model is not trained!")
             return
 
-        # Normalize input
         if self.normalize_input:
-            X_, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
-        else:
-            X_ = X_test
+            X_test = self.normalize_inputs(X_test, self.x_mean, self.x_std)[0]
 
         l = lasagne.layers.get_all_layers(self.network)
-        m = lasagne.layers.get_output(l, X_)[-1].eval()
+        m = lasagne.layers.get_output(l, X_test)[-1].eval()
 
         # denormalize output
         if self.normalize_output:
@@ -221,13 +209,17 @@ class SGDNet(object):
 
         Parameters
         ----------
-        n_inputs : int
-            Number of input features
+        x : numpy.array
+            input vector
+        mean: float
+            mean used for normalization
+        std: float
+            standard deviation used for normalization
 
         Returns
         ----------
         float
-            lnlikelihood + prior
+            scaled x as input to the network
         """
         if mean is None:
             mean = np.mean(x, axis=0)
@@ -242,13 +234,17 @@ class SGDNet(object):
 
         Parameters
         ----------
-        n_inputs : int
-            Number of input features
+        y : numpy.array
+            target values
+        mean: float
+            mean used for normalization
+        std: float
+            standard deviation used for normalization
 
         Returns
         ----------
         float
-            lnlikelihood + prior
+            scaled y as target output for the network
         """
         if mean is None:
             mean = np.mean(y, axis=0)
@@ -263,15 +259,17 @@ class SGDNet(object):
 
         Parameters
         ----------
-        x : np.ndarray
-            Data point
-
-        x : np.ndarray
-            Data point
+        y : numpy.array
+            target values
+        mean: float
+            mean used for normalization
+        std: float
+            standard deviation used for normalization
 
         Returns
         ----------
         float
-            lnlikelihood + prior
+            scaled y as target output for the network
+
         """
         return mean + x * std
