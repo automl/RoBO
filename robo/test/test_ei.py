@@ -14,7 +14,7 @@ class EITestCase(unittest.TestCase):
     def setUp(self):
         self.X_lower = np.array([0])
         self.X_upper = np.array([1])
-        self.rng = np.random.RandomState(42)
+        self.rng = np.random.RandomState(np.random.randint(1, 100000))
         self.X = init_random_uniform(self.X_lower, self.X_upper, 10, self.rng)
         self.Y = np.sin(self.X)
         self.kernel = GPy.kern.RBF(input_dim=1)
@@ -41,9 +41,10 @@ class EITestCase(unittest.TestCase):
         assert dadx.shape[1] == x_test.shape[1]
 
     def test_check_grads(self):
+
         x_ = np.array([[self.rng.rand()]])
 
-        assert check_grad(self.ei, lambda x: self.ei(x, True)[1], x_) < 1e-3
+        assert check_grad(self.ei, lambda x: self.ei(x, True)[1], x_, epsilon=1e-6) < 1e-3
 
 if __name__ == "__main__":
     unittest.main()
