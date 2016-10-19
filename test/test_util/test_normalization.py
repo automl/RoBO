@@ -28,7 +28,7 @@ class TestNormalization(unittest.TestCase):
         assert np.all(np.max(X, axis=0) <= up)
 
     def test_zero_mean_unit_var_normalization(self):
-        X = np.random.rand(10000, 3)
+        X = np.random.rand(100, 3)
         X_norm, m, s = normalization.zero_mean_unit_var_normalization(X)
 
         np.testing.assert_almost_equal(np.mean(X_norm, axis=0), np.zeros(X_norm.shape[1]), decimal=1)
