@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class LCB(BaseAcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=0.0, **kwargs):
+    def __init__(self, model, par=0.0):
         r"""
         The lower confidence bound acquisition functions that computes for a
         test point the acquisition value by:
@@ -36,9 +36,10 @@ class LCB(BaseAcquisitionFunction):
             and exploitation of the acquisition function. Default is 0.01
         """
         self.par = par
-        super(LCB, self).__init__(model, X_lower, X_upper)
+        super(LCB, self).__init__(model)
 
-    def compute(self, X, derivative=False, **kwargs):
+    #@BaseAcquisitionFunction._multiple_inputs
+    def compute(self, x, derivative=False, **kwargs):
         """
         Computes the LCB acquisition value and its derivatives.
 
@@ -60,16 +61,13 @@ class LCB(BaseAcquisitionFunction):
         np.ndarray(1,D)
             Derivative of LCB at X (only if derivative=True)
         """
-        mean, var = self.model.predict(X)
+        mean, var = self.model.predict(x)
 
         # Minimize in f so we maximize the negative lower bound
         acq = - (mean - self.par * np.sqrt(var))
         if derivative:
-            dm, dv = self.model.predictive_gradients(X)
+            dm, dv = self.model.predictive_gradients(x)
             grad = -(dm - self.par * dv / (2 * np.sqrt(var)))
             return acq, grad
         else:
             return acq
-
-    def update(self, model):
-        self.model = model
