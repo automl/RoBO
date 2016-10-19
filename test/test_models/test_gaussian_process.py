@@ -20,10 +20,8 @@ class TestGaussianProcess(unittest.TestCase):
         self.model.train(X, y, do_optimize=False)
 
     def test_predict(self):
-
         X_test = np.random.rand(10, 2)
 
-        # Shape matching predict
         m, v = self.model.predict(X_test)
 
         assert len(m.shape) == 1
@@ -40,7 +38,6 @@ class TestGaussianProcess(unittest.TestCase):
         assert v.shape[1] == X_test.shape[0]
 
     def test_sample_function(self):
-        # Shape matching function sampling
         X_test = np.random.rand(8, 2)
         n_funcs = 3
         funcs = self.model.sample_functions(X_test, n_funcs=n_funcs)
@@ -50,7 +47,6 @@ class TestGaussianProcess(unittest.TestCase):
         assert funcs.shape[1] == X_test.shape[0]
 
     def test_predict_variance(self):
-        # Shape matching predict variance
         x_test1 = np.random.rand(1, 2)
         x_test2 = np.random.rand(10, 2)
         var = self.model.predict_variance(x_test1, x_test2)
@@ -59,10 +55,13 @@ class TestGaussianProcess(unittest.TestCase):
         assert var.shape[1] == x_test1.shape[0]
 
     def test_nll(self):
-        pass
+        theta = np.array([0.2, 0.2, 0.001])
+        nll = self.model.nll(theta)
 
     def test_optimize(self):
-        pass
+        theta = self.model.optimize()
+        # Hyperparameters are 2 length scales + noise
+        assert theta.shape[0] == 3
 
 
 if __name__ == "__main__":

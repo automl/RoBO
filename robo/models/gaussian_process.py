@@ -134,7 +134,7 @@ class GaussianProcess(BaseModel):
         noise = np.exp(theta[-1])  # sigma^2
         
         self.gp.compute(self.X, yerr=np.sqrt(noise))
-        ll = self.gp.lnlikelihood(self.Y[:, 0], quiet=True)
+        ll = self.gp.lnlikelihood(self.y, quiet=True)
 
         # Add prior
         if self.prior is not None:
@@ -150,7 +150,7 @@ class GaussianProcess(BaseModel):
         
         self.gp.compute(self.X, yerr=np.sqrt(noise))
         
-        self.gp._compute_alpha(self.Y[:, 0])
+        self.gp._compute_alpha(self.y)
         K_inv = self.gp.solver.apply_inverse(np.eye(self.gp._alpha.size),
                                              in_place=True)
 
