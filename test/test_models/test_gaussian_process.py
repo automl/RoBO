@@ -4,14 +4,6 @@ import numpy as np
 
 from robo.models.gaussian_process import GaussianProcess
 from robo.priors.default_priors import TophatPrior
-from robo.initial_design.init_random_uniform import init_random_uniform
-from robo.acquisition.ei import EI
-from robo.acquisition.pi import PI
-from robo.acquisition.lcb import LCB
-from robo.acquisition.information_gain import InformationGain
-from robo.incumbent.best_observation import BestObservation
-from robo.incumbent.posterior_optimization import PosteriorMeanOptimization
-from robo.incumbent.posterior_optimization import PosteriorMeanAndStdOptimization
 
 
 class TestGaussianProcess(unittest.TestCase):
@@ -48,76 +40,30 @@ class TestGaussianProcess(unittest.TestCase):
         assert v.shape[1] == X_test.shape[0]
 
     def test_sample_function(self):
-        pass
         # Shape matching function sampling
-        # x_ = np.linspace(X_lower, X_upper, 10)
-        # x_ = x_[:, np.newaxis]
-        # funcs = model.sample_functions(x_, n_funcs=2)
-        # assert len(funcs.shape) == 2
-        # assert funcs.shape[0] == 2
-        # assert funcs.shape[1] == x_.shape[0]
-        #
-        # # Shape matching predict variance
-        # x_test1 = np.array([np.random.rand(1)])
-        # x_test2 = np.random.rand(10)[:, np.newaxis]
-        # var = model.predict_variance(x_test1, x_test2)
-        # assert len(var.shape) == 2
-        # assert var.shape[0] == x_test2.shape[0]
-        # assert var.shape[1] == 1
-        #
-        # # Check compatibility with all acquisition functions
-        # acq_func = EI(model,
-        #               X_upper=X_upper,
-        #               X_lower=X_lower)
-        # acq_func.update(model)
-        # acq_func(x_test)
-        #
-        # acq_func = PI(model,
-        #               X_upper=X_upper,
-        #               X_lower=X_lower)
-        # acq_func.update(model)
-        # acq_func(x_test)
-        #
-        # acq_func = LCB(model,
-        #                X_upper=X_upper,
-        #                X_lower=X_lower)
-        # acq_func.update(model)
-        # acq_func(x_test)
-        #
-        # acq_func = InformationGain(model,
-        #                            X_upper=X_upper,
-        #                            X_lower=X_lower)
-        # acq_func.update(model)
-        # acq_func(x_test)
-        # # Check compatibility with all incumbent estimation methods
-        # rec = BestObservation(model, X_lower, X_upper)
-        # inc, inc_val = rec.estimate_incumbent(None)
-        # assert len(inc.shape) == 2
-        # assert inc.shape[0] == 1
-        # assert inc.shape[1] == X_upper.shape[0]
-        # assert len(inc_val.shape) == 2
-        # assert inc_val.shape[0] == 1
-        # assert inc_val.shape[1] == 1
-        #
-        # rec = PosteriorMeanOptimization(model, X_lower, X_upper)
-        # startpoints = init_random_uniform(X_lower, X_upper, 4)
-        # inc, inc_val = rec.estimate_incumbent(startpoints)
-        # assert len(inc.shape) == 2
-        # assert inc.shape[0] == 1
-        # assert inc.shape[1] == X_upper.shape[0]
-        # assert len(inc_val.shape) == 2
-        # assert inc_val.shape[0] == 1
-        # assert inc_val.shape[1] == 1
-        #
-        # rec = PosteriorMeanAndStdOptimization(model, X_lower, X_upper)
-        # startpoints = init_random_uniform(X_lower, X_upper, 4)
-        # inc, inc_val = rec.estimate_incumbent(startpoints)
-        # assert len(inc.shape) == 2
-        # assert inc.shape[0] == 1
-        # assert inc.shape[1] == X_upper.shape[0]
-        # assert len(inc_val.shape) == 2
-        # assert inc_val.shape[0] == 1
-        # assert inc_val.shape[1] == 1
+        X_test = np.random.rand(8, 2)
+        n_funcs = 3
+        funcs = self.model.sample_functions(X_test, n_funcs=n_funcs)
+
+        assert len(funcs.shape) == 2
+        assert funcs.shape[0] == n_funcs
+        assert funcs.shape[1] == X_test.shape[0]
+
+    def test_predict_variance(self):
+        # Shape matching predict variance
+        x_test1 = np.random.rand(1, 2)
+        x_test2 = np.random.rand(10, 2)
+        var = self.model.predict_variance(x_test1, x_test2)
+        assert len(var.shape) == 2
+        assert var.shape[0] == x_test2.shape[0]
+        assert var.shape[1] == x_test1.shape[0]
+
+    def test_nll(self):
+        pass
+
+    def test_optimize(self):
+        pass
+
 
 if __name__ == "__main__":
     unittest.main()
