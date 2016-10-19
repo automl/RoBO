@@ -206,8 +206,8 @@ class GaussianProcess(BaseModel):
             raise Exception('Model has to be trained first!')
 
         if self.normalize_input:
-            x1_norm = normalization.zero_one_normalization(x1, self.lower, self.upper)
-            X2_norm = normalization.zero_one_normalization(X2, self.lower, self.upper)
+            x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
+            X2_norm, _, _ = normalization.zero_one_normalization(X2, self.lower, self.upper)
         else:
             x1_norm = x1
             X2_norm = X2
@@ -243,7 +243,7 @@ class GaussianProcess(BaseModel):
             raise Exception('Model has to be trained first!')
 
         if self.normalize_input:
-            X_test_norm = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
         else:
             X_test_norm = X_test
 
@@ -291,7 +291,7 @@ class GaussianProcess(BaseModel):
         """
 
         if self.normalize_input:
-            X_test_norm = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
         else:
             X_test_norm = X_test
 
