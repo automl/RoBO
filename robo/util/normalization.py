@@ -17,10 +17,10 @@ def zero_one_unnormalization(X_normalized, lower, upper):
     return lower + (upper - lower) * X_normalized
 
 
-def zero_mean_normalization(X, mean=None, std=None):
+def zero_mean_unit_var_normalization(X, mean=None, var=None):
     if mean is None:
         mean = np.mean(X, axis=0)
-    if std is None:
+    if var is None:
         std = np.std(X, axis=0)
 
     X_normalized = (X - mean) / std
@@ -28,5 +28,5 @@ def zero_mean_normalization(X, mean=None, std=None):
     return X_normalized, mean, std
 
 
-def zero_mean_unnormalization(X_normalized, mean, std):
+def zero_mean_unit_var_unnormalization(X_normalized, mean, std):
     return X_normalized * std + mean
