@@ -34,6 +34,11 @@ class GaussianProcess(BaseModel):
             for the Cholesky decomposition.
         use_gradients : bool
             Use gradient information to optimize the negative log likelihood
+        normalize_output : bool
+            Zero mean unit variance normalization of the the output values
+        normalize_input : bool
+            Normalize all inputs to be in [0, 1]. This is important to define good priors for the
+            length scales.
         """
 
         self.kernel = kernel
@@ -54,10 +59,10 @@ class GaussianProcess(BaseModel):
     @BaseModel._check_shapes_train
     def train(self, X, y, do_optimize=True):
         """
-        Computes the cholesky decomposition of the covariance of X and
-        estimates the GP hyperparameter by optimizing the marginal
+        Computes the Cholesky decomposition of the covariance of X and
+        estimates the GP hyperparameters by optimizing the marginal
         loglikelihood. The prior mean of the GP is set to the empirical
-        mean of the X.
+        mean of X.
 
         Parameters
         ----------
@@ -67,7 +72,8 @@ class GaussianProcess(BaseModel):
         y: np.ndarray (N,)
             The corresponding target values.
         do_optimize: boolean
-            If set to true the hyperparameters are optimized.
+            If set to true the hyperparameters are optimized otherwise
+            the default hyperparameters of the kernel are used.
         """
 
         if self.normalize_input:
@@ -169,6 +175,15 @@ class GaussianProcess(BaseModel):
         return -g
 
     def optimize(self):
+        """
+        Optimizes the marginal log likelihood and returns the best found
+        hyperparameter configuration theta.
+
+        Returns
+        -------
+        theta : np.ndarray(H)
+            Hyperparameter vector that maximizes the marginal log likelihood
+        """
         # Start optimization from the previous hyperparameter configuration
         p0 = self.gp.kernel.vector
         p0 = np.append(p0, np.log(self.noise))
@@ -191,14 +206,14 @@ class GaussianProcess(BaseModel):
 
         Parameters
         ----------
-        X1: np.ndarray (1, D)
+        x1: np.ndarray (1, D)
             First test point
         X2: np.ndarray (N, D)
             Set of test point
         Returns
         ----------
         np.array(N, 1)
-            predictive variance
+            predictive variance between x1 and X2
 
         """
 
@@ -223,12 +238,14 @@ class GaussianProcess(BaseModel):
     def predict(self, X_test, full_cov=False, **kwargs):
         r"""
         Returns the predictive mean and variance of the objective function at
-        the specified test point.
+        the given test points.
 
         Parameters
         ----------
-        X: np.ndarray (N, D)
+        X_test: np.ndarray (N, D)
             Input test points
+        full_cov: bool
+            If set to true than the whole covariance matrix between the test points is returned
 
         Returns
         ----------
@@ -275,7 +292,7 @@ class GaussianProcess(BaseModel):
     def sample_functions(self, X_test, n_funcs=1):
         """
         Samples F function values from the current posterior at the N
-        specified test point.
+        specified test points.
 
         Parameters
         ----------
