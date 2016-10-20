@@ -1,24 +1,29 @@
-import GPy
 import unittest
 import numpy as np
+
 from  scipy.optimize import check_grad
 
-from robo.models.gpy_model import GPyModel
-from robo.acquisition.lcb import LCB
 
-from robo.initial_design.init_random_uniform import init_random_uniform
+from robo.acquisition_functions.lcb import LCB
+
+from ..dummy_model import DemoModel
 
 
-class LCBTestCase(unittest.TestCase):
+class TestLCB(unittest.TestCase):
 
-    def test(self):
-        m = DemoModel()
-        lcb = LCB(m)
-        print(lcb.compute(np.random.randn(3)))
+    def setUp(self):
+        X = np.random.rand(10, 2)
+        y = np.sinc(X * 10 - 5).sum(axis=1)
+        self.model = DemoModel()
+        self.model.train(X, y)
+
+    def test_compute(self):
+        lcb = LCB(self.model)
+        print(lcb.compute(np.random.randn(1, 3)))
         print(lcb.compute(np.random.randn(2, 3)))
 
-        print(lcb.compute(np.random.randn(3), derivative=True))
-        print(lcb.compute(np.random.randn(2, 3), derivative=True))
+        print(lcb.compute(np.random.randn(1, 3), derivative=False))
+        print(lcb.compute(np.random.randn(2, 3), derivative=False))
 #    def setUp(self):
 #        self.X_lower = np.array([0])
 #        self.X_upper = np.array([1])

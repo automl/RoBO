@@ -249,9 +249,9 @@ class GaussianProcess(BaseModel):
 
         Returns
         ----------
-        np.array(N,1)
+        np.array(N,)
             predictive mean
-        np.array(N,1) or np.array(N, N) if full_cov == True
+        np.array(N,) or np.array(N, N) if full_cov == True
             predictive variance
 
         """
