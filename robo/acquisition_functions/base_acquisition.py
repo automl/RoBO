@@ -6,7 +6,7 @@ class BaseAcquisitionFunction(object):
 
     def __init__(self, model):
         """
-        A base class for acquisition functions.
+        A base class for acquisition_functions functions.
 
         Parameters
         ----------
@@ -40,16 +40,16 @@ class BaseAcquisitionFunction(object):
     @abc.abstractmethod
     def compute(self, x, derivative=False):
         """
-        Computes the acquisition value for a given point X. This function has
+        Computes the acquisition_functions value for a given point X. This function has
         to be overwritten in a derived class.
 
         Parameters
         ----------
-        x: np.ndarray(D,), The input point where the acquisition function
+        x: np.ndarray(D,), The input point where the acquisition_functions function
             should be evaluate.
 
         derivative: Boolean
-            If is set to true also the derivative of the acquisition
+            If is set to true also the derivative of the acquisition_functions
             function at X is returned
         """
         pass

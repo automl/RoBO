@@ -1,7 +1,7 @@
 import emcee
 import numpy as np
 
-from robo.acquisition.information_gain import InformationGain
+from robo.acquisition_functions.information_gain import InformationGain
 
 
 class InformationGainPerUnitCost(InformationGain):
@@ -66,12 +66,12 @@ class InformationGainPerUnitCost(InformationGain):
 
     def compute(self, X, derivative=False):
         """
-        Computes the acquisition value for a single point.
+        Computes the acquisition_functions value for a single point.
 
         Parameters
         ----------
         X : (1, D) numpy array
-            The input point for which the acquisition functions is computed.
+            The input point for which the acquisition_functions functions is computed.
         derivative : bool, optional
             If it is equal to True also the derivatives with respect to X is
             computed.
@@ -79,9 +79,9 @@ class InformationGainPerUnitCost(InformationGain):
         Returns
         -------
         acquisition_value: numpy array
-            The acquisition value computed for X.
+            The acquisition_functions value computed for X.
         grad : numpy array
-            The computed gradient of the acquisition function at X. Only
+            The computed gradient of the acquisition_functions function at X. Only
             returned if derivative==True
         """
         if len(X.shape) == 1:
