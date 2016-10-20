@@ -23,7 +23,6 @@ class TestGaussianProcessMCMC(unittest.TestCase):
                                          chain_length=200)
         self.model.train(X, y, do_optimize=True)
 
-
     def test_predict(self):
         X_test = np.random.rand(10, 2)
 
