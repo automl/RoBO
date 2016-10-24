@@ -166,7 +166,10 @@ class BayesianNeuralNetwork(object):
             xmb = floatX(self.X[start:start + self.bsize])
             ymb = floatX(self.Y[start:start + self.bsize])
 
-            _, nll_value = self.sampler.step(xmb, ymb)
+            if i < self.burn_in:
+                _, nll_value = self.sampler.step_burn_in(xmb, ymb)
+            else:
+                _, nll_value = self.sampler.step(xmb, ymb)
 
             if i % 1000 == 0:
                 total_err = self.compute_err(floatX(self.X), floatX(self.Y).reshape(-1, 1))
