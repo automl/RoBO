@@ -18,12 +18,43 @@ except ImportError as e:
     print("sgmcmc (see https://github.com/stokasto/sgmcmc)")
 
 
+def get_default_net(n_inputs):
+    l_in = lasagne.layers.InputLayer(shape=(None, n_inputs))
+
+    fc_layer_1 = lasagne.layers.DenseLayer(
+        l_in,
+        num_units=50,
+        W=lasagne.init.HeNormal(),
+        b=lasagne.init.Constant(val=0.0),
+        nonlinearity=lasagne.nonlinearities.tanh)
+    fc_layer_2 = lasagne.layers.DenseLayer(
+        fc_layer_1,
+        num_units=50,
+        W=lasagne.init.HeNormal(),
+        b=lasagne.init.Constant(val=0.0),
+        nonlinearity=lasagne.nonlinearities.tanh)
+    fc_layer_3 = lasagne.layers.DenseLayer(
+        fc_layer_2,
+        num_units=50,
+        W=lasagne.init.HeNormal(),
+        b=lasagne.init.Constant(val=0.0),
+        nonlinearity=lasagne.nonlinearities.tanh)
+    network = lasagne.layers.DenseLayer(
+        fc_layer_3,
+        num_units=1,
+        W=lasagne.init.HeNormal(),
+        b=lasagne.init.Constant(val=0.0),
+        nonlinearity=lasagne.nonlinearities.linear)
+
+    return network
+
+
 class BayesianNeuralNetwork(object):
 
-    def __init__(self, sampling_method="sghmc", n_nets=100, l_rate=1e-3, n_iters=5 * 10**4,
+    def __init__(self, sampling_method="sghmc", n_nets=100, l_rate=1e-3, mdecay=5e-2, n_iters=5 * 10**4,
                  noise_std=0.1, wd=1e-5, bsize=10, burn_in=1000,
                  precondition=True, normalize_output=True,
-                 normalize_input=True, rng=None):
+                 normalize_input=True, rng=None, get_net=get_default_net):
         """
         Constructor
 
@@ -43,6 +74,7 @@ class BayesianNeuralNetwork(object):
         self.sampling_method = sampling_method
         self.n_nets = n_nets
         self.l_rate = l_rate
+        self.mdecay = mdecay
         self.n_iters = n_iters
         self.noise_std = noise_std
         self.wd = wd
@@ -52,6 +84,7 @@ class BayesianNeuralNetwork(object):
         self.is_trained = False
         self.normalize_output = normalize_output
         self.normalize_input = normalize_input
+        self.get_net = get_net
 
         self.samples = deque(maxlen=n_nets)
 
@@ -64,37 +97,6 @@ class BayesianNeuralNetwork(object):
         self.Y = None
         self.y_mean = None
         self.y_std = None
-
-    @staticmethod
-    def get_net(n_inputs):
-        l_in = lasagne.layers.InputLayer(shape=(None, n_inputs))
-
-        fc_layer_1 = lasagne.layers.DenseLayer(
-            l_in,
-            num_units=50,
-            W=lasagne.init.HeNormal(),
-            b=lasagne.init.Constant(val=0.0),
-            nonlinearity=lasagne.nonlinearities.tanh)
-        fc_layer_2 = lasagne.layers.DenseLayer(
-            fc_layer_1,
-            num_units=50,
-            W=lasagne.init.HeNormal(),
-            b=lasagne.init.Constant(val=0.0),
-            nonlinearity=lasagne.nonlinearities.tanh)
-        fc_layer_3 = lasagne.layers.DenseLayer(
-            fc_layer_2,
-            num_units=50,
-            W=lasagne.init.HeNormal(),
-            b=lasagne.init.Constant(val=0.0),
-            nonlinearity=lasagne.nonlinearities.tanh)
-        network = lasagne.layers.DenseLayer(
-            fc_layer_3,
-            num_units=1,
-            W=lasagne.init.HeNormal(),
-            b=lasagne.init.Constant(val=0.0),
-            nonlinearity=lasagne.nonlinearities.linear)
-
-        return network
 
     def train(self, X, Y):
         """
@@ -145,7 +147,7 @@ class BayesianNeuralNetwork(object):
 
         nll, params = self.negativ_log_likelihood(self.net, self.Xt, self.Yt,
                                                   Xsize=scale_grad, wd=self.wd, noise_std=self.noise_std)
-        updates = self.sampler.prepare_updates(nll, params, self.l_rate,
+        updates = self.sampler.prepare_updates(nll, params, self.l_rate, mdecay=self.mdecay,
                                                inputs=[self.Xt, self.Yt], scale_grad=scale_grad)
 
         logging.info("Starting sampling")
@@ -245,6 +247,7 @@ class BayesianNeuralNetwork(object):
         # denormalize output
         if self.normalize_output:
             m = self.denormalize(m, self.y_mean, self.y_std)
+            v = v * self.y_std ** 2
 
         return m[:, None], v[:, None]
 
