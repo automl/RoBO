@@ -10,6 +10,9 @@ try:
     import lasagne
     from sgmcmc.theano_mcmc import SGLDSampler, SGHMCSampler
     from sgmcmc.utils import floatX
+    from sgmcmc.bnn.priors import WeightPrior, LogVariancePrior
+    from sgmcmc.bnn.lasagne_layers import AppendLayer
+
 except ImportError as e:
     print(str(e))
     print("If you want to use Bayesian Neural Networks you have to install the following dependencies:")
@@ -39,13 +42,13 @@ def get_default_net(n_inputs):
         W=lasagne.init.HeNormal(),
         b=lasagne.init.Constant(val=0.0),
         nonlinearity=lasagne.nonlinearities.tanh)
-    network = lasagne.layers.DenseLayer(
+    l_out = lasagne.layers.DenseLayer(
         fc_layer_3,
         num_units=1,
         W=lasagne.init.HeNormal(),
         b=lasagne.init.Constant(val=0.0),
         nonlinearity=lasagne.nonlinearities.linear)
-
+    network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(np.log(1e-3)))
     return network
 
 
@@ -88,6 +91,9 @@ class BayesianNeuralNetwork(object):
 
         self.samples = deque(maxlen=n_nets)
 
+        self.variance_prior = LogVariancePrior(1e-4, prior_out_std_prec=0.01)
+        self.weight_prior = WeightPrior(alpha=1., beta=1.)
+
         self.Xt = T.matrix()
         self.Yt = T.matrix()
 
@@ -117,7 +123,9 @@ class BayesianNeuralNetwork(object):
         start_time = time.time()
 
         self.net = self.get_net(n_inputs=X.shape[1])
-        err = T.sum(T.square(lasagne.layers.get_output(self.net, self.Xt) - self.Yt))
+
+        nll, mse = self.negativ_log_likelihood(self.net, self.Xt, self.Yt, X.shape[0], self.weight_prior, self.variance_prior)
+        params = lasagne.layers.get_all_params(self.net, trainable=True)
 
         seed = self.rng.randint(1, 100000)
         srng = theano.sandbox.rng_mrg.MRG_RandomStreams(seed)
@@ -127,7 +135,7 @@ class BayesianNeuralNetwork(object):
         elif self.sampling_method == "sgld":
             self.sampler = SGLDSampler(rng=srng, precondition=self.precondition)
 
-        self.compute_err = theano.function([self.Xt, self.Yt], err)
+        self.compute_err = theano.function([self.Xt, self.Yt], [mse, nll])
         self.single_predict = theano.function([self.Xt], lasagne.layers.get_output(self.net, self.Xt))
 
         self.samples.clear()
@@ -142,13 +150,8 @@ class BayesianNeuralNetwork(object):
         else:
             self.Y = Y
 
-        # Scale the gradient by the number of datapoints
-        scale_grad = self.X.shape[0]
-
-        nll, params = self.negativ_log_likelihood(self.net, self.Xt, self.Yt,
-                                                  Xsize=scale_grad, wd=self.wd, noise_std=self.noise_std)
-        updates = self.sampler.prepare_updates(nll, params, self.l_rate, mdecay=self.mdecay,
-                                               inputs=[self.Xt, self.Yt], scale_grad=scale_grad)
+        self.sampler.prepare_updates(nll, params, self.l_rate, mdecay=self.mdecay,
+                                     inputs=[self.Xt, self.Yt], scale_grad=X.shape[0])
 
         logging.info("Starting sampling")
 
@@ -158,13 +161,13 @@ class BayesianNeuralNetwork(object):
             self.bsize = self.X.shape[0]
             logging.error("Not enough datapoint to form a minibatch. "
                           "Set the batchsize to {}".format(self.bsize))
+
         i = 0
         while i < self.n_iters and len(self.samples) < self.n_nets:
             if self.X.shape[0] == self.bsize:
                 start = 0
             else:
                 start = np.random.randint(0, self.X.shape[0] - self.bsize)
-            #start = (i * self.bsize) % (self.X.shape[0])
 
             xmb = floatX(self.X[start:start + self.bsize])
             ymb = floatX(self.Y[start:start + self.bsize])
@@ -175,13 +178,13 @@ class BayesianNeuralNetwork(object):
                 _, nll_value = self.sampler.step(xmb, ymb)
 
             if i % 1000 == 0:
-                total_err = self.compute_err(floatX(self.X), floatX(self.Y).reshape(-1, 1))
+                total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.Y).reshape(-1, 1))
                 t = time.time() - start_time
 
                 logging.info("Iter {} : NLL = {} MSE = {} "
                              "Collected samples= {} Time = {}".format(i,
-                                                                      nll_value,
-                                                                      total_err / self.X.shape[0],
+                                                                      total_nll,
+                                                                      total_err,
                                                                       len(self.samples), t))
             if i % 200 == 0 and i >= self.burn_in:
                 self.samples.append(lasagne.layers.get_all_param_values(self.net))
@@ -189,7 +192,7 @@ class BayesianNeuralNetwork(object):
             i += 1
         self.is_trained = True
 
-    def negativ_log_likelihood(self, net, X, Y, Xsize=1, wd=1., noise_std=0.1):
+    def negativ_log_likelihood(self, f_net, X, Y, n_examples, weight_prior, variance_prior):
         """
         Negative log likelihood of the data
 
@@ -204,16 +207,23 @@ class BayesianNeuralNetwork(object):
             lnlikelihood + prior
         """
 
-        all_params = lasagne.layers.get_all_params(net, trainable=True)
+        f_out = lasagne.layers.get_output(f_net, X)
+        f_mean = f_out[:, 0].reshape((-1, 1))
+        f_log_var = f_out[:, 1].reshape((-1, 1))
+        f_var_inv = 1. / (T.exp(f_log_var) + 1e-16)
+        mse = T.square(Y - f_mean)
+        log_like = T.sum(T.sum(-mse * (0.5 * f_var_inv) - 0.5 * f_log_var, axis=1))
+        # scale by batch size to make this work nicely with the updaters above
+        log_like /= T.cast(X.shape[0], theano.config.floatX)
+        # scale the priors by the dataset size for the same reason
+        # prior for the variance
+        tn_examples = T.cast(n_examples, theano.config.floatX)
+        log_like += variance_prior.log_like(f_log_var, n_examples) / tn_examples
+        # prior for the weights
+        params = lasagne.layers.get_all_params(f_net, trainable=True)
+        log_like += weight_prior.log_like(params) / tn_examples
 
-        out = lasagne.layers.get_output(net, X)
-        err = T.mean(T.square(Y - out) / noise_std) #(noise_std ** 2))
-
-        prior_nll = 0.
-        for p in all_params:
-            prior_nll += T.sum(-T.square(p) * 0.5 * wd)
-        nll = err - prior_nll / T.cast(Xsize, dtype=theano.config.floatX)
-        return nll, all_params
+        return -log_like, T.mean(mse)
 
     def predict(self, X_test):
         """
