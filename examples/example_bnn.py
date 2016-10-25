@@ -16,27 +16,41 @@ rng = np.random.RandomState(42)
 X = init_random_uniform(np.zeros(1), np.ones(1), 20, rng)
 Y = f(X)
 
-#model = BayesianNeuralNetwork(sampling_method="sgld", l_rate=1e-3, burn_in=30000, n_iters=100000)
-#model.train(X, Y)
+model = BayesianNeuralNetwork(sampling_method="sgld",
+                              l_rate=1e-4,
+                              mdecay=0.05,
+                              noise_std=0.01,
+                              burn_in=3000,
+                              n_iters=50000,
+                              precondition=True,
+                              normalize_input=True,
+                              normalize_output=True)
+model.train(X, Y)
 
 x = np.linspace(0, 1, 100)[:, None]
 
 vals = f(x)
 
-#mean_pred, var_pred = model.predict(x)
+mean_pred, var_pred = model.predict(x)
 
-#std_pred = np.sqrt(var_pred)
+std_pred = np.sqrt(var_pred)
 
 plt.grid()
-#plt.plot(x[:, 0], mean_pred[:, 0], label="SGLD", color="red")
+plt.plot(x[:, 0], mean_pred[:, 0], label="SGLD", color="red")
 plt.plot(x[:, 0], vals[:, 0], label="true", color="green")
 plt.plot(X[:, 0], Y[:, 0], "ro")
-#plt.fill_between(x[:, 0], mean_pred[:, 0] + std_pred[:, 0], mean_pred[:, 0] - std_pred[:, 0], alpha=0.2, color="orange")
+plt.fill_between(x[:, 0], mean_pred[:, 0] + std_pred[:, 0], mean_pred[:, 0] - std_pred[:, 0], alpha=0.2, color="orange")
 
-model = BayesianNeuralNetwork(sampling_method="sghmc", l_rate=1e-4, mdecay=0.05, noise_std=0.01, burn_in=10000, n_iters=2000000, precondition=True)
+model = BayesianNeuralNetwork(sampling_method="sghmc",
+                              l_rate=np.sqrt(1e-4),
+                              mdecay=0.05,
+                              noise_std=0.01,
+                              burn_in=3000,
+                              n_iters=50000,
+                              precondition=True,
+                              normalize_input=True,
+                              normalize_output=True)
 model.train(X, Y)
-
-vals = f(x)
 
 mean_pred, var_pred = model.predict(x)
 
