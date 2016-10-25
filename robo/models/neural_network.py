@@ -8,7 +8,9 @@ import numpy as np
 
 class SGDNet(object):
 
-    def __init__(self, n_inputs,  n_epochs=100, l_rate=1e-3,
+    def __init__(self, n_inputs,  n_epochs=100,
+                 error_threshold = 0,
+                 learning_rate=1e-3,
                  n_units= [10, 10, 10],
                  dropout = [0.5,0.5,0.5],
                  batch_size=10, shuffle_batches = False,
@@ -21,6 +23,25 @@ class SGDNet(object):
         ----------
         n_inputs : int
             Number of input features
+        n_epochs : int
+			maxmimum number of epochs
+		learning_rate : float
+			learing rate used for ADAM
+		n_units : list of ints
+			number of units in each layer, thus controls also the number of layers
+		dropout : float or list of floats
+			If it's a list, every element defines the dropout for each layer. If it's float
+			the same dropout is applied at each layer
+		batch_size : int
+			size of the minibatches used during training
+		shuffle_batches : boolean
+			whether or not to permute the data points during training
+		normalize_output : boolean
+			whether or not the output should be scaled to zero mean, unit variance for training
+		normalize_input : boolean
+			whether or not the input should be scaled to zero mean, unit variance for training
+		rng : numpy.random.RandomState
+			the random number generator
         """
 
         if rng is None:
@@ -29,11 +50,11 @@ class SGDNet(object):
             self.rng = rng
         lasagne.random.set_rng(self.rng)
 
-        self.n_inputs = n_inputs
-        self.n_epochs = n_epochs
-        self.l_rate = l_rate
+        self.n_inputs = int(n_inputs)
+        self.n_epochs = int(n_epochs)
+        self.error_threshold = error_threshold
+        self.l_rate = learning_rate
         self.n_units = n_units
-
 
         # bring the dropout parameters in a common form
         try:
@@ -56,26 +77,14 @@ class SGDNet(object):
         self.y_mean = None
         self.y_std = None
         self.input_var = T.matrix('inputs')
-        target_var = T.matrix('targets')
 
-        self.initialize_weights()
 
-        prediction = lasagne.layers.get_output(self.network)
-        loss = lasagne.objectives.squared_error(prediction, target_var)
-        loss = loss.mean()
+        self.network = None
 
-        params = lasagne.layers.get_all_params(self.network, trainable=True)
-        updates = lasagne.updates.adam(loss, params, learning_rate=l_rate)
-
-        self.train_fn = theano.function([self.input_var, target_var], loss, updates=updates)
-
-        test_prediction = lasagne.layers.get_output(self.network, deterministic=True)
-        test_loss = lasagne.objectives.squared_error(test_prediction, target_var)
-        test_loss = test_loss.mean()
-
-        self.val_fn = theano.function([self.input_var, target_var], test_loss)
-
-    def initialize_weights(self):
+    def initialize_net(self):
+		"""
+			creates the network and the associated loss and update functions
+		"""
         self.network = lasagne.layers.InputLayer(shape=(None, self.n_inputs), input_var=self.input_var)
 
         for n,p in zip(self.n_units, self.dropout):
@@ -94,8 +103,30 @@ class SGDNet(object):
             b=lasagne.init.Constant(val=0.0),
             nonlinearity=lasagne.nonlinearities.linear)
 
+        target_var = T.matrix('targets')
 
-    def train(self, X, Y, X_valid, Y_valid):
+        prediction = lasagne.layers.get_output(self.network)
+        loss = lasagne.objectives.squared_error(prediction, target_var)
+        loss = loss.mean()
+
+        params = lasagne.layers.get_all_params(self.network, trainable=True)
+        updates = lasagne.updates.adam(loss, params, learning_rate=self.l_rate)
+
+        self.train_fn = theano.function([self.input_var, target_var], loss, updates=updates)
+
+        test_prediction = lasagne.layers.get_output(self.network, deterministic=True)
+        test_loss = lasagne.objectives.squared_error(test_prediction, target_var)
+        test_loss = test_loss.mean()
+
+        self.val_fn = theano.function([self.input_var, target_var], test_loss)
+
+
+		g = T.grad(test_prediction, self.input_var)
+		
+        self.gradient = theano.function([self.input_var], g)
+
+
+    def train(self, X, Y):
         """
         Trains the model on the provided data.
 
@@ -110,20 +141,19 @@ class SGDNet(object):
             match the number of points of X and T is the number of objectives
         """
 
+        self.initialize_net()
+
         if self.normalize_input:
             X, self.x_mean, self.x_std = self.normalize_inputs(X)
-            X_valid = self.normalize_inputs(X_valid, self.x_mean, self.x_std)[0]
         else:
             self.x_mean, self.x_std = None, None
 
         if self.normalize_output:
             Y, self.y_mean, self.y_std = self.normalize_targets(Y)
-            Y_valid = self.normalize_targets(Y_valid, self.y_mean, self.y_std)[0]
             
         else:
             self.Y, self.y_mean, self.y_std = Y, None, None
 
-        self.initialize_weights()
         logging.info("Starting training...")
 
         if X.shape[0] < self.batch_size:
@@ -138,25 +168,57 @@ class SGDNet(object):
             start_time = time.time()
             for batch in self.iterate_minibatches(X, Y, batch_size, shuffle=self.shuffle_batches):
                 inputs, targets = batch
-                train_err += self.train_fn(inputs, targets[:,None])
+                train_err += self.train_fn(inputs, targets)
                 train_batches += 1
 
             logging.info("Epoch {} of {} took {:.3f}s".format(epoch + 1, self.n_epochs, time.time() - start_time))
             logging.info("  training loss:\t\t{:.6f}".format(train_err / train_batches))
 
-        val_err = 0
+            if train_err/train_batches < self.error_threshold:
+                break
 
+        l = lasagne.layers.get_all_layers(self.network)
+        m = lasagne.layers.get_output(l, X)[-1].eval()
+        
+
+
+    def validation_error(self, X_valid, Y_valid):
+		"""
+        Trains the model on the provided data.
+
+        Parameters
+        ----------
+        X_valid: np.ndarray (N, D)
+            Validation data points. The dimensionality is (N, D),
+            where N is the number of points and D is the number of features.
+        Y_valid: np.ndarray (N, T)
+            The corresponding target values.
+            The dimensionality of Y is (N, T), where N has to
+            match the number of points of X and T is the number of objectives
+		"""
+		
+        if X_valid.shape[0] < self.batch_size:
+            batch_size = X.shape[0]
+        else:
+            batch_size = self.batch_size
+
+
+        if self.normalize_input:
+            X_valid = self.normalize_inputs(X_valid, self.x_mean, self.x_std)[0]
+        if self.normalize_output:
+            Y_valid = self.normalize_targets(Y_valid, self.y_mean, self.y_std)[0]
+
+        val_err = 0
         val_batches = 0
+
         for batch in self.iterate_minibatches(X_valid, Y_valid, batch_size, shuffle=False):
             inputs, targets = batch
-            err = self.val_fn(inputs, targets[:,None])
+            err = self.val_fn(inputs, targets)
             val_err += err
             val_batches += 1
         logging.info("  valid loss:\t\t{:.6f}".format(val_err / val_batches))
-
-        self.is_trained = True
-
         return val_err / val_batches
+
 
     def predict(self, X_test):
         """
@@ -169,11 +231,11 @@ class SGDNet(object):
 
         Returns
         ----------
-        float
+        numpy.array(dtype=float)
             predictions for all points
         """
 
-        if not self.is_trained:
+        if self.network is None:
             logging.error("Model is not trained!")
             return
 
@@ -189,7 +251,30 @@ class SGDNet(object):
 
         return m[:, None]
 
+	def predict_gradient(self, X):
+
+		fx = 1.
+		fy = 1.
+		
+        if self.normalize_input:
+            X_test = self.normalize_inputs(X, self.x_mean, self.x_std)[0]
+            fx = self.x_std
+
+		g = self.gradient(X)
+
+		if self.normalize_output:
+            g = self.normalize_outputs(g, self.y_mean, self.y_std)[0]
+            fy= self.y_std
+
+        
+		return g * (fy/fx)
+		
+
+
     def iterate_minibatches(self, inputs, targets, batchsize, shuffle=False):
+		"""
+			helper function to quickly iterate over the data
+		"""
         assert len(inputs) == len(targets)
         if shuffle:
             indices = np.arange(len(inputs))
