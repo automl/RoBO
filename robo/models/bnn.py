@@ -52,7 +52,7 @@ def get_default_net(n_inputs):
 class BayesianNeuralNetwork(object):
 
     def __init__(self, sampling_method="sghmc", n_nets=100, l_rate=1e-3, mdecay=5e-2, n_iters=5 * 10**4,
-                 noise_std=0.1, wd=1e-5, bsize=10, burn_in=1000,
+                 noise_std=0.1, wd=1e-5, bsize=20, burn_in=1000,
                  precondition=True, normalize_output=True,
                  normalize_input=True, rng=None, get_net=get_default_net):
         """
@@ -123,7 +123,7 @@ class BayesianNeuralNetwork(object):
         srng = theano.sandbox.rng_mrg.MRG_RandomStreams(seed)
 
         if self.sampling_method == "sghmc":
-            self.sampler = SGHMCSampler(rng=srng, precondition=self.precondition)
+            self.sampler = SGHMCSampler(rng=srng, precondition=self.precondition, ignore_burn_in=False)
         elif self.sampling_method == "sgld":
             self.sampler = SGLDSampler(rng=srng, precondition=self.precondition)
 
@@ -158,10 +158,13 @@ class BayesianNeuralNetwork(object):
             self.bsize = self.X.shape[0]
             logging.error("Not enough datapoint to form a minibatch. "
                           "Set the batchsize to {}".format(self.bsize))
-
         i = 0
         while i < self.n_iters and len(self.samples) < self.n_nets:
-            start = (i * self.bsize) % (self.X.shape[0])
+            if self.X.shape[0] == self.bsize:
+                start = 0
+            else:
+                start = np.random.randint(0, self.X.shape[0] - self.bsize)
+            #start = (i * self.bsize) % (self.X.shape[0])
 
             xmb = floatX(self.X[start:start + self.bsize])
             ymb = floatX(self.Y[start:start + self.bsize])
@@ -204,7 +207,7 @@ class BayesianNeuralNetwork(object):
         all_params = lasagne.layers.get_all_params(net, trainable=True)
 
         out = lasagne.layers.get_output(net, X)
-        err = T.mean(T.square(Y - out) / (noise_std ** 2))
+        err = T.mean(T.square(Y - out) / noise_std) #(noise_std ** 2))
 
         prior_nll = 0.
         for p in all_params:
