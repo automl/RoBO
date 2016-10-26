@@ -54,17 +54,64 @@ def get_default_net(n_inputs):
 
 class BayesianNeuralNetwork(object):
 
-    def __init__(self, sampling_method="sghmc", n_nets=100, l_rate=1e-3, mdecay=5e-2, n_iters=5 * 10**4,
-                 noise_std=0.1, wd=1e-5, bsize=20, burn_in=1000,
+    def __init__(self, sampling_method="sghmc",
+                 n_nets=100, l_rate=1e-3,
+                 mdecay=5e-2, n_iters=5 * 10**4,
+                 bsize=20, burn_in=1000,
                  precondition=True, normalize_output=True,
                  normalize_input=True, rng=None, get_net=get_default_net):
         """
-        Constructor
+        Bayesian Neural Networks use Bayesian methods to estimate the posterior distribution of a neural
+        network's weights. This allows to also predict uncertainties for test points and thus makes
+        Bayesian Neural Networks suitable for Bayesian optimization.
+
+        This module uses stochastic gradient MCMC methods to sample from the posterior distribution together See [1]
+        for more details.
+
+        [1] J. T. Springenberg, A. Klein, S. Falkner, F. Hutter
+            Bayesian Optimization with Robust Bayesian Neural Networks.
+            In Advances in Neural Information Processing Systems 29 (2016).
 
         Parameters
         ----------
-        n_inputs : int
-            Number of input features
+        sampling_method : str
+            Determines the MCMC strategy:
+            "sghmc" = Stochastic Gradient Hamiltonian Monte Carlo
+            "sgld" = Stochastic Gradient Langevin Dynamics
+
+        n_nets : int
+            The number of samples (weights) that are drawn from the posterior
+
+        l_rate : float
+            The step size parameter for SGHMC
+
+        mdecay : float
+            Decaying term for the momentum in SGHMC
+
+        n_iters : int
+            Number of MCMC sampling steps without burn in
+
+        bsize : int
+            Batch size to form a mini batch
+
+        burn_in : int
+            Number of burn-in steps before the actual MCMC sampling begins
+
+        precondition : bool
+            Turns on / off preconditioning. See [1] for more details
+
+        normalize_input : bool
+            Turns on / off zero mean unit variance normalization of the input data
+
+        normalize_output : bool
+            Turns on / off zero mean unit variance normalization of the output data
+
+        rng : np.random.RandomState()
+            Random number generator
+
+        get_net : func
+            function that returns a network specification.
+
         """
 
         if rng is None:
@@ -79,8 +126,6 @@ class BayesianNeuralNetwork(object):
         self.l_rate = l_rate
         self.mdecay = mdecay
         self.n_iters = n_iters
-        self.noise_std = noise_std
-        self.wd = wd
         self.bsize = bsize
         self.burn_in = burn_in
         self.precondition = precondition
@@ -194,17 +239,16 @@ class BayesianNeuralNetwork(object):
 
     def negativ_log_likelihood(self, f_net, X, Y, n_examples, weight_prior, variance_prior):
         """
-        Negative log likelihood of the data
+        Returns the negative log likelihood (+ priors) and the MSE of the data
 
         Parameters
         ----------
-        n_inputs : int
-            Number of input features
+        f_net, X, Y, n_examples, weight_prior, variance_prior
 
         Returns
         ----------
         float
-            lnlikelihood + prior
+            nll, mse
         """
 
         f_out = lasagne.layers.get_output(f_net, X)
@@ -227,7 +271,6 @@ class BayesianNeuralNetwork(object):
 
     def predict(self, X_test):
         """
-        Negative log likelihood of the data
 
         Parameters
         ----------
