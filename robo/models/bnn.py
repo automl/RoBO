@@ -48,7 +48,9 @@ def get_default_net(n_inputs):
         W=lasagne.init.HeNormal(),
         b=lasagne.init.Constant(val=0.0),
         nonlinearity=lasagne.nonlinearities.linear)
-    network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(np.log(1e-3)))
+    # Noise has to be in [0, 1]
+    network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(0.2))
+    #network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(np.log(1e-3)))
     return network
 
 
@@ -179,6 +181,8 @@ class BayesianNeuralNetwork(object):
             self.sampler = SGHMCSampler(rng=srng, precondition=self.precondition, ignore_burn_in=False)
         elif self.sampling_method == "sgld":
             self.sampler = SGLDSampler(rng=srng, precondition=self.precondition)
+        else:
+            logging.error("Sampling Strategy % does not exist!" % self.sampling_method)
 
         self.compute_err = theano.function([self.Xt, self.Yt], [mse, nll])
         self.single_predict = theano.function([self.Xt], lasagne.layers.get_output(self.net, self.Xt))
@@ -231,7 +235,7 @@ class BayesianNeuralNetwork(object):
                                                                       total_nll,
                                                                       total_err,
                                                                       len(self.samples), t))
-            if i % 200 == 0 and i >= self.burn_in:
+            if i % 100 == 0 and i >= self.burn_in:
                 self.samples.append(lasagne.layers.get_all_param_values(self.net))
 
             i += 1
@@ -253,7 +257,10 @@ class BayesianNeuralNetwork(object):
 
         f_out = lasagne.layers.get_output(f_net, X)
         f_mean = f_out[:, 0].reshape((-1, 1))
-        f_log_var = f_out[:, 1].reshape((-1, 1))
+
+        # Scale the noise to be between -10 and 10 on a log scale
+        f_log_var = 20 * f_out[:, 1].reshape((-1, 1)) - 10
+        #f_log_var = f_out[:, 1].reshape((-1, 1))
         f_var_inv = 1. / (T.exp(f_log_var) + 1e-16)
         mse = T.square(Y - f_mean)
         log_like = T.sum(T.sum(-mse * (0.5 * f_var_inv) - 0.5 * f_log_var, axis=1))
@@ -293,15 +300,21 @@ class BayesianNeuralNetwork(object):
         else:
             X_ = X_test
 
-        p = []
-
+        f_out = []
+        theta_noise = []
         for sample in self.samples:
             lasagne.layers.set_all_param_values(self.net, sample)
-            out = self.single_predict(X_)[:, 0]
-            p.append(out)
+            out = self.single_predict(X_)
+            f_out.append(out[:, 0])
+            #theta_noise.append(np.exp(out[:, 1]))
+            theta_noise.append(np.exp(20 * out[:, 1] - 10))
 
-        m = np.mean(np.asarray(p), axis=0)
-        v = np.var(np.asarray(p), axis=0)
+        f_out = np.asarray(f_out)
+        theta_noise = np.asarray(theta_noise)
+
+        m = np.mean(f_out, axis=0)
+        # Total variance
+        v = np.mean(f_out ** 2 + theta_noise, axis=0) - m ** 2
 
         # denormalize output
         if self.normalize_output:
