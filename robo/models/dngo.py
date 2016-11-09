@@ -1,9 +1,6 @@
 import logging
 import time
 import numpy as np
-import lasagne
-import theano
-import theano.tensor as T
 import emcee
 
 from scipy import optimize
@@ -11,10 +8,22 @@ from scipy import optimize
 from robo.models.base_model import BaseModel
 from robo.priors.dngo_priors import DNGOPrior
 from robo.models.bayesian_linear_regression import BayesianLinearRegression
+from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
+try:
+    import theano
+    import theano.tensor as T
+    import lasagne
+
+except ImportError as e:
+    print(str(e))
+    print("If you want to use Bayesian Neural Networks you have to install the following dependencies:")
+    print("Theano (pip install theano)")
+    print("Lasagne (pip install lasagne)")
 
 
 def sharedX(X, dtype=theano.config.floatX, name=None):
     return theano.shared(np.asarray(X, dtype=dtype), name=name)
+
 
 def smorms3(cost, params, lrate=1e-3, eps=1e-16, gather=False):
     updates = []
@@ -43,6 +52,7 @@ def smorms3(cost, params, lrate=1e-3, eps=1e-16, gather=False):
         updates.append((mem, mem_t))
     return updates
 
+
 class DNGO(BaseModel):
 
     def __init__(self, batch_size, num_epochs, learning_rate,
@@ -50,9 +60,9 @@ class DNGO(BaseModel):
                  n_units_1=50, n_units_2=50, n_units_3=50,
                  alpha=1.0, beta=1000, do_optimize=True, do_mcmc=True,
                  prior=None, n_hypers=20, chain_length=2000,
-                 burnin_steps=2000, *args, **kwargs):
+                 burnin_steps=2000, normalize_input=True, normalize_output=True):
         """
-        Deep Networks for Global Optimizatin [1]. This module performas
+        Deep Networks for Global Optimization [1]. This module performs
         Bayesian Linear Regression with basis function extracted from a
         neural network.
         
@@ -68,11 +78,13 @@ class DNGO(BaseModel):
         """
         
         self.X = None
-        self.Y = None
+        self.y = None
         self.network = None
         self.alpha = alpha
         self.beta = beta
         self.do_optimize = do_optimize
+        self.normalize_input = normalize_input
+        self.normalize_output = normalize_output
 
         # MCMC hyperparameters
         self.do_mcmc = do_mcmc
@@ -89,6 +101,7 @@ class DNGO(BaseModel):
         self.num_epochs = num_epochs
         self.batch_size = batch_size
         self.init_learning_rate = learning_rate
+
         self.momentum = momentum
         self.n_units_1 = n_units_1
         self.n_units_2 = n_units_2
@@ -100,7 +113,8 @@ class DNGO(BaseModel):
         self.input_var = T.matrix('inputs')
         self.models = []
 
-    def train(self, X, Y, **kwargs):
+    @BaseModel._check_shapes_train
+    def train(self, X, y):
         """
         Trains the model on the provided data.
 
@@ -109,37 +123,36 @@ class DNGO(BaseModel):
         X: np.ndarray (N, D)
             Input datapoints. The dimensionality of X is (N, D),
             with N as the number of points and D is the number of features.
-        Y: np.ndarray (N, T)
+        y: np.ndarray (N,)
             The corresponding target values.
-            The dimensionality of Y is (N, T), where N has to
-            match the number of points of X and T is the number of objectives
-        """
-        # Normalize inputs
-        self.X = X
-        self.X_mean = np.mean(X)
-        self.X_std = np.std(X)
-        self.norm_X = (X - self.X_mean) / self.X_std
 
+        """
+        start_time = time.time()
+
+        # Normalize inputs
+        if self.normalize_input:
+            self.X, self.X_mean, self.X_std = zero_mean_unit_var_normalization(X)
+        else:
+            self.X = X
+
+        # Normalize ouputs
+        if self.normalize_output:
+            self.y, self.y_mean, self.y_std = zero_mean_unit_var_normalization(y)
+        else:
+            self.y = y
+
+        self.y = self.y[:, None]
+
+        # Check if we have enough points to create a minibatch otherwise use all data points
         if self.X.shape[0] <= self.batch_size:
             batch_size = self.X.shape[0]
         else:
             batch_size = self.batch_size
 
-        # Normalize ouputs
-        self.Y_mean = np.mean(Y)
-        self.Y_std = np.std(Y)
-        self.Y = (Y - self.Y_mean) / self.Y_std
-        #self.Y = Y
-        start_time = time.time()
-
         # Create the neural network
         features = X.shape[1]
 
-        self.learning_rate = theano.shared(np.array(self.init_learning_rate,
-                                                dtype=theano.config.floatX))
         self.network = self._build_net(self.input_var, features)
-
-
 
         prediction = lasagne.layers.get_output(self.network)
 
@@ -154,10 +167,10 @@ class DNGO(BaseModel):
 
         params = lasagne.layers.get_all_params(self.network, trainable=True)
 
+        self.learning_rate = theano.shared(np.array(self.init_learning_rate,
+                                                    dtype=theano.config.floatX))
 
-        updates = lasagne.updates.adam(loss, params,
-                                        learning_rate=self.learning_rate)
-
+        updates = lasagne.updates.adam(loss, params, learning_rate=self.learning_rate)
 
         logging.debug("... compiling theano functions")
         self.train_fn = theano.function([self.input_var, self.target_var], loss,
@@ -170,12 +183,11 @@ class DNGO(BaseModel):
 
             epoch_start_time = time.time()
 
-            # Full pass over the training data:
             train_err = 0
             train_batches = 0
 
-            for batch in self.iterate_minibatches(self.norm_X, self.Y,
-                                            batch_size, shuffle=True):
+            for batch in self.iterate_minibatches(self.X, self.y,
+                                                  batch_size, shuffle=True):
                 inputs, targets = batch
                 train_err += self.train_fn(inputs, targets)
                 train_batches += 1
@@ -185,24 +197,22 @@ class DNGO(BaseModel):
             curtime = time.time()
             epoch_time = curtime - epoch_start_time
             total_time = curtime - start_time
-            logging.debug("Epoch time {:.3f}s, "
-                 "total time {:.3f}s".format(epoch_time, total_time))
+            logging.debug("Epoch time {:.3f}s, total time {:.3f}s".format(epoch_time, total_time))
             logging.debug("Training loss:\t\t{:.5g}".format(train_err / train_batches))
 
-            #Adapt the learning rate
+            # Adapt the learning rate
             if epoch % self.adapt_epoch == 0:
                 self.learning_rate.set_value(
                             np.float32(self.init_learning_rate * 0.1))
 
         # Design matrix
         layers = lasagne.layers.get_all_layers(self.network)
-        self.Theta = lasagne.layers.get_output(layers[:-1], self.norm_X)[-1].eval()
+        self.Theta = lasagne.layers.get_output(layers[:-1], self.X)[-1].eval()
 
         if self.do_optimize:
             if self.do_mcmc:
-                self.sampler = emcee.EnsembleSampler(self.n_hypers,
-                                                 2,
-                                                 self.marginal_log_likelihood)
+                self.sampler = emcee.EnsembleSampler(self.n_hypers, 2,
+                                                     self.marginal_log_likelihood)
 
                 # Do a burn-in in the first iteration
                 if not self.burned:
@@ -240,7 +250,7 @@ class DNGO(BaseModel):
             model = BayesianLinearRegression(alpha=sample[0],
                                              beta=sample[1],
                                              basis_func=None)
-            model.train(self.Theta, self.Y, do_optimize=False)
+            model.train(self.Theta, self.y[:, 0], do_optimize=False)
 
             self.models.append(model)
 
@@ -252,19 +262,19 @@ class DNGO(BaseModel):
         alpha = np.exp(theta[0])
         beta = np.exp(theta[1])
 
-        D = self.norm_X.shape[1]
-        N = self.norm_X.shape[0]
+        D = self.X.shape[1]
+        N = self.X.shape[0]
 
         K = beta * np.dot(self.Theta.T, self.Theta)
         K += np.eye(self.Theta.shape[1]) * alpha**2
         K_inv = np.linalg.inv(K)
         m = beta * np.dot(K_inv, self.Theta.T)
-        m = np.dot(m, self.Y)
+        m = np.dot(m, self.y)
 
         mll = D / 2 * np.log(alpha)
         mll += N / 2 * np.log(beta)
         mll -= N / 2 * np.log(2 * np.pi)
-        mll -= beta / 2. * np.linalg.norm(self.Y - np.dot(self.Theta, m), 2)
+        mll -= beta / 2. * np.linalg.norm(self.y - np.dot(self.Theta, m), 2)
         mll -= alpha / 2. * np.dot(m.T, m)
         mll -= 0.5 * np.log(np.linalg.det(K))
         param = np.array([theta[0], np.log(1 / np.exp(theta[1]))])
@@ -289,15 +299,13 @@ class DNGO(BaseModel):
                 excerpt = slice(start_idx, start_idx + batchsize)
             yield inputs[excerpt], targets[excerpt]
 
-    def update(self, X, y):
-        X = np.append(self.X, X, axis=0)
-        y = np.append(self.Y, y, axis=0)
-        self.train(X, y)
-
     def predict(self, X_test, **kwargs):
 
-        # Normalize input data to 0 mean and unit std
-        X_ = (X_test - self.X_mean) /  self.X_std
+        # Normalize inputs
+        if self.normalize_input:
+            X_, _, _ = zero_mean_unit_var_normalization(X_test,self.X_mean, self.X_std)
+        else:
+            X_ = X_test
 
         # Get features from the net
 
@@ -313,30 +321,28 @@ class DNGO(BaseModel):
 
         # See the algorithm runtime prediction paper by Hutter et al
         # for the derivation of the total variance
-        m = np.array([[mu.mean()]])
-        v = np.mean(mu ** 2 + var) - m ** 2
+        m = np.mean(mu, axis=0)
+        v = np.mean(mu ** 2 + var, axis=0) - m ** 2
 
         # Clip negative variances and set them to the smallest
         # positive float value
         if v.shape[0] == 1:
             v = np.clip(v, np.finfo(v.dtype).eps, np.inf)
         else:
-            v[np.diag_indices(v.shape[0])] = \
-                    np.clip(v[np.diag_indices(v.shape[0])],
-                            np.finfo(v.dtype).eps, np.inf)
+            v = np.clip(v, np.finfo(v.dtype).eps, np.inf)
             v[np.where((v < np.finfo(v.dtype).eps) & (v > -np.finfo(v.dtype).eps))] = 0
 
+        if self.normalize_output:
+                m = zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
+                v *= self.y_std ** 2
 
         return m, v
 
     def _build_net(self, input_var, features):
 
-        network = lasagne.layers.InputLayer(shape=(None, features),
-                                                input_var=input_var)
+        network = lasagne.layers.InputLayer(shape=(None, features), input_var=input_var)
 
-        # Define each layer
         network = lasagne.layers.DenseLayer(
-#             lasagne.layers.dropout(network, p=0.1),
              network,
              num_units=self.n_units_1,
              W=lasagne.init.HeNormal(),
@@ -344,7 +350,6 @@ class DNGO(BaseModel):
              nonlinearity=lasagne.nonlinearities.tanh)
 
         network = lasagne.layers.DenseLayer(
-#            lasagne.layers.dropout(network, p=0.1),
             network,
             num_units=self.n_units_2,
             W=lasagne.init.HeNormal(),
@@ -352,7 +357,6 @@ class DNGO(BaseModel):
             nonlinearity=lasagne.nonlinearities.tanh)
 
         network = lasagne.layers.DenseLayer(
- #            lasagne.layers.dropout(network, p=0.1),
              network,
              num_units=self.n_units_3,
              W=lasagne.init.HeNormal(),
@@ -361,25 +365,9 @@ class DNGO(BaseModel):
 
         # Define output layer
         network = lasagne.layers.DenseLayer(network,
-                 num_units=1,
-                 W=lasagne.init.HeNormal(),
-                 b=lasagne.init.Constant(val=0.),
-                 nonlinearity=lasagne.nonlinearities.linear)
+                                            num_units=1,
+                                            W=lasagne.init.HeNormal(),
+                                            b=lasagne.init.Constant(val=0.),
+                                            nonlinearity=lasagne.nonlinearities.linear)
         return network
-
-    def predictive_gradients(self, X=None):
-        """
-        Calculates the predictive gradients (gradient of the prediction)
-
-        Parameters
-        ----------
-
-        X: np.ndarray (N, D)
-            The points to predict the gradient for
-
-        Returns
-        ----------
-            The gradients at X
-        """
-        raise NotImplementedError()
 
