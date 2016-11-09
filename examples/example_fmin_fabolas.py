@@ -124,3 +124,4 @@ res = fabolas_fmin(objective_function, X_lower, X_upper, num_iterations=100)
 x_best = res["x_opt"]
 print(x_best)
 print(objective_function(x_best[:, :-1], s=x_best[:, None, -1]))
+
