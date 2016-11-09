@@ -35,10 +35,12 @@ mean_pred, var_pred = model.predict(x)
 std_pred = np.sqrt(var_pred)
 
 plt.grid()
-plt.plot(x[:, 0], mean_pred[:, 0], label="SGLD", color="red")
-plt.plot(x[:, 0], vals[:, 0], label="true", color="green")
+
+plt.plot(x[:, 0], vals[:, 0], label="true", color="black")
 plt.plot(X[:, 0], Y[:, 0], "ro")
-plt.fill_between(x[:, 0], mean_pred[:, 0] + std_pred[:, 0], mean_pred[:, 0] - std_pred[:, 0], alpha=0.2, color="orange")
+
+plt.plot(x[:, 0], mean_pred[:, 0], label="SGLD", color="green")
+plt.fill_between(x[:, 0], mean_pred[:, 0] + std_pred[:, 0], mean_pred[:, 0] - std_pred[:, 0], alpha=0.2, color="green")
 
 model = BayesianNeuralNetwork(sampling_method="sghmc",
                               l_rate=np.sqrt(1e-4),

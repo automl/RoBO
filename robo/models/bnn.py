@@ -49,8 +49,9 @@ def get_default_net(n_inputs):
         b=lasagne.init.Constant(val=0.0),
         nonlinearity=lasagne.nonlinearities.linear)
     # Noise has to be in [0, 1]
-    network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(0.2))
-    #network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(np.log(1e-3)))
+    #network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(0.2))
+    network = AppendLayer(l_out, num_units=1, b=lasagne.init.Constant(np.log(1e-3)))
+
     return network
 
 
@@ -259,8 +260,8 @@ class BayesianNeuralNetwork(object):
         f_mean = f_out[:, 0].reshape((-1, 1))
 
         # Scale the noise to be between -10 and 10 on a log scale
-        f_log_var = 20 * f_out[:, 1].reshape((-1, 1)) - 10
-        #f_log_var = f_out[:, 1].reshape((-1, 1))
+        #f_log_var = 20 * f_out[:, 1].reshape((-1, 1)) - 10
+        f_log_var = f_out[:, 1].reshape((-1, 1))
         f_var_inv = 1. / (T.exp(f_log_var) + 1e-16)
         mse = T.square(Y - f_mean)
         log_like = T.sum(T.sum(-mse * (0.5 * f_var_inv) - 0.5 * f_log_var, axis=1))
@@ -306,8 +307,8 @@ class BayesianNeuralNetwork(object):
             lasagne.layers.set_all_param_values(self.net, sample)
             out = self.single_predict(X_)
             f_out.append(out[:, 0])
-            #theta_noise.append(np.exp(out[:, 1]))
-            theta_noise.append(np.exp(20 * out[:, 1] - 10))
+            theta_noise.append(np.exp(out[:, 1]))
+            #theta_noise.append(np.exp(20 * out[:, 1] - 10))
 
         f_out = np.asarray(f_out)
         theta_noise = np.asarray(theta_noise)
