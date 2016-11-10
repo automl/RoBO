@@ -88,7 +88,7 @@ class BaseModel(object):
         """
         json_data = dict()
         json_data = {'X': self.X if self.X is None else self.X.tolist(),
-                     'Y': self.Y if self.Y is None else self.Y.tolist(),
+                     'y': self.y if self.y is None else self.y.tolist(),
                      'hyperparameters': ""}
         return json_data
 
