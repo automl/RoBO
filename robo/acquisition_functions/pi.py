@@ -1,16 +1,16 @@
 import logging
-from scipy.stats import norm
 import numpy as np
 
+from scipy.stats import norm
+
 from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
-from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
 class PI(BaseAcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=0.0, **kwargs):
+    def __init__(self, model, par=0.0):
         r"""
         Probability of Improvement solves the following equation
         :math:`PI(X) := \mathbb{P}\left( f(\mathbf{X^+}) - f_{t+1}(\mathbf{X}) > \xi\right)`, where
@@ -19,46 +19,25 @@ class PI(BaseAcquisitionFunction):
         Parameters
         ----------
         model: Model object
-            A model that implements at least
-                 - predict(X)
-                 - getCurrentBestX().
-            If you want to calculate derivatives than it should also support
-                 - predictive_gradients(X)
+            Current belief of your objective function
+            If you want to calculate derivatives than the model should also support
+                 - predictive_gradients(X_test)
 
-        X_lower: np.ndarray (D)
-            Lower bounds of the input space
-        X_upper: np.ndarray (D)
-            Upper bounds of the input space
         par: float
             Controls the balance between exploration
-            and exploitation of the acquisition_functions function. Default is 0.01
+            and exploitation of the acquisition_functions function.
         """
-        super(PI, self).__init__(model, X_lower, X_upper)
+        super(PI, self).__init__(model)
 
         self.par = par
-        self.rec = BestObservation(self.model,
-                                                 self.X_lower,
-                                                 self.X_upper)
 
-    def update(self, model):
-        """
-        This method will be called if the model is updated.
-        Parameters
-        ----------
-        model : Model object
-            Models the objective function.
-        """
-
-        super(PI, self).update(model)
-        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
-
-    def compute(self, X, derivative=False, **kwargs):
+    def compute(self, X_test, derivative=False):
         """
         Computes the PI value and its derivatives.
 
         Parameters
         ----------
-        X: np.ndarray(1, D), The input point where the acquisition_functions function
+        X_test: np.ndarray(1, D), The input point where the acquisition_functions function
             should be evaluate. The dimensionality of X is (N, D), with N as
             the number of points to evaluate at and D is the number of
             dimensions of one X.
@@ -70,30 +49,21 @@ class PI(BaseAcquisitionFunction):
         Returns
         -------
         np.ndarray(1,1)
-            Probability of Improvement of X
+            Probability of Improvement of X_test
         np.ndarray(1,D)
-            Derivative of Probability of Improvement at X
+            Derivative of Probability of Improvement at X_test
             (only if derivative=True)
         """
-        if X.shape[0] > 1:
-            logger.error("PI is only for single x inputs")
-            return
-        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
-            if derivative:
-                f = 0
-                df = np.zeros((1, X.shape[1]))
-                return np.array([[f]]), np.array([df])
-            else:
-                return np.array([[0]])
 
-        m, v = self.model.predict(X)
-        _, eta = self.rec.estimate_incumbent(None)
+        m, v = self.model.predict(X_test)
+        _, inc_val = self.model.get_incumbent()
 
         s = np.sqrt(v)
-        z = (eta - m - self.par) / s
+        z = (inc_val - m - self.par) / s
         f = norm.cdf(z)
+
         if derivative:
-            dmdx, ds2dx = self.model.predictive_gradients(X)
+            dmdx, ds2dx = self.model.predictive_gradients(X_test)
             dmdx = dmdx[0]
             ds2dx = ds2dx[0][:, None]
             dsdx = ds2dx / (2 * s)
