@@ -8,35 +8,40 @@ from robo.initial_design.init_random_uniform import init_random_uniform
 
 def posterior_mean_optimization(model, lower, upper, n_restarts=10, method="scipy", with_gradients=False):
         """
-        Estimates the incumbent by minimize the current posterior
+        Estimates the incumbent by minimize the posterior
         mean of the objective function.
-        Starts form each startpoint an optimization run and returns
-        the best found point of all runs as incumbent
 
         Parameters
         ----------
         model : Model object
-            Models the objective function.
+            Posterior belief of the objective function.
         lower : (D) numpy array
             Specified the lower bound of the input space. Each entry
             corresponds to one dimension.
         upper : (D) numpy array
             Specified the upper bound of the input space. Each entry
             corresponds to one dimension.
-        method : ['scipy', 'cmaes']
+        n_restarts: int
+            Number of independent restarts of the optimization procedure from random starting points
+        method : {'scipy', 'cma'}
             Specifies which optimization method is used to minimize
             the posterior mean.
         with_gradients : bool
             Specifies if gradient information are used. Only valid
             if method == 'scipy'.
+
+        Returns
+        -------
+        np.ndarray(D,)
+            best point that was found
         """
 
         def f(x):
-            return model.predict(x[np.newaxis, :])[0][0][0]
+            return model.predict(x[np.newaxis, :])[0][0]
 
         def df(x):
             dmu = model.predictive_gradients(x[np.newaxis, :])[0]
-            return dmu[0, :, :]
+            return dmu
 
         startpoints = init_random_uniform(lower, upper, n_restarts)
 
@@ -52,42 +57,49 @@ def posterior_mean_optimization(model, lower, upper, n_restarts=10, method="scip
                     res = optimize.minimize(f, startpoint, bounds=list(zip(lower, upper)), method="L-BFGS-B")
                     x_opt[i] = res["x"]
                     fval[i] = res["fun"]
-            elif method == 'cmaes':
+            elif method == 'cma':
                 res = cma.fmin(f, startpoint, 0.6, options={"bounds": [lower, upper]})
                 x_opt[i] = res[0]
                 fval[i] = res[1]
 
         # Return the point with the lowest function value
         best = np.argmin(fval)
-        return x_opt[best, np.newaxis, :], fval[best, np.newaxis, np.newaxis]
+        return x_opt[best]
 
 
 def posterior_mean_plus_std_optimization(model, lower, upper, n_restarts=10, method="scipy", with_gradients=False):
         """
-        Estimates the incumbent by minimize the current posterior
-        mean + std of the objective function.
+        Estimates the incumbent by minimize the posterior mean + std of the objective function, i.e. the
+        upper bound.
 
         Parameters
         ----------
         model : Model object
-            Models the objective function.
+            Posterior belief of the objective function.
         lower : (D) numpy array
             Specified the lower bound of the input space. Each entry
             corresponds to one dimension.
         upper : (D) numpy array
             Specified the upper bound of the input space. Each entry
             corresponds to one dimension.
-        method : ['scipy', 'cmaes']
+        n_restarts: int
+            Number of independent restarts of the optimization procedure from random starting points
+        method : {'scipy', 'cma'}
             Specifies which optimization method is used to minimize
             the posterior mean.
         with_gradients : bool
             Specifies if gradient information are used. Only valid
             if method == 'scipy'.
+
+        Returns
+        -------
+        np.ndarray(D,)
+            best point that was found
         """
 
         def f(x):
             mu, var = model.predict(x[np.newaxis, :])
-            return (mu + np.sqrt(var))[0, 0]
+            return (mu + np.sqrt(var))[0]
 
         def df(x):
             dmu, dvar = model.predictive_gradients(x[np.newaxis, :])
@@ -97,7 +109,7 @@ def posterior_mean_plus_std_optimization(model, lower, upper, n_restarts=10, met
             # We need to apply chain rule
             # (s(x)=sqrt[v(x)] => s'(x) = 1/2 * v'(x) / sqrt[v(x)]
             dstd = 0.5 * dvar / std
-            return (dmu[:, :, 0] + dstd)[0, :]
+            return dmu[:, :, 0] + dstd
 
         startpoints = init_random_uniform(lower, upper, n_restarts)
 
@@ -113,11 +125,11 @@ def posterior_mean_plus_std_optimization(model, lower, upper, n_restarts=10, met
                     res = optimize.minimize(f, startpoint, bounds=list(zip(lower, upper)), method="L-BFGS-B")
                     x_opt[i] = res["x"]
                     fval[i] = res["fun"]
-            elif method == 'cmaes':
+            elif method == 'cma':
                 res = cma.fmin(f, startpoint, 0.6, options={"bounds": [lower, upper]})
                 x_opt[i] = res[0]
                 fval[i] = res[1]
 
         # Return the point with the lowest function value
         best = np.argmin(fval)
-        return x_opt[best, np.newaxis, :], fval[best, np.newaxis, np.newaxis]
+        return x_opt[best]
