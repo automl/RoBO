@@ -20,7 +20,7 @@ class GaussianProcess(BaseModel):
                  normalize_input=True):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
-        by optimizing the marginal loglikelihood.
+        by optimizing the marginal log likelihood.
 
         Parameters
         ----------
@@ -89,7 +89,7 @@ class GaussianProcess(BaseModel):
 
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
-            self.y, self.y_mean, self.y_std = normalization.zero_one_normalization(y)
+            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
         else:
             self.y = y
 
@@ -161,7 +161,7 @@ class GaussianProcess(BaseModel):
                                              in_place=True)
 
         # The gradients of the Gram matrix, for the noise this is just 
-        # the identiy matrix
+        # the identity matrix
         Kg = self.gp.kernel.gradient(self.gp._x)
         Kg = np.concatenate((Kg, np.eye(Kg.shape[0])[:, :, None]), axis=2)
 
@@ -274,7 +274,7 @@ class GaussianProcess(BaseModel):
         mu, var = self.gp.predict(self.y, X_test_norm)
 
         if self.normalize_output:
-            mu = normalization.zero_mean_unnormalization(mu, self.y_mean, self.y_std)
+            mu = normalization.zero_mean_unit_var_unnormalization(mu, self.y_mean, self.y_std)
 
         if not full_cov:
             var = np.diag(var)
@@ -318,9 +318,29 @@ class GaussianProcess(BaseModel):
         funcs = self.gp.sample_conditional(self.y, X_test_norm, n_funcs)
 
         if self.normalize_output:
-            funcs = normalization.zero_mean_unnormalization(funcs, self.y_mean, self.y_std)
+            funcs = normalization.zero_mean_unit_var_unnormalization(funcs, self.y_mean, self.y_std)
 
         if len(funcs.shape) == 1:
             return funcs[None, :]
         else:
             return funcs
+        
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+        inc, inc_value = super(GaussianProcess, self).get_incumbent()
+        if self.normalize_input:
+            inc = normalization.zero_one_unnormalization(inc, self.lower, self.upper)
+
+        if self.normalize_output:
+            inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
+
+        return inc, inc_value

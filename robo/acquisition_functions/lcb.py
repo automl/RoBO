@@ -9,14 +9,17 @@ logger = logging.getLogger(__name__)
 
 class LCB(BaseAcquisitionFunction):
 
-    def __init__(self, model, par=0.0):
+    def __init__(self, model, par=1.0):
         r"""
-        The lower confidence bound acquisition_functions functions that computes for a
-        test point the acquisition_functions value by:
+        The lower confidence bound that computes for a
+        test point the acquisition value by:
 
         .. math::
 
-        LCB(X) := \mu(X) - \kappa\sigma(X)
+        LCB(X) := - (\mu(x) - \kappa\sigma(x))
+
+        Note: We want to find the minimum of and thus minimize the lower confidence bound.
+        But RoBO always maximizes the acquisition function
 
         Parameters
         ----------
@@ -27,13 +30,9 @@ class LCB(BaseAcquisitionFunction):
             If you want to calculate derivatives than it should also support
                  - predictive_gradients(X)
 
-        X_lower: np.ndarray (D)
-            Lower bounds of the input space
-        X_upper: np.ndarray (D)
-            Upper bounds of the input space
         par: float
             Controls the balance between exploration
-            and exploitation of the acquisition_functions function. Default is 0.01
+            and exploitation of the acquisition_functions function. Default is 1
         """
         self.par = par
         super(LCB, self).__init__(model)
@@ -55,14 +54,14 @@ class LCB(BaseAcquisitionFunction):
 
         Returns
         -------
-        np.ndarray(1,1)
+        np.ndarray(N,)
             LCB value of X
-        np.ndarray(1,D)
+        np.ndarray(N,D)
             Derivative of LCB at X (only if derivative=True)
         """
         mean, var = self.model.predict(X)
 
-        # Minimize in f so we maximize the negative lower bound
+        # RoBO maximizes the acquisition function but we want to minimize the lower confidence bound
         acq = - (mean - self.par * np.sqrt(var))
         if derivative:
             dm, dv = self.model.predictive_gradients(X)

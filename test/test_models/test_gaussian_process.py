@@ -9,15 +9,15 @@ from robo.priors.default_priors import TophatPrior
 class TestGaussianProcess(unittest.TestCase):
 
     def setUp(self):
-        X = np.random.rand(10, 2)
-        y = np.sinc(X * 10 - 5).sum(axis=1)
+        self.X = np.random.rand(10, 2)
+        self.y = np.sinc(self.X * 10 - 5).sum(axis=1)
 
-        kernel = george.kernels.Matern52Kernel(np.ones(X.shape[1]),
-                                               ndim=X.shape[1])
+        kernel = george.kernels.Matern52Kernel(np.ones(self.X.shape[1]),
+                                               ndim=self.X.shape[1])
 
         prior = TophatPrior(-2, 2)
         self.model = GaussianProcess(kernel, prior=prior)
-        self.model.train(X, y, do_optimize=False)
+        self.model.train(self.X, self.y, do_optimize=False)
 
     def test_predict(self):
         X_test = np.random.rand(10, 2)
@@ -63,6 +63,12 @@ class TestGaussianProcess(unittest.TestCase):
         # Hyperparameters are 2 length scales + noise
         assert theta.shape[0] == 3
 
+    def test_get_incumbent(self):
+        inc, inc_val = self.model.get_incumbent()
+
+        b = np.argmin(self.y)
+        np.testing.assert_almost_equal(inc, self.X[b], decimal=5)
+        assert inc_val == self.y[b]
 
 if __name__ == "__main__":
     unittest.main()

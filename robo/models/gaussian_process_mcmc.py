@@ -88,7 +88,7 @@ class GaussianProcessMCMC(BaseModel):
 
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
-            self.y, self.y_mean, self.y_std = normalization.zero_one_normalization(y)
+            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
         else:
             self.y = y
 
@@ -98,7 +98,7 @@ class GaussianProcessMCMC(BaseModel):
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
-            self.sampler = emcee.EnsembleSampler(self.n_hypers,
+            sampler = emcee.EnsembleSampler(self.n_hypers,
                                                  len(self.kernel.pars) + 1,
                                                  self.loglikelihood)
 
@@ -107,21 +107,21 @@ class GaussianProcessMCMC(BaseModel):
                 # Initialize the walkers by sampling from the prior
                 self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
-                self.p0, _, _ = self.sampler.run_mcmc(self.p0,
-                                                      self.burnin_steps)
+                self.p0, _, _ = sampler.run_mcmc(self.p0,
+                                                 self.burnin_steps)
 
                 self.burned = True
 
             # Start sampling
-            pos, _, _ = self.sampler.run_mcmc(self.p0,
-                                              self.chain_length)
+            pos, _, _ = sampler.run_mcmc(self.p0,
+                                         self.chain_length)
 
             # Save the current position, it will be the start point in
             # the next iteration
             self.p0 = pos
 
             # Take the last samples from each walker
-            self.hypers = self.sampler.chain[:, -1]
+            self.hypers = sampler.chain[:, -1]
 
             self.models = []
         else:
@@ -220,7 +220,7 @@ class GaussianProcessMCMC(BaseModel):
         v = np.mean(mu ** 2 + var) - m ** 2
 
         if self.normalize_output:
-            m = normalization.zero_mean_unnormalization(m, self.y_mean, self.y_std)
+            m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
 
         # Clip negative variances and set them to the smallest
         # positive float value
@@ -231,3 +231,23 @@ class GaussianProcessMCMC(BaseModel):
             v[np.where((v < np.finfo(v.dtype).eps) & (v > -np.finfo(v.dtype).eps))] = 0
 
         return m, v
+
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+        inc, inc_value = super(GaussianProcessMCMC, self).get_incumbent()
+        if self.normalize_input:
+            inc = normalization.zero_one_unnormalization(inc, self.lower, self.upper)
+
+        if self.normalize_output:
+            inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
+
+        return inc, inc_value

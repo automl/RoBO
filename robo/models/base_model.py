@@ -86,9 +86,21 @@ class BaseModel(object):
         ----------
             dictionary
         """
-        json_data = dict()
         json_data = {'X': self.X if self.X is None else self.X.tolist(),
                      'y': self.y if self.y is None else self.y.tolist(),
                      'hyperparameters': ""}
         return json_data
 
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+        best_idx = np.argmin(self.y)
+        return self.X[best_idx], self.y[best_idx]

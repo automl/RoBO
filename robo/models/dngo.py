@@ -335,7 +335,7 @@ class DNGO(BaseModel):
 
         return l
 
-    def nll(self, theta):
+    def negative_mll(self, theta):
         """
         Returns the negative marginal log likelihood (for optimizing it with scipy).
 
@@ -386,7 +386,7 @@ class DNGO(BaseModel):
         """
         # Normalize inputs
         if self.normalize_input:
-            X_, _, _ = zero_mean_unit_var_normalization(X_test,self.X_mean, self.X_std)
+            X_, _, _ = zero_mean_unit_var_normalization(X_test, self.X_mean, self.X_std)
         else:
             X_ = X_test
 
@@ -453,3 +453,23 @@ class DNGO(BaseModel):
                                             nonlinearity=lasagne.nonlinearities.linear)
         return network
 
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+
+        inc, inc_value = super(DNGO, self).get_incumbent()
+        if self.normalize_input:
+            inc = zero_mean_unit_var_unnormalization(inc, self.X_mean, self.X_std)
+
+        if self.normalize_output:
+            inc_value = zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
+
+        return inc, inc_value

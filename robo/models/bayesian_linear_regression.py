@@ -93,19 +93,19 @@ class BayesianLinearRegression(BaseModel):
         alpha = np.exp(theta[0])
         beta = np.exp(theta[1])
 
-        D = self.X.shape[1]
-        N = self.X.shape[0]
+        D = self.X_transformed.shape[1]
+        N = self.X_transformed.shape[0]
 
-        A = beta * np.dot(self.X.T, self.X)
-        A += np.eye(self.X.shape[1]) * alpha
+        A = beta * np.dot(self.X_transformed.T, self.X_transformed)
+        A += np.eye(self.X_transformed.shape[1]) * alpha
         A_inv = np.linalg.inv(A)
-        m = beta * np.dot(A_inv, self.X.T)
+        m = beta * np.dot(A_inv, self.X_transformed.T)
         m = np.dot(m, self.y)
 
         mll = D / 2 * np.log(alpha)
         mll += N / 2 * np.log(beta)
         mll -= N / 2 * np.log(2 * np.pi)
-        mll -= beta / 2. * np.linalg.norm(self.y - np.dot(self.X, m), 2)
+        mll -= beta / 2. * np.linalg.norm(self.y - np.dot(self.X_transformed, m), 2)
         mll -= alpha / 2. * np.dot(m.T, m)
         mll -= 0.5 * np.log(np.linalg.det(A))
 
@@ -149,10 +149,13 @@ class BayesianLinearRegression(BaseModel):
             the default hyperparameters are used.
         """
 
+        self.X = X
+
         if self.basis_func is not None:
-            self.X = self.basis_func(X)
+            self.X_transformed = self.basis_func(X)
         else:
-            self.X = X
+            self.X_transformed = self.X
+
         self.y = y
 
         if do_optimize:
@@ -198,11 +201,11 @@ class BayesianLinearRegression(BaseModel):
 
             logger.debug("Alpha=%f ; Beta=%f" % (alpha, beta))
 
-            S_inv = beta * np.dot(self.X.T, self.X)
-            S_inv += np.eye(self.X.shape[1]) * alpha
+            S_inv = beta * np.dot(self.X_transformed.T, self.X_transformed)
+            S_inv += np.eye(self.X_transformed.shape[1]) * alpha
 
             S = np.linalg.inv(S_inv)
-            m = beta * np.dot(np.dot(S, self.X.T), self.y)
+            m = beta * np.dot(np.dot(S, self.X_transformed.T), self.y)
 
             self.models.append((m, S))
 

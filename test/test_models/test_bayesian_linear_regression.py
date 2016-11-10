@@ -7,11 +7,11 @@ from robo.models.bayesian_linear_regression import BayesianLinearRegression
 class TestBayesianLinearRegression(unittest.TestCase):
 
     def setUp(self):
-        X = np.random.rand(10, 1)
-        y = X * 2
-        y = y[:, 0]
+        self.X = np.random.rand(10, 1)
+        y = self.X * 2
+        self.y = y[:, 0]
         self.model = BayesianLinearRegression(alpha=1, beta=1000)
-        self.model.train(X, y, do_optimize=False)
+        self.model.train(self.X, self.y, do_optimize=False)
 
     def test_predict(self):
         X_test = np.random.rand(10, 1)
@@ -34,3 +34,12 @@ class TestBayesianLinearRegression(unittest.TestCase):
         theta = np.array([np.log(1), np.log(1000)])
         mll = self.model.negative_mll(theta)
 
+    def test_get_incumbent(self):
+        inc, inc_val = self.model.get_incumbent()
+
+        b = np.argmin(self.y)
+        assert np.all(inc == self.X[b])
+        assert inc_val == self.y[b]
+
+if __name__ == "__main__":
+    unittest.main()
