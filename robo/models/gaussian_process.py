@@ -35,7 +35,7 @@ class GaussianProcess(BaseModel):
         use_gradients : bool
             Use gradient information to optimize the negative log likelihood
         normalize_output : bool
-            Zero mean unit variance normalization of the the output values
+            Zero mean unit variance normalization of the output values
         normalize_input : bool
             Normalize all inputs to be in [0, 1]. This is important to define good priors for the
             length scales.

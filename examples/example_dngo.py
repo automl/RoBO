@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.models.dngo import DNGO
-from robo.priors.dngo_priors import DNGOPrior
 from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
 
 
@@ -20,14 +19,7 @@ X = init_random_uniform(np.zeros(1), np.ones(1), 20, rng)
 y = f(X)[:, 0]
 
 
-prior = DNGOPrior()
-model = DNGO(batch_size=10, num_epochs=20000,
-             learning_rate=0.01, momentum=0.9,
-             l2=1e-16, adapt_epoch=5000,
-             n_units_1=10, n_units_2=10, n_units_3=10,
-             alpha=1e-3, beta=10000.0, n_hypers=20,
-             prior=prior, do_optimize=True, do_mcmc=True)
-
+model = DNGO()
 
 model.train(X, y)
 
@@ -58,8 +50,9 @@ plt.ylabel(r"Basisfunction $\theta(x)$")
 plt.show()
 
 
-plt.plot(X, predictions, "ro")
+plt.plot(X, y, "ro")
 plt.plot(X, predictions, "g+")
+plt.grid()
 plt.plot(X_test[:, 0], fvals, "k--")
 plt.plot(X_test[:, 0], m, "blue")
 plt.fill_between(X_test[:, 0], m + np.sqrt(v), m - np.sqrt(v), color="orange", alpha=0.4)
