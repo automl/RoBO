@@ -32,7 +32,7 @@ class Fabolas(BayesianOptimization):
         Parameters
         ----------
         acquisition_func : EnvironmentEntropy Object
-            The acquisition function to determine the next point to evaluate.
+            The acquisition_functions function to determine the next point to evaluate.
             This object has to be an instance of EnvironmentEntropy class.
         model : Model object
             Models the objective function. The model has to be a
@@ -42,7 +42,7 @@ class Fabolas(BayesianOptimization):
         cost_model : model
             Models the cost function. The model has to be a Gaussian Process.
         maximize_func : Maximizer object
-            Optimizer to maximize the acquisition function.
+            Optimizer to maximize the acquisition_functions function.
         task: Task object
             The task that should be optimized. Make sure that it returns the
             function value as well as the cost if the evaluate() function is
@@ -316,14 +316,14 @@ class Fabolas(BayesianOptimization):
                 raise
             self.model_untrained = False
 
-            # Update the acquisition function with the new models
+            # Update the acquisition_functions function with the new models
             self.acquisition_func.update(self.model, self.cost_model,
                                          overhead=self.time_overhead[-1])
 
-            # Maximize the acquisition function and return the suggested point
+            # Maximize the acquisition_functions function and return the suggested point
             t = time.time()
             x = self.maximize_func.maximize()
-            logger.info("Time to maximize the acquisition function: %f",
+            logger.info("Time to maximize the acquisition_functions function: %f",
                         (time.time() - t))
 
         return x
