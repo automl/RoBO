@@ -6,7 +6,7 @@ import itertools
 
 def init_grid(X_lower, X_upper, N):
     """
-    Returns as initial design a grid with N samples
+    Returns as initial design a grid where each dimension is split into N intervals
 
     Parameters
     ----------
@@ -15,15 +15,18 @@ def init_grid(X_lower, X_upper, N):
     X_upper: np.ndarray (D)
         Upper bounds of the input space
     N: int
-        The number of initial data points
+        The number of points in each dimension
 
     Returns
     -------
-    np.ndarray(N,D)
+    np.ndarray(N**X_lower.shape[0], D)
         The initial design data points
     """
-    n_dims = X_lower.shape[0]
-    if np.power(N, n_dims) > 81 or n_dims > 4:
-        raise AssertionError("Too many initial samples for grid")
-    return np.array(itertools.product(
-       *[np.linspace(X_lower[i], X_upper[i], N) for i in range(n_dims)]))
+
+    X = np.zeros([N ** X_lower.shape[0], X_lower.shape[0]])
+    intervals = [np.linspace(X_lower[i], X_upper[i], N) for i in range(X_lower.shape[0])]
+    m = np.meshgrid(*intervals)
+    for i in range(X_lower.shape[0]):
+        X[:, i] = m[i].flatten()
+
+    return X
