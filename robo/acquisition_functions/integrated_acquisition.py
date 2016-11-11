@@ -2,7 +2,7 @@ import logging
 import numpy as np
 
 from copy import deepcopy
-from robo.acquisition.base_acquisition import BaseAcquisitionFunction
+from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +12,8 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
     def __init__(self, model, acquisition_func,
                  X_lower, X_upper, cost_model=None, is_dngo=False):
         '''
-        Meta acquisition function that allows to marginalise the
-        acquisition function over GP hyperparameter.
+        Meta acquisition_functions function that allows to marginalise the
+        acquisition_functions function over GP hyperparameter.
 
         Parameters
         ----------
@@ -21,9 +21,9 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
             The model of the objective function, it has to be an instance of
             GaussianProcessMCMC or GPyModelMCMC.
         acquisition_func: BaseAcquisitionFunction object
-            The acquisition function that will be integrated.
+            The acquisition_functions function that will be integrated.
         cost_model: Model object
-            If the acquisition function also takes the cost into account, we
+            If the acquisition_functions function also takes the cost into account, we
             have to specify here the model for the cost function. cost_model
             has to be an instance of GaussianProcessMCMC or GPyModelMCMC.
         is_dngo: boolean
@@ -34,15 +34,15 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
         self.model = model
         self.is_dngo = is_dngo
 
-        # Save also the cost model if the acquisition function needs it
+        # Save also the cost model if the acquisition_functions function needs it
         if cost_model is not None:
 
             self.cost_model = cost_model
 
-        # Keep for each model an extra acquisition function module
+        # Keep for each model an extra acquisition_functions function module
         self.estimators = []
         for _ in range(self.model.n_hypers):
-            # Copy the acquisition function for this model
+            # Copy the acquisition_functions function for this model
             estimator = deepcopy(acquisition_func)
             estimator.model = None
             if cost_model is not None:
@@ -53,7 +53,7 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
 
     def update(self, model, cost_model=None, **kwargs):
         """
-        Updates each acquisition function object if the models
+        Updates each acquisition_functions function object if the models
         have changed
 
         Parameters
@@ -62,7 +62,7 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
             The model of the objective function, it has to be an instance of
             GaussianProcessMCMC or GPyModelMCMC.
         cost_model: Model object
-            If the acquisition function also takes the cost into account, we
+            If the acquisition_functions function also takes the cost into account, we
             have to specify here the model for the cost function. cost_model
             has to be an instance of GaussianProcessMCMC or GPyModelMCMC.
         """
@@ -80,26 +80,26 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
 
     def compute(self, X, derivative=False):
         """
-        Integrates the acquisition function over the GP's hyperparameters by
-        averaging the acquisition value for X of each hyperparameter sample.
+        Integrates the acquisition_functions function over the GP's hyperparameters by
+        averaging the acquisition_functions value for X of each hyperparameter sample.
 
         Parameters
         ----------
-        X: np.ndarray(1, D), The input point where the acquisition function
+        X: np.ndarray(1, D), The input point where the acquisition_functions function
             should be evaluate. The dimensionality of X is (N, D), with N as
             the number of points to evaluate at and D is the number of
             dimensions of one X.
 
         derivative: Boolean
-            If is set to true also the derivative of the acquisition
+            If is set to true also the derivative of the acquisition_functions
             function at X is returned
 
         Returns
         -------
         np.ndarray(1,1)
-            Integrated acquisition value of X
+            Integrated acquisition_functions value of X
         np.ndarray(1,D)
-            Derivative of the acquisition value at X (only if derivative=True)
+            Derivative of the acquisition_functions value at X (only if derivative=True)
         """
         acquisition_values = np.zeros([self.model.n_hypers])
 
@@ -113,7 +113,7 @@ class IntegratedAcquisition(BaseAcquisitionFunction):
         else:
             theta = X
 
-        # Integrate over the acquisition values
+        # Integrate over the acquisition_functions values
         for i in range(self.model.n_hypers):
             acquisition_values[i] = self.estimators[i](theta,
                                                     derivative=derivative)

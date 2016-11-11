@@ -6,8 +6,8 @@ import numpy as np
 import emcee
 
 
-from robo.acquisition.log_ei import LogEI
-from robo.acquisition.base_acquisition import BaseAcquisitionFunction
+from robo.acquisition_functions.log_ei import LogEI
+from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
 from robo.util import epmgp
 
 sq2 = np.sqrt(2)
@@ -25,7 +25,7 @@ class InformationGain(BaseAcquisitionFunction):
             rng=None, **kwargs):
 
         """
-        The Information Gain acquisition function for Entropy Search [1].
+        The Information Gain acquisition_functions function for Entropy Search [1].
         In a nutshell entropy search approximates the
         distribution pmin of the global minimum and tries to decrease its
         entropy. See Hennig and Schuler[1] for a more detailed view.
@@ -56,7 +56,7 @@ class InformationGain(BaseAcquisitionFunction):
             be samples
         sampling_acquisition_kw: dist
             Additional keyword parameters that are passed to the
-            acquisition function
+            acquisition_functions function
         """
 
         self.Nb = Nb
@@ -89,13 +89,13 @@ class InformationGain(BaseAcquisitionFunction):
 
         Parameters
         ----------
-        X: np.ndarray(1, D), The input point where the acquisition function
+        X: np.ndarray(1, D), The input point where the acquisition_functions function
             should be evaluate. The dimensionality of X is (N, D), with N as
             the number of points to evaluate at and D is the number of
             dimensions of one X.
 
         derivative: Boolean
-            If is set to true also the derivative of the acquisition
+            If is set to true also the derivative of the acquisition_functions
             function at X is returned
             Not implemented yet!
 

@@ -3,10 +3,12 @@ import logging
 import george
 import emcee
 import numpy as np
+
 from copy import deepcopy
 
 from robo.models.base_model import BaseModel
 from robo.models.gaussian_process import GaussianProcess
+from robo.util import normalization
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ class GaussianProcessMCMC(BaseModel):
 
     def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
                  burnin_steps=2000, basis_func=None, dim=None,
-                 normalize_output=False, *args, **kwargs):
+                 normalize_output=False, normalize_input=True):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -54,45 +56,44 @@ class GaussianProcessMCMC(BaseModel):
         self.basis_func = basis_func
         self.dim = dim
         self.models = []
-        self.normalize_output = normalize_output        
+        self.normalize_output = normalize_output
+        self.normalize_input = normalize_input
         self.X = None
-        self.Y = None
+        self.y = None
+        self.is_trained = False
 
-    def _scale(self, x, new_min, new_max, old_min, old_max):
-        return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
-
-    def train(self, X, Y, do_optimize=True, **kwargs):
+    @BaseModel._check_shapes_train
+    def train(self, X, y, do_optimize=True, **kwargs):
         """
         Performs MCMC sampling to sample hyperparameter configurations from the
-        likelihood and trains for each sample a GP on X and Y
+        likelihood and trains for each sample a GP on X and y
 
         Parameters
         ----------
         X: np.ndarray (N, D)
             Input data points. The dimensionality of X is (N, D),
             with N as the number of points and D is the number of features.
-        Y: np.ndarray (N, 1)
+        y: np.ndarray (N,)
             The corresponding target values.
         do_optimize: boolean
             If set to true we perform MCMC sampling otherwise we just use the
             hyperparameter specified in the kernel.
         """
-        self.X = X
 
-        # For Fabolas we transform s to (1 - s)^2
+        if self.normalize_input:
+            # Normalize input to be in [0, 1]
+            self.X, self.lower, self.upper = normalization.zero_one_normalization(X)
+        else:
+            self.X = X
 
-        if self.basis_func is not None:
-            self.X = deepcopy(X)
-            self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
-
-        self.Y = Y
         if self.normalize_output:
-            self.Y_mean = np.mean(Y)
-            self.Y_std = np.std(Y)
-            self.Y = (Y - self.Y_mean) / self.Y_std
+            # Normalize output to have zero mean and unit standard deviation
+            self.y, self.y_mean, self.y_std = normalization.zero_one_normalization(y)
+        else:
+            self.y = y
 
         # Use the mean of the data as mean for the GP
-        mean = np.mean(self.Y, axis=0)
+        mean = np.mean(self.y, axis=0)
         self.gp = george.GP(self.kernel, mean=mean)
 
         if do_optimize:
@@ -115,7 +116,7 @@ class GaussianProcessMCMC(BaseModel):
             pos, _, _ = self.sampler.run_mcmc(self.p0,
                                               self.chain_length)
 
-            # Save the current position, it will be the startpoint in
+            # Save the current position, it will be the start point in
             # the next iteration
             self.p0 = pos
 
@@ -128,17 +129,20 @@ class GaussianProcessMCMC(BaseModel):
 
         for sample in self.hypers:
 
-            # Instantiate a model for each hyperparameter configuration
+            # Instantiate a GP for each hyperparameter configuration
             kernel = deepcopy(self.kernel)
             kernel.pars = np.exp(sample[:-1])
             noise = np.exp(sample[-1])
             model = GaussianProcess(kernel,
                                     basis_func=self.basis_func,
                                     dim=self.dim,
-                                    normalize_output=self.normalize_output,
+                                    normalize_output=False,
+                                    normalize_input=False,
                                     noise=noise)
-            model.train(X, Y, do_optimize=False)
+            model.train(self.X, self.y, do_optimize=False)
             self.models.append(model)
+
+        self.is_trained = True
 
     def loglikelihood(self, theta):
         """
@@ -172,10 +176,10 @@ class GaussianProcessMCMC(BaseModel):
         except:
             return -np.inf
 
-        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0],
-                                                                quiet=True)
+        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.y, quiet=True)
 
-    def predict(self, X, **kwargs):
+    @BaseModel._check_shapes_predict
+    def predict(self, X_test, **kwargs):
         r"""
         Returns the predictive mean and variance of the objective function
         at X average over all hyperparameter samples.
@@ -186,37 +190,44 @@ class GaussianProcessMCMC(BaseModel):
 
         Parameters
         ----------
-        X: np.ndarray (N, D)
+        X_test: np.ndarray (N, D)
             Input test points
 
         Returns
         ----------
-        np.array(N,1)
+        np.array(N,)
             predictive mean
-        np.array(N,1)
+        np.array(N,)
             predictive variance
 
         """
+        if not self.is_trained:
+            raise Exception('Model has to be trained first!')
 
-        X_test = X
-        mu = np.zeros([len(self.models), X_test.shape[0]])
-        var = np.zeros([len(self.models), X_test.shape[0]])
+        if self.normalize_input:
+            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+        else:
+            X_test_norm = X_test
+
+        mu = np.zeros([len(self.models), X_test_norm.shape[0]])
+        var = np.zeros([len(self.models), X_test_norm.shape[0]])
         for i, model in enumerate(self.models):
-            mu[i], var[i] = model.predict(X_test)
+            mu[i], var[i] = model.predict(X_test_norm)
 
-        # See the algorithm runtime prediction paper by Hutter et al
+        # See the Algorithm Runtime Prediction paper by Hutter et al.
         # for the derivation of the total variance
-        m = np.array([[mu.mean()]])
+        m = mu.mean(axis=0)
         v = np.mean(mu ** 2 + var) - m ** 2
+
+        if self.normalize_output:
+            m = normalization.zero_mean_unnormalization(m, self.y_mean, self.y_std)
 
         # Clip negative variances and set them to the smallest
         # positive float value
         if v.shape[0] == 1:
             v = np.clip(v, np.finfo(v.dtype).eps, np.inf)
         else:
-            v[np.diag_indices(v.shape[0])] = \
-                    np.clip(v[np.diag_indices(v.shape[0])],
-                            np.finfo(v.dtype).eps, np.inf)
+            v = np.clip(v, np.finfo(v.dtype).eps, np.inf)
             v[np.where((v < np.finfo(v.dtype).eps) & (v > -np.finfo(v.dtype).eps))] = 0
 
         return m, v

@@ -3,8 +3,8 @@ import emcee
 import logging
 from scipy.stats import norm
 
-from robo.acquisition.log_ei import LogEI
-from robo.acquisition.base_acquisition import BaseAcquisitionFunction
+from robo.acquisition_functions.log_ei import LogEI
+from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
 from robo.initial_design.init_random_uniform import init_random_uniform
 from robo.util import mc_part
 
@@ -20,7 +20,7 @@ class InformationGainMC(BaseAcquisitionFunction):
 
         """
         The InformationGainMC computes the asymptotically exact, sampling
-        based variant of the entropy search acquisition function [1] by
+        based variant of the entropy search acquisition_functions function [1] by
         approximating the distribution over the minimum with MC sampling.
 
         [1] Hennig and C. J. Schuler

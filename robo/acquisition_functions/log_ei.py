@@ -2,7 +2,7 @@ import logging
 from scipy.stats import norm
 import numpy as np
 
-from robo.acquisition.base_acquisition import BaseAcquisitionFunction
+from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
 from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class LogEI(BaseAcquisitionFunction):
 
         r"""
         Computes for a given x the logarithm expected improvement as
-        acquisition value.
+        acquisition_functions value.
 
         Parameters
         ----------
@@ -30,7 +30,7 @@ class LogEI(BaseAcquisitionFunction):
             Upper bounds of the input space
         par: float
             Controls the balance between exploration
-            and exploitation of the acquisition function. Default is 0.01
+            and exploitation of the acquisition_functions function. Default is 0.01
         """
 
         super(LogEI, self).__init__(model, X_lower, X_upper)
@@ -57,13 +57,13 @@ class LogEI(BaseAcquisitionFunction):
 
         Parameters
         ----------
-        X: np.ndarray(1, D), The input point where the acquisition function
+        X: np.ndarray(1, D), The input point where the acquisition_functions function
             should be evaluate. The dimensionality of X is (N, D), with N as
             the number of points to evaluate at and D is the number of
             dimensions of one X.
 
         derivative: Boolean
-            If is set to true also the derivative of the acquisition
+            If is set to true also the derivative of the acquisition_functions
             function at X is returned
             Not implemented yet!
 
