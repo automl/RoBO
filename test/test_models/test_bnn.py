@@ -9,7 +9,7 @@ class TestBayesianNeuralNetwork(unittest.TestCase):
     def setUp(self):
         self.X = np.random.rand(10, 2)
         self.y = np.sinc(self.X * 10 - 5).sum(axis=1)
-        self.model = BayesianNeuralNetwork()
+        self.model = BayesianNeuralNetwork(normalize_output=True, normalize_input=True)
         self.model.train(self.X, self.y)
 
     def test_predict(self):

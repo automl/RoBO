@@ -3,7 +3,7 @@ import numpy as np
 
 from robo.util.posterior_optimization import posterior_mean_optimization, posterior_mean_plus_std_optimization
 
-from ..dummy_model import DemoQuadraticModel
+from test.dummy_model import DemoQuadraticModel
 
 
 class TestPosteriorOptimization(unittest.TestCase):

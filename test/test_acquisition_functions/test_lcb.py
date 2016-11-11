@@ -3,7 +3,7 @@ import numpy as np
 
 from robo.acquisition_functions.lcb import LCB
 
-from ..dummy_model import DemoModel
+from test.dummy_model import DemoModel
 
 
 class TestLCB(unittest.TestCase):
