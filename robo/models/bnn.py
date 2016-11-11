@@ -4,6 +4,9 @@ import numpy as np
 
 from collections import deque
 
+from robo.models.base_model import BaseModel
+from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
+
 try:
     import theano
     import theano.tensor as T
@@ -55,7 +58,7 @@ def get_default_net(n_inputs):
     return network
 
 
-class BayesianNeuralNetwork(object):
+class BayesianNeuralNetwork(BaseModel):
 
     def __init__(self, sampling_method="sghmc",
                  n_nets=100, l_rate=1e-3,
@@ -148,11 +151,12 @@ class BayesianNeuralNetwork(object):
         self.X = None
         self.x_mean = None
         self.x_std = None
-        self.Y = None
+        self.y = None
         self.y_mean = None
         self.y_std = None
 
-    def train(self, X, Y):
+    @BaseModel._check_shapes_train
+    def train(self, X, y):
         """
         Trains the model on the provided data.
 
@@ -161,10 +165,9 @@ class BayesianNeuralNetwork(object):
         X: np.ndarray (N, D)
             Input data points. The dimensionality of X is (N, D),
             with N as the number of points and D is the number of features.
-        Y: np.ndarray (N, T)
+        y: np.ndarray (N, T)
             The corresponding target values.
-            The dimensionality of Y is (N, T), where N has to
-            match the number of points of X and T is the number of objectives
+
         """
 
         # Clear old samples
@@ -191,14 +194,14 @@ class BayesianNeuralNetwork(object):
         self.samples.clear()
 
         if self.normalize_input:
-            self.X, self.x_mean, self.x_std = self.normalize_inputs(X)
+            self.X, self.x_mean, self.x_std = zero_mean_unit_var_normalization(X)
         else:
             self.X = X
 
         if self.normalize_output:
-            self.Y, self.y_mean, self.y_std = self.normalize_targets(Y)
+            self.y, self.y_mean, self.y_std = zero_mean_unit_var_normalization(y)
         else:
-            self.Y = Y
+            self.y = y
 
         self.sampler.prepare_updates(nll, params, self.l_rate, mdecay=self.mdecay,
                                      inputs=[self.Xt, self.Yt], scale_grad=X.shape[0])
@@ -220,7 +223,7 @@ class BayesianNeuralNetwork(object):
                 start = np.random.randint(0, self.X.shape[0] - self.bsize)
 
             xmb = floatX(self.X[start:start + self.bsize])
-            ymb = floatX(self.Y[start:start + self.bsize])
+            ymb = floatX(self.y[start:start + self.bsize, None])
 
             if i < self.burn_in:
                 _, nll_value = self.sampler.step_burn_in(xmb, ymb)
@@ -228,7 +231,7 @@ class BayesianNeuralNetwork(object):
                 _, nll_value = self.sampler.step(xmb, ymb)
 
             if i % 1000 == 0:
-                total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.Y).reshape(-1, 1))
+                total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.y).reshape(-1, 1))
                 t = time.time() - start_time
 
                 logging.info("Iter {} : NLL = {} MSE = {} "
@@ -242,19 +245,7 @@ class BayesianNeuralNetwork(object):
             i += 1
         self.is_trained = True
 
-    def negativ_log_likelihood(self, f_net, X, Y, n_examples, weight_prior, variance_prior):
-        """
-        Returns the negative log likelihood (+ priors) and the MSE of the data
-
-        Parameters
-        ----------
-        f_net, X, Y, n_examples, weight_prior, variance_prior
-
-        Returns
-        ----------
-        float
-            nll, mse
-        """
+    def negativ_log_likelihood(self, f_net, X, y, n_examples, weight_prior, variance_prior):
 
         f_out = lasagne.layers.get_output(f_net, X)
         f_mean = f_out[:, 0].reshape((-1, 1))
@@ -263,7 +254,7 @@ class BayesianNeuralNetwork(object):
         #f_log_var = 20 * f_out[:, 1].reshape((-1, 1)) - 10
         f_log_var = f_out[:, 1].reshape((-1, 1))
         f_var_inv = 1. / (T.exp(f_log_var) + 1e-16)
-        mse = T.square(Y - f_mean)
+        mse = T.square(y - f_mean)
         log_like = T.sum(T.sum(-mse * (0.5 * f_var_inv) - 0.5 * f_log_var, axis=1))
         # scale by batch size to make this work nicely with the updaters above
         log_like /= T.cast(X.shape[0], theano.config.floatX)
@@ -277,18 +268,24 @@ class BayesianNeuralNetwork(object):
 
         return -log_like, T.mean(mse)
 
+    @BaseModel._check_shapes_predict
     def predict(self, X_test):
         """
+        Returns the predictive mean and variance of the objective function at
+        the given test points.
 
         Parameters
         ----------
-        n_inputs : int
-            Number of input features
+        X_test: np.ndarray (N, D)
+            Input test points
 
         Returns
         ----------
-        float
-            lnlikelihood + prior
+        np.array(N,)
+            predictive mean
+        np.array(N,)
+            predictive variance
+
         """
 
         if not self.is_trained:
@@ -297,7 +294,7 @@ class BayesianNeuralNetwork(object):
 
         # Normalize input
         if self.normalize_input:
-            X_, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
+            X_, _, _ = zero_mean_unit_var_normalization(X_test, self.x_mean, self.x_std)
         else:
             X_ = X_test
 
@@ -317,12 +314,11 @@ class BayesianNeuralNetwork(object):
         # Total variance
         v = np.mean(f_out ** 2 + theta_noise, axis=0) - m ** 2
 
-        # denormalize output
         if self.normalize_output:
-            m = self.denormalize(m, self.y_mean, self.y_std)
-            v = v * self.y_std ** 2
+            m = zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
+            v *= self.y_std ** 2
 
-        return m[:, None], v[:, None]
+        return m, v
 
     def sample_functions(self, X_test, n_funcs=1):
         """
@@ -338,11 +334,11 @@ class BayesianNeuralNetwork(object):
 
         Returns
         ----------
-        np.array(F,N)
+        np.array(F, N)
             The F function values drawn at the N test points.
         """
         if self.normalize_input:
-            X_test_norm, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
+            X_test_norm, _, _ = zero_mean_unit_var_normalization(X_test, self.x_mean, self.x_std)
         else:
             X_test_norm = X_test
         f = np.zeros([n_funcs, X_test_norm.shape[0]])
@@ -350,70 +346,28 @@ class BayesianNeuralNetwork(object):
             lasagne.layers.set_all_param_values(self.net, self.samples[i])
             out = self.single_predict(X_test_norm)[:, 0]
             if self.normalize_output:
-                f[i, :] = self.denormalize(out, self.y_mean, self.y_std)
+                f[i, :] = zero_mean_unit_var_unnormalization(out, self.y_mean, self.y_std)
             else:
                 f[i, :] = out
 
         return f
 
-    @staticmethod
-    def normalize_inputs(x, mean=None, std=None):
+    def get_incumbent(self):
         """
-        normalize_inputs
-
-        Parameters
-        ----------
-        n_inputs : int
-            Number of input features
+        Returns the best observed point and its function value
 
         Returns
         ----------
-        float
-            lnlikelihood + prior
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
         """
-        if mean is None:
-            mean = np.mean(x, axis=0)
-        if std is None:
-            std = np.std(x, axis=0)
-        return (x - mean) / std, mean, std
+        inc, inc_value = super(BayesianNeuralNetwork, self).get_incumbent()
+        if self.normalize_input:
+            inc = zero_mean_unit_var_unnormalization(inc, self.x_mean, self.x_std)
 
-    @staticmethod
-    def normalize_targets(y, mean=None, std=None):
-        """
-        normalize_targets
+        if self.normalize_output:
+            inc_value = zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
 
-        Parameters
-        ----------
-        n_inputs : int
-            Number of input features
-
-        Returns
-        ----------
-        float
-            lnlikelihood + prior
-        """
-        if mean is None:
-            mean = np.mean(y, axis=0)
-        if std is None:
-            std = np.std(y, axis=0)
-        return (y - mean) / std, mean, std
-
-    @staticmethod
-    def denormalize(x, mean, std):
-        """
-        denormalize
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Data point
-
-        x : np.ndarray
-            Data point
-
-        Returns
-        ----------
-        float
-            lnlikelihood + prior
-        """
-        return mean + x * std
+        return inc, inc_value
