@@ -27,7 +27,7 @@ class TestBayesianOptimization(unittest.TestCase):
 
     def test_run(self):
         n_iters = 4
-        inc = self.solver.run(n_iters)
+        inc, inc_val = self.solver.run(n_iters)
 
         assert inc.shape[0] == 1
         assert inc >= 0
