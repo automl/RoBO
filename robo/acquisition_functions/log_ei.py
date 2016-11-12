@@ -3,14 +3,13 @@ from scipy.stats import norm
 import numpy as np
 
 from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
-from robo.incumbent.best_observation import BestObservation
 
 logger = logging.getLogger(__name__)
 
 
 class LogEI(BaseAcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper, par=0.0, **kwargs):
+    def __init__(self, model, par=0.0, **kwargs):
 
         r"""
         Computes for a given x the logarithm expected improvement as
@@ -24,32 +23,14 @@ class LogEI(BaseAcquisitionFunction):
             If you want to calculate derivatives than it should also support
                  - predictive_gradients(X)
 
-        X_lower: np.ndarray (D)
-            Lower bounds of the input space
-        X_upper: np.ndarray (D)
-            Upper bounds of the input space
         par: float
             Controls the balance between exploration
             and exploitation of the acquisition_functions function. Default is 0.01
         """
 
-        super(LogEI, self).__init__(model, X_lower, X_upper)
+        super(LogEI, self).__init__(model)
 
         self.par = par
-        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
-
-    def update(self, model):
-        """
-        This method will be called if the model is updated.
-
-        Parameters
-        ----------
-        model : Model object
-            Models the objective function.
-        """
-
-        super(LogEI, self).update(model)
-        self.rec = BestObservation(self.model, self.X_lower, self.X_upper)
 
     def compute(self, X, derivative=False, **kwargs):
         """
@@ -80,11 +61,9 @@ class LogEI(BaseAcquisitionFunction):
                 calculation until now")
             return
 
-        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
-            return np.array([[- np.finfo(np.float).max]])
         m, v = self.model.predict(X)
 
-        _, eta = self.rec.estimate_incumbent(None)
+        _, eta = self.model.get_incumbent()
 
         f_min = eta - self.par
 
@@ -92,7 +71,7 @@ class LogEI(BaseAcquisitionFunction):
 
         z = (f_min - m) / s
 
-        log_ei = np.zeros((m.size, 1))
+        log_ei = np.zeros([m.size])
         for i in range(0, m.size):
             mu, sigma = m[i], s[i]
 
