@@ -176,7 +176,7 @@ class BayesianOptimization(BaseSolver):
             logger.info("Evaluation of this configuration took %f seconds" % self.time_func_evals[-1])
 
             # Extend the data
-            self.X = np.append(self.X, new_x[:, None], axis=0)
+            self.X = np.append(self.X, new_x[None, :], axis=0)
             self.y = np.append(self.y, new_y)
 
             # Estimate incumbent
