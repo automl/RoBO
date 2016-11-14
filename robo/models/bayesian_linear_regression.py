@@ -38,10 +38,10 @@ class BayesianLinearRegression(BaseModel):
             Function handle to transfer the input with via basis functions
             (see the code above for an example)
         prior: Prior object
-            Prior for alpa and beta. If set to None the default prior is used
+            Prior for alpha and beta. If set to None the default prior is used
         do_mcmc: bool
             If set to true different values for alpha and beta are sampled via MCMC from the marginal log likelihood
-            Otherwise the marginal log likehood is optimized with scipy fmin function
+            Otherwise the marginal log likelihood is optimized with scipy fmin function
         n_hypers : int
             Number of samples for alpha and beta
         chain_length : int
