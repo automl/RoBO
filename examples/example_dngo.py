@@ -11,8 +11,6 @@ from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_
 def f(x):
     return np.sinc(x * 10 - 5).sum(axis=1)[:, None]
 
-logging.basicConfig(level=logging.DEBUG)
-
 rng = np.random.RandomState(42)
 
 X = init_random_uniform(np.zeros(1), np.ones(1), 20, rng)
@@ -23,7 +21,8 @@ model = DNGO()
 
 model.train(X, y)
 
-predictions = lasagne.layers.get_output(model.network, zero_mean_unit_var_normalization(X, model.X_mean, model.X_std)[0],
+predictions = lasagne.layers.get_output(model.network,
+                                        zero_mean_unit_var_normalization(X, model.X_mean, model.X_std)[0],
                                         deterministic=True).eval()
 
 predictions = zero_mean_unit_var_unnormalization(predictions, model.y_mean, model.y_std)
