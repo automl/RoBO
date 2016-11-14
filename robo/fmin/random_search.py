@@ -52,6 +52,8 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
 
         # Choose next point to evaluate
         new_x = rng.uniform(lower, upper)
+        if len(lower.shape) == 1:
+            new_x = np.array([new_x])
 
         time_overhead.append(time.time() - start_time)
 
