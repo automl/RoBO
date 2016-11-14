@@ -26,7 +26,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
     num_iterations: int
         Number of iterations
     rng: numpy.random.RandomState
-
+        Random number generator
     Returns
     -------
     dict with all results

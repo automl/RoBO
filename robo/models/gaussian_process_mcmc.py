@@ -17,7 +17,7 @@ class GaussianProcessMCMC(BaseModel):
 
     def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
                  burnin_steps=2000, basis_func=None, dim=None,
-                 normalize_output=False, normalize_input=True):
+                 normalize_output=False, normalize_input=True, rng=None):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -42,7 +42,14 @@ class GaussianProcessMCMC(BaseModel):
             in the chain as a hyperparameter sample.
         burnin_steps : int
             The number of burnin steps before the actual MCMC sampling starts.
+        rng: np.random.RandomState
+            Random number generator
         """
+
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
         self.kernel = kernel
         if prior is None:
@@ -108,13 +115,15 @@ class GaussianProcessMCMC(BaseModel):
                 self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
                 self.p0, _, _ = sampler.run_mcmc(self.p0,
-                                                 self.burnin_steps)
+                                                 self.burnin_steps,
+                                                 rstate0=self.rng)
 
                 self.burned = True
 
             # Start sampling
             pos, _, _ = sampler.run_mcmc(self.p0,
-                                         self.chain_length)
+                                         self.chain_length,
+                                         rstate0=self.rng)
 
             # Save the current position, it will be the start point in
             # the next iteration
@@ -138,7 +147,7 @@ class GaussianProcessMCMC(BaseModel):
                                     dim=self.dim,
                                     normalize_output=False,
                                     normalize_input=False,
-                                    noise=noise)
+                                    noise=noise, rng=self.rng)
             model.train(self.X, self.y, do_optimize=False)
             self.models.append(model)
 

@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
-                          maximizer="direct", acquisition_func="log_ei", model="gp_mcmc"):
+                          maximizer="direct", acquisition_func="log_ei", model="gp_mcmc", rng=None):
     """
-    Bayesian optimization
+    General interface for Bayesian optimization for global black box optimization problems.
 
     Parameters
     ----------
@@ -40,8 +40,17 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The acquisition function
     model: {"gp", "gp_mcmc"}
         The model for the objective function.
+    rng: numpy.random.RandomState
+        Random number generator
+
+    Returns
+    -------
+        dict with all results
     """
     assert upper.shape[0] == lower.shape[0]
+
+    if rng is None:
+        rng = np.random.RandomState(np.random.randint(0, 10000))
 
     cov_amp = 2
     n_dims = lower.shape[0]
@@ -58,12 +67,13 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         n_hypers += 1
 
     if model == "gp":
-        gp = GaussianProcess(kernel, prior=prior)
+        gp = GaussianProcess(kernel, prior=prior, rng=rng)
     elif model == "gp_mcmc":
         gp = GaussianProcessMCMC(kernel, prior=prior,
                                  n_hypers=n_hypers,
                                  chain_length=200,
-                                 burnin_steps=100)
+                                 burnin_steps=100,
+                                 rng=rng)
     else:
         print("ERROR: %s is not a valid model!" % model)
         return
@@ -90,14 +100,14 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         acquisition_func = MarginalizationGPMCMC(a)
 
     if maximizer == "cmaes":
-        max_func = CMAES(acquisition_func, lower, upper, verbose=False)
+        max_func = CMAES(acquisition_func, lower, upper, verbose=False, rng=rng)
     elif maximizer == "direct":
         max_func = Direct(acquisition_func, lower, upper)
     else:
         print("ERROR: %s is not a valid function to maximize the acquisition function!" % maximizer)
         return
 
-    bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func)
+    bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func, rng=rng)
 
     x_best, f_min = bo.run(num_iterations)
 

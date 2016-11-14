@@ -17,7 +17,7 @@ class GaussianProcess(BaseModel):
                  noise=1e-3, use_gradients=False,
                  basis_func=None, dim=None,
                  normalize_output=False,
-                 normalize_input=True):
+                 normalize_input=True, rng=None):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal log likelihood.
@@ -39,7 +39,14 @@ class GaussianProcess(BaseModel):
         normalize_input : bool
             Normalize all inputs to be in [0, 1]. This is important to define good priors for the
             length scales.
+        rng: np.random.RandomState
+            Random number generator
         """
+
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
         self.kernel = kernel
         self.gp = None
