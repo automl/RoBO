@@ -177,7 +177,7 @@ class BayesianOptimization(BaseSolver):
 
             # Extend the data
             self.X = np.append(self.X, new_x[:, None], axis=0)
-            self.y = np.append(self.y, np.array([new_y]), axis=0)
+            self.y = np.append(self.y, new_y)
 
             # Estimate incumbent
             best_idx = np.argmin(self.y)
@@ -233,6 +233,7 @@ class BayesianOptimization(BaseSolver):
             except:
                 logger.error("Model could not be trained!")
                 raise
+            self.acquisition_func.update(self.model)
 
             logger.info("Maximize acquisition function...")
             t = time.time()
