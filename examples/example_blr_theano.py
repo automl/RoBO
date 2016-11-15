@@ -19,12 +19,25 @@ def quadratic_basis_func(x):
 	x = np.append(x**2, x, axis=1)
 	return np.append(x, np.ones([x.shape[0], 1]), axis=1)
 
-
-
 def linear_basis_func(x):
 	return np.append(x, np.ones([x.shape[0], 1]), axis=1)
 
 
+
+
+
+
+# Some Theano functions to get gradients later
+
+def static_compute_blr_matrices(Phi, y, alpha, beta):
+
+	A = beta * T.dot(Phi.T, Phi)
+	A += T.eye(T.shape(Phi)[1]) * alpha
+	A_inv = nlinalg.matrix_inverse(A)
+	m = beta * T.dot(A_inv, Phi.T)
+	m = T.dot(m, y)
+
+	return (m, A_inv)
 
 
 def static_marginal_log_likelihood(Phi, y, theta):
@@ -44,8 +57,8 @@ def static_marginal_log_likelihood(Phi, y, theta):
 	"""
 
 	# Theta is on a log scale
-	alpha = np.exp(theta[0])
-	beta = np.exp(theta[1])
+	alpha = T.exp(theta[0])
+	beta = T.exp(theta[1])
 
 	D = Phi.shape[1]
 	N = Phi.shape[0]
@@ -66,12 +79,91 @@ def static_marginal_log_likelihood(Phi, y, theta):
 	return mll
 
 
+def batched_marginal_log_likelihood(Phi, y, thetas):
+	"""
+	Log likelihood of the data marginalised over the weights w. See chapter 3.5 of
+	the book by Bishop of an derivation.
 
-Phi = T.dmatrix('Phi')
-y = T.dvector('y')
-theta = T.dvector('theta')
+	Parameters
+	----------
+	theta: np.array(2,)
+		The hyperparameter alpha and beta on a log scale
 
-marginal_log_likelihood_theano = theano.function([Phi, y, theta], static_marginal_log_likelihood(Phi,y,theta))
+	Returns
+	-------
+	float
+		lnlikelihood + prior
+	"""
+
+	# Theta is on a log scale
+	alpha = T.exp(thetas[:,0])[:,np.newaxis, np.newaxis]
+	beta = T.exp(thetas[:,1])[:,np.newaxis, np.newaxis]
+
+	D = Phi.shape[1]
+	N = Phi.shape[0]
+	B = beta.shape[0]
+
+	A = beta * T.dot(Phi.T, Phi)
+	A += T.eye(T.shape(Phi)[1]) * alpha
+	A_inv,_ = theano.scan( lambda Ai: nlinalg.matrix_inverse(Ai), sequences=A)
+	m_, _ = theano.scan( lambda bi, Aii: bi*T.dot(Aii, Phi.T), sequences=[beta, A_inv])
+	m, _ = theano.scan( lambda mi: T.dot(mi, y), sequences=m_)
+
+	mll = D / 2 * T.log(alpha[:,0,0])
+	mll += N / 2 * T.log(beta[:,0,0])
+
+	mll = beta[:,0,0] / 2. * T.sum(T.power(y[:,np.newaxis]-T.dot(Phi, m.T), 2), axis=0)
+	mll -= alpha[:,0,0]/ 2. * (m*m).sum(axis=1)
+
+
+	logdets,_ = theano.scan( lambda Ai: T.log(nlinalg.det(Ai)), sequences=A)
+
+	return(mll, logdets)
+	
+	mll -= 0.5 * logdets
+
+	return mll
+
+
+
+
+
+Phi1 = T.dmatrix('Phi1')
+y1 = T.dvector('y1')
+theta1 = T.dvector('theta1')
+
+marginal_log_likelihood_theano = theano.function([Phi1, y1, theta1], static_marginal_log_likelihood(Phi1,y1,theta1))
+
+
+Phi2 = T.dmatrix('Phi2')
+y2 = T.dvector('y2')
+theta2 = T.dvector('theta2')
+
+
+gmll = T.grad(static_marginal_log_likelihood(Phi2, y2, theta2), theta2)
+
+
+grad_marginal_log_likelihood_theano = theano.function([Phi2, y2, theta2], gmll)
+
+
+
+
+
+
+
+Phi3 = T.dmatrix('Phi3')
+y3 = T.dvector('y3')
+alpha = T.dscalar('alpha')
+beta = T.dscalar('beta')
+
+compute_blr_matrices_theano = theano.function([Phi3, y3, alpha, beta], static_compute_blr_matrices(Phi3,y3,alpha,beta))
+
+
+
+
+
+
+
 
 
 class BayesianLinearRegression(object):
@@ -130,6 +222,9 @@ class BayesianLinearRegression(object):
 	def marginal_log_likelihood(self, theta):
 		return(marginal_log_likelihood_theano(self.X_transformed, self.y, theta))
 
+	def grad_marginal_log_likelihood(self, theta):
+		return(grad_marginal_log_likelihood_theano(self.X_transformed, self.y, theta))
+
 	def train(self, X, y, do_optimize=True):
 		"""
 		First optimized the hyperparameters if do_optimize is True and then computes
@@ -186,8 +281,13 @@ class BayesianLinearRegression(object):
 				# Take the last samples from each walker
 				self.hypers = np.exp(sampler.chain[:, -1])
 			else:
-				# Optimize hyperparameters of the Bayesian linear regression        
-				res = optimize.fmin(lambda t: -self.marginal_log_likelihood(t),self.rng.rand(2))
+				# Optimize hyperparameters of the Bayesian linear regression
+				
+				res = optimize.fmin_bfgs(
+					lambda t: -self.marginal_log_likelihood(t),
+					self.rng.rand(2),
+					lambda t: -self.grad_marginal_log_likelihood(t),
+				)
 				self.hypers = [[np.exp(res[0]), np.exp(res[1])]]
 				
 		else:
@@ -199,14 +299,7 @@ class BayesianLinearRegression(object):
 			beta = sample[1]
 
 			logger.debug("Alpha=%f ; Beta=%f" % (alpha, beta))
-
-			S_inv = beta * np.dot(self.X_transformed.T, self.X_transformed)
-			S_inv += np.eye(self.X_transformed.shape[1]) * alpha
-
-			S = np.linalg.inv(S_inv)
-			m = beta * np.dot(np.dot(S, self.X_transformed.T), self.y)
-
-			self.models.append((m, S))
+			self.models.append(compute_blr_matrices_theano(self.X_transformed, self.y, alpha,beta))
 
 	def predict(self, X_test):
 		r"""
@@ -264,12 +357,37 @@ Phi = quadratic_basis_func(x[:,None])
 y = 0.5*x + 0 + np.random.randn(len(x))*0.02
 
 
-
-
 from IPython import embed
+
+bla = batched_marginal_log_likelihood(Phi,y, np.array([[50,0.1],[0.1,50]]))
+
+embed()
+
 
 model = BayesianLinearRegression(1000,1,do_mcmc=False)
 model.train(Phi,y,True)
+
+
+
+import sys
+sys.path.append("/ihome/sfalkner/repositories/github/RoBO/")
+
+from robo.util.hmc import HMC_sampler
+
+
+batchsize=5
+
+
+hps = np.random.rand(2).astype(theano.config.floatX)
+hps = theano.shared(hps)
+
+
+def mll(t):
+	return(static_marginal_log_likelihood(model.X_transformed, model.y, t))
+
+sampler = HMC_sampler.new_from_shared_positions( hps, mll)
+
+
 
 mu,var = model.predict(Phi)
 
