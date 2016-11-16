@@ -17,7 +17,8 @@ class GaussianProcessMCMC(BaseModel):
 
     def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
                  burnin_steps=2000, basis_func=None, dim=None,
-                 normalize_output=False, normalize_input=True, rng=None):
+                 normalize_output=False, normalize_input=True,
+                 rng=None, lower=None, upper=None, noise=-8):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -40,6 +41,10 @@ class GaussianProcessMCMC(BaseModel):
             The length of the MCMC chain. We start n_hypers walker for
             chain_length steps and we use the last sample
             in the chain as a hyperparameter sample.
+        lower : np.array(D,)
+            Lower bound of the input space which is used for the input space normalization
+        upper : np.array(D,)
+            Upper bound of the input space which is used for the input space normalization
         burnin_steps : int
             The number of burnin steps before the actual MCMC sampling starts.
         rng: np.random.RandomState
@@ -52,10 +57,8 @@ class GaussianProcessMCMC(BaseModel):
             self.rng = rng
 
         self.kernel = kernel
-        if prior is None:
-            self.prior = lambda x: 0
-        else:
-            self.prior = prior
+        self.prior = prior
+        self.noise = noise
         self.n_hypers = n_hypers
         self.chain_length = chain_length
         self.burned = False
@@ -68,6 +71,9 @@ class GaussianProcessMCMC(BaseModel):
         self.X = None
         self.y = None
         self.is_trained = False
+
+        self.lower = lower
+        self.upper = upper
 
     @BaseModel._check_shapes_train
     def train(self, X, y, do_optimize=True, **kwargs):
@@ -89,7 +95,8 @@ class GaussianProcessMCMC(BaseModel):
 
         if self.normalize_input:
             # Normalize input to be in [0, 1]
-            self.X, self.lower, self.upper = normalization.zero_one_normalization(X)
+            self.X, self.lower, self.upper = normalization.zero_one_normalization(X, self.lower, self.upper)
+
         else:
             self.X = X
 
@@ -106,24 +113,27 @@ class GaussianProcessMCMC(BaseModel):
         if do_optimize:
             # We have one walker for each hyperparameter configuration
             sampler = emcee.EnsembleSampler(self.n_hypers,
-                                                 len(self.kernel.pars) + 1,
-                                                 self.loglikelihood)
+                                            len(self.kernel.pars) + 1,
+                                            self.loglikelihood)
 
             # Do a burn-in in the first iteration
             if not self.burned:
                 # Initialize the walkers by sampling from the prior
-                self.p0 = self.prior.sample_from_prior(self.n_hypers)
+                if self.prior is None:
+                    self.p0 = np.random.rand(self.n_hypers, len(self.kernel.pars) + 1)
+                else:
+                    self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
                 self.p0, _, _ = sampler.run_mcmc(self.p0,
-                                                 self.burnin_steps,
-                                                 rstate0=self.rng)
+                                                 self.burnin_steps)
+                #rstate0=self.rng)
 
                 self.burned = True
 
             # Start sampling
             pos, _, _ = sampler.run_mcmc(self.p0,
-                                         self.chain_length,
-                                         rstate0=self.rng)
+                                         self.chain_length)
+                                         #rstate0=self.rng)
 
             # Save the current position, it will be the start point in
             # the next iteration
@@ -134,8 +144,10 @@ class GaussianProcessMCMC(BaseModel):
 
             self.models = []
         else:
-            self.hypers = [self.gp.kernel[:]]
-
+            self.hypers = self.gp.kernel[:].tolist()
+            self.hypers.append(self.noise)
+            self.hypers = [self.hypers]
+            print(self.hypers)
         for sample in self.hypers:
 
             # Instantiate a GP for each hyperparameter configuration
@@ -145,10 +157,13 @@ class GaussianProcessMCMC(BaseModel):
             model = GaussianProcess(kernel,
                                     basis_func=self.basis_func,
                                     dim=self.dim,
-                                    normalize_output=False,
-                                    normalize_input=False,
-                                    noise=noise, rng=self.rng)
-            model.train(self.X, self.y, do_optimize=False)
+                                    normalize_output=self.normalize_output,
+                                    normalize_input=self.normalize_input,
+                                    noise=noise,
+                                    lower=self.lower,
+                                    upper=self.upper,
+                                    rng=self.rng)
+            model.train(X, y, do_optimize=False)
             self.models.append(model)
 
         self.is_trained = True
@@ -185,7 +200,10 @@ class GaussianProcessMCMC(BaseModel):
         except:
             return -np.inf
 
-        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.y, quiet=True)
+        if self.prior is not None:
+            return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.y, quiet=True)
+        else:
+            return self.gp.lnlikelihood(self.y, quiet=True)
 
     @BaseModel._check_shapes_predict
     def predict(self, X_test, **kwargs):
@@ -226,7 +244,8 @@ class GaussianProcessMCMC(BaseModel):
         # See the Algorithm Runtime Prediction paper by Hutter et al.
         # for the derivation of the total variance
         m = mu.mean(axis=0)
-        v = np.mean(mu ** 2 + var) - m ** 2
+        #v = np.mean(mu ** 2 + var) - m ** 2
+        v = var.mean(axis=0)
 
         if self.normalize_output:
             m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)

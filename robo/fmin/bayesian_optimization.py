@@ -1,4 +1,5 @@
 import logging
+import matplotlib.pyplot as plt
 import george
 import numpy as np
 
@@ -67,13 +68,17 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         n_hypers += 1
 
     if model == "gp":
-        gp = GaussianProcess(kernel, prior=prior, rng=rng)
+        gp = GaussianProcess(kernel, prior=prior, rng=rng,
+                             normalize_output=True, normalize_input=True,
+                             lower=lower, upper=upper)
     elif model == "gp_mcmc":
         gp = GaussianProcessMCMC(kernel, prior=prior,
                                  n_hypers=n_hypers,
                                  chain_length=200,
                                  burnin_steps=100,
-                                 rng=rng)
+                                 normalize_input=True,
+                                 normalize_output=True,
+                                 rng=rng, lower=lower, upper=upper)
     else:
         print("ERROR: %s is not a valid model!" % model)
         return

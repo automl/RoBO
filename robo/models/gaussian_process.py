@@ -17,7 +17,8 @@ class GaussianProcess(BaseModel):
                  noise=1e-3, use_gradients=False,
                  basis_func=None, dim=None,
                  normalize_output=False,
-                 normalize_input=True, rng=None):
+                 normalize_input=True,
+                 lower=None, upper=None, rng=None):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal log likelihood.
@@ -34,6 +35,10 @@ class GaussianProcess(BaseModel):
             for the Cholesky decomposition.
         use_gradients : bool
             Use gradient information to optimize the negative log likelihood
+        lower : np.array(D,)
+            Lower bound of the input space which is used for the input space normalization
+        upper : np.array(D,)
+            Upper bound of the input space which is used for the input space normalization
         normalize_output : bool
             Zero mean unit variance normalization of the output values
         normalize_input : bool
@@ -62,6 +67,8 @@ class GaussianProcess(BaseModel):
         self.hypers = []
         self.mean = 0
         self.is_trained = False
+        self.lower = lower
+        self.upper = upper
 
     @BaseModel._check_shapes_train
     def train(self, X, y, do_optimize=True):
@@ -85,7 +92,7 @@ class GaussianProcess(BaseModel):
 
         if self.normalize_input:
             # Normalize input to be in [0, 1]
-            self.X, self.lower, self.upper = normalization.zero_one_normalization(X)
+            self.X, self.lower, self.upper = normalization.zero_one_normalization(X, self.lower, self.upper)
         else:
             self.X = X
 
