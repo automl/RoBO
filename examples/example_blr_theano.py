@@ -10,6 +10,14 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 from scipy import optimize
+from IPython import embed
+
+import sys
+sys.path.append("/ihome/sfalkner/repositories/github/RoBO/")
+
+from robo.util.hmc import HMC_sampler
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +79,7 @@ def static_marginal_log_likelihood(Phi, y, theta):
 
 	mll = D / 2 * T.log(alpha)
 	mll += N / 2 * T.log(beta)
-	mll -= N / 2 * T.log(2 * np.pi)
+	
 	mll -= beta / 2. * T.sum(T.power(y - T.dot(Phi, m), 2))
 	mll -= alpha / 2. * T.dot(m.T, m)
 	mll -= 0.5 * T.log(nlinalg.det(A))
@@ -112,16 +120,13 @@ def batched_marginal_log_likelihood(Phi, y, thetas):
 	mll = D / 2 * T.log(alpha[:,0,0])
 	mll += N / 2 * T.log(beta[:,0,0])
 
-	mll = beta[:,0,0] / 2. * T.sum(T.power(y[:,np.newaxis]-T.dot(Phi, m.T), 2), axis=0)
+	mll -= beta[:,0,0] / 2. * T.sum(T.power(y[:,np.newaxis]-T.dot(Phi, m.T), 2), axis=0)
 	mll -= alpha[:,0,0]/ 2. * (m*m).sum(axis=1)
 
 
 	logdets,_ = theano.scan( lambda Ai: T.log(nlinalg.det(Ai)), sequences=A)
 
-	return(mll, logdets)
-	
 	mll -= 0.5 * logdets
-
 	return mll
 
 
@@ -141,8 +146,6 @@ theta2 = T.dvector('theta2')
 
 
 gmll = T.grad(static_marginal_log_likelihood(Phi2, y2, theta2), theta2)
-
-
 grad_marginal_log_likelihood_theano = theano.function([Phi2, y2, theta2], gmll)
 
 
@@ -254,32 +257,25 @@ class BayesianLinearRegression(object):
 
 		if do_optimize:
 			if self.do_mcmc:
-				sampler = emcee.EnsembleSampler(self.n_hypers, 2,
-												self.marginal_log_likelihood)
 
-				# Do a burn-in in the first iteration
 				if not self.burned:
-					# Initialize the walkers by sampling from the prior
-					self.p0 = self.prior.sample_from_prior(self.n_hypers)
+					self.log_hypers = np.random.rand(self.n_hypers,2).astype(theano.config.floatX)
+					self.log_hypers = theano.shared(self.log_hypers)
 
-					# Run MCMC sampling
-					self.p0, _, _ = sampler.run_mcmc(self.p0,
-													 self.burnin_steps,
-													 rstate0=self.rng)
+
+					def mll(t):
+						return(-batched_marginal_log_likelihood(self.X_transformed, self.y, t))
+
+					self.sampler = HMC_sampler.new_from_shared_positions( self.log_hypers, mll, n_steps = self.chain_length)
+
+					# Do a burn-in in the first iteration
+					[self.sampler.draw() for i in np.ceil(self.burnin_steps/self.chain_length)]
 	
 					self.burned = True
 	
 				# Start sampling
-				pos, _, _ = sampler.run_mcmc(self.p0,
-											 self.chain_length,
-											 rstate0=self.rng)
+				self.hypers = np.exp(self.sampler.draw())
 	
-				# Save the current position, it will be the start point in
-				# the next iteration
-				self.p0 = pos
-	
-				# Take the last samples from each walker
-				self.hypers = np.exp(sampler.chain[:, -1])
 			else:
 				# Optimize hyperparameters of the Bayesian linear regression
 				
@@ -292,7 +288,11 @@ class BayesianLinearRegression(object):
 				
 		else:
 			self.hypers = [[self.alpha, self.beta]]
-		
+
+		self.update_model()
+
+	def update_model(self, hypers=None):
+		self.hypers = self.hypers if hypers is None else hypers
 		self.models = []
 		for sample in self.hypers:
 			alpha = sample[0]
@@ -357,45 +357,26 @@ Phi = quadratic_basis_func(x[:,None])
 y = 0.5*x + 0 + np.random.randn(len(x))*0.02
 
 
-from IPython import embed
-
-bla = batched_marginal_log_likelihood(Phi,y, np.array([[50,0.1],[0.1,50]]))
-
-embed()
-
-
-model = BayesianLinearRegression(1000,1,do_mcmc=False)
+model = BayesianLinearRegression(1000,1,do_mcmc=1)
 model.train(Phi,y,True)
 
 
 
-import sys
-sys.path.append("/ihome/sfalkner/repositories/github/RoBO/")
-
-from robo.util.hmc import HMC_sampler
-
-
-batchsize=5
-
-
-hps = np.random.rand(2).astype(theano.config.floatX)
-hps = theano.shared(hps)
-
-
-def mll(t):
-	return(static_marginal_log_likelihood(model.X_transformed, model.y, t))
-
-sampler = HMC_sampler.new_from_shared_positions( hps, mll)
 
 
 
-mu,var = model.predict(Phi)
 
-print(mu,var)
 
-plt.scatter(x,y)
-plt.plot(x,mu)
-plt.fill_between(x, mu-np.sqrt(var), mu+np.sqrt(var),alpha=0.5)
-plt.show()
+
+
+
+
+def plot_predictions( P = Phi):
+	mu,var= model.predict(P)
+	plt.scatter(x,y)
+	plt.plot(x,mu)
+	plt.fill_between(x, mu-np.sqrt(var), mu+np.sqrt(var),alpha=0.5)
+	plt.show()
+
 
 embed()
