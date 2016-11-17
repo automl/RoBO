@@ -73,7 +73,7 @@ def static_marginal_log_likelihood(Phi, y, theta):
 
 	A = beta * T.dot(Phi.T, Phi)
 	A += T.eye(T.shape(Phi)[1]) * alpha
-	A_inv = nlinalg.matrix_inverse(A)
+	A_inv = nlinalg.matrix_inverse(A + 1e-7*T.identity_like(A))
 	m = beta * T.dot(A_inv, Phi.T)
 	m = T.dot(m, y)
 
@@ -113,7 +113,7 @@ def batched_marginal_log_likelihood(Phi, y, thetas):
 
 	A = beta * T.dot(Phi.T, Phi)
 	A += T.eye(T.shape(Phi)[1]) * alpha
-	A_inv,_ = theano.scan( lambda Ai: nlinalg.matrix_inverse(Ai), sequences=A)
+	A_inv,_ = theano.scan( lambda Ai: nlinalg.matrix_inverse(Ai + 1e-7*T.identity_like(Ai)), sequences=A)
 	m_, _ = theano.scan( lambda bi, Aii: bi*T.dot(Aii, Phi.T), sequences=[beta, A_inv])
 	m, _ = theano.scan( lambda mi: T.dot(mi, y), sequences=m_)
 
@@ -171,7 +171,7 @@ compute_blr_matrices_theano = theano.function([Phi3, y3, alpha, beta], static_co
 
 class BayesianLinearRegression(object):
 
-	def __init__(self, alpha=1, beta=1000, basis_func=linear_basis_func,
+	def __init__(self, alpha=1, beta=1000, basis_func=None,
 				 prior=None, do_mcmc=True, n_hypers=20, chain_length=2000,
 				 burnin_steps=2000, rng=None):
 		"""
@@ -259,17 +259,17 @@ class BayesianLinearRegression(object):
 			if self.do_mcmc:
 
 				if not self.burned:
-					self.log_hypers = np.random.rand(self.n_hypers,2).astype(theano.config.floatX)
+					self.log_hypers = 2+2*np.random.rand(self.n_hypers,2).astype(theano.config.floatX)
 					self.log_hypers = theano.shared(self.log_hypers)
 
 
 					def mll(t):
-						return(-batched_marginal_log_likelihood(self.X_transformed, self.y, t))
+						return(-5*batched_marginal_log_likelihood(self.X_transformed, self.y, t))
 
 					self.sampler = HMC_sampler.new_from_shared_positions( self.log_hypers, mll, n_steps = self.chain_length)
 
 					# Do a burn-in in the first iteration
-					[self.sampler.draw() for i in np.ceil(self.burnin_steps/self.chain_length)]
+					[self.sampler.draw() for i in range(int(np.ceil(self.burnin_steps/self.chain_length)))]
 	
 					self.burned = True
 	
@@ -281,7 +281,7 @@ class BayesianLinearRegression(object):
 				
 				res = optimize.fmin_bfgs(
 					lambda t: -self.marginal_log_likelihood(t),
-					self.rng.rand(2),
+					5+np.random.rand(2),
 					lambda t: -self.grad_marginal_log_likelihood(t),
 				)
 				self.hypers = [[np.exp(res[0]), np.exp(res[1])]]
@@ -357,7 +357,7 @@ Phi = quadratic_basis_func(x[:,None])
 y = 0.5*x + 0 + np.random.randn(len(x))*0.02
 
 
-model = BayesianLinearRegression(1000,1,do_mcmc=1)
+model = BayesianLinearRegression(1,1000,do_mcmc=1,chain_length=2000)
 model.train(Phi,y,True)
 
 
