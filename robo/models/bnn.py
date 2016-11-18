@@ -267,7 +267,7 @@ class BayesianNeuralNetwork(BaseModel):
         return -log_like, T.mean(mse)
 
     @BaseModel._check_shapes_predict
-    def predict(self, X_test):
+    def predict(self, X_test, return_individual_predictions = False):
         """
         Returns the predictive mean and variance of the objective function at
         the given test points.
@@ -306,6 +306,9 @@ class BayesianNeuralNetwork(BaseModel):
 
         f_out = np.asarray(f_out)
         theta_noise = np.asarray(theta_noise)
+        
+        if return_individual_predictions:
+            return(f_out, theta_noise)
 
         m = np.mean(f_out, axis=0)
         # Total variance
