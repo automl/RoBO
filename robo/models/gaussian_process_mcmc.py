@@ -139,12 +139,12 @@ class GaussianProcessMCMC(BaseModel):
             # Take the last samples from each walker
             self.hypers = sampler.chain[:, -1]
 
-            self.models = []
         else:
             self.hypers = self.gp.kernel[:].tolist()
             self.hypers.append(self.noise)
             self.hypers = [self.hypers]
-            print(self.hypers)
+
+        self.models = []
         for sample in self.hypers:
 
             # Instantiate a GP for each hyperparameter configuration
