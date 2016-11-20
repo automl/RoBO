@@ -40,7 +40,7 @@ test:
 
 deployment:
   production:
-    branch: development
+    branch: refactor
     commands:
       - echo "run SPHINX build"
       - bash ci_scripts/sphinx_buil.sh
