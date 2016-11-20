@@ -3,7 +3,7 @@ import george
 import logging
 import numpy as np
 
-from robo.models.gaussian_process_mcmc import FabolasGP
+from robo.models.gaussian_process_mcmc import MTBOGP
 from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
@@ -93,7 +93,7 @@ def mtbo(objective_function, lower, upper,
                       n_kt=len(task_kernel),
                       rng=rng)
 
-    model_objective = FabolasGP(kernel,
+    model_objective = MTBOGP(kernel,
                                 prior=prior,
                                 burnin_steps=burnin,
                                 chain_length=chain_length,
@@ -121,7 +121,7 @@ def mtbo(objective_function, lower, upper,
                            n_kt=len(task_kernel),
                            rng=rng)
 
-    model_cost = FabolasGP(cost_kernel,
+    model_cost = MTBOGP(cost_kernel,
                            prior=cost_prior,
                            burnin_steps=burnin,
                            chain_length=chain_length,
