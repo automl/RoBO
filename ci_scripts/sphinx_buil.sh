@@ -15,6 +15,10 @@ echo $USERNAME
 
 # We just have to run the sphinx build command here 
 # and commit and push
+cd ..
+echo "before RoBo folder"
+ls
+cd RoBo
 echo ".... HOME ...."
 ls
 sphinx-build -b html ./docs/ ./docs/api
