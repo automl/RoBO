@@ -35,7 +35,7 @@ git checkout gh-pages
 echo "changed to branch gh-pages"
 ls
 echo "importing docs folder ....."
-git checkout development -- docs
+git checkout refactor -- docs
 echo "importing complete ... "
 ls
 git add docs/api/
