@@ -12,6 +12,5 @@ Contents:
    :maxdepth: 2
 test at 1:03
 
-.. automodule::bar_plot
 .. autoclass:: robo.models.base_model.BaseModel
    :members:
