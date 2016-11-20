@@ -19,7 +19,12 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0,'/home/ubuntu/RoBo/robo/')
+#sys.path.insert(0,'/home/ubuntu/RoBo/robo/')
+
+current_directory = os.path.dirname(__file__)
+parent_directory = os.path.join(current_directory, '..')
+parent_directory = os.path.abspath(parent_directory)
+sys.path.append(parent_directory)
 
 # -- General configuration ------------------------------------------------
 
