@@ -152,7 +152,6 @@ class GaussianProcessMCMC(BaseModel):
             kernel.pars = np.exp(sample[:-1])
             noise = np.exp(sample[-1])
             model = GaussianProcess(kernel,
-                                    basis_func=self.basis_func,
                                     normalize_output=self.normalize_output,
                                     normalize_input=self.normalize_input,
                                     noise=noise,
