@@ -47,8 +47,8 @@ mv _sources sources
 mv _static static
 git add sources
 git add static
-git cd ..
-git cd ..
+cd ..
+cd ..
 git status
 git commit -am "update api"
 git push
