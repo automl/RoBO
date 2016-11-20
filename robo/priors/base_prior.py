@@ -316,7 +316,7 @@ class LognormalPrior(BasePrior):
 
 
 class NormalPrior(BasePrior):
-    def __init__(self, sigma, mean=0):
+    def __init__(self, sigma, mean=0, rng=None):
         """
         Normal prior
 
@@ -330,6 +330,10 @@ class NormalPrior(BasePrior):
         rng: np.random.RandomState
             Random number generator
         """
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
         self.sigma = sigma
         self.mean = mean
@@ -367,7 +371,7 @@ class NormalPrior(BasePrior):
             The samples from the prior.
         """
 
-        p0 = np.random.normal(loc=self.mean,
+        p0 = self.rng.normal(loc=self.mean,
                               scale=self.sigma,
                               size=n_samples)
         return p0[:, np.newaxis]
