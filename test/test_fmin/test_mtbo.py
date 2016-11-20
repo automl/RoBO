@@ -21,7 +21,7 @@ class TestFminInterface(unittest.TestCase):
 
     def setUp(self):
         self.lower = np.zeros([2])
-        self.upper = np.ones([2])
+        self.upper = np.ones([2]) * 3
 
     def test_bayesian_optimization(self):
         res = mtbo(objective_function=objective,

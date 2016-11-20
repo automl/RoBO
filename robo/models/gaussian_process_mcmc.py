@@ -274,3 +274,25 @@ class GaussianProcessMCMC(BaseModel):
             inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
 
         return inc, inc_value
+
+
+class FabolasGP(GaussianProcessMCMC):
+
+    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
+                 normalize_input=True,
+                 rng=None, lower=None, upper=None, noise=-8):
+        
+        super(FabolasGP, self).__init__(kernel, prior, n_hypers, chain_length, burnin_steps,
+                 normalize_output=False, normalize_input=normalize_input,
+                 rng=rng, lower=lower, upper=upper, noise=noise)
+        
+    def predict(self, X_test, **kwargs):
+        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
+        X_test_norm = np.concatenate((X_test_norm, X_test[:, None, -1]), axis=1)
+        return super(FabolasGP, self).predict(X_test_norm, **kwargs)
+
+    def train(self, X, y, do_optimize=True, **kwargs):
+
+        X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
+        X_norm = np.concatenate((X_norm, X[:, None, -1]), axis=1)
+        return super(FabolasGP, self).train(X_norm, y, do_optimize, **kwargs)

@@ -3,7 +3,7 @@ import george
 import logging
 import numpy as np
 
-from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
+from robo.models.gaussian_process_mcmc import FabolasGP
 from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
@@ -93,14 +93,15 @@ def mtbo(objective_function, lower, upper,
                       n_kt=len(task_kernel),
                       rng=rng)
 
-    model_objective = GaussianProcessMCMC(kernel,
-                                          prior=prior,
-                                          burnin_steps=burnin,
-                                          chain_length=chain_length,
-                                          n_hypers=n_hypers,
-                                          normalize_input=False,
-                                          normalize_output=False,
-                                          rng=rng)
+    model_objective = FabolasGP(kernel,
+                                prior=prior,
+                                burnin_steps=burnin,
+                                chain_length=chain_length,
+                                n_hypers=n_hypers,
+                                normalize_input=False,
+                                lower=lower,
+                                upper=upper,
+                                rng=rng)
 
     # Define model for the cost function
     cost_cov_amp = 1
@@ -120,14 +121,15 @@ def mtbo(objective_function, lower, upper,
                            n_kt=len(task_kernel),
                            rng=rng)
 
-    model_cost = GaussianProcessMCMC(cost_kernel,
-                                     prior=cost_prior,
-                                     burnin_steps=burnin,
-                                     chain_length=chain_length,
-                                     n_hypers=n_hypers,
-                                     normalize_input=False,
-                                     normalize_output=False,
-                                     rng=rng)
+    model_cost = FabolasGP(cost_kernel,
+                           prior=cost_prior,
+                           burnin_steps=burnin,
+                           chain_length=chain_length,
+                           n_hypers=n_hypers,
+                           normalize_input=False,
+                           lower=lower,
+                           upper=upper,
+                           rng=rng)
 
     # Extend input space by task variable
     extend_lower = np.append(lower, 0)
