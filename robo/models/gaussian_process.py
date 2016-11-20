@@ -15,7 +15,6 @@ class GaussianProcess(BaseModel):
 
     def __init__(self, kernel, prior=None,
                  noise=1e-3, use_gradients=False,
-                 basis_func=None, dim=None,
                  normalize_output=False,
                  normalize_input=True,
                  lower=None, upper=None, rng=None):
@@ -58,8 +57,6 @@ class GaussianProcess(BaseModel):
         self.prior = prior
         self.noise = noise
         self.use_gradients = use_gradients
-        self.basis_func = basis_func
-        self.dim = dim
         self.normalize_output = normalize_output
         self.normalize_input = normalize_input
         self.X = None
@@ -95,11 +92,6 @@ class GaussianProcess(BaseModel):
             self.X, self.lower, self.upper = normalization.zero_one_normalization(X, self.lower, self.upper)
         else:
             self.X = X
-
-        # For Fabolas we transform s to (1 - s)^2
-#        if self.basis_func is not None:
-#            self.X = deepcopy(X)
-#            self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
 
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
@@ -277,13 +269,6 @@ class GaussianProcess(BaseModel):
             X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
         else:
             X_test_norm = X_test
-
-        # For Fabolas we transform s to (1 - s)^2
-#        if self.basis_func is not None:
-#            X_test_ = deepcopy(X_test)
-#            X_test_[:, self.dim] = self.basis_func(X_test_[:, self.dim])
-#        else:
-#            X_test_ = X_test
 
         mu, var = self.gp.predict(self.y, X_test_norm)
 

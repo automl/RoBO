@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 
 class GaussianProcessMCMC(BaseModel):
 
-    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
-                 burnin_steps=2000, basis_func=None, dim=None,
+    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
                  normalize_output=False, normalize_input=True,
                  rng=None, lower=None, upper=None, noise=-8):
         """
@@ -63,8 +62,6 @@ class GaussianProcessMCMC(BaseModel):
         self.chain_length = chain_length
         self.burned = False
         self.burnin_steps = burnin_steps
-        self.basis_func = basis_func
-        self.dim = dim
         self.models = []
         self.normalize_output = normalize_output
         self.normalize_input = normalize_input
@@ -125,15 +122,15 @@ class GaussianProcessMCMC(BaseModel):
                     self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
                 self.p0, _, _ = sampler.run_mcmc(self.p0,
-                                                 self.burnin_steps)
-                #rstate0=self.rng)
+                                                 self.burnin_steps,
+                                                 rstate0=self.rng)
 
                 self.burned = True
 
             # Start sampling
             pos, _, _ = sampler.run_mcmc(self.p0,
-                                         self.chain_length)
-                                         #rstate0=self.rng)
+                                         self.chain_length,
+                                         rstate0=self.rng)
 
             # Save the current position, it will be the start point in
             # the next iteration
@@ -156,7 +153,6 @@ class GaussianProcessMCMC(BaseModel):
             noise = np.exp(sample[-1])
             model = GaussianProcess(kernel,
                                     basis_func=self.basis_func,
-                                    dim=self.dim,
                                     normalize_output=self.normalize_output,
                                     normalize_input=self.normalize_input,
                                     noise=noise,

@@ -1,5 +1,4 @@
 import logging
-import matplotlib.pyplot as plt
 import george
 import numpy as np
 
