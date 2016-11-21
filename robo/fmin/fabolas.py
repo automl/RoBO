@@ -3,9 +3,9 @@ import george
 import logging
 import numpy as np
 
-from robo.models.gaussian_process_mcmc import MTBOGP
+from robo.models.gaussian_process_mcmc import FabolasGP
 from robo.initial_design import init_random_uniform
-from robo.priors.env_priors import MTBOPrior
+from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.maximizers.direct import Direct
@@ -15,16 +15,23 @@ from robo.util.incumbent_estimation import projected_incumbent_estimation
 logger = logging.getLogger(__name__)
 
 
-def mtbo(objective_function, lower, upper,
-         n_tasks=2, n_init=2, num_iterations=30,
+def transform(s, s_min, s_max):
+    s_transform = (np.log(s) - np.log(s_min)) / (np.log(s_max) - np.log(s_min))
+    return s_transform
+
+
+def retransform(s_transform, s_min, s_max):
+    s = np.rint(np.exp(s_transform * (np.log(s_max) - np.log(s_min)) + np.log(s_min)))
+    return s
+
+
+def fabolas(objective_function, lower, upper, s_min, s_max,
+         n_init=2, num_iterations=30,
          burnin=100, chain_length=200, rng=None):
     """
-    Interface to MTBO[1] which uses an auxiliary cheaper task to speed up the optimization
-    of a more expensive but similar task.
+    Fast Bayesian Optimization of Machine Learning Hyperparameters
+    on Large Datasets
 
-    [1] Multi-Task Bayesian Optimization
-        K. Swersky and J. Snoek and R. Adams
-        Proceedings of the 27th International Conference on Advances in Neural Information Processing Systems (NIPS'13)
 
     Parameters
     ----------
@@ -80,23 +87,32 @@ def mtbo(objective_function, lower, upper,
         kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
                                                 ndim=n_dims+1, dim=d)
 
-    task_kernel = george.kernels.TaskKernel(n_dims+1, n_dims, n_tasks)
-    kernel *= task_kernel
+    # Kernel for the environmental variable
+    # We use (1-s)**2 as basis function for the Bayesian linear kernel
+    degree = 1
+    env_kernel = george.kernels.BayesianLinearRegressionKernel(n_dims+1,
+                                                               dim=n_dims,
+                                                               degree=degree)
+    env_kernel[:] = np.ones([degree + 1]) * 0.1
 
     # Take 3 times more samples than we have hyperparameters
     n_hypers = 3 * len(kernel)
     if n_hypers % 2 == 1:
         n_hypers += 1
 
-    prior = MTBOPrior(len(kernel) + 1,
-                      n_ls=n_dims,
-                      n_kt=len(task_kernel),
-                      rng=rng)
+    prior = EnvPrior(len(kernel) + 1,
+                     n_ls=n_dims,
+                     n_lr=(degree + 1),
+                     rng=rng)
 
-    model_objective = MTBOGP(kernel,
+    linear_bf = lambda x: x
+    quadratic_bf = lambda x: (1 - x) ** 2
+
+    model_objective = FabolasGP(kernel,
                                 prior=prior,
                                 burnin_steps=burnin,
                                 chain_length=chain_length,
+                                basis_func=quadratic_bf,
                                 n_hypers=n_hypers,
                                 normalize_input=False,
                                 lower=lower,
@@ -113,16 +129,23 @@ def mtbo(objective_function, lower, upper,
         cost_kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
                                                      ndim=n_dims+1, dim=d)
 
-    cost_task_kernel = george.kernels.TaskKernel(n_dims+1, n_dims, n_tasks)
-    cost_kernel *= cost_task_kernel
+    cost_degree = 1
+    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(
+                                                            n_dims+1,
+                                                            dim=n_dims,
+                                                            degree=cost_degree)
+    cost_env_kernel[:] = np.ones([cost_degree + 1]) * 0.1
 
-    cost_prior = MTBOPrior(len(cost_kernel) + 1,
-                           n_ls=n_dims,
-                           n_kt=len(task_kernel),
-                           rng=rng)
+    cost_kernel *= cost_env_kernel
 
-    model_cost = MTBOGP(cost_kernel,
+    cost_prior = EnvPrior(len(cost_kernel) + 1,
+                          n_ls=n_dims,
+                          n_lr=(cost_degree + 1),
+                          rng=rng)
+
+    model_cost = FabolasGP(cost_kernel,
                            prior=cost_prior,
+                           basis_func=linear_bf,
                            burnin_steps=burnin,
                            chain_length=chain_length,
                            n_hypers=n_hypers,
@@ -133,7 +156,7 @@ def mtbo(objective_function, lower, upper,
 
     # Extend input space by task variable
     extend_lower = np.append(lower, 0)
-    extend_upper = np.append(upper, n_tasks-1)
+    extend_upper = np.append(upper, 1)
     is_env = np.zeros(extend_lower.shape[0])
     is_env[-1] = 1
 
@@ -147,25 +170,27 @@ def mtbo(objective_function, lower, upper,
     acquisition_func = MarginalizationGPMCMC(ig)
     maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=False)
 
+    subsets = [256, 128, 64, 32]
     # Initial Design
     for i in range(n_init):
         start_time_overhead = time.time()
-        # Draw random configuration and evaluate it just on the auxiliary task
-        task = 0
+        # Draw random configuration
+        s = int(s_max / float(subsets[i % len(subsets)]))
         x = init_random_uniform(lower, upper, 1, rng)[0]
         st = time.time()
-        func_val, cost = objective_function(x, task)
+        func_val, cost = objective_function(x, s)
         time_func_eval.append(time.time() - st)
 
         # Bookkeeping
-        config = np.append(x, task)
+        s_transformed = transform(s)
+        config = np.append(x, s_transformed)
         X.append(config)
         y.append(func_val)
         c.append(cost)
 
         # Estimate incumbent as the best observed value so far
         best_idx = np.argmin(y)
-        incumbents.append(np.append(X[best_idx], n_tasks-1))  # Incumbent is always on the task of interest
+        incumbents.append(np.append(X[best_idx], s_max))  # Incumbent is always on s=s_max
 
         time_overhead.append(time.time() - start_time_overhead)
         runtime.append(time.time() - time_start)
@@ -186,14 +211,14 @@ def mtbo(objective_function, lower, upper,
         # Estimate incumbent by projecting all observed points to the task of interest and
         # pick the point with the lowest mean prediction
         incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
-                                                                    proj_value=n_tasks-1)
+                                                                    proj_value=s_max)
         incumbents.append(incumbent)
         logger.info("Current incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
 
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)
         new_x = maximizer.maximize()
-        new_x[-1] = np.rint(new_x[-1])  # Map float value to discrete task variable
+        s = retransform(new_x[-1], s_min, s_max)  # Map s from log space to original linear space
 
         time_overhead.append(time.time() - start_time)
         logger.info("Optimization overhead was %f seconds" % time_overhead[-1])
@@ -201,7 +226,7 @@ def mtbo(objective_function, lower, upper,
         # Evaluate the chosen configuration
         logger.info("Evaluate candidate %s" % (str(new_x)))
         start_time = time.time()
-        new_y, new_c = objective_function(new_x[:-1], new_x[-1])
+        new_y, new_c = objective_function(new_x[:-1], s)
         time_func_eval.append(time.time() - start_time)
 
         logger.info("Configuration achieved a performance of %f with cost %f" % (new_y, new_c))
@@ -217,7 +242,8 @@ def mtbo(objective_function, lower, upper,
     # Estimate the final incumbent
     model_objective.train(X, y)
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
-                                                                proj_value=n_tasks - 1)
+                                                                proj_value=1)
+    incumbent[-1] = s_max
     incumbents.append(incumbent)
     logger.info("Final incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
 
