@@ -139,12 +139,12 @@ class GaussianProcessMCMC(BaseModel):
             # Take the last samples from each walker
             self.hypers = sampler.chain[:, -1]
 
-            self.models = []
         else:
             self.hypers = self.gp.kernel[:].tolist()
             self.hypers.append(self.noise)
             self.hypers = [self.hypers]
-            print(self.hypers)
+
+        self.models = []
         for sample in self.hypers:
 
             # Instantiate a GP for each hyperparameter configuration
@@ -152,7 +152,6 @@ class GaussianProcessMCMC(BaseModel):
             kernel.pars = np.exp(sample[:-1])
             noise = np.exp(sample[-1])
             model = GaussianProcess(kernel,
-                                    basis_func=self.basis_func,
                                     normalize_output=self.normalize_output,
                                     normalize_input=self.normalize_input,
                                     noise=noise,
@@ -275,3 +274,47 @@ class GaussianProcessMCMC(BaseModel):
             inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
 
         return inc, inc_value
+
+
+class MTBOGP(GaussianProcessMCMC):
+
+    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
+                 normalize_input=True,
+                 rng=None, lower=None, upper=None, noise=-8):
+        
+        super(MTBOGP, self).__init__(kernel, prior, n_hypers, chain_length, burnin_steps,
+                 normalize_output=False, normalize_input=normalize_input,
+                 rng=rng, lower=lower, upper=upper, noise=noise)
+        
+    def predict(self, X_test, **kwargs):
+        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
+        X_test_norm = np.concatenate((X_test_norm, X_test[:, None, -1]), axis=1)
+        return super(MTBOGP, self).predict(X_test_norm, **kwargs)
+
+    def train(self, X, y, do_optimize=True, **kwargs):
+
+        X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
+        X_norm = np.concatenate((X_norm, X[:, None, -1]), axis=1)
+        return super(MTBOGP, self).train(X_norm, y, do_optimize, **kwargs)
+
+
+class FabolasGP(GaussianProcessMCMC):
+    def __init__(self, kernel, basis_func, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
+                 normalize_input=True,
+                 rng=None, lower=None, upper=None, noise=-8):
+        self.basis_func = basis_func
+        super(FabolasGP, self).__init__(kernel, prior, n_hypers, chain_length, burnin_steps,
+                                     normalize_output=False, normalize_input=normalize_input,
+                                     rng=rng, lower=lower, upper=upper, noise=noise)
+
+    def predict(self, X_test, **kwargs):
+        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
+        s_ = self.basis_func(X_test[:, -1])[:, None]
+        X_test_norm = np.concatenate((X_test_norm, s_), axis=1)
+        return super(FabolasGP, self).predict(X_test_norm, **kwargs)
+
+    def train(self, X, y, do_optimize=True, **kwargs):
+        X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
+        s_ = self.basis_func(X[:, -1])[:, None]
+        X_norm = np.concatenate((X_norm, s_), axis=1)
+        return super(FabolasGP, self).train(X_norm, y, do_optimize, **kwargs)

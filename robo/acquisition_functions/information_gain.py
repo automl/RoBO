@@ -5,7 +5,6 @@ import scipy
 import numpy as np
 import emcee
 
-
 from robo.acquisition_functions.log_ei import LogEI
 from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
 from robo.util import epmgp
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class InformationGain(BaseAcquisitionFunction):
 
-    def __init__(self, model, X_lower, X_upper,
+    def __init__(self, model, lower, upper,
             Nb=50, Np=400, sampling_acquisition=None,
             sampling_acquisition_kw={"par": 0.0},
             rng=None, **kwargs):
@@ -42,9 +41,9 @@ class InformationGain(BaseAcquisitionFunction):
                  - predict_variances(X1, X2)
             If you want to calculate derivatives than it should also support
                  - predictive_gradients(X)
-        X_lower: np.ndarray (D)
+        lower: np.ndarray (D)
             Lower bounds of the input space
-        X_upper: np.ndarray (D)
+        upper: np.ndarray (D)
             Upper bounds of the input space
         Nb: int
             Number of representer points to define pmin.
@@ -60,14 +59,16 @@ class InformationGain(BaseAcquisitionFunction):
         """
 
         self.Nb = Nb
-        super(InformationGain, self).__init__(model, X_lower, X_upper)
-        self.D = self.X_lower.shape[0]
+        super(InformationGain, self).__init__(model)
+        self.lower = lower
+        self.upper = upper
+        self.D = self.lower.shape[0]
         self.sn2 = None
 
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
         self.sampling_acquisition = sampling_acquisition(
-            model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
+            model, **sampling_acquisition_kw)
 
         self.Np = Np
 
@@ -83,63 +84,55 @@ class InformationGain(BaseAcquisitionFunction):
                                    np.add(lPred, lmb)), axis=0) - H
         return np.array([dHp])
 
-    def compute(self, X, derivative=False, **kwargs):
+    def compute(self, X_test, derivative=False, **kwargs):
         """
         Computes the information gain of X and its derivatives
 
         Parameters
         ----------
-        X: np.ndarray(1, D), The input point where the acquisition_functions function
-            should be evaluate. The dimensionality of X is (N, D), with N as
-            the number of points to evaluate at and D is the number of
-            dimensions of one X.
+        X_test: np.ndarray(N, D), The input point where the acquisition_functions function
+            should be evaluate.
 
         derivative: Boolean
             If is set to true also the derivative of the acquisition_functions
             function at X is returned
-            Not implemented yet!
+            Not tested!
 
         Returns
         -------
-        np.ndarray(1,1)
-            Log Expected Improvement of X
-        np.ndarray(1,D)
-            Derivative of Log Expected Improvement at X
+        np.ndarray(N,)
+            Relative change of entropy of pmin
+        np.ndarray(N,D)
+            Derivatives with respect to X
             (only if derivative=True)
-
         """
-        if X.shape[0] > 1:
-            raise ValueError("Entropy is only for single test points")
-        if np.any(X < self.X_lower) or np.any(X > self.X_upper):
+
+        acq = np.zeros([X_test.shape[0]])
+        grad = np.zeros([X_test.shape[0], X_test.shape[1]])
+        for i, X in enumerate(X_test):
             if derivative:
-                f = 0
-                df = np.zeros((1, X.shape[1]))
-                return np.array([[f]]), np.array([df])
+                acq[i], grad[i] = self.dh_fun(X[None, :], derivative=True)
+
             else:
-                return np.array([[0]])
+                acq[i] = self.dh_fun(X[None, :], derivative=False)
+
+            if np.any(np.isnan(acq[i])) or np.any(acq[i] == np.inf):
+                acq[i] = -sys.float_info.max
 
         if derivative:
-            acq, grad = self.dh_fun(X, derivative=True)
-
-            if np.any(np.isnan(acq)) or np.any(acq == np.inf):
-                return -sys.float_info.max
             return acq, grad
         else:
-            acq = self.dh_fun(X, derivative=False)
-
-            if np.any(np.isnan(acq)) or np.any(acq == np.inf):
-                return -sys.float_info.max
             return acq
 
     def sampling_acquisition_wrapper(self, x):
-        if np.any(x < self.X_lower) or np.any(x > self.X_upper):
+        if np.any(x < self.lower) or np.any(x > self.upper):
             return -np.inf
         return self.sampling_acquisition(np.array([x]))[0]
 
     def sample_representer_points(self):
         self.sampling_acquisition.update(self.model)
         restarts = np.zeros((self.Nb, self.D))
-        restarts[0:self.Nb, ] = self.X_lower + (self.X_upper - self.X_lower) \
+        restarts[0:self.Nb, ] = self.lower + (self.upper - self.lower) \
                                                * self.rng.uniform(size=(self.Nb, self.D))
         sampler = emcee.EnsembleSampler(
             self.Nb, self.D, self.sampling_acquisition_wrapper)
@@ -216,7 +209,7 @@ class InformationGain(BaseAcquisitionFunction):
         if len(x.shape) == 1:
             x = x[np.newaxis]
 
-        if np.any(x < self.X_lower) or np.any(x > self.X_upper):
+        if np.any(x < self.lower) or np.any(x > self.upper):
             dH = np.spacing(1)
             ddHdx = np.zeros((x.shape[1], 1))
             return np.array([[dH]]), np.array([[ddHdx]])
@@ -248,11 +241,12 @@ class InformationGain(BaseAcquisitionFunction):
             else:
                 return_df = np.array([ddHdx])
             return np.array([[dH]]), return_df
-        return np.array([[dH]])
+        return np.array([dH])
 
     def innovations(self, x, rep):
         # Get the variance at x with noise
         _, v = self.model.predict(x)
+        v = v.reshape(-1, 1)
 
         # Get the variance at x without noise
         v_ = v - self.sn2
@@ -263,8 +257,7 @@ class InformationGain(BaseAcquisitionFunction):
 
         norm_cov = np.dot(sigma_x_rep, np.linalg.inv(v_))
         # Compute the stochastic innovation for the mean
-        dm_rep = np.dot(norm_cov,
-                    np.linalg.cholesky(v + 1e-10))
+        dm_rep = np.dot(norm_cov, np.linalg.cholesky(v + 1e-10))
 
         # Compute the deterministic innovation for the variance
         dv_rep = -norm_cov.dot(sigma_x_rep.T)

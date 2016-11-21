@@ -19,7 +19,7 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
         acquisition_func: BaseAcquisitionFunction object
             The acquisition_functions function that will be integrated.
         """
-
+        self.acquisition_func = acquisition_func
         self.model = acquisition_func.model
 
         # Save also the cost model if the acquisition_functions function needs it
@@ -30,7 +30,7 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
 
         # Keep for each model an extra acquisition_functions function module
         self.estimators = []
-        for i in range(self.model.n_hypers):
+        for i in range(len(self.model.models)):
             # Copy the acquisition_functions function for this model
             estimator = deepcopy(acquisition_func)
             if len(self.model.models) == 0:
@@ -60,11 +60,27 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
             have to specify here the model for the cost function. cost_model
             has to be an instance of GaussianProcessMCMC or GPyModelMCMC.
         """
+        if len(self.estimators) == 0:
+            for i in range(len(self.model.models)):
+                # Copy the acquisition_functions function for this model
+                estimator = deepcopy(self.acquisition_func)
+                if len(self.model.models) == 0:
+                    estimator.model = None
+                else:
+                    estimator.model = self.model.models[i]
+
+                if self.cost_model is not None:
+                    if len(self.cost_model.models) == 0:
+                        estimator.model = None
+                    else:
+                        estimator.model = self.cost_model.models[i]
+                self.estimators.append(estimator)
 
         self.model = model
         if cost_model is not None:
             self.cost_model = cost_model
-        for i in range(self.model.n_hypers):
+        for i in range(len(self.model.models)):
+
             if cost_model is not None:
                 self.estimators[i].update(self.model.models[i],
                                           self.cost_model.models[i],
@@ -95,10 +111,10 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
         np.ndarray(1,D)
             Derivative of the acquisition_functions value at X (only if derivative=True)
         """
-        acquisition_values = np.zeros([self.model.n_hypers, X_test.shape[0]])
+        acquisition_values = np.zeros([len(self.model.models), X_test.shape[0]])
 
         # Integrate over the acquisition_functions values
-        for i in range(self.model.n_hypers):
+        for i in range(len(self.model.models)):
             acquisition_values[i] = self.estimators[i].compute(X_test, derivative=derivative)
 
         return acquisition_values.mean(axis=0)
