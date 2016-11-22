@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
-                          maximizer="direct", acquisition_func="log_ei", model="gp_mcmc", rng=None):
+                          maximizer="direct", acquisition_func="log_ei", model="gp_mcmc",
+                          n_init=3, rng=None):
     """
     General interface for Bayesian optimization for global black box optimization problems.
 
@@ -40,6 +41,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The acquisition function
     model: {"gp", "gp_mcmc"}
         The model for the objective function.
+    n_init: int
+        Number of points for the initial design. Make sure that it is <= num_iterations.
     rng: numpy.random.RandomState
         Random number generator
 
@@ -48,6 +51,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         dict with all results
     """
     assert upper.shape[0] == lower.shape[0]
+    assert n_init <= num_iterations, "Number of initial design point has to be <= than the number of iterations"
 
     if rng is None:
         rng = np.random.RandomState(np.random.randint(0, 10000))
@@ -111,14 +115,16 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         print("ERROR: %s is not a valid function to maximize the acquisition function!" % maximizer)
         return
 
-    bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func, rng=rng)
+    bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func,
+                              initial_points=n_init, rng=rng)
 
     x_best, f_min = bo.run(num_iterations)
 
     results = dict()
     results["x_opt"] = x_best
     results["f_opt"] = f_min
-    results["trajectory"] = [inc for inc in bo.incumbents]
+    results["incumbents"] = [inc for inc in bo.incumbents]
+    results["incumbent_values"] = [val for val in bo.incumbents_values]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
     return results
