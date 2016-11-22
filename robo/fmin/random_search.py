@@ -42,8 +42,8 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
     incumbents_values = []
     runtime = []
 
-    X = np.zeros([num_iterations, lower.shape[0]])
-    y = np.zeros([num_iterations])
+    X = []
+    y = []
 
     for it in range(num_iterations):
         logger.info("Start iteration %d ... ", it)
@@ -52,7 +52,9 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
 
         # Choose next point to evaluate
         new_x = rng.uniform(lower, upper)
-        if len(lower.shape) == 1:
+
+        # In case of a one dim problem make x a vector
+        if lower.shape[0] == 1:
             new_x = np.array([new_x])
 
         time_overhead.append(time.time() - start_time)
@@ -70,8 +72,8 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
         logger.info("Evaluation of this configuration took %f seconds" % time_func_eval[-1])
 
         # Update the data
-        X[it] = new_x
-        y[it] = new_y
+        X.append(new_x)
+        y.append(new_y)
 
         # The incumbent is just the best observation we have seen so far
         best_idx = np.argmin(y)
@@ -86,9 +88,9 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
         runtime.append(time.time() - time_start)
 
     results = dict()
-    results["x_opt"] = incumbent
+    results["x_opt"] = incumbent.tolist()
     results["f_opt"] = incumbent_value
-    results["trajectory"] = [inc for inc in incumbents]
+    results["incumbents"] = [inc.tolist() for inc in incumbents]
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
