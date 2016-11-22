@@ -107,37 +107,37 @@ class BayesianOptimization(BaseSolver):
         if X is None and y is None:
 
             # Initial design
-            self.X = np.zeros([self.init_points, self.lower.shape[0]])
-            self.y = np.zeros([self.init_points])
+            X = []
+            y = []
 
             start_time_overhead = time.time()
             init = self.initial_design(self.lower,
                                        self.upper,
                                        self.init_points,
                                        rng=self.rng)
-            time_overhead = start_time_overhead / self.init_points
+            time_overhead = (time.time() - start_time_overhead) / self.init_points
 
             for i, x in enumerate(init):
 
                 logger.info("Evaluate: %s" % x)
 
                 start_time = time.time()
-                y = self.objective_func(x)
+                new_y = self.objective_func(x)
 
-                self.X[i] = x
-                self.y[i] = y
+                X.append(x)
+                y.append(new_y)
                 self.time_func_evals.append(time.time() - start_time)
                 self.time_overhead.append(time_overhead)
 
                 logger.info("Configuration achieved a performance of %f in %f seconds" %
-                            (self.y[i], self.time_func_evals[i]))
+                            (y[i], self.time_func_evals[i]))
 
                 # Use best point seen so far as incumbent
-                best_idx = np.argmin(self.y)
-                incumbent = self.X[best_idx]
-                incumbent_value = self.y[best_idx]
+                best_idx = np.argmin(y)
+                incumbent = X[best_idx]
+                incumbent_value = y[best_idx]
 
-                self.incumbents.append(incumbent)
+                self.incumbents.append(incumbent.tolist())
                 self.incumbents_values.append(incumbent_value)
 
                 self.runtime.append(time.time() - self.start_time)
@@ -145,6 +145,10 @@ class BayesianOptimization(BaseSolver):
                 if self.save_output and i % self.num_save == 0:
                     self.save_json(i)
 
+            self.X = np.array(X)
+            print(self.X.shape)
+            self.y = np.array(y)
+            print(self.y.shape)
         else:
             self.X = X
             self.y = y
@@ -184,7 +188,7 @@ class BayesianOptimization(BaseSolver):
             incumbent = self.X[best_idx]
             incumbent_value = self.y[best_idx]
 
-            self.incumbents.append(incumbent)
+            self.incumbents.append(incumbent.tolist())
             self.incumbents_values.append(incumbent_value)
 
             self.runtime.append(time.time() - self.start_time)
