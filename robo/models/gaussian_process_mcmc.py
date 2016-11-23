@@ -281,11 +281,11 @@ class MTBOGP(GaussianProcessMCMC):
     def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
                  normalize_input=True,
                  rng=None, lower=None, upper=None, noise=-8):
-        
+
         super(MTBOGP, self).__init__(kernel, prior, n_hypers, chain_length, burnin_steps,
                  normalize_output=False, normalize_input=normalize_input,
                  rng=rng, lower=lower, upper=upper, noise=noise)
-        
+
     def predict(self, X_test, **kwargs):
         X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
         X_test_norm = np.concatenate((X_test_norm, X_test[:, None, -1]), axis=1)

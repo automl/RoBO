@@ -4,7 +4,7 @@ import numpy as np
 
 from robo.fmin import mtbo
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def objective(x, t):

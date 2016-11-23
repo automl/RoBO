@@ -17,7 +17,7 @@ class DefaultPrior(BasePrior):
         self.n_dims = n_dims
 
         # Prior for the Matern52 lengthscales
-        self.tophat = TophatPrior(-2, 2, rng=self.rng)
+        self.tophat = TophatPrior(-10, 2, rng=self.rng)
 
         # Prior for the covariance amplitude
         self.ln_prior = LognormalPrior(mean=0.0, sigma=1.0, rng=self.rng)

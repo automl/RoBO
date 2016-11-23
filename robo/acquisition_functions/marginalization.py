@@ -2,6 +2,7 @@ import logging
 import numpy as np
 
 from copy import deepcopy
+
 from robo.acquisition_functions.base_acquisition import BaseAcquisitionFunction
 
 logger = logging.getLogger(__name__)
@@ -54,11 +55,11 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
         ----------
         model: Model object
             The model of the objective function, it has to be an instance of
-            GaussianProcessMCMC or GPyModelMCMC.
+            GaussianProcessMCMC.
         cost_model: Model object
             If the acquisition_functions function also takes the cost into account, we
             have to specify here the model for the cost function. cost_model
-            has to be an instance of GaussianProcessMCMC or GPyModelMCMC.
+            has to be an instance of GaussianProcessMCMC.
         """
         if len(self.estimators) == 0:
             for i in range(len(self.model.models)):
