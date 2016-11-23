@@ -146,9 +146,7 @@ class BayesianOptimization(BaseSolver):
                     self.save_json(i)
 
             self.X = np.array(X)
-            print(self.X.shape)
             self.y = np.array(y)
-            print(self.y.shape)
         else:
             self.X = X
             self.y = y
