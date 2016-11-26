@@ -155,7 +155,7 @@ class BayesianNeuralNetwork(BaseModel):
         self.y_std = None
 
     @BaseModel._check_shapes_train
-    def train(self, X, y):
+    def train(self, X, y, *args, **kwargs):
         """
         Trains the model on the provided data.
 
@@ -267,7 +267,7 @@ class BayesianNeuralNetwork(BaseModel):
         return -log_like, T.mean(mse)
 
     @BaseModel._check_shapes_predict
-    def predict(self, X_test, return_individual_predictions = False):
+    def predict(self, X_test, return_individual_predictions=False, *args, **kwargs):
         """
         Returns the predictive mean and variance of the objective function at
         the given test points.
@@ -313,6 +313,7 @@ class BayesianNeuralNetwork(BaseModel):
         m = np.mean(f_out, axis=0)
         # Total variance
         v = np.mean(f_out ** 2 + theta_noise, axis=0) - m ** 2
+        #v = np.mean((f_out - m) ** 2, axis=0)
 
         if self.normalize_output:
             m = zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
