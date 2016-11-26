@@ -60,7 +60,7 @@ class GaussianProcess(BaseModel):
         self.normalize_output = normalize_output
         self.normalize_input = normalize_input
         self.X = None
-        self.Y = None
+        self.y = None
         self.hypers = []
         self.mean = 0
         self.is_trained = False

@@ -3,7 +3,7 @@ import george
 import logging
 import numpy as np
 
-from robo.models.gaussian_process_mcmc import FabolasGP
+from robo.models.fabolas_gp import FabolasGPMCMC
 from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
@@ -26,8 +26,8 @@ def retransform(s_transform, s_min, s_max):
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
-         n_init=2, num_iterations=30,
-         burnin=100, chain_length=200, rng=None):
+         n_init=40, num_iterations=43, subsets = [1024, 256, 128, 64],
+         burnin=100, chain_length=200, n_hypers=20, rng=None):
     """
     Fast Bayesian Optimization of Machine Learning Hyperparameters
     on Large Datasets
@@ -95,26 +95,29 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                                                degree=degree)
     env_kernel[:] = np.ones([degree + 1]) * 0.1
 
+    kernel *= env_kernel
+
     # Take 3 times more samples than we have hyperparameters
-    n_hypers = 3 * len(kernel)
-    if n_hypers % 2 == 1:
-        n_hypers += 1
+    if n_hypers < 2*n_dims:
+        n_hypers = 3 * len(kernel)
+        if n_hypers % 2 == 1:
+            n_hypers += 1
 
     prior = EnvPrior(len(kernel) + 1,
                      n_ls=n_dims,
                      n_lr=(degree + 1),
                      rng=rng)
 
-    linear_bf = lambda x: x
     quadratic_bf = lambda x: (1 - x) ** 2
+    linear_bf = lambda x: x
 
-    model_objective = FabolasGP(kernel,
+    model_objective = FabolasGPMCMC(kernel,
                                 prior=prior,
                                 burnin_steps=burnin,
                                 chain_length=chain_length,
-                                basis_func=quadratic_bf,
                                 n_hypers=n_hypers,
-                                normalize_input=False,
+                                normalize_output=False,
+                                basis_func=quadratic_bf,
                                 lower=lower,
                                 upper=upper,
                                 rng=rng)
@@ -143,13 +146,13 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                           n_lr=(cost_degree + 1),
                           rng=rng)
 
-    model_cost = FabolasGP(cost_kernel,
+    model_cost = FabolasGPMCMC(cost_kernel,
                            prior=cost_prior,
-                           basis_func=linear_bf,
                            burnin_steps=burnin,
                            chain_length=chain_length,
                            n_hypers=n_hypers,
-                           normalize_input=False,
+                           basis_func=linear_bf,
+                           normalize_output=False,
                            lower=lower,
                            upper=upper,
                            rng=rng)
@@ -166,31 +169,35 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     extend_lower,
                                     extend_upper,
                                     is_env_variable=is_env,
-                                    n_representer=10)
+                                    n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=False)
+    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True)
 
-    subsets = [256, 128, 64, 32]
     # Initial Design
+    logger.info("Initial Design")
     for i in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration
         s = int(s_max / float(subsets[i % len(subsets)]))
+
         x = init_random_uniform(lower, upper, 1, rng)[0]
+        logger.info("Evaluate %s on subset size %d" % (str(x), s))
         st = time.time()
         func_val, cost = objective_function(x, s)
         time_func_eval.append(time.time() - st)
 
+        logger.info("Configuration achieved a performance of %f with cost %f" % (func_val, cost))
+        logger.info("Evaluation of this configuration took %f seconds" % time_func_eval[-1])
+
         # Bookkeeping
-        s_transformed = transform(s)
-        config = np.append(x, s_transformed)
+        config = np.append(x, transform(s, s_min, s_max))
         X.append(config)
-        y.append(func_val)
-        c.append(cost)
+        y.append(np.log(func_val))  # Model the target function on a logarithmic scale
+        c.append(np.log(cost))  # Model the cost on a logarithmic scale
 
         # Estimate incumbent as the best observed value so far
         best_idx = np.argmin(y)
-        incumbents.append(np.append(X[best_idx], s_max))  # Incumbent is always on s=s_max
+        incumbents.append(X[best_idx][:-1])  # Incumbent is always on s=s_max
 
         time_overhead.append(time.time() - start_time_overhead)
         runtime.append(time.time() - time_start)
@@ -211,9 +218,9 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         # Estimate incumbent by projecting all observed points to the task of interest and
         # pick the point with the lowest mean prediction
         incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
-                                                                    proj_value=s_max)
-        incumbents.append(incumbent)
-        logger.info("Current incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
+                                                                    proj_value=1)
+        incumbents.append(incumbent[:-1])
+        logger.info("Current incumbent %s with estimated performance %f" % (str(incumbent), np.exp(incumbent_value)))
 
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)
@@ -224,7 +231,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         logger.info("Optimization overhead was %f seconds" % time_overhead[-1])
 
         # Evaluate the chosen configuration
-        logger.info("Evaluate candidate %s" % (str(new_x)))
+        logger.info("Evaluate candidate %s on subset size %f" % (str(new_x[:-1]), s))
         start_time = time.time()
         new_y, new_c = objective_function(new_x[:-1], s)
         time_func_eval.append(time.time() - start_time)
@@ -234,17 +241,16 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
         # Add new observation to the data
         X = np.concatenate((X, new_x[None, :]), axis=0)
-        y = np.concatenate((y, np.array([new_y])), axis=0)
-        c = np.concatenate((c, np.array([new_c])), axis=0)
+        y = np.concatenate((y, np.log(np.array([new_y]))), axis=0)  # Model the target function on a logarithmic scale
+        c = np.concatenate((c, np.log(np.array([new_c]))), axis=0)  # Model the cost function on a logarithmic scale
 
         runtime.append(time.time() - time_start)
 
     # Estimate the final incumbent
-    model_objective.train(X, y)
+    model_objective.train(X, y, do_optimize=True)
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
                                                                 proj_value=1)
-    incumbent[-1] = s_max
-    incumbents.append(incumbent)
+    incumbents.append(incumbent[:-1])
     logger.info("Final incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
 
     results = dict()

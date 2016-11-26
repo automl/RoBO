@@ -73,7 +73,7 @@ class EnvPrior(BasePrior):
         #p0[:, pos:end] = np.array([np.random.randn(n_samples)
         #                           for _ in range(0, (self.n_lr))]).T
         samples = np.array([self.bayes_lin_prior.sample_from_prior(n_samples)[:, 0]
-                                   for _ in range(0, (self.n_lr))]).T
+                                   for _ in range(0, self.n_lr)]).T
 
         p0[:, pos:end] = samples
         # Noise

@@ -99,7 +99,7 @@ class InformationGainPerUnitCost(InformationGain):
             # Add the cost it took to pick the last configuration
             cost = np.exp(log_cost)
 
-            acquisition_value = dh / (cost  + self.overhead)
+            acquisition_value = dh / (cost + self.overhead)
 
             return acquisition_value
 
