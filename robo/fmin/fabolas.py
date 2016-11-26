@@ -254,8 +254,8 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     logger.info("Final incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
 
     results = dict()
-    results["x_opt"] = incumbent[:-1]
-    results["trajectory"] = [inc for inc in incumbents]
+    results["x_opt"] = incumbent[:-1].tolist()
+    results["trajectory"] = [inc.tolist() for inc in incumbents]
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval

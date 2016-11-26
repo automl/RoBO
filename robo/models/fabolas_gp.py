@@ -28,13 +28,13 @@ class FabolasGPMCMC(GaussianProcessMCMC):
                                             rng=rng, lower=lower,
                                             upper=upper, noise=noise)
 
-    def predict(self, X_test, **kwargs):
-
-        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
-        s_ = self.basis_func(X_test[:, -1])[:, None]
-        X_test_norm = np.concatenate((X_test_norm, s_), axis=1)
-
-        return super(FabolasGPMCMC, self).predict(X_test_norm, **kwargs)
+#    def predict(self, X_test, **kwargs):
+#
+#        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
+#        s_ = self.basis_func(X_test[:, -1])[:, None]
+#        X_test_norm = np.concatenate((X_test_norm, s_), axis=1)
+#
+#        return super(FabolasGPMCMC, self).predict(X_test_norm, **kwargs)
 
     def train(self, X, y, do_optimize=True, **kwargs):
         X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
