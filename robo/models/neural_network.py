@@ -1,18 +1,25 @@
 import time
-import lasagne
 import logging
-import theano
-import theano.tensor as T
 import numpy as np
+
+try:
+    import lasagne
+    import theano
+    import theano.tensor as T
+except ImportError as e:
+    print(str(e))
+    print("If you want to use Bayesian Neural Networks you have to install the following dependencies:")
+    print("Theano (pip install theano)")
+    print("Lasagne (pip install lasagne)")
 
 
 class SGDNet(object):
 
     def __init__(self, n_inputs,  n_epochs=100,
-                 error_threshold = 0,
+                 error_threshold=0,
                  learning_rate=1e-3,
-                 n_units= [10, 10, 10],
-                 dropout = [0.5,0.5,0.5],
+                 n_units=[10, 10, 10],
+                 dropout=[0.5, 0.5, 0.5],
                  batch_size=10, shuffle_batches = False,
                  normalize_output=True,
                  normalize_input=True, rng=None):
@@ -24,24 +31,24 @@ class SGDNet(object):
         n_inputs : int
             Number of input features
         n_epochs : int
-			maxmimum number of epochs
-		learning_rate : float
-			learing rate used for ADAM
-		n_units : list of ints
-			number of units in each layer, thus controls also the number of layers
-		dropout : float or list of floats
-			If it's a list, every element defines the dropout for each layer. If it's float
-			the same dropout is applied at each layer
-		batch_size : int
-			size of the minibatches used during training
-		shuffle_batches : boolean
-			whether or not to permute the data points during training
-		normalize_output : boolean
-			whether or not the output should be scaled to zero mean, unit variance for training
-		normalize_input : boolean
-			whether or not the input should be scaled to zero mean, unit variance for training
-		rng : numpy.random.RandomState
-			the random number generator
+            maxmimum number of epochs
+        learning_rate : float
+            learing rate used for ADAM
+        n_units : list of ints
+            number of units in each layer, thus controls also the number of layers
+        dropout : float or list of floats
+            If it's a list, every element defines the dropout for each layer. If it's float
+            the same dropout is applied at each layer
+        batch_size : int
+            size of the minibatches used during training
+        shuffle_batches : boolean
+            whether or not to permute the data points during training
+        normalize_output : boolean
+            whether or not the output should be scaled to zero mean, unit variance for training
+        normalize_input : boolean
+            whether or not the input should be scaled to zero mean, unit variance for training
+        rng : numpy.random.RandomState
+            the random number generator
         """
 
         if rng is None:
@@ -78,13 +85,12 @@ class SGDNet(object):
         self.y_std = None
         self.input_var = T.matrix('inputs')
 
-
         self.network = None
 
     def initialize_net(self):
-		"""
-			creates the network and the associated loss and update functions
-		"""
+        """
+            creates the network and the associated loss and update functions
+        """
         self.network = lasagne.layers.InputLayer(shape=(None, self.n_inputs), input_var=self.input_var)
 
         for n,p in zip(self.n_units, self.dropout):
@@ -120,11 +126,9 @@ class SGDNet(object):
 
         self.val_fn = theano.function([self.input_var, target_var], test_loss)
 
+        #g = T.grad(test_prediction, self.input_var)
 
-		g = T.grad(test_prediction, self.input_var)
-		
-        self.gradient = theano.function([self.input_var], g)
-
+        #self.gradient = theano.function([self.input_var], g)
 
     def train(self, X, Y):
         """
@@ -179,11 +183,9 @@ class SGDNet(object):
 
         l = lasagne.layers.get_all_layers(self.network)
         m = lasagne.layers.get_output(l, X)[-1].eval()
-        
-
 
     def validation_error(self, X_valid, Y_valid):
-		"""
+        """
         Trains the model on the provided data.
 
         Parameters
@@ -195,13 +197,12 @@ class SGDNet(object):
             The corresponding target values.
             The dimensionality of Y is (N, T), where N has to
             match the number of points of X and T is the number of objectives
-		"""
-		
+        """
+
         if X_valid.shape[0] < self.batch_size:
-            batch_size = X.shape[0]
+            batch_size = X_valid.shape[0]
         else:
             batch_size = self.batch_size
-
 
         if self.normalize_input:
             X_valid = self.normalize_inputs(X_valid, self.x_mean, self.x_std)[0]
@@ -218,7 +219,6 @@ class SGDNet(object):
             val_batches += 1
         logging.info("  valid loss:\t\t{:.6f}".format(val_err / val_batches))
         return val_err / val_batches
-
 
     def predict(self, X_test):
         """
@@ -251,30 +251,27 @@ class SGDNet(object):
 
         return m[:, None]
 
-	def predict_gradient(self, X):
-
-		fx = 1.
-		fy = 1.
-		
-        if self.normalize_input:
-            X_test = self.normalize_inputs(X, self.x_mean, self.x_std)[0]
-            fx = self.x_std
-
-		g = self.gradient(X)
-
-		if self.normalize_output:
-            g = self.normalize_outputs(g, self.y_mean, self.y_std)[0]
-            fy= self.y_std
-
-        
-		return g * (fy/fx)
-		
-
+    # def predict_gradient(self, X):
+    #
+    #     fx = 1.
+    #     fy = 1.
+    #
+    #     if self.normalize_input:
+    #         X_test = self.normalize_inputs(X, self.x_mean, self.x_std)[0]
+    #         fx = self.x_std
+    #
+    #     g = self.gradient(X)
+    #
+    #     if self.normalize_output:
+    #         g = self.normalize_outputs(g, self.y_mean, self.y_std)[0]
+    #         fy = self.y_std
+    #
+    #     return g * (fy/fx)
 
     def iterate_minibatches(self, inputs, targets, batchsize, shuffle=False):
-		"""
-			helper function to quickly iterate over the data
-		"""
+        """
+            helper function to quickly iterate over the data
+        """
         assert len(inputs) == len(targets)
         if shuffle:
             indices = np.arange(len(inputs))

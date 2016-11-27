@@ -8,28 +8,26 @@ class BaggedNets(object):
     """
 
     def __init__(self, base_model_class, num_models = 16, bootstrap_size = None, bootstrap_with_replacement=True, **init_kwargs):
-		"""
-		Parameters
-		----------
-			base_model_class : custom_class with a fit and predict method
-				base model fitted to bootstrapped samples of the data
-			num_models : int
-				number of base models fitted
-			bootstrap_size : int
-				size of the bootstrap sample
-			bootstrap_with_replacement : boolean
-				whether or not to draw samples from the data with or without replacement
-			**kwargs:
-				all remaining arguments are passed to base_model_class.__init__()
-		"""
-
+        """
+        Parameters
+        ----------
+            base_model_class : custom_class with a fit and predict method
+                base model fitted to bootstrapped samples of the data
+            num_models : int
+                number of base models fitted
+            bootstrap_size : int
+                size of the bootstrap sample
+            bootstrap_with_replacement : boolean
+                whether or not to draw samples from the data with or without replacement
+            **kwargs:
+                all remaining arguments are passed to base_model_class.__init__()
+        """
         self.base_model_class = base_model_class
         self.init_kwargs = init_kwargs
         self.num_models = num_models
         self.bootstrap_size = bootstrap_size
         self.bootstrap_with_replacement = bootstrap_with_replacement
         self.models = None
-
 
     def train(self, X, Y, **kwargs):
         """
@@ -45,14 +43,14 @@ class BaggedNets(object):
             The dimensionality of Y is (N, T), where N has to 
             match the number of points of X and T is the number of objectives
         **kwargs:
-			all other arguments will be passed to the training method of the base model
+            all other arguments will be passed to the training method of the base model
         """
         self.X = X
         self.Y = Y
         self.models = []
         self.bootstrap_indices = []
 
-        bss =  X.shape[0] if self.bootstrap_size is None else self.bootstrapsize
+        bss = X.shape[0] if self.bootstrap_size is None else self.bootstrapsize
 
         for i in range(self.num_models):
 
@@ -61,8 +59,6 @@ class BaggedNets(object):
 
             self.models.append( self.base_model_class(X.shape[1], **self.init_kwargs) )
             self.models[-1].train(np.copy(X[indices]), np.copy(Y[indices]), **kwargs)
-
-        
 
     def update(self, X, Y):
         X = np.append(self.X, X, axis=0)
@@ -89,8 +85,7 @@ class BaggedNets(object):
         m = np.mean(predictions, axis=0)
         v = np.var (predictions, axis=0)
         
-        return(m[:,np.newaxis], v[:,np.newaxis])
-
+        return m[:, np.newaxis], v[:, np.newaxis]
 
     def predictive_gradients(self, X):
         """
@@ -110,10 +105,7 @@ class BaggedNets(object):
 
         m = np.mean(predictions, axis=0)
         
-        return(m[:,np.newaxis])
-
-
-
+        return m[:, np.newaxis]
 
     def predict_variance(self, X1, X2):
         raise NotImplementedError()

@@ -20,8 +20,10 @@ before_install:
 install:
   - pip install --upgrade pip
   - pip install cython
+  - pip install theano
+  - pip install lasagne
   - travis_wait pip install -r requirements.txt
   - python setup.py install
   - pip install coveralls
-script: coverage run --source=robo -m unittest discover robo/test -v
+script: coverage run --source=robo -m unittest discover test -v
 after_success: coveralls

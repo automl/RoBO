@@ -8,7 +8,12 @@ from scipy.stats import norm
 
 class EnvPrior(BasePrior):
 
-    def __init__(self, n_dims, n_ls, n_lr):
+    def __init__(self, n_dims, n_ls, n_lr, rng=None):
+
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
         # The number of hyperparameters
         self.n_dims = n_dims
@@ -18,16 +23,16 @@ class EnvPrior(BasePrior):
 
         # The number of params of the bayes linear reg kernel
         self.n_lr = n_lr
-        self.bayes_lin_prior = NormalPrior(sigma=1, mean=0)
+        self.bayes_lin_prior = NormalPrior(sigma=1, mean=0, rng=self.rng)
 
         # Prior for the Matern52 lengthscales
-        self.tophat = TophatPrior(-2, 2)
+        self.tophat = TophatPrior(-2, 2, rng=self.rng)
 
         # Prior for the covariance amplitude
-        self.ln_prior = LognormalPrior(mean=-2, sigma=1.0)
+        self.ln_prior = LognormalPrior(mean=-2, sigma=1.0, rng=self.rng)
 
         # Prior for the noise
-        self.horseshoe = HorseshoePrior(scale=0.001)
+        self.horseshoe = HorseshoePrior(scale=0.001, rng=self.rng)
 
     def lnprob(self, theta):
 
@@ -68,7 +73,7 @@ class EnvPrior(BasePrior):
         #p0[:, pos:end] = np.array([np.random.randn(n_samples)
         #                           for _ in range(0, (self.n_lr))]).T
         samples = np.array([self.bayes_lin_prior.sample_from_prior(n_samples)[:, 0]
-                                   for _ in range(0, (self.n_lr))]).T
+                                   for _ in range(0, self.n_lr)]).T
 
         p0[:, pos:end] = samples
         # Noise
@@ -156,7 +161,12 @@ class EnvNoisePrior(BasePrior):
 
 class MTBOPrior(BasePrior):
 
-    def __init__(self, n_dims, n_ls, n_kt):
+    def __init__(self, n_dims, n_ls, n_kt, rng=None):
+
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
         # The number of hyperparameters
         self.n_dims = n_dims
@@ -169,15 +179,15 @@ class MTBOPrior(BasePrior):
         self.n_kt = n_kt
 
         # Prior for the Matern52 lengthscales
-        self.tophat = TophatPrior(-2, 2)
+        self.tophat = TophatPrior(-2, 2, rng=self.rng)
 
         # Prior for the covariance amplitude
-        self.ln_prior = LognormalPrior(mean=0.0, sigma=1.0)
+        self.ln_prior = LognormalPrior(mean=0.0, sigma=1.0, rng=self.rng)
 
         # Prior for the noise
-        self.horseshoe = HorseshoePrior(scale=0.1)
+        self.horseshoe = HorseshoePrior(scale=0.1, rng=self.rng)
 
-        self.tophat_task = TophatPrior(-2, 2)
+        self.tophat_task = TophatPrior(-2, 2, rng=self.rng)
 
     def lnprob(self, theta):
 
@@ -212,7 +222,7 @@ class MTBOPrior(BasePrior):
         # Task Kernel
         pos = (self.n_ls + 1)
         end = (self.n_ls + self.n_kt + 1)
-        p0[:, pos:end] = np.random.randn(n_samples, end - pos)
+        p0[:, pos:end] = self.rng.randn(n_samples, end - pos)
 
         # Noise
         p0[:, -1] = self.horseshoe.sample_from_prior(n_samples)[:, 0]

@@ -7,19 +7,23 @@ from robo.priors.base_prior import BasePrior, TophatPrior, \
 
 class DefaultPrior(BasePrior):
 
-    def __init__(self, n_dims):
+    def __init__(self, n_dims, rng=None):
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
         # The number of hyperparameters
         self.n_dims = n_dims
 
         # Prior for the Matern52 lengthscales
-        self.tophat = TophatPrior(-2, 2)
+        self.tophat = TophatPrior(-10, 2, rng=self.rng)
 
         # Prior for the covariance amplitude
-        self.ln_prior = LognormalPrior(mean=0.0, sigma=1.0)
+        self.ln_prior = LognormalPrior(mean=0.0, sigma=1.0, rng=self.rng)
 
         # Prior for the noise
-        self.horseshoe = HorseshoePrior(scale=0.1)
+        self.horseshoe = HorseshoePrior(scale=0.1, rng=self.rng)
 
     def lnprob(self, theta):
         lp = 0
