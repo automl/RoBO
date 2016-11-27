@@ -29,9 +29,9 @@ class TestBayesianOptimization(unittest.TestCase):
         n_iters = 4
         inc, inc_val = self.solver.run(n_iters)
 
-        assert inc.shape[0] == 1
-        assert inc >= 0
-        assert inc <= 1
+        assert len(inc) == 1
+        assert np.array(inc) >= 0
+        assert np.array(inc) <= 1
         assert len(self.solver.incumbents_values) == n_iters
         assert len(self.solver.incumbents) == n_iters
         assert len(self.solver.time_overhead) == n_iters
