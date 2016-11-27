@@ -6,7 +6,7 @@ from robo.fmin import random_search, bayesian_optimization
 
 def objective(x):
     y = (x - 0.5) ** 2
-    return y
+    return y[0]
 
 
 class TestFminInterface(unittest.TestCase):
@@ -16,21 +16,22 @@ class TestFminInterface(unittest.TestCase):
         self.upper = np.ones([1])
 
     def test_random_search(self):
-        res = random_search(objective_function=objective, lower=self.lower, upper=self.upper)
-        assert len(res["x_opt"].shape) == 1
-        assert res["x_opt"].shape[0] == 1
-        assert res["x_opt"] >= 0
-        assert res["x_opt"] <= 1
+        res = random_search(objective_function=objective,
+                            lower=self.lower, upper=self.upper,
+                            num_iterations=3)
+        assert len(res["x_opt"]) == 1
+        assert np.array(res["x_opt"]) >= 0
+        assert np.array(res["x_opt"]) <= 1
 
     def test_bayesian_optimization(self):
         res = bayesian_optimization(objective_function=objective,
                                     lower=self.lower,
                                     upper=self.upper,
-                                    num_iterations=10)
-        assert len(res["x_opt"].shape) == 1
-        assert res["x_opt"].shape[0] == 1
-        assert res["x_opt"] >= 0
-        assert res["x_opt"] <= 1
+                                    n_init=2,
+                                    num_iterations=3)
+        assert len(res["x_opt"]) == 1
+        assert np.array(res["x_opt"]) >= 0
+        assert np.array(res["x_opt"]) <= 1
 
 if __name__ == "__main__":
     unittest.main()
