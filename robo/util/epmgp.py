@@ -80,10 +80,6 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
     dlogPdMudMu = dlogPdMudMuold + adds
     return logP, dlogPdMu, dlogPdSigma, dlogPdMudMu
 
-"""
-min_factor
-"""
-
 
 def min_faktor(Mu, Sigma, k, gamma=1):
 
@@ -171,10 +167,6 @@ def min_faktor(Mu, Sigma, k, gamma=1):
         dlogZdSigma = 0.5 * (dlogZdSigma + dlogZdSigma.T - dlogZdSigma2)
         dlogZdSigma = np.rot90(dlogZdSigma, k=2)[np.triu_indices(D)][::-1]
         yield dlogZdSigma
-
-"""
-lt_factor
-"""
 
 
 def lt_factor(s, l, M, V, mp, p, gamma):
