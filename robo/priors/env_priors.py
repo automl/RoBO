@@ -1,7 +1,7 @@
 
 import numpy as np
-from robo.priors.base_prior import BasePrior, TophatPrior, \
-                LognormalPrior, HorseshoePrior, NormalPrior
+from robo.priors.base_prior import BasePrior, TophatPrior
+from robo.priors.base_prior import LognormalPrior, HorseshoePrior, NormalPrior
 
 from scipy.stats import norm
 
@@ -47,7 +47,7 @@ class EnvPrior(BasePrior):
         # Prior for the Bayesian regression kernel
         pos = (self.n_ls + 1)
         end = (self.n_ls + self.n_lr + 1)
-        #lp += -np.sum((theta[pos:end]) ** 2 / 10.)
+
         for t in theta[pos:end]:
             lp += self.bayes_lin_prior.lnprob(t)
 
@@ -70,8 +70,7 @@ class EnvPrior(BasePrior):
         # Bayesian linear regression
         pos = (self.n_ls + 1)
         end = (self.n_ls + self.n_lr + 1)
-        #p0[:, pos:end] = np.array([np.random.randn(n_samples)
-        #                           for _ in range(0, (self.n_lr))]).T
+
         samples = np.array([self.bayes_lin_prior.sample_from_prior(n_samples)[:, 0]
                                    for _ in range(0, self.n_lr)]).T
 
@@ -119,9 +118,6 @@ class EnvNoisePrior(BasePrior):
         end = (self.n_ls + self.n_lr + 1)
         lp += -np.sum((theta[pos:end]) ** 2 / 10.)
 
-        # Env Noise
-        #lp += self.ln_prior_env_noise.lnprob(theta[end])
-        #lp += self.ln_prior_env_noise.lnprob(theta[end + 1])
         # alpha
         lp += norm.pdf(theta[end], loc=-7, scale=1)
         # beta
@@ -147,7 +143,7 @@ class EnvNoisePrior(BasePrior):
         pos = (self.n_ls + 1)
         end = (self.n_ls + self.n_lr + 1)
         p0[:, pos:end] = np.array([5 * np.random.randn(n_samples) - 5
-                                   for _ in range(0, (self.n_lr))]).T
+                                   for _ in range(0, self.n_lr)]).T
 
         # Env Noise
         p0[:, end] = np.random.randn(n_samples) - 7
@@ -216,7 +212,7 @@ class MTBOPrior(BasePrior):
 
         # Lengthscales
         ls_sample = np.array([self.tophat.sample_from_prior(n_samples)[:, 0]
-                              for _ in range(0, (self.n_ls))]).T
+                              for _ in range(0, self.n_ls)]).T
         p0[:, 1:(self.n_ls + 1)] = ls_sample
 
         # Task Kernel

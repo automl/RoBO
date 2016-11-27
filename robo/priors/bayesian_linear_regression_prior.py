@@ -20,10 +20,10 @@ class BayesianLinearRegressionPrior(BasePrior):
             self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
             self.rng = rng
-            
+
         # Prior for alpha
         self.ln_prior_alpha = LognormalPrior(sigma=0.1, mean=-10, rng=self.rng)
-            
+
         # Prior for sigma^2 = 1 / beta
         self.horseshoe = HorseshoePrior(scale=0.1, rng=self.rng)
 
@@ -45,8 +45,8 @@ class BayesianLinearRegressionPrior(BasePrior):
         lp = 0
         lp += self.ln_prior_alpha.lnprob(theta[0])
         lp += self.horseshoe.lnprob(1 / theta[-1])
-        
-        return lp        
+
+        return lp
 
     def sample_from_prior(self, n_samples):
         p0 = np.zeros([n_samples, 2])

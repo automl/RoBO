@@ -49,5 +49,5 @@ class DefaultPrior(BasePrior):
         return p0
 
     def gradient(self, theta):
-        #TODO: Implement real gradient here
+        # TODO: Implement real gradient here
         return np.zeros([theta.shape[0]])

@@ -17,7 +17,7 @@ def init_grid(lower, upper, n_points):
 
     Returns
     -------
-    np.ndarray(N**X_lower.shape[0], D)
+    np.ndarray(N**lower.shape[0], D)
         The initial design data points
     """
 

@@ -164,7 +164,7 @@ def mtbo(objective_function, lower, upper,
     maximizer = Direct(wrapper_func, extend_lower, extend_upper, verbose=True)
 
     # Initial Design
-    for i in range(n_init):
+    for _ in range(n_init):
         logger.info("Initial design")
         start_time_overhead = time.time()
         # Draw random configuration and evaluate it just on the auxiliary task
@@ -223,7 +223,7 @@ def mtbo(objective_function, lower, upper,
         logger.info("Optimization overhead was %f seconds", time_overhead[-1])
 
         # Evaluate the chosen configuration
-        logger.info("Evaluate candidate %s" % (str(new_x)))
+        logger.info("Evaluate candidate %s", str(new_x))
         start_time = time.time()
         new_y, new_c = objective_function(new_x[:-1], new_x[-1])
         time_func_eval.append(time.time() - start_time)

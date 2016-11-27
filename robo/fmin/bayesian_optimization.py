@@ -94,10 +94,6 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         a = PI(gp)
     elif acquisition_func == "lcb":
         a = LCB(gp)
-    #elif acquisition_func == "information_gain":
-    #    a = InformationGain(gp, upper=upper, lower=lower)
-    #elif acquisition_func == "information_gain_mc":
-    #    a = InformationGainMC(gp, upper=upper, lower=lower, )
     else:
         print("ERROR: %s is not a valid acquisition function!" % acquisition_func)
         return

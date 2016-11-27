@@ -372,8 +372,8 @@ class NormalPrior(BasePrior):
         """
 
         p0 = self.rng.normal(loc=self.mean,
-                              scale=self.sigma,
-                              size=n_samples)
+                             scale=self.sigma,
+                             size=n_samples)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -391,6 +391,5 @@ class NormalPrior(BasePrior):
         (D) np.array
             The gradient of the prior at theta.
         """
-        #return sps.norm.pdf(theta, scale=self.sigma, loc=self.mean)
-        return (1 / (self.sigma * np.sqrt(2 * np.pi))) * (- theta /
-            (self.sigma ** 2) * np.exp(- (theta ** 2) / (2 * self.sigma ** 2)))
+        return (1 / (self.sigma * np.sqrt(2 * np.pi))) *\
+               (- theta / (self.sigma ** 2) * np.exp(- (theta ** 2) / (2 * self.sigma ** 2)))

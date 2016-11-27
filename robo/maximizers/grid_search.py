@@ -14,9 +14,9 @@ class GridSearch(BaseMaximizer):
         ----------
         objective_function: acquisition function
             The acquisition function which will be maximized
-        X_lower: np.ndarray (D)
+        lower: np.ndarray (D)
             Lower bounds of the input space
-        X_upper: np.ndarray (D)
+        upper: np.ndarray (D)
             Upper bounds of the input space
         resolution: int
             Defines of how many data points the grid consists.
@@ -37,8 +37,7 @@ class GridSearch(BaseMaximizer):
             Point with highest acquisition value.
         """
 
-        x = np.linspace(self.lower[0], self.upper[0],
-                    self.resolution).reshape((self.resolution, 1, 1))
+        x = np.linspace(self.lower[0], self.upper[0], self.resolution).reshape((self.resolution, 1, 1))
         # y = array(map(acquisition_fkt, x))
         ys = np.zeros([self.resolution])
         for i in range(self.resolution):
