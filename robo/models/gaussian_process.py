@@ -144,7 +144,7 @@ class GaussianProcess(BaseModel):
         # The last entry of theta is always the noise
         self.gp.kernel[:] = theta[:-1]
         noise = np.exp(theta[-1])  # sigma^2
-        
+
         self.gp.compute(self.X, yerr=np.sqrt(noise))
         ll = self.gp.lnlikelihood(self.y, quiet=True)
 
@@ -161,7 +161,7 @@ class GaussianProcess(BaseModel):
         noise = np.exp(theta[-1])
         
         self.gp.compute(self.X, yerr=np.sqrt(noise))
-        
+
         self.gp._compute_alpha(self.y)
         K_inv = self.gp.solver.apply_inverse(np.eye(self.gp._alpha.size),
                                              in_place=True)

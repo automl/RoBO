@@ -277,6 +277,9 @@ class BayesianNeuralNetwork(BaseModel):
         X_test: np.ndarray (N, D)
             Input test points
 
+        return_individual_predictions: bool
+            If set to true than the individual predictions of all samples are returned.
+
         Returns
         ----------
         np.array(N,)
@@ -308,12 +311,12 @@ class BayesianNeuralNetwork(BaseModel):
         theta_noise = np.asarray(theta_noise)
         
         if return_individual_predictions:
-            return(f_out, theta_noise)
+            return f_out, theta_noise
 
         m = np.mean(f_out, axis=0)
         # Total variance
-        v = np.mean(f_out ** 2 + theta_noise, axis=0) - m ** 2
-        #v = np.mean((f_out - m) ** 2, axis=0)
+        # v = np.mean(f_out ** 2 + theta_noise, axis=0) - m ** 2
+        v = np.mean((f_out - m) ** 2, axis=0)
 
         if self.normalize_output:
             m = zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)

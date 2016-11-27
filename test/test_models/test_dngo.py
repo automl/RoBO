@@ -10,7 +10,7 @@ class TestDNGO(unittest.TestCase):
         self.X = np.random.rand(10, 1)
         y = self.X * 2
         self.y = y[:, 0]
-        self.model = DNGO()
+        self.model = DNGO(num_epochs=10, burnin_steps=10, chain_length=20)
         self.model.train(self.X, self.y, do_optimize=False)
 
     def test_predict(self):

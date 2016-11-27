@@ -20,7 +20,7 @@ class SGDNet(object):
                  learning_rate=1e-3,
                  n_units=[10, 10, 10],
                  dropout=[0.5, 0.5, 0.5],
-                 batch_size=10, shuffle_batches = False,
+                 batch_size=10, shuffle_batches=False,
                  normalize_output=True,
                  normalize_input=True, rng=None):
         """
@@ -72,7 +72,7 @@ class SGDNet(object):
             self.dropout = [dropout] * len(n_units)
         except:
             raise
-        
+
         self.batch_size = batch_size
         self.shuffle_batches = shuffle_batches
         self.is_trained = False
@@ -93,7 +93,7 @@ class SGDNet(object):
         """
         self.network = lasagne.layers.InputLayer(shape=(None, self.n_inputs), input_var=self.input_var)
 
-        for n,p in zip(self.n_units, self.dropout):
+        for n, p in zip(self.n_units, self.dropout):
             self.network = lasagne.layers.DenseLayer(
                 self.network,
                 num_units=n,
@@ -126,9 +126,9 @@ class SGDNet(object):
 
         self.val_fn = theano.function([self.input_var, target_var], test_loss)
 
-        #g = T.grad(test_prediction, self.input_var)
+        # g = T.grad(test_prediction, self.input_var)
 
-        #self.gradient = theano.function([self.input_var], g)
+        # self.gradient = theano.function([self.input_var], g)
 
     def train(self, X, Y):
         """

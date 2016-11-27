@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class InformationGainMC(BaseAcquisitionFunction):
-    def __init__(self, model, X_lower, X_upper,
+    def __init__(self, model, lower, upper,
                  Nb=50, Nf=500,
                  sampling_acquisition=None,
                  sampling_acquisition_kw={"par": 0.0},
@@ -34,9 +34,9 @@ class InformationGainMC(BaseAcquisitionFunction):
             A model should have following methods:
             - predict(X)
             - predict_variance(X1, X2)
-        X_lower: np.ndarray (D)
+        lower: np.ndarray (D)
             Lower bounds of the input space
-        X_upper: np.ndarray (D)
+        upper: np.ndarray (D)
             Upper bounds of the input space
         Nb: int
             Number of representer points.
@@ -54,13 +54,13 @@ class InformationGainMC(BaseAcquisitionFunction):
         """
 
         self.Nb = Nb
-        super(InformationGainMC, self).__init__(model, X_lower, X_upper)
-        self.D = self.X_lower.shape[0]
+        super(InformationGainMC, self).__init__(model, lower, upper)
+        self.D = self.lower.shape[0]
         self.sn2 = None
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
         self.sampling_acquisition = sampling_acquisition(
-            model, self.X_lower, self.X_upper, **sampling_acquisition_kw)
+            model, self.lower, self.upper, **sampling_acquisition_kw)
         self.Nf = Nf
         self.Np = Np
 
@@ -74,17 +74,14 @@ class InformationGainMC(BaseAcquisitionFunction):
         # Calculate the Kullback-Leibler divergence between the old and the
         # fantasised pmin
         H = -np.sum(np.multiply(np.exp(self.logP), (self.logP + self.lmb)))
-        dHp = - np.sum(np.multiply(new_pmin,
-                            np.add(np.log(new_pmin), self.lmb)), axis=0) - H
+        dHp = - np.sum(np.multiply(new_pmin, np.add(np.log(new_pmin), self.lmb)), axis=0) - H
         # We maximize
         return -np.array([dHp])
 
     def sample_representer_points(self):
         self.sampling_acquisition.update(self.model)
 
-        start_points = init_random_uniform(self.X_lower,
-                                       self.X_upper,
-                                       self.Nb)
+        start_points = init_random_uniform(self.lower, self.upper, self.Nb)
 
         sampler = emcee.EnsembleSampler(self.Nb,
                                         self.D,
@@ -99,7 +96,7 @@ class InformationGainMC(BaseAcquisitionFunction):
             self.lmb = self.lmb[:, None]
 
     def sampling_acquisition_wrapper(self, x):
-        if np.any(x < self.X_lower) or np.any(x > self.X_upper):
+        if np.any(x < self.lower) or np.any(x > self.upper):
             return -np.inf
         return self.sampling_acquisition(np.array([x]))[0]
 
@@ -115,8 +112,8 @@ class InformationGainMC(BaseAcquisitionFunction):
         # Omega values which are needed for the innovations
         # by sampling from a uniform grid
         self.W = norm.ppf(np.linspace(1. / (self.Np + 1),
-                                    1 - 1. / (self.Np + 1),
-                                    self.Np))[np.newaxis, :]
+                                      1 - 1. / (self.Np + 1),
+                                      self.Np))[np.newaxis, :]
 
         # Compute current posterior belief at the representer points
         self.Mb, self.Vb = self.model.predict(self.zb, full_cov=True)
@@ -136,8 +133,7 @@ class InformationGainMC(BaseAcquisitionFunction):
 
         norm_cov = np.dot(sigma_x_rep, np.linalg.inv(v_))
         # Compute the stochastic innovation for the mean
-        dm_rep = np.dot(norm_cov,
-                    np.linalg.cholesky(v + 1e-10))
+        dm_rep = np.dot(norm_cov, np.linalg.cholesky(v + 1e-10))
         dm_rep = dm_rep.dot(self.W)
 
         # Compute the deterministic innovation for the variance

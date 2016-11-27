@@ -53,7 +53,7 @@ class BaseModel(object):
         ----------
         X_test: np.ndarray (N, D)
             N Test data points with input dimensions D
-            
+
         Returns
         ----------
         mean: ndarray (N,)

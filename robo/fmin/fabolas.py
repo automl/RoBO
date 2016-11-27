@@ -240,7 +240,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         logger.info("Optimization overhead was %f seconds", time_overhead[-1])
 
         # Evaluate the chosen configuration
-        logger.info("Evaluate candidate %s on subset size %f", (str(new_x[:-1]), s))
+        logger.info("Evaluate candidate %s on subset size %f", str(new_x[:-1]), s)
         start_time = time.time()
         new_y, new_c = objective_function(new_x[:-1], s)
         time_func_eval.append(time.time() - start_time)

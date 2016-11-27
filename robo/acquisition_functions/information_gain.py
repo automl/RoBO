@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 class InformationGain(BaseAcquisitionFunction):
 
     def __init__(self, model, lower, upper,
-            Nb=50, Np=400, sampling_acquisition=None,
-            sampling_acquisition_kw={"par": 0.0},
-            rng=None, **kwargs):
+                 Nb=50, Np=400, sampling_acquisition=None,
+                 sampling_acquisition_kw={"par": 0.0},
+                 rng=None, **kwargs):
 
         """
         The Information Gain acquisition_functions function for Entropy Search [1].

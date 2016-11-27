@@ -69,7 +69,15 @@ you can simple :
 
     results = bayesian_optimization(objective_function, lower, upper, acquisition_func='lcb')
 
-See the API documentation for different choices of acquisition functions.
+See the API documentation for different possible choices of acquisition functions.
+
+If you want to have a deeper look what RoBO is doing under the hood you can activate RoBO's logging
+mechanism by adding the following two lines on top of your python script:
+
+.. code-block:: python
+
+    import logging
+    logging.basicConfig(level=logging.INFO)
 
 
 ---------

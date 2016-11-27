@@ -7,7 +7,8 @@ class BaggedNets(object):
      Abstract base class for all models
     """
 
-    def __init__(self, base_model_class, num_models = 16, bootstrap_size = None, bootstrap_with_replacement=True, **init_kwargs):
+    def __init__(self, base_model_class, num_models=16,
+                 bootstrap_size=None, bootstrap_with_replacement=True, **init_kwargs):
         """
         Parameters
         ----------
@@ -80,10 +81,10 @@ class BaggedNets(object):
             The mean and variance of the test datapoint.
         """
 
-        predictions = [m.predict(X)[:,0,0] for m in self.models]
+        predictions = [m.predict(X)[:, 0, 0] for m in self.models]
 
         m = np.mean(predictions, axis=0)
-        v = np.var (predictions, axis=0)
+        v = np.var(predictions, axis=0)
         
         return m[:, np.newaxis], v[:, np.newaxis]
 
@@ -101,7 +102,7 @@ class BaggedNets(object):
             The gradients at X
         """
 
-        predictions = [m.predict_gradient(X)[:,0,0] for m in self.models]
+        predictions = [m.predict_gradient(X)[:, 0, 0] for m in self.models]
 
         m = np.mean(predictions, axis=0)
         
@@ -116,7 +117,8 @@ class BaggedNets(object):
 
         :return: Dict object
         """
-        jsonData = dict()
-        jsonData = {'X': self.X if self.X is None else self.X.tolist(), 'Y':self.Y if self.Y is None else self.Y.tolist(), 'hyperparameters':" " }
+        jsonData = {'X': self.X if self.X is None else self.X.tolist(),
+                    'Y': self.Y if self.Y is None else self.Y.tolist(),
+                    'hyperparameters': " "}
         return jsonData
 

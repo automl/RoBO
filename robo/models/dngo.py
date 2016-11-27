@@ -23,6 +23,9 @@ from robo.models.bayesian_linear_regression import BayesianLinearRegression
 from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
 
 
+logger = logging.getLogger(__name__)
+
+
 def sharedX(X, dtype=theano.config.floatX, name=None):
     return theano.shared(np.asarray(X, dtype=dtype), name=name)
 
