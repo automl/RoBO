@@ -63,7 +63,7 @@ class BaseModel(object):
         """
         pass
 
-    def _check_shapes_train(self, func):
+    def _check_shapes_train(func):
         def func_wrapper(self, X, y, *args, **kwargs):
             assert X.shape[0] == y.shape[0]
             assert len(X.shape) == 2
@@ -71,7 +71,7 @@ class BaseModel(object):
             return func(self, X, y, *args, **kwargs)
         return func_wrapper
 
-    def _check_shapes_predict(self, func):
+    def _check_shapes_predict(func):
         def func_wrapper(self, X, *args, **kwargs):
             assert len(X.shape) == 2
             return func(self, X, *args, **kwargs)

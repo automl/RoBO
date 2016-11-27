@@ -119,7 +119,7 @@ class BayesianOptimization(BaseSolver):
 
             for i, x in enumerate(init):
 
-                logger.info("Evaluate: %s" % x)
+                logger.info("Evaluate: %s", x)
 
                 start_time = time.time()
                 new_y = self.objective_func(x)
@@ -129,8 +129,8 @@ class BayesianOptimization(BaseSolver):
                 self.time_func_evals.append(time.time() - start_time)
                 self.time_overhead.append(time_overhead)
 
-                logger.info("Configuration achieved a performance of %f in %f seconds" %
-                            (y[i], self.time_func_evals[i]))
+                logger.info("Configuration achieved a performance of %f in %f seconds",
+                            y[i], self.time_func_evals[i])
 
                 # Use best point seen so far as incumbent
                 best_idx = np.argmin(y)
@@ -150,7 +150,7 @@ class BayesianOptimization(BaseSolver):
         else:
             self.X = X
             self.y = y
-            
+
         # Main Bayesian optimization loop
         for it in range(self.init_points, num_iterations):
             logger.info("Start iteration %d ... ", it)
@@ -166,16 +166,16 @@ class BayesianOptimization(BaseSolver):
             new_x = self.choose_next(self.X, self.y, do_optimize)
 
             self.time_overhead.append(time.time() - start_time)
-            logger.info("Optimization overhead was %f seconds" % self.time_overhead[-1])
-            logger.info("Next candidate %s" % (str(new_x)))
+            logger.info("Optimization overhead was %f seconds", self.time_overhead[-1])
+            logger.info("Next candidate %s", str(new_x))
 
             # Evaluate
             start_time = time.time()
             new_y = self.objective_func(new_x)
             self.time_func_evals.append(time.time() - start_time)
 
-            logger.info("Configuration achieved a performance of %f " % new_y)
-            logger.info("Evaluation of this configuration took %f seconds" % self.time_func_evals[-1])
+            logger.info("Configuration achieved a performance of %f ", new_y)
+            logger.info("Evaluation of this configuration took %f seconds", self.time_func_evals[-1])
 
             # Extend the data
             self.X = np.append(self.X, new_x[None, :], axis=0)
@@ -195,7 +195,8 @@ class BayesianOptimization(BaseSolver):
                 hypers = self.model.hypers
                 self.save_json(it)
 
-        logger.info("Return %s as incumbent with error %f " % (self.incumbents[-1], self.incumbents_values[-1]))
+        logger.info("Return %s as incumbent with error %f ",
+                    self.incumbents[-1], self.incumbents_values[-1])
 
         return self.incumbents[-1], self.incumbents_values[-1]
 
@@ -241,14 +242,14 @@ class BayesianOptimization(BaseSolver):
             t = time.time()
             x = self.maximize_func.maximize()
 
-            logger.info("Time to maximize the acquisition function: %f" % (time.time() - t))
+            logger.info("Time to maximize the acquisition function: %f", (time.time() - t))
 
         return x
 
     def get_json_data(self, it):
-        '''
+        """
         Overrides method in BaseSolver.
-        '''
+        """
         json_data = {
                     "optimization_overhead": None if self.time_overhead is None else self.time_overhead[it],
                     "runtime": None if self.time_start is None else time.time() - self.time_start,

@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def bohamiann(objective_function, lower, upper, num_iterations=30,
-                          acquisition_func="log_ei",
-                          n_init=3, rng=None):
+              acquisition_func="log_ei", n_init=3, rng=None):
     """
     General interface for Bayesian optimization for global black box optimization problems.
 

@@ -59,17 +59,17 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
 
         time_overhead.append(time.time() - start_time)
 
-        logger.info("Optimization overhead was %f seconds" % time_overhead[-1])
+        logger.info("Optimization overhead was %f seconds", time_overhead[-1])
 
         # Evaluate
-        logger.info("Evaluate candidate %s" % (str(new_x)))
+        logger.info("Evaluate candidate %s", str(new_x))
         start_time = time.time()
         new_y = objective_function(new_x)
         time_func_eval.append(time.time() - start_time)
 
-        logger.info("Configuration achieved a performance of %f " % new_y)
+        logger.info("Configuration achieved a performance of %f ", new_y)
 
-        logger.info("Evaluation of this configuration took %f seconds" % time_func_eval[-1])
+        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
 
         # Update the data
         X.append(new_x)
@@ -83,7 +83,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
         incumbents.append(incumbent)
         incumbents_values.append(incumbent_value)
 
-        logger.info("New incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
+        logger.info("New incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
         runtime.append(time.time() - time_start)
 

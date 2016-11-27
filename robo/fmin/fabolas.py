@@ -142,10 +142,9 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                                      ndim=n_dims+1, dim=d)
 
     cost_degree = 1
-    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(
-                                                            n_dims+1,
-                                                            dim=n_dims,
-                                                            degree=cost_degree)
+    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(n_dims+1,
+                                                                    dim=n_dims,
+                                                                    degree=cost_degree)
     cost_env_kernel[:] = np.ones([cost_degree + 1]) * 0.1
 
     cost_kernel *= cost_env_kernel
@@ -190,13 +189,13 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         s = int(s_max / float(subsets[i % len(subsets)]))
 
         x = init_random_uniform(lower, upper, 1, rng)[0]
-        logger.info("Evaluate %s on subset size %d" % (str(x), s))
+        logger.info("Evaluate %s on subset size %d", str(x), s)
         st = time.time()
         func_val, cost = objective_function(x, s)
         time_func_eval.append(time.time() - st)
 
-        logger.info("Configuration achieved a performance of %f with cost %f" % (func_val, cost))
-        logger.info("Evaluation of this configuration took %f seconds" % time_func_eval[-1])
+        logger.info("Configuration achieved a performance of %f with cost %f", func_val, cost)
+        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
 
         # Bookkeeping
         config = np.append(x, transform(s, s_min, s_max))
@@ -229,7 +228,8 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
                                                                     proj_value=1)
         incumbents.append(incumbent[:-1])
-        logger.info("Current incumbent %s with estimated performance %f" % (str(incumbent), np.exp(incumbent_value)))
+        logger.info("Current incumbent %s with estimated performance %f",
+                    str(incumbent), np.exp(incumbent_value))
 
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)
@@ -237,16 +237,16 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         s = retransform(new_x[-1], s_min, s_max)  # Map s from log space to original linear space
 
         time_overhead.append(time.time() - start_time)
-        logger.info("Optimization overhead was %f seconds" % time_overhead[-1])
+        logger.info("Optimization overhead was %f seconds", time_overhead[-1])
 
         # Evaluate the chosen configuration
-        logger.info("Evaluate candidate %s on subset size %f" % (str(new_x[:-1]), s))
+        logger.info("Evaluate candidate %s on subset size %f", (str(new_x[:-1]), s))
         start_time = time.time()
         new_y, new_c = objective_function(new_x[:-1], s)
         time_func_eval.append(time.time() - start_time)
 
-        logger.info("Configuration achieved a performance of %f with cost %f" % (new_y, new_c))
-        logger.info("Evaluation of this configuration took %f seconds" % time_func_eval[-1])
+        logger.info("Configuration achieved a performance of %f with cost %f", new_y, new_c)
+        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
 
         # Add new observation to the data
         X = np.concatenate((X, new_x[None, :]), axis=0)
@@ -260,7 +260,8 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
                                                                 proj_value=1)
     incumbents.append(incumbent[:-1])
-    logger.info("Final incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
+    logger.info("Final incumbent %s with estimated performance %f",
+                str(incumbent), incumbent_value)
 
     results = dict()
     results["x_opt"] = incumbent[:-1].tolist()

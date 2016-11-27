@@ -10,7 +10,6 @@ from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.maximizers.direct import Direct
-from robo.maximizers.cmaes import CMAES
 from robo.util import normalization
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
@@ -22,6 +21,7 @@ def transform(X, lower, upper):
     X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], lower, upper)
     X_norm = np.concatenate((X_norm, np.rint(X[:, None, -1])), axis=1)
     return X_norm
+
 
 def transformation(X, acq, lower, upper):
     X_norm = transform(X, lower, upper)
@@ -108,14 +108,14 @@ def mtbo(objective_function, lower, upper,
                       rng=rng)
 
     model_objective = GaussianProcessMCMC(kernel,
-                             prior=prior,
-                             burnin_steps=burnin,
-                             chain_length=chain_length,
-                             n_hypers=n_hypers,
-                             normalize_input=False,
-                             lower=lower,
-                             upper=upper,
-                             rng=rng)
+                                          prior=prior,
+                                          burnin_steps=burnin,
+                                          chain_length=chain_length,
+                                          n_hypers=n_hypers,
+                                          normalize_input=False,
+                                          lower=lower,
+                                          upper=upper,
+                                          rng=rng)
 
     # Define model for the cost function
     cost_cov_amp = 1
@@ -136,14 +136,14 @@ def mtbo(objective_function, lower, upper,
                            rng=rng)
 
     model_cost = GaussianProcessMCMC(cost_kernel,
-                        prior=cost_prior,
-                        burnin_steps=burnin,
-                        chain_length=chain_length,
-                        n_hypers=n_hypers,
-                        normalize_input=False,
-                        lower=lower,
-                        upper=upper,
-                        rng=rng)
+                                     prior=cost_prior,
+                                     burnin_steps=burnin,
+                                     chain_length=chain_length,
+                                     n_hypers=n_hypers,
+                                     normalize_input=False,
+                                     lower=lower,
+                                     upper=upper,
+                                     rng=rng)
 
     # Extend input space by task variable
     extend_lower = np.append(lower, 0)
@@ -170,13 +170,13 @@ def mtbo(objective_function, lower, upper,
         # Draw random configuration and evaluate it just on the auxiliary task
         task = 0
         x = init_random_uniform(lower, upper, 1, rng)[0]
-        logger.info("Evaluate candidate %s" % (str(x)))
+        logger.info("Evaluate candidate %s", str(x))
         st = time.time()
         func_val, cost = objective_function(x, task)
         time_func_eval.append(time.time() - st)
 
-        logger.info("Configuration achieved a performance of %f with cost %f" % (func_val, cost))
-        logger.info("Evaluation of this configuration took %f seconds" % time_func_eval[-1])
+        logger.info("Configuration achieved a performance of %f with cost %f", func_val, cost)
+        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
 
         # Bookkeeping
         config = np.append(x, task)
@@ -211,7 +211,7 @@ def mtbo(objective_function, lower, upper,
                                                                     proj_value=n_tasks-1)
         incumbent[:-1] = normalization.zero_one_unnormalization(incumbent[:-1], lower, upper)
         incumbents.append(incumbent)
-        logger.info("Current incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
+        logger.info("Current incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)
@@ -220,7 +220,7 @@ def mtbo(objective_function, lower, upper,
         new_x[-1] = np.rint(new_x[-1])  # Map float value to discrete task variable
 
         time_overhead.append(time.time() - start_time)
-        logger.info("Optimization overhead was %f seconds" % time_overhead[-1])
+        logger.info("Optimization overhead was %f seconds", time_overhead[-1])
 
         # Evaluate the chosen configuration
         logger.info("Evaluate candidate %s" % (str(new_x)))
@@ -228,8 +228,8 @@ def mtbo(objective_function, lower, upper,
         new_y, new_c = objective_function(new_x[:-1], new_x[-1])
         time_func_eval.append(time.time() - start_time)
 
-        logger.info("Configuration achieved a performance of %f with cost %f" % (new_y, new_c))
-        logger.info("Evaluation of this configuration took %f seconds" % time_func_eval[-1])
+        logger.info("Configuration achieved a performance of %f with cost %f", new_y, new_c)
+        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
 
         # Add new observation to the data
         X = np.concatenate((X, new_x[None, :]), axis=0)
@@ -245,7 +245,7 @@ def mtbo(objective_function, lower, upper,
                                                                 proj_value=n_tasks - 1)
     incumbent[:-1] = normalization.zero_one_unnormalization(incumbent[:-1], lower, upper)
     incumbents.append(incumbent)
-    logger.info("Final incumbent %s with estimated performance %f" % (str(incumbent), incumbent_value))
+    logger.info("Final incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
     results = dict()
     results["x_opt"] = incumbent[:-1]
@@ -254,8 +254,4 @@ def mtbo(objective_function, lower, upper,
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
 
-    from IPython import embed
-    embed()
-
     return results
-
