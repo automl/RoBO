@@ -26,8 +26,8 @@ def retransform(s_transform, s_min, s_max):
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
-         n_init=40, num_iterations=43, subsets = [1024, 256, 128, 64],
-         burnin=100, chain_length=200, n_hypers=20, rng=None):
+            n_init=40, num_iterations=43, subsets=[1024, 256, 128, 64],
+            burnin=100, chain_length=200, n_hypers=20, rng=None):
     """
     Fast Bayesian Optimization of Machine Learning Hyperparameters
     on Large Datasets
@@ -41,10 +41,19 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         Lower bound of the input space
     upper: np.array(D,)
         Upper bound of the input space
-    n_tasks: int
-        Number of task
+    s_min: int
+        Minimum number of data points for the training data set
+    s_max: int
+        Maximum number of data points for the training data set
     n_init: int
         Number of initial design points
+    n_hypers: int
+        Number of hyperparameter samples for the GP
+    subsets: list
+        The ratio of the subsets size of the initial design.
+        For example if subsets=[1024, 256, 128, 64] then the first random point from the
+        initial design is evaluated on s_max/1024 of the data, the second point on
+        s_max/256 of the data and so on.
     num_iterations: int
         Number of iterations
     chain_length : int
@@ -112,15 +121,15 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     linear_bf = lambda x: x
 
     model_objective = FabolasGPMCMC(kernel,
-                                prior=prior,
-                                burnin_steps=burnin,
-                                chain_length=chain_length,
-                                n_hypers=n_hypers,
-                                normalize_output=False,
-                                basis_func=quadratic_bf,
-                                lower=lower,
-                                upper=upper,
-                                rng=rng)
+                                    prior=prior,
+                                    burnin_steps=burnin,
+                                    chain_length=chain_length,
+                                    n_hypers=n_hypers,
+                                    normalize_output=False,
+                                    basis_func=quadratic_bf,
+                                    lower=lower,
+                                    upper=upper,
+                                    rng=rng)
 
     # Define model for the cost function
     cost_cov_amp = 1
@@ -147,15 +156,15 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                           rng=rng)
 
     model_cost = FabolasGPMCMC(cost_kernel,
-                           prior=cost_prior,
-                           burnin_steps=burnin,
-                           chain_length=chain_length,
-                           n_hypers=n_hypers,
-                           basis_func=linear_bf,
-                           normalize_output=False,
-                           lower=lower,
-                           upper=upper,
-                           rng=rng)
+                               prior=cost_prior,
+                               burnin_steps=burnin,
+                               chain_length=chain_length,
+                               n_hypers=n_hypers,
+                               basis_func=linear_bf,
+                               normalize_output=False,
+                               lower=lower,
+                               upper=upper,
+                               rng=rng)
 
     # Extend input space by task variable
     extend_lower = np.append(lower, 0)

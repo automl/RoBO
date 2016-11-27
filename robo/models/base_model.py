@@ -16,7 +16,7 @@ class BaseModel(object):
     def train(self, X, y):
         """
         Trains the model on the provided data.
-            
+
         Parameters
         ----------
         X: np.ndarray (N, D)
@@ -48,7 +48,7 @@ class BaseModel(object):
     def predict(self, X_test):
         """
         Predicts for a given set of test data points the mean and variance of its target values
-        
+
         Parameters
         ----------
         X_test: np.ndarray (N, D)
@@ -63,7 +63,7 @@ class BaseModel(object):
         """
         pass
 
-    def _check_shapes_train(func):
+    def _check_shapes_train(self, func):
         def func_wrapper(self, X, y, *args, **kwargs):
             assert X.shape[0] == y.shape[0]
             assert len(X.shape) == 2
@@ -71,7 +71,7 @@ class BaseModel(object):
             return func(self, X, y, *args, **kwargs)
         return func_wrapper
 
-    def _check_shapes_predict(func):
+    def _check_shapes_predict(self, func):
         def func_wrapper(self, X, *args, **kwargs):
             assert len(X.shape) == 2
             return func(self, X, *args, **kwargs)
