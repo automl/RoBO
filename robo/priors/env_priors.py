@@ -26,7 +26,7 @@ class EnvPrior(BasePrior):
         self.bayes_lin_prior = NormalPrior(sigma=1, mean=0, rng=self.rng)
 
         # Prior for the Matern52 lengthscales
-        self.tophat = TophatPrior(-2, 2, rng=self.rng)
+        self.tophat = TophatPrior(-10, 2, rng=self.rng)
 
         # Prior for the covariance amplitude
         self.ln_prior = LognormalPrior(mean=-2, sigma=1.0, rng=self.rng)
@@ -64,7 +64,7 @@ class EnvPrior(BasePrior):
 
         # Lengthscales
         ls_sample = np.array([self.tophat.sample_from_prior(n_samples)[:, 0]
-                              for _ in range(0, (self.n_ls))]).T
+                              for _ in range(0, self.n_ls)]).T
         p0[:, 1:(self.n_ls + 1)] = ls_sample
 
         # Bayesian linear regression
@@ -136,7 +136,7 @@ class EnvNoisePrior(BasePrior):
 
         # Lengthscales
         ls_sample = np.array([self.tophat.sample_from_prior(n_samples)[:, 0]
-                              for _ in range(0, (self.n_ls))]).T
+                              for _ in range(0, self.n_ls)]).T
         p0[:, 1:(self.n_ls + 1)] = ls_sample
 
         # Bayesian linear regression
@@ -175,7 +175,7 @@ class MTBOPrior(BasePrior):
         self.n_kt = n_kt
 
         # Prior for the Matern52 lengthscales
-        self.tophat = TophatPrior(-2, 2, rng=self.rng)
+        self.tophat = TophatPrior(-10, 2, rng=self.rng)
 
         # Prior for the covariance amplitude
         self.ln_prior = LognormalPrior(mean=0.0, sigma=1.0, rng=self.rng)
@@ -183,7 +183,7 @@ class MTBOPrior(BasePrior):
         # Prior for the noise
         self.horseshoe = HorseshoePrior(scale=0.1, rng=self.rng)
 
-        self.tophat_task = TophatPrior(-2, 2, rng=self.rng)
+        self.tophat_task = TophatPrior(-10, 2, rng=self.rng)
 
     def lnprob(self, theta):
 
