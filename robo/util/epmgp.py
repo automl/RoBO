@@ -19,7 +19,7 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
 
     Parameters
     ----------
-    M: np.ndarray(N, 1)
+    M: np.ndarray(N,)
         Mean value of each of the N points.
 
     V: np.ndarray(N, N)
@@ -33,7 +33,7 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
     np.ndarray(N,1)
         pmin distribution
     """
-    mu = mu[:, 0]
+
     logP = np.zeros(mu.shape)
     D = mu.shape[0]
     if with_derivatives:
@@ -79,10 +79,6 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
     adds = np.reshape(-gg + Zij, (1, D, D))
     dlogPdMudMu = dlogPdMudMuold + adds
     return logP, dlogPdMu, dlogPdSigma, dlogPdMudMu
-
-"""
-min_factor
-"""
 
 
 def min_faktor(Mu, Sigma, k, gamma=1):
@@ -172,10 +168,6 @@ def min_faktor(Mu, Sigma, k, gamma=1):
         dlogZdSigma = np.rot90(dlogZdSigma, k=2)[np.triu_indices(D)][::-1]
         yield dlogZdSigma
 
-"""
-lt_factor
-"""
-
 
 def lt_factor(s, l, M, V, mp, p, gamma):
 
@@ -184,7 +176,7 @@ def lt_factor(s, l, M, V, mp, p, gamma):
     cM = (M[l] - M[s]) / sq2
     cVnic = np.max([cVc / (1 - p * cVc), 0])
     cmni = cM + cVnic * (p * cM - mp)
-    z = cmni / np.sqrt(cVnic)
+    z = cmni / np.sqrt(cVnic + 1e-25)
     if np.isnan(z):
         z = -np.inf
     e, lP, exit_flag = log_relative_gauss(z)

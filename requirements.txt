@@ -5,6 +5,9 @@ scipy>=0.13.3
 matplotlib>=1.3.1
 cma
 direct
+theano
+Lasagne
 git+https://github.com/sfalkner/george.git
+git+https://github.com/stokasto/sgmcmc.git
 git+https://github.com/SheffieldML/GPy.git
 git+https://bitbucket.org/aadfreiburg/random_forest_run
