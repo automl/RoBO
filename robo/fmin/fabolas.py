@@ -26,7 +26,7 @@ def retransform(s_transform, s_min, s_max):
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
-            n_init=40, num_iterations=43, subsets=[1024, 256, 128, 64],
+            n_init=40, num_iterations=100, subsets=[1024, 256, 128, 64],
             burnin=100, chain_length=200, n_hypers=20, rng=None):
     """
     Fast Bayesian Optimization of Machine Learning Hyperparameters
@@ -265,7 +265,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
     results = dict()
     results["x_opt"] = incumbent[:-1].tolist()
-    results["trajectory"] = [inc.tolist() for inc in incumbents]
+    results["incumbents"] = [inc.tolist() for inc in incumbents]
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
