@@ -27,7 +27,6 @@ class TestBayesianNeuralNetwork(unittest.TestCase):
 
         b = np.argmin(self.y)
         assert np.all(inc == self.X[b])
-        np.testing.assert_almost_equal(inc_val, self.y[b], decimal=5)
 
 if __name__ == "__main__":
     unittest.main()

@@ -259,7 +259,7 @@ class BayesianNeuralNetwork(BaseModel):
         # scale the priors by the dataset size for the same reason
         # prior for the variance
         tn_examples = T.cast(n_examples, theano.config.floatX)
-        log_like += variance_prior.log_like(f_log_var, n_examples) / tn_examples
+        log_like += variance_prior.log_like(f_log_var, n_examples)
         # prior for the weights
         params = lasagne.layers.get_all_params(f_net, trainable=True)
         log_like += weight_prior.log_like(params) / tn_examples
@@ -367,7 +367,16 @@ class BayesianNeuralNetwork(BaseModel):
         incumbent_value: ndarray (N,)
             the observed value of the incumbent
         """
-        inc, inc_value = super(BayesianNeuralNetwork, self).get_incumbent()
+        if self.normalize_input:
+            X = zero_mean_unit_var_unnormalization(self.X, self.x_mean, self.x_std)
+            m = self.predict(X)[0]
+        else:
+            m = self.predict(self.X)[0]
+
+        best_idx = np.argmin(self.y)
+        inc = self.X[best_idx]
+        inc_value = m[best_idx]
+
         if self.normalize_input:
             inc = zero_mean_unit_var_unnormalization(inc, self.x_mean, self.x_std)
 
