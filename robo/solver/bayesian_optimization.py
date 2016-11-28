@@ -188,6 +188,8 @@ class BayesianOptimization(BaseSolver):
 
             self.incumbents.append(incumbent.tolist())
             self.incumbents_values.append(incumbent_value)
+            logger.info("Current incumbent %s with estimated performance %f",
+                        str(incumbent), incumbent_value)
 
             self.runtime.append(time.time() - self.start_time)
 
