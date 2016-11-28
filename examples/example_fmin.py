@@ -6,6 +6,8 @@ from robo.fmin import bayesian_optimization
 
 import logging
 logging.basicConfig(level=logging.INFO)
+
+
 # The optimization function that we want to optimize.
 # It gets a numpy array with shape (1,D) where D is the number of input dimensions
 def objective_function(x):
