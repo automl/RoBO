@@ -5,7 +5,10 @@ import numpy as np
 
 from sklearn import svm
 
-from robo.fmin import fabolas_fmin
+import logging
+logging.basicConfig(level=logging.INFO)
+
+from robo.fmin import fabolas
 
 
 # Example script to optimize the C and gamma parameter of a
@@ -75,24 +78,23 @@ def load_dataset():
 
 
 # The optimization function that we want to optimize.
-# It gets a numpy array x with shape (1,D) where D are the number of parameters
+# It gets a numpy array x with shape (D,) where D are the number of parameters
 # and s which is the ratio of the training data that is used to
 # evaluate this configuration
 def objective_function(x, s):
-
+    return np.random.rand(), np.random.rand()
     # Start the clock to determine the cost of this function evaluation
     start_time = time.time()
 
-    # Shuffle the data and split up the request subset of the training data    
-    size = int(np.exp(s))
+    # Shuffle the data and split up the request subset of the training data
     s_max = y_train.shape[0]
     shuffle = np.random.permutation(np.arange(s_max))
-    train_subset = X_train[shuffle[:size]]
-    train_targets_subset = y_train[shuffle[:size]]
+    train_subset = X_train[shuffle[:s]]
+    train_targets_subset = y_train[shuffle[:s]]
 
     # Train the SVM on the subset set
-    C = np.exp(float(x[0, 0]))
-    gamma = np.exp(float(x[0, 1]))
+    C = np.exp(float(x[0]))
+    gamma = np.exp(float(x[1]))
     clf = svm.SVC(gamma=gamma, C=C)
     clf.fit(train_subset, train_targets_subset)
     
@@ -101,7 +103,7 @@ def objective_function(x, s):
 
     c = time.time() - start_time
 
-    return np.array([[np.log(y)]]), np.array([[c]])
+    return y, c
 
 # Load the data
 X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
@@ -109,17 +111,18 @@ X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
 
 # We optimize s on a log scale, as we expect that the performance varies
 # logarithmically across s
-s_min = np.log(100)
-s_max = np.log(X_train.shape[0])
+s_min = 100
+s_max = 50000
 
 # Defining the bounds and dimensions of the
 # input space (configuration space + environment space)
 # We also optimize the hyperparameters of the svm on a log scale
-X_lower = np.array([-10, -10, s_min])
-X_upper = np.array([10, 10, s_max])
+lower = np.array([-10, -10])
+upper = np.array([10, 10])
 
 # Start Fabolas to optimize the objective function
-res = fabolas_fmin(objective_function, X_lower, X_upper, num_iterations=100)
+res = fabolas(objective_function, lower=lower, upper=upper,
+                   s_min=s_min, s_max=s_max, num_iterations=100)
 
 x_best = res["x_opt"]
 print(x_best)
