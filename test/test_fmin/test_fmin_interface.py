@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from robo.fmin import random_search, bayesian_optimization
+from robo.fmin import random_search, bayesian_optimization, bohamiann
 
 
 def objective(x):
@@ -29,6 +29,16 @@ class TestFminInterface(unittest.TestCase):
                                     upper=self.upper,
                                     n_init=2,
                                     num_iterations=3)
+        assert len(res["x_opt"]) == 1
+        assert np.array(res["x_opt"]) >= 0
+        assert np.array(res["x_opt"]) <= 1
+
+    def test_bohamiann(self):
+        res = bohamiann(objective_function=objective,
+                        lower=self.lower,
+                        upper=self.upper,
+                        n_init=2,
+                        num_iterations=3)
         assert len(res["x_opt"]) == 1
         assert np.array(res["x_opt"]) >= 0
         assert np.array(res["x_opt"]) <= 1

@@ -1,11 +1,7 @@
 import unittest
-import logging
 import numpy as np
 
 from robo.fmin import mtbo
-
-logging.basicConfig(level=logging.DEBUG)
-
 
 def objective(x, t):
     if t == 1:
@@ -29,7 +25,7 @@ class TestFminInterface(unittest.TestCase):
                    upper=self.upper,
                    n_tasks=2,
                    n_init=2,
-                   num_iterations=10)
+                   num_iterations=3)
 
         assert len(res["x_opt"].shape) == 1
         assert res["x_opt"].shape[0] == self.lower.shape[0]
