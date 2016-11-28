@@ -13,7 +13,7 @@ RoBO needs the following dependencies to be installed for it's core functionalit
 
 * scipy >= 0.12
 * numpy >= 1.7
-* DIRECT
+* direct
 * george
 * emcee
 
