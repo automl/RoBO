@@ -96,7 +96,7 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
 
         Parameters
         ----------
-        X_test: np.ndarray(1, D), The input point where the acquisition_functions function
+        X_test: np.ndarray(N, D), The input point where the acquisition_functions function
             should be evaluate. The dimensionality of X is (N, D), with N as
             the number of points to evaluate at and D is the number of
             dimensions of one X.
