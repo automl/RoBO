@@ -7,6 +7,7 @@ requires = [
     'DIRECT',
     'george',
     'emcee',
+    'cma',
     'scipy >= 0.12',
     'numpy >= 1.7'
     ]
@@ -17,7 +18,6 @@ dependency_links = [
 optional_dependencies = [
     'cython',
     'rf',
-    'cma',
     'matplotlib',
     'theano',
     'lasagne',

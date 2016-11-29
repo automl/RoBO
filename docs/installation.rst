@@ -14,22 +14,22 @@ RoBO needs the following dependencies to be installed for it's core functionalit
 * scipy >= 0.12
 * numpy >= 1.7
 * direct
+* cma
 * george
 * emcee
 
-Additionally it has some optional dependencies that are only needed for specific modules:
+Additionally RoBO has some optional dependencies that are only needed for specific modules:
 
 * cython
 * `pyrfr <https://bitbucket.org/aadfreiburg/random_forest_run/>`_
 * theano
-* cma
 * matplotlib
 * lasagne
 * `sgmcmc <https://github.com/stokasto/sgmcmc>`_
 * `hpolib2 <https://github.com/automl/HPOlib2>`_
 
 
-**Note**: RoBO requires python 3 and does not support python 2 anymore.
+**Note**: RoBO works only with Python3. Python2 is not support anymore.
 
 -------------------
 Manual Installation
@@ -48,13 +48,25 @@ then change into the new directory:
     cd RoBO/
 
 
-and install it:
+Before you install RoBO you have to install the required dependencies
+
+.. code:: bash
+
+    for req in $(cat requirements.txt); do pip install $req; done
+
+This will install the basis requirements that you need to run RoBO's core functionality. If you want to make
+use of the full functionality (for instance Bohamiann, Fabolas, ...) you can install all necessary dependencies
+by:
+
+.. code:: bash
+
+    for req in $(cat all_requirements.txt); do pip install $req; done
+
+
+**Note**: This may take a while to install all dependencies.
+
+Finally you can install RoBO by:
 
 .. code:: bash
 
     python setup.py install
-
-
-This will install RoBO's core functionality.
-Again ff you want to use additional modules such as for instance
-Bohamiann you have to install some extra optional dependencies (see above).
