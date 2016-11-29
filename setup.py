@@ -11,7 +11,7 @@ requires = [
     'numpy >= 1.7'
     ]
 dependency_links = [
-      'https://github.com/sfalkner/george/tarball/master#egg=gerorge'
+      'https://github.com/sfalkner/george/tarball/master#egg=george'
       ]
 
 optional_dependencies = [
