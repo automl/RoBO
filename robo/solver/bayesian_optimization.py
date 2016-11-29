@@ -223,11 +223,11 @@ class BayesianOptimization(BaseSolver):
         """
 
         if X is None and y is None:
-            x = self.initial_design(self.lower, self.upper, 1, rng=self.rng)
+            x = self.initial_design(self.lower, self.upper, 1, rng=self.rng)[0, :]
 
         elif X.shape[0] == 1:
             # We need at least 2 data points to train a GP
-            x = self.initial_design(self.lower, self.upper, 1, rng=self.rng)
+            x = self.initial_design(self.lower, self.upper, 1, rng=self.rng)[0, :]
 
         else:
             try:
