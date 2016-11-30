@@ -1,8 +1,3 @@
-'''
-Created on Oct 14, 2015
-
-@author: Aaron Klein
-'''
 
 import numpy as np
 import scipy.stats as sps
@@ -14,8 +9,11 @@ class BasePrior(object):
         """
         Abstract base class to define the interface for priors
         of GP hyperparameter.
+
         Parameters
         ----------
+        rng: np.random.RandomState
+            Random number generator
 
         """
         if rng is None:
@@ -86,7 +84,8 @@ class TophatPrior(BasePrior):
             Lower bound of the prior. Note the log scale.
         u_bound : float
             Upper bound of the prior. Note the log scale.
-
+        rng: np.random.RandomState
+            Random number generator
         """
         if rng is None:
             self.rng = np.random.RandomState(np.random.randint(0, 10000))
@@ -158,7 +157,7 @@ class TophatPrior(BasePrior):
 
 class HorseshoePrior(BasePrior):
 
-    def __init__(self, scale=0.1, rng = None):
+    def __init__(self, scale=0.1, rng=None):
         """
         Horseshoe Prior as it is used in spearmint
 
@@ -167,6 +166,8 @@ class HorseshoePrior(BasePrior):
         scale: float
             Scaling parameter. See below how it is influenced
             the distribution.
+        rng: np.random.RandomState
+            Random number generator
         """
         if rng is None:
             self.rng = np.random.RandomState(np.random.randint(0, 10000))
@@ -236,7 +237,7 @@ class HorseshoePrior(BasePrior):
 
 
 class LognormalPrior(BasePrior):
-    def __init__(self, sigma, mean=0, rng = None):
+    def __init__(self, sigma, mean=0, rng=None):
         """
         Log normal prior
 
@@ -247,6 +248,8 @@ class LognormalPrior(BasePrior):
             distribution.
         mean: float
             Specifies the mean of the normal distribution
+        rng: np.random.RandomState
+            Random number generator
         """
         if rng is None:
             self.rng = np.random.RandomState(np.random.randint(0, 10000))
@@ -290,8 +293,8 @@ class LognormalPrior(BasePrior):
         """
 
         p0 = self.rng.lognormal(mean=self.mean,
-                                   sigma=self.sigma,
-                                   size=n_samples)
+                                sigma=self.sigma,
+                                size=n_samples)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -313,7 +316,7 @@ class LognormalPrior(BasePrior):
 
 
 class NormalPrior(BasePrior):
-    def __init__(self, sigma, mean=0):
+    def __init__(self, sigma, mean=0, rng=None):
         """
         Normal prior
 
@@ -324,7 +327,13 @@ class NormalPrior(BasePrior):
             distribution.
         mean: float
             Specifies the mean of the normal distribution
+        rng: np.random.RandomState
+            Random number generator
         """
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
 
         self.sigma = sigma
         self.mean = mean
@@ -362,9 +371,9 @@ class NormalPrior(BasePrior):
             The samples from the prior.
         """
 
-        p0 = np.random.normal(loc=self.mean,
-                              scale=self.sigma,
-                              size=n_samples)
+        p0 = self.rng.normal(loc=self.mean,
+                             scale=self.sigma,
+                             size=n_samples)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -382,6 +391,5 @@ class NormalPrior(BasePrior):
         (D) np.array
             The gradient of the prior at theta.
         """
-        #return sps.norm.pdf(theta, scale=self.sigma, loc=self.mean)
-        return (1 / (self.sigma * np.sqrt(2 * np.pi))) * (- theta /
-            (self.sigma ** 2) * np.exp(- (theta ** 2) / (2 * self.sigma ** 2)))
+        return (1 / (self.sigma * np.sqrt(2 * np.pi))) *\
+               (- theta / (self.sigma ** 2) * np.exp(- (theta ** 2) / (2 * self.sigma ** 2)))

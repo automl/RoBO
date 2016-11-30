@@ -1,15 +1,10 @@
-'''
-Created on Jul 30, 2015
-
-@author: Aaron Klein
-'''
 
 import numpy as np
 
 from scipy import optimize
 
 from robo.maximizers.base_maximizer import BaseMaximizer
-from _functools import partial
+from functools import partial
 
 
 class SciPyOptimizer(BaseMaximizer):
@@ -34,9 +29,7 @@ class SciPyOptimizer(BaseMaximizer):
 
         """
         if rng is None:
-            self.rng = np.random.RandomState(42)
-        else:
-            self.rng = rng
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         self.n_restarts = n_restarts
         self.verbosity = verbosity
         super(SciPyOptimizer, self).__init__(objective_function,
@@ -83,7 +76,7 @@ class SciPyOptimizer(BaseMaximizer):
 class SciPyGlobalOptimizer(BaseMaximizer):
 
     def __init__(self, objective_function, X_lower, X_upper,
-                 n_restarts=10, verbosity=False):
+                 n_restarts=10, verbosity=False, n_func_evals=200, rng=None):
         """
         Interface for scipy's global optimization method.
 
@@ -102,11 +95,14 @@ class SciPyGlobalOptimizer(BaseMaximizer):
         """
         self.n_restarts = n_restarts
         self.verbosity = verbosity
-
+        self.n_func_evals = n_func_evals
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         super(SciPyGlobalOptimizer, self).__init__(objective_function,
                                                    X_lower, X_upper)
 
     def _acquisition_fkt_wrapper(self, x, acq_f):
+        print x
         return -acq_f(np.array([x]))
 
     def maximize(self):
@@ -130,6 +126,7 @@ class SciPyGlobalOptimizer(BaseMaximizer):
             res = optimize.basinhopping(
                 f,
                 start,
+                niter=self.n_func_evals,
                 minimizer_kwargs={
                     "bounds": zip(
                         self.X_lower,
@@ -140,4 +137,5 @@ class SciPyGlobalOptimizer(BaseMaximizer):
             cand[i] = res.x
             cand_vals[i] = res.fun
         best = np.argmax(cand_vals)
+        print np.array([cand[best]])
         return np.array([cand[best]])

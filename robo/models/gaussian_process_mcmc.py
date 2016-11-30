@@ -1,26 +1,23 @@
-'''
-Created on Oct 12, 2015
-
-@author: Aaron Klein
-'''
 
 import logging
 import george
 import emcee
 import numpy as np
+
 from copy import deepcopy
 
 from robo.models.base_model import BaseModel
 from robo.models.gaussian_process import GaussianProcess
+from robo.util import normalization
 
 logger = logging.getLogger(__name__)
 
 
 class GaussianProcessMCMC(BaseModel):
 
-    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000,
-                 burnin_steps=2000, basis_func=None, dim=None,
-                 normalize_output=False, *args, **kwargs):
+    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
+                 normalize_output=False, normalize_input=True,
+                 rng=None, lower=None, upper=None, noise=-8):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -43,110 +40,128 @@ class GaussianProcessMCMC(BaseModel):
             The length of the MCMC chain. We start n_hypers walker for
             chain_length steps and we use the last sample
             in the chain as a hyperparameter sample.
+        lower : np.array(D,)
+            Lower bound of the input space which is used for the input space normalization
+        upper : np.array(D,)
+            Upper bound of the input space which is used for the input space normalization
         burnin_steps : int
             The number of burnin steps before the actual MCMC sampling starts.
+        rng: np.random.RandomState
+            Random number generator
         """
 
-        self.kernel = kernel
-        if prior is None:
-            self.prior = lambda x: 0
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
         else:
-            self.prior = prior
+            self.rng = rng
+
+        self.kernel = kernel
+        self.prior = prior
+        self.noise = noise
         self.n_hypers = n_hypers
         self.chain_length = chain_length
         self.burned = False
         self.burnin_steps = burnin_steps
-        self.basis_func = basis_func
-        self.dim = dim
         self.models = []
-        self.normalize_output = normalize_output        
+        self.normalize_output = normalize_output
+        self.normalize_input = normalize_input
         self.X = None
-        self.Y = None
+        self.y = None
+        self.is_trained = False
 
-    def _scale(self, x, new_min, new_max, old_min, old_max):
-        return ((new_max - new_min) * (x - old_min) / (old_max - old_min)) + new_min
+        self.lower = lower
+        self.upper = upper
 
-    def train(self, X, Y, do_optimize=True, **kwargs):
+    @BaseModel._check_shapes_train
+    def train(self, X, y, do_optimize=True, **kwargs):
         """
         Performs MCMC sampling to sample hyperparameter configurations from the
-        likelihood and trains for each sample a GP on X and Y
+        likelihood and trains for each sample a GP on X and y
 
         Parameters
         ----------
         X: np.ndarray (N, D)
             Input data points. The dimensionality of X is (N, D),
             with N as the number of points and D is the number of features.
-        Y: np.ndarray (N, 1)
+        y: np.ndarray (N,)
             The corresponding target values.
         do_optimize: boolean
             If set to true we perform MCMC sampling otherwise we just use the
             hyperparameter specified in the kernel.
         """
-        self.X = X
 
-        # For Fabolas we transform s to (1 - s)^2
+        if self.normalize_input:
+            # Normalize input to be in [0, 1]
+            self.X, self.lower, self.upper = normalization.zero_one_normalization(X, self.lower, self.upper)
 
-        if self.basis_func is not None:
-            self.X = deepcopy(X)
-            self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
-        
-        self.Y = Y
+        else:
+            self.X = X
+
         if self.normalize_output:
-            self.Y_mean = np.mean(Y)
-            self.Y_std = np.std(Y)
-            self.Y = (Y - self.Y_mean) / self.Y_std
-        
+            # Normalize output to have zero mean and unit standard deviation
+            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+        else:
+            self.y = y
 
         # Use the mean of the data as mean for the GP
-        mean = np.mean(self.Y, axis=0)
+        mean = np.mean(self.y, axis=0)
         self.gp = george.GP(self.kernel, mean=mean)
-
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
-            self.sampler = emcee.EnsembleSampler(self.n_hypers,
-                                                 len(self.kernel.pars) + 1,
-                                                 self.loglikelihood)
+            sampler = emcee.EnsembleSampler(self.n_hypers,
+                                            len(self.kernel.pars) + 1,
+                                            self.loglikelihood)
 
             # Do a burn-in in the first iteration
             if not self.burned:
                 # Initialize the walkers by sampling from the prior
-                self.p0 = self.prior.sample_from_prior(self.n_hypers)
+                if self.prior is None:
+                    self.p0 = np.random.rand(self.n_hypers, len(self.kernel.pars) + 1)
+                else:
+                    self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
-                self.p0, _, _ = self.sampler.run_mcmc(self.p0,
-                                                      self.burnin_steps)
+                self.p0, _, _ = sampler.run_mcmc(self.p0,
+                                                 self.burnin_steps,
+                                                 rstate0=self.rng)
 
                 self.burned = True
 
             # Start sampling
-            pos, _, _ = self.sampler.run_mcmc(self.p0,
-                                              self.chain_length)
+            pos, _, _ = sampler.run_mcmc(self.p0,
+                                         self.chain_length,
+                                         rstate0=self.rng)
 
-            # Save the current position, it will be the startpoint in
+            # Save the current position, it will be the start point in
             # the next iteration
             self.p0 = pos
 
             # Take the last samples from each walker
-            self.hypers = self.sampler.chain[:, -1]
+            self.hypers = sampler.chain[:, -1]
 
-            self.models = []
         else:
-            self.hypers = [self.gp.kernel[:]]
+            self.hypers = self.gp.kernel[:].tolist()
+            self.hypers.append(self.noise)
+            self.hypers = [self.hypers]
 
-
+        self.models = []
         for sample in self.hypers:
 
-            # Instantiate a model for each hyperparameter configuration
+            # Instantiate a GP for each hyperparameter configuration
             kernel = deepcopy(self.kernel)
             kernel.pars = np.exp(sample[:-1])
             noise = np.exp(sample[-1])
             model = GaussianProcess(kernel,
-                                    basis_func=self.basis_func,
-                                    dim=self.dim,
                                     normalize_output=self.normalize_output,
-                                    noise=noise)
-            model.train(X, Y, do_optimize=False)
+                                    normalize_input=self.normalize_input,
+                                    noise=noise,
+                                    lower=self.lower,
+                                    upper=self.upper,
+                                    rng=self.rng)
+            model.train(X, y, do_optimize=False)
             self.models.append(model)
+
+        self.is_trained = True
 
     def loglikelihood(self, theta):
         """
@@ -180,10 +195,13 @@ class GaussianProcessMCMC(BaseModel):
         except:
             return -np.inf
 
-        return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.Y[:, 0],
-                                                                quiet=True)
+        if self.prior is not None:
+            return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.y, quiet=True)
+        else:
+            return self.gp.lnlikelihood(self.y, quiet=True)
 
-    def predict(self, X, **kwargs):
+    @BaseModel._check_shapes_predict
+    def predict(self, X_test, **kwargs):
         r"""
         Returns the predictive mean and variance of the objective function
         at X average over all hyperparameter samples.
@@ -194,37 +212,87 @@ class GaussianProcessMCMC(BaseModel):
 
         Parameters
         ----------
-        X: np.ndarray (N, D)
+        X_test: np.ndarray (N, D)
             Input test points
 
         Returns
         ----------
-        np.array(N,1)
+        np.array(N,)
             predictive mean
-        np.array(N,1)
+        np.array(N,)
             predictive variance
 
         """
+        if not self.is_trained:
+            raise Exception('Model has to be trained first!')
 
-        X_test = X
-        mu = np.zeros([len(self.models), X_test.shape[0]])
-        var = np.zeros([len(self.models), X_test.shape[0]])
+        if self.normalize_input:
+            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+        else:
+            X_test_norm = X_test
+
+        mu = np.zeros([len(self.models), X_test_norm.shape[0]])
+        var = np.zeros([len(self.models), X_test_norm.shape[0]])
         for i, model in enumerate(self.models):
-            mu[i], var[i] = model.predict(X_test)
+            mu[i], var[i] = model.predict(X_test_norm)
 
-        # See the algorithm runtime prediction paper by Hutter et al
+        # See the Algorithm Runtime Prediction paper by Hutter et al.
         # for the derivation of the total variance
-        m = np.array([[mu.mean()]])
-        v = np.mean(mu ** 2 + var) - m ** 2
+        m = mu.mean(axis=0)
+        #v = np.mean(mu ** 2 + var) - m ** 2
+        v = var.mean(axis=0)
+
+        if self.normalize_output:
+            m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
 
         # Clip negative variances and set them to the smallest
         # positive float value
         if v.shape[0] == 1:
             v = np.clip(v, np.finfo(v.dtype).eps, np.inf)
         else:
-            v[np.diag_indices(v.shape[0])] = \
-                    np.clip(v[np.diag_indices(v.shape[0])],
-                            np.finfo(v.dtype).eps, np.inf)
+            v = np.clip(v, np.finfo(v.dtype).eps, np.inf)
             v[np.where((v < np.finfo(v.dtype).eps) & (v > -np.finfo(v.dtype).eps))] = 0
 
         return m, v
+
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+        inc, inc_value = super(GaussianProcessMCMC, self).get_incumbent()
+        if self.normalize_input:
+            inc = normalization.zero_one_unnormalization(inc, self.lower, self.upper)
+
+        if self.normalize_output:
+            inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
+
+        return inc, inc_value
+
+
+class MTBOGP(GaussianProcessMCMC):
+
+    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
+                 normalize_input=True,
+                 rng=None, lower=None, upper=None, noise=-8):
+
+        super(MTBOGP, self).__init__(kernel, prior, n_hypers, chain_length, burnin_steps,
+                 normalize_output=False, normalize_input=normalize_input,
+                 rng=rng, lower=lower, upper=upper, noise=noise)
+
+    def predict(self, X_test, **kwargs):
+        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
+        X_test_norm = np.concatenate((X_test_norm, X_test[:, None, -1]), axis=1)
+        return super(MTBOGP, self).predict(X_test_norm, **kwargs)
+
+    def train(self, X, y, do_optimize=True, **kwargs):
+
+        X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
+        X_norm = np.concatenate((X_norm, X[:, None, -1]), axis=1)
+        return super(MTBOGP, self).train(X_norm, y, do_optimize, **kwargs)

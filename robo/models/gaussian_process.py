@@ -1,16 +1,11 @@
-'''
-Created on Oct 12, 2015
-
-@author: Aaron Klein
-'''
 
 import logging
 import george
 import numpy as np
 
 from scipy import optimize
-from copy import deepcopy
 
+from robo.util import normalization
 from robo.models.base_model import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -20,11 +15,12 @@ class GaussianProcess(BaseModel):
 
     def __init__(self, kernel, prior=None,
                  noise=1e-3, use_gradients=False,
-                 basis_func=None, dim=None, normalize_output=False,
-                 *args, **kwargs):
+                 normalize_output=False,
+                 normalize_input=True,
+                 lower=None, upper=None, rng=None):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
-        by optimizing the marginal loglikelihood.
+        by optimizing the marginal log likelihood.
 
         Parameters
         ----------
@@ -35,68 +31,91 @@ class GaussianProcess(BaseModel):
             it implements the Prior interface.
         noise : float
             Noise term that is added to the diagonal of the covariance matrix
-            for the cholesky decomposition.
+            for the Cholesky decomposition.
         use_gradients : bool
             Use gradient information to optimize the negative log likelihood
+        lower : np.array(D,)
+            Lower bound of the input space which is used for the input space normalization
+        upper : np.array(D,)
+            Upper bound of the input space which is used for the input space normalization
+        normalize_output : bool
+            Zero mean unit variance normalization of the output values
+        normalize_input : bool
+            Normalize all inputs to be in [0, 1]. This is important to define good priors for the
+            length scales.
+        rng: np.random.RandomState
+            Random number generator
         """
 
+        if rng is None:
+            self.rng = np.random.RandomState(np.random.randint(0, 10000))
+        else:
+            self.rng = rng
+
         self.kernel = kernel
-        self.model = None
+        self.gp = None
         self.prior = prior
         self.noise = noise
         self.use_gradients = use_gradients
-        self.basis_func = basis_func
-        self.dim = dim
         self.normalize_output = normalize_output
+        self.normalize_input = normalize_input
         self.X = None
-        self.Y = None
+        self.y = None
+        self.hypers = []
+        self.mean = 0
+        self.is_trained = False
+        self.lower = lower
+        self.upper = upper
 
-    def scale(self, x, new_min, new_max, old_min, old_max):
-        return ((new_max - new_min) *
-                (x - old_min) / (old_max - old_min)) + new_min
-
-    def train(self, X, Y, do_optimize=True):
+    @BaseModel._check_shapes_train
+    def train(self, X, y, do_optimize=True):
         """
-        Computes the cholesky decomposition of the covariance of X and
-        estimates the GP hyperparameter by optimizing the marginal
+        Computes the Cholesky decomposition of the covariance of X and
+        estimates the GP hyperparameters by optimizing the marginal
         loglikelihood. The prior mean of the GP is set to the empirical
-        mean of the X.
+        mean of X.
 
         Parameters
         ----------
         X: np.ndarray (N, D)
             Input data points. The dimensionality of X is (N, D),
             with N as the number of points and D is the number of features.
-        Y: np.ndarray (N, 1)
+        y: np.ndarray (N,)
             The corresponding target values.
         do_optimize: boolean
-            If set to true the hyperparameters are optimized.
+            If set to true the hyperparameters are optimized otherwise
+            the default hyperparameters of the kernel are used.
         """
-        self.X = X
-        # For Fabolas we transform s to (1 - s)^2
-        if self.basis_func is not None:
-            self.X = deepcopy(X)
-            self.X[:, self.dim] = self.basis_func(self.X[:, self.dim])
 
-        self.Y = Y
+        if self.normalize_input:
+            # Normalize input to be in [0, 1]
+            self.X, self.lower, self.upper = normalization.zero_one_normalization(X, self.lower, self.upper)
+        else:
+            self.X = X
+
         if self.normalize_output:
-            self.Y_mean = np.mean(Y)
-            self.Y_std = np.std(Y)
-            self.Y = (Y - self.Y_mean) / self.Y_std
+            # Normalize output to have zero mean and unit standard deviation
+            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+        else:
+            self.y = y
 
         # Use the empirical mean of the data as mean for the GP
-        self.mean = np.mean(self.Y, axis=0)
-        self.model = george.GP(self.kernel, mean=self.mean)
+        self.mean = np.mean(self.y, axis=0)
+        self.gp = george.GP(self.kernel, mean=self.mean)
 
         if do_optimize:
             self.hypers = self.optimize()
-            self.model.kernel[:] = self.hypers[:-1]
-            self.noise = np.exp(self.hypers[-1]) ## sigma^2
+            self.gp.kernel[:] = self.hypers[:-1]
+            self.noise = np.exp(self.hypers[-1])  # sigma^2
         else:
-            self.hypers = self.model.kernel[:]
+            self.hypers = self.gp.kernel[:]
             self.hypers = np.append(self.hypers, np.log(self.noise))
-        logger.info("HYPERS: " + str(self.hypers))            
-        self.model.compute(self.X, yerr=np.sqrt(self.noise))
+
+        logger.debug("GP Hyperparameters: " + str(self.hypers))
+
+        self.gp.compute(self.X, yerr=np.sqrt(self.noise))
+
+        self.is_trained = True
 
     def get_noise(self):
         return self.noise
@@ -123,11 +142,11 @@ class GaussianProcess(BaseModel):
             return 1e25
 
         # The last entry of theta is always the noise
-        self.model.kernel[:] = theta[:-1]
+        self.gp.kernel[:] = theta[:-1]
         noise = np.exp(theta[-1])  # sigma^2
-        
-        self.model.compute(self.X, yerr=np.sqrt(noise))
-        ll = self.model.lnlikelihood(self.Y[:, 0], quiet=True)
+
+        self.gp.compute(self.X, yerr=np.sqrt(noise))
+        ll = self.gp.lnlikelihood(self.y, quiet=True)
 
         # Add prior
         if self.prior is not None:
@@ -138,24 +157,23 @@ class GaussianProcess(BaseModel):
 
     def grad_nll(self, theta):
 
-        self.model.kernel[:] = theta[:-1]
+        self.gp.kernel[:] = theta[:-1]
         noise = np.exp(theta[-1])
         
-        self.model.compute(self.X, yerr=np.sqrt(noise))
-        
-        self.model._compute_alpha(self.Y[:, 0])
-        K_inv = self.model.solver.apply_inverse(np.eye(self.model._alpha.size),
-                                          in_place=True)
+        self.gp.compute(self.X, yerr=np.sqrt(noise))
+
+        self.gp._compute_alpha(self.y)
+        K_inv = self.gp.solver.apply_inverse(np.eye(self.gp._alpha.size),
+                                             in_place=True)
 
         # The gradients of the Gram matrix, for the noise this is just 
-        # the identiy matrix
-        Kg = self.model.kernel.gradient(self.model._x)
+        # the identity matrix
+        Kg = self.gp.kernel.gradient(self.gp._x)
         Kg = np.concatenate((Kg, np.eye(Kg.shape[0])[:, :, None]), axis=2)
 
         # Calculate the gradient.
-        A = np.outer(self.model._alpha, self.model._alpha) - K_inv
+        A = np.outer(self.gp._alpha, self.gp._alpha) - K_inv
         g = 0.5 * np.einsum('ijk,ij', Kg, A)
-        
 
         if self.prior is not None:
             g += self.prior.gradient(theta)
@@ -163,92 +181,117 @@ class GaussianProcess(BaseModel):
         return -g
 
     def optimize(self):
-        # Start optimization  from the previous hyperparameter configuration
-        p0 = self.model.kernel.vector
+        """
+        Optimizes the marginal log likelihood and returns the best found
+        hyperparameter configuration theta.
+
+        Returns
+        -------
+        theta : np.ndarray(H)
+            Hyperparameter vector that maximizes the marginal log likelihood
+        """
+        # Start optimization from the previous hyperparameter configuration
+        p0 = self.gp.kernel.vector
         p0 = np.append(p0, np.log(self.noise))
 
         if self.use_gradients:
             bounds = [(-10, 10)] * (len(self.kernel) + 1)
             theta, _, _ = optimize.fmin_l_bfgs_b(self.nll, p0,
-                                             fprime=self.grad_nll,
-                                             bounds=bounds)
+                                                 fprime=self.grad_nll,
+                                                 bounds=bounds)
         else:
             results = optimize.minimize(self.nll, p0)
             theta = results.x
         return theta
 
-    def predict_variance(self, X1, X2):
+    def predict_variance(self, x1, X2):
         r"""
-        Predicts the variance between two test points X1, X2 by
+        Predicts the variance between a test points x1 and a set of points X2 by
            math: \sigma(X_1, X_2) = k_{X_1,X_2} - k_{X_1,X} * (K_{X,X}
                        + \sigma^2*\mathds{I})^-1 * k_{X,X_2})
 
         Parameters
         ----------
-        X1: np.ndarray (N, D)
+        x1: np.ndarray (1, D)
             First test point
         X2: np.ndarray (N, D)
-            Second test point
+            Set of test point
         Returns
         ----------
-        np.array(N,1)
-            predictive variance
+        np.array(N, 1)
+            predictive variance between x1 and X2
 
         """
-        x_ = np.concatenate((X1, X2))
-        _, var = self.predict(x_)
-        var = var[:-1, -1, np.newaxis]
+
+        if not self.is_trained:
+            raise Exception('Model has to be trained first!')
+
+        if self.normalize_input:
+            x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
+            X2_norm, _, _ = normalization.zero_one_normalization(X2, self.lower, self.upper)
+        else:
+            x1_norm = x1
+            X2_norm = X2
+
+        x_ = np.concatenate((x1_norm, X2_norm))
+        _, var = self.predict(x_, full_cov=True)
+
+        var = var[-1, :-1, np.newaxis]
 
         return var
 
-    def predict(self, X, **kwargs):
+    @BaseModel._check_shapes_predict
+    def predict(self, X_test, full_cov=False, **kwargs):
         r"""
         Returns the predictive mean and variance of the objective function at
-        the specified test point.
+        the given test points.
 
         Parameters
         ----------
-        X: np.ndarray (N, D)
+        X_test: np.ndarray (N, D)
             Input test points
+        full_cov: bool
+            If set to true than the whole covariance matrix between the test points is returned
 
         Returns
         ----------
-        np.array(N,1)
+        np.array(N,)
             predictive mean
-        np.array(N,1)
+        np.array(N,) or np.array(N, N) if full_cov == True
             predictive variance
 
         """
 
-        # For Fabolas we transform s to (1 - s)^2
-        if self.basis_func is not None:
-            X_test = deepcopy(X)
-            X_test[:, self.dim] = self.basis_func(X_test[:, self.dim])
+        if not self.is_trained:
+            raise Exception('Model has to be trained first!')
+
+        if self.normalize_input:
+            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
         else:
-            X_test = X
+            X_test_norm = X_test
 
-        if self.model is None:
-            logger.error("The model has to be trained first!")
-            raise ValueError
+        mu, var = self.gp.predict(self.y, X_test_norm)
 
-        mu, var = self.model.predict(self.Y[:, 0], X_test)
+        if self.normalize_output:
+            mu = normalization.zero_mean_unit_var_unnormalization(mu, self.y_mean, self.y_std)
+
+        if not full_cov:
+            var = np.diag(var)
 
         # Clip negative variances and set them to the smallest
-        # positive float values
+        # positive float value
         if var.shape[0] == 1:
             var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
         else:
-            var[np.diag_indices(var.shape[0])] = np.clip(
-                                            var[np.diag_indices(var.shape[0])],
-                                            np.finfo(var.dtype).eps, np.inf)
+            var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
             var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
 
-        return mu[:, np.newaxis], var
+        return mu, var
 
     def sample_functions(self, X_test, n_funcs=1):
         """
         Samples F function values from the current posterior at the N
-        specified test point.
+        specified test points.
 
         Parameters
         ----------
@@ -259,12 +302,44 @@ class GaussianProcess(BaseModel):
 
         Returns
         ----------
-        np.array(F,N)
+        function_samples: np.array(F, N)
             The F function values drawn at the N test points.
         """
 
-        return self.model.sample_conditional(self.Y[:, 0], X_test, n_funcs)
+        if self.normalize_input:
+            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+        else:
+            X_test_norm = X_test
 
-    def predictive_gradients(self, X_test):
-        dmdx, dvdx = self.m.predictive_gradients(X_test)
-        return dmdx[:, 0, :], dvdx
+        if not self.is_trained:
+            raise Exception('Model has to be trained first!')
+
+        funcs = self.gp.sample_conditional(self.y, X_test_norm, n_funcs)
+
+        if self.normalize_output:
+            funcs = normalization.zero_mean_unit_var_unnormalization(funcs, self.y_mean, self.y_std)
+
+        if len(funcs.shape) == 1:
+            return funcs[None, :]
+        else:
+            return funcs
+        
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+        inc, inc_value = super(GaussianProcess, self).get_incumbent()
+        if self.normalize_input:
+            inc = normalization.zero_one_unnormalization(inc, self.lower, self.upper)
+
+        if self.normalize_output:
+            inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
+
+        return inc, inc_value

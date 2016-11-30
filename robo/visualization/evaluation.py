@@ -1,30 +1,36 @@
-'''
-Created on April 7th, 2016
-@author: Numair Mansur (numair.mansur@gmail.com)
-'''
-
-import seaborn as sns
+try:
+    import seaborn as sns
+    # Set Appearance properties using Seaborn
+    sns.set(style="white", color_codes=True, font_scale=1.2)
+    sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
+    sns.set_titles(col_template="{col_name}", fontweight='bold', size=18)
+except:
+    pass
 import matplotlib.pyplot as plt
 import numpy as np
+
 from scipy import stats
 
+
 def bar_plot(x, curves, title="", width=0.10,
-            colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
-            log_scale_y=False, log_scale_x=False, legend=True,
-            x_title="X Label", y_title="Y Label"):
-    
-    '''
+             colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
+             log_scale_y=False, log_scale_x=False, legend=True,
+             x_title="X Label", y_title="Y Label"):
+    """
+
     Plots Mean and Standard Deviation with a Bar Graph
+
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
-        curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
-        curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
-        curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
-        curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
-        curves = [curve1, curve2, curve3, curve4]
-        plot = bar_plot(x, curves, legend = True)
-        plot.show()
+    x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
+    curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
+    curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
+    curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
+    curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
+    curves = [curve1, curve2, curve3, curve4]
+    plot = bar_plot(x, curves, legend = True)
+    plot.show()
+
     Parameters
     -----------
     x : numpy array
@@ -37,7 +43,7 @@ def bar_plot(x, curves, title="", width=0.10,
     title : string
         Title of the graph
     width : float
-    	Width of the bars.
+        Width of the bars.
     colors : string array
         Color of the curve. Each entry corresponds to one curve
     log_scale_y : Boolean
@@ -47,18 +53,16 @@ def bar_plot(x, curves, title="", width=0.10,
     legend : Boolean
         If set to true, displays the legend.
     x_title : String
-    	X label string 
+        X label string
     y_title : String
-    	Y label string
-   	Retrun
-   	----------
-   	plt : object
-    '''
-    # Set Appearance properties using Seaborn
-    sns.set(style="white", color_codes=True, font_scale=1.2)
-    sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
-    #sns.set_titles(col_template = "{col_name}", fontweight = 'bold', size = 18)
-    # - - - - - - - -- - - - - - - - -
+        Y label string
+
+    Returns
+    -------
+
+    plt : object
+    """
+
     x = x.astype(float)
     fig, ax = plt.subplots()
     bars = []
@@ -73,7 +77,7 @@ def bar_plot(x, curves, title="", width=0.10,
                 x_location_map[k] += 1
             else:
                 x_location_map[k] = 1
-    # - - - - - - - - - - - - -
+
     for i, j in enumerate(x):
         bar = ax.bar(
             j,
@@ -94,7 +98,7 @@ def bar_plot(x, curves, title="", width=0.10,
                    for i in x_location_map])
     ax.set_xticklabels([int(i) for i in x_location_map])
     if legend:
-    	ax.legend(bars, ["Method " + str(i + 1) for i, j in enumerate(bars)], loc=0)
+        ax.legend(bars, ["Method " + str(i + 1) for i, j in enumerate(bars)], loc=0)
     if log_scale_x:
         plt.xscale('log')
     if log_scale_y:
@@ -103,22 +107,24 @@ def bar_plot(x, curves, title="", width=0.10,
 
 
 def point_plot(x, curves, title="",
-        colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
-        log_scale_y=False, log_scale_x=False, legend=True,
-        x_title="X Label", y_title="Y Label"):
+               colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
+               log_scale_y=False, log_scale_x=False, legend=True,
+               x_title="X Label", y_title="Y Label"):
 
-    '''
+    """
     Plots Mean and Standard Deviation with an error bar graph
+
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
-        curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
-        curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
-        curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
-        curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
-        curves = [curve1, curve2, curve3, curve4]
-        plot = point_plot(x, curves)
-        plot.show()
+    x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 5], [1, 2, 3, 4]])
+    curve1 = np.array([[1, 3, 5, 7], [0.2, 0.4, 0.7, 0.4]])
+    curve2 = np.array([[3, 2, 6, 8], [0.1, 1, 0.7, 0.3]])
+    curve3 = np.array([[2, 4, 6, 3], [0.4, 0.4, 0.1, 0.3]])
+    curve4 = np.array([[4, 3, 2, 1], [0.3, 0.4, 0.1, 0.2]])
+    curves = [curve1, curve2, curve3, curve4]
+    plot = point_plot(x, curves)
+    plot.show()
+
     Parameters
     ----------
     x : numpy array
@@ -142,17 +148,17 @@ def point_plot(x, curves, title="",
         X label string 
     y_title : String
         Y label string
-    Retrun
+
+    Returns
     ----------
     plt : object
-    '''
-    # Set Appearance properties using Seaborn
-    sns.set(style="white", color_codes=True, font_scale=1.2)
-    sns.set_style("ticks", {"xtick.major.size": 3, "ytick.major.size": 2})
-    # - - - - - - - - - - - - - - - - - - -
+
+    """
+
     plt.figure()
 
     for i, j in enumerate(x):
+
         plt.errorbar(j,
                      curves[i][0],
                      yerr=curves[i][1],
@@ -162,7 +168,7 @@ def point_plot(x, curves, title="",
                      color=colors[i])
     
     plt.ylabel(y_title, fontsize = 14)
-    plt.xlabel(x_title, fontsize=13)    
+    plt.xlabel(x_title, fontsize=13)
     plt.title(title)
     plt.grid()
     if log_scale_x:
@@ -183,18 +189,20 @@ def point_plot(x, curves, title="",
 
 
 def latex_matrix_string(mean, error, title,
-        row_labels, col_labels, best_bold_row=True, best_bold_column=False):
+                        row_labels, col_labels,
+                        best_bold_row=True, best_bold_column=False):
     
-    '''
+    """
     Latex Matrix String Generator.
-    
+
     Example
     -------
-        mean = [[1, 6, 5, 7], [12, 4, 6, 13], [9, 8, 7, 10]]
-        error = [[2, 6, 1, 5], [4, 8, 2, 3], [1, 4, 8, 2]]
-        print(latex_matrix_string(mean, error, "Testing Testing", [
-                         "row1", "row2", "row3"], [
-                         "col1", "col2", "col3", "col4"]))
+    mean = [[1, 6, 5, 7], [12, 4, 6, 13], [9, 8, 7, 10]]
+    error = [[2, 6, 1, 5], [4, 8, 2, 3], [1, 4, 8, 2]]
+    print(latex_matrix_string(mean, error, "Testing Testing", [
+                     "row1", "row2", "row3"], [
+                     "col1", "col2", "col3", "col4"]))
+
     Parameters
     ----------
     mean : array of float array
@@ -213,7 +221,7 @@ def latex_matrix_string(mean, error, title,
     best_bold_column :
             If set to true, the minimum mean entry in each column will
             be set to bold.
-    '''
+    """
     matrix_string = '''\hline
 '''
     for i, row in enumerate(mean):
@@ -251,22 +259,25 @@ def latex_matrix_string(mean, error, title,
     return latex_string1
 
 
-def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
-    colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
-    x_title="X Label", y_title="Y Label"):
-    '''
+def plot_mean_and_std(x, methods, draw_bar_plot= False,
+                      draw_point_plot=False, title="", width=0.10,
+                      colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
+                      log_scale_y=False, log_scale_x=False, legend=True,
+                      x_title="X Label", y_title="Y Label"):
+
+    """
     Plots Mean and Standard Deviation of Methods with multiple runs
 
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
-        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
-        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
-        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
-        methods = [method_1, method_2, method_3]
+    x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+    method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+    method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+    method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+    methods = [method_1, method_2, method_3]
 
-        plot = plotMeanAndStd(x,methods,drawBarPlot = True)
-        plot.show()
+    plot = plot_mean_and_std(x,methods,drawBarPlot = True)
+    plot.show()
 
     Parameters
     -----------
@@ -276,9 +287,9 @@ def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="
     methods : list of numpy arrays
         A list of numpy arrays of methods. Each method contains a numpy array
         of several run of that corresponding method.
-    drawBarPlot : Bool
+    draw_bar_plot : Bool
         Should be True if a Bar Plot is expected.
-    drawPointPlot : Bool
+    draw_point_plot : Bool
         Should be True if a Point Plot is expected.
     title : string
         Title of the graph
@@ -296,12 +307,13 @@ def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="
         X label string 
     y_title : String
         Y label string
-    Retrun
+    Return
     ----------
     plt : object
         Plot Object
-    '''
+    """
     curves = []
+
     for index,method in enumerate(methods):
         mean = []
         std = []
@@ -311,39 +323,41 @@ def plotMeanAndStd(x,methods,drawBarPlot = False, drawPointPlot = False, title="
             stdValue = np.std(valueArray)
             mean.append(meanValue)
             std.append(stdValue)
-        curves.append(np.array([mean,std]))
-    if(drawBarPlot):
-        barPlot = bar_plot(x,curves, title=title, width=width,
-            colors=colors,
-            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
-            x_title=x_title, y_title=y_title)
-        return barPlot
-    elif (drawPointPlot):
-        pointPlot = point_plot(x,curves,title=title,
-            colors=colors,
-            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
-            x_title=x_title, y_title=y_title)
-        return pointPlot
+        curves.append(np.array([mean, std]))
+    if draw_bar_plot:
+        plot = bar_plot(x, curves, title=title, width=width,
+                        colors=colors, log_scale_y=log_scale_y,
+                        log_scale_x=log_scale_x, legend=legend,
+                        x_title=x_title, y_title=y_title)
+        return plot
+    elif draw_point_plot :
+        plot = point_plot(x, curves, title=title,
+                          colors=colors, log_scale_y=log_scale_y,
+                          log_scale_x=log_scale_x, legend=legend,
+                          x_title=x_title, y_title=y_title)
+        return plot
     else:
         raise NameError('Please select the type of the plot')
 
 
-def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False, title="", width=0.10,
-    colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'], log_scale_y=False, log_scale_x=False, legend=True,
-    x_title="X Label", y_title="Y Label"):
-    '''
+def plot_standard_error_of_mean(x, methods, draw_bar_plot=False,
+                                draw_point_plot=False, title="", width=0.10,
+                                colors=['b', 'g', 'r', 'c', 'm', 'y', 'k'],
+                                log_scale_y=False, log_scale_x=False, legend=True,
+                                x_title="X Label", y_title="Y Label"):
+    """
     Plots Mean and Standard Error of the mean for Methods with multiple runs
 
     Example
     -------    
-        x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
-        method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
-        method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
-        method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
-        methods = [method_1, method_2, method_3]
+    x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+    method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+    method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+    method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+    methods = [method_1, method_2, method_3]
 
-        plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
-        plot.show()
+    plot = plotStandardErrorOfMean(x,methods,drawBarPlot = True)
+    plot.show()
 
     Parameters
     -----------
@@ -353,9 +367,9 @@ def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False
     methods : list of numpy arrays
         A list of numpy arrays of methods. Each method contains a numpy array
         of several run of that corresponding method.
-    drawBarPlot : Bool
+    draw_bar_plot : Bool
         Should be True if a Bar Plot is expected.
-    drawPointPlot : Bool
+    draw_point_plot : Bool
         Should be True if a Point Plot is expected.
     title : string
         Title of the graph
@@ -373,11 +387,13 @@ def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False
         X label string 
     y_title : String
         Y label string
-    Retrun
-    ----------
+
+    Returns
+    -------
     plt : object
         Plot Object
-    '''
+    """
+
     curves = []
     for index,method in enumerate(methods):
         mean = []
@@ -385,21 +401,281 @@ def plotStandardErrorOfMean(x,methods,drawBarPlot = False, drawPointPlot = False
         for j in range(0,len(x[index])):
             valueArray = np.array([el[j] for el in method])
             meanValue = np.mean(valueArray)
-            semValue = stats.sem(valueArray) #Standard Error of Mean
+            semValue = stats.sem(valueArray)  # Standard Error of Mean
             mean.append(meanValue)
             sem.append(semValue)
         curves.append(np.array([mean,sem]))
-    if(drawBarPlot):
-        barPlot = bar_plot(x,curves, title=title, width=width,
-            colors=colors,
-            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
-            x_title=x_title, y_title=y_title)
-        return barPlot
-    elif (drawPointPlot):
-        pointPlot = point_plot(x,curves,title=title,
-            colors=colors,
-            log_scale_y=log_scale_y, log_scale_x=log_scale_x, legend=legend,
-            x_title=x_title, y_title=y_title)
-        return pointPlot
+    if draw_bar_plot:
+        plot = bar_plot(x,curves, title=title, width=width,
+                        colors=colors, log_scale_y=log_scale_y,
+                        log_scale_x=log_scale_x, legend=legend,
+                        x_title=x_title, y_title=y_title)
+        return plot
+    elif draw_point_plot:
+        plot = point_plot(x, curves, title=title,
+                          colors=colors, log_scale_y=log_scale_y,
+                          log_scale_x=log_scale_x, legend=legend,
+                          x_title=x_title, y_title=y_title)
+        return plot
     else:
         raise NameError('Please select the type of the plot')
+
+
+def time_interpolation(time_point_union, data):
+    """
+    Interpolates data over time points.
+    Edits the original data dictionary. All of the methods should have runs on the same time point.
+    i.e for each time point in the time_points_union array there should be a y value.
+    :return:
+    """
+
+    for method_number in time_point_union:
+        for time_point in time_point_union[method_number]:
+            for run_number in data[method_number]:
+                if time_point in data[method_number][run_number]:
+                    pass  # Do nothing
+                else:  # Did not find the key
+                    y_value_of_new_point = sorted([i for i in data[method_number][run_number] if i < time_point])
+                    if not y_value_of_new_point:
+                        y_value_of_new_point = sorted([i for i in data[method_number][run_number]])[-1]
+                    else:
+                        y_value_of_new_point = y_value_of_new_point[-1]
+                    data[method_number][run_number][time_point] = {}
+                    data[method_number][run_number][time_point] = data[method_number][run_number][y_value_of_new_point]
+    return data
+
+
+def plot_over_time(time, methods, error_random_config, agglomeration="mean"):
+    """
+    Takes different runs of a method with different time points and interpolates each run so that all the runs have a value
+    at all the time points.
+
+    Example:
+    ---------
+    method1 = np.array([[80,84,85,82,83, 87,86,86,79,75,74],[53,52,59,54,55,56,54,59,54,52,50],[30,33,32,31,29, 28,26,27,26,24,23]])
+    method2 = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12]])
+    time = np.array([[[1, 2, 10, 15,16, 19,22,27,33,38,40], [1, 3, 9, 12,14, 19,21,30,35,40,42], [1, 3, 4, 6, 8, 20,22,28,33,45,46]],
+            [[2,3,4,5], [4,5,6,7], [6,7,8,9]]])
+    methods = [method1,method2]
+    plot = plot_over_time(time,methods,0.9)
+    plot.show()
+
+    Parameters:
+    -----------
+    time : numpy array
+        For each method and for each run of the method, contains the time points.
+    methods : list of numpy arrays
+        A list of numpy arrays of methods. Each method contains a numpy array
+        of several run of that corresponding method.
+    error_random_config: float
+        ...
+    agglomeration: string
+        ...
+
+    Returns
+    -------
+
+    plt : object
+        Plot Object
+
+    """
+    # Transform data into a dictionary for more efficient and easy pre-processing.
+    data = dict()
+    time_point_union = dict()
+    # Initializing the dictionary with data already available
+    for i, method in enumerate(methods):
+        data[i] = {}
+        time_point_union[i] = list()  # A dictionary of lists.
+        for j, runs in enumerate(method):
+            data[i][j] = dict()
+            time_point_union[i] = np.union1d(time_point_union[i], time[i][j])
+            time_point_union[i] = list(map(int, time_point_union[i]))
+            for k, y_value in enumerate(runs):
+                data[i][j][time[i][j][k]] = {}
+                data[i][j][time[i][j][k]] = methods[i][j][k]
+    data = time_interpolation(time_point_union, data)  # Interpolating data on time points.
+    # Transforming this dictionary into array format so that it can be visualised.
+    new_time = list()
+    new_methods = list()
+    method_numbers = sorted(data.keys()) # A sorted list of method numbers.
+    for i in method_numbers:
+        new_time.append([time_point_union[i] for j in data[i]])
+    new_time = np.asarray(new_time)
+    # Use the dictionary to generate the new and interpolated methods array.
+    for i in method_numbers:
+        method1 = list()
+        run_numbers = sorted(data[i].keys())
+        for runs in run_numbers:
+            array = [data[i][runs][time_point_union[i][o]] for o in [n for n in range(0,len(time_point_union[i]))]]
+            method1.append(array)
+        new_methods.append(method1)
+    # Update the old data to the new data.
+    time = new_time
+    methods = new_methods
+    for i,j in enumerate(methods):
+        for l,m in enumerate(methods[i]):
+            plt.step(time[i][l], m, where='post') #,color='r')
+    return plt
+
+def plot_median_and_percentiles(x, method, first_percentile=5, second_percentile=95):
+    """
+    Plots the median and the percentiles of different runs of a method for a given time point.
+    By default plots the 5th and 95th percentile, if values not given.
+
+    Example:
+    -----------
+    x = np.array([[10,30,  50, 70,90, 100 ,120 ], [10, 50, 70, 90, 100, 120], [10, 50, 70, 90, 100, 120]])
+    method_1 = np.array([[100,70,90,100, 80,120,140], [110,70,100,120,70,70,130] , [90,70,80,90,85,110,120]])
+    method_2 = np.array([[50,58,65,70,45,70,75], [60,48,65,60,45, 65,70] , [40,68,65,55, 55,60,85]])
+    method_3 = np.array([[9,13,12,10,11,15,20], [11,13,9,9,11,20,25] , [12,13,5,7,11,11,11]])
+    methods = [method_1, method_2, method_3]
+    plot = plot_median_and_percentiles(x,methods)
+    plot.show()
+
+    Parameters:
+    ----------
+    x : numpy array
+        For each curve, contains the x-coordinates. Each entry
+        corresponds to one method.
+    method : list of numpy arrays
+        A list of numpy arrays of methods. Each method contains a numpy array
+        of several run of that corresponding method.
+    first_percentile : int
+        First percentile value, 5th percentile by defualt.
+    second_percentile : int
+        Second percentile value, 95th percentile by defualt.
+
+    Returns
+    -------
+
+    plt : object
+        Plot Object
+
+    """
+    markers = ["+","x","o","v","<",">","*",",","."]
+    for index,method in enumerate(method):
+        median = []
+        fifth_percentile = []
+        ninty_fifth_percentile = []
+        for j in range(0, len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            medianValue = np.median(valueArray)
+            fifth_value = np.percentile(valueArray, first_percentile)
+            ninty_fifth_value = np.percentile(valueArray, second_percentile)
+            ninty_fifth_percentile.append(ninty_fifth_value)
+            fifth_percentile.append(fifth_value)
+            median.append(medianValue)
+        median_curve =np.array(median)
+        ninty_fifth_percentile_curve = np.array(ninty_fifth_percentile)
+        fifth_percentile_curve = np.array(fifth_percentile)
+        plt.plot(x[index],median_curve, label = "median", color = "#4169e1", linewidth=1, marker = markers[index])
+        plt.plot(x[index],ninty_fifth_percentile_curve, color = "#6495ed", alpha=0.2)
+        plt.plot(x[index],fifth_percentile_curve,color = "#6495ed", alpha=0.2)
+        plt.fill_between(x[index],median_curve,ninty_fifth_percentile_curve, alpha=0.2, color = "#6495ed")
+        plt.fill_between(x[index],median_curve,fifth_percentile_curve,alpha=0.2, color = "#6495ed")
+    return plt
+
+x = np.array([[10,30,  50, 70,90, 100 ,120 ], [10, 50, 70, 90, 100, 120], [10, 50, 70, 90, 100, 120]])
+method_1 = np.array([[100,70,90,100, 80,120,140], [110,70,100,120,70,70,130] , [90,70,80,90,85,110,120]])
+method_2 = np.array([[50,58,65,70,45,70,75], [60,48,65,60,45, 65,70] , [40,68,65,55, 55,60,85]])
+method_3 = np.array([[9,13,12,10,11,15,20], [11,13,9,9,11,20,25] , [12,13,5,7,11,11,11]])
+methods = [method_1, method_2, method_3]
+plot = plot_median_and_percentiles(x,methods)
+plot.show()
+
+def plot_median(x, methods, method_names=[]):
+    """
+    Plots the median [ and the percentile value given? ]
+
+    Example:
+    ----------------------------
+    x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+    method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+    method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+    method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+    methods = [method_1, method_2, method_3]
+    plot = plot_median(x,methods)
+    plot.show()
+
+    Parameters:
+    ----------
+    x : numpy array
+        For each curve, contains the x-coordinates. Each entry
+        corresponds to one method.
+    methods : list of numpy arrays
+        A list of numpy arrays of methods. Each method contains a numpy array
+        of several run of that corresponding method.
+    method_names: List of Strings
+        A list of names for the methods
+
+    Returns
+    -------
+    plt : object
+        Plot Object
+    """
+    curves = []
+    for index, method in enumerate(methods):
+        median = []
+        fifth_percentile = []
+        ninty_fifth_percentile = []
+        for j in range(0, len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            medianValue = np.median(valueArray)
+            fifth_value = np.percentile(valueArray, 5)
+            ninty_fifth_value = np.percentile(valueArray, 95)
+            ninty_fifth_percentile.append(ninty_fifth_value)
+            fifth_percentile.append(fifth_value)
+            median.append(medianValue)
+        curves.append(np.array(median))
+        print("5th-->", fifth_percentile)
+        print("95th --> ", ninty_fifth_percentile)
+        print("median --> ", median)
+    for index, curve in enumerate(curves):
+        plt.plot(x[index], curve, label=method_names[index]) if len(method_names) !=0 else plt.plot(x[index], curve)
+        plt.legend()
+    return plt
+
+
+def plot_mean(x, methods, method_names=[]):
+    """
+    Plots the mean of different runs of a method
+
+    Example:
+    --------
+    x = np.array([[1, 3, 4, 5], [1, 3, 4, 5], [1, 3, 4, 6]])
+    method_1 = np.array([[1,4,5,2], [3,4,3,6] , [2,5,5,8]])
+    method_2 = np.array([[8,7,5,9], [7,3,9,1] , [3,2,9,4]])
+    method_3 = np.array([[10,13,9,11], [9,12,10,10] , [11,14,18,6]])
+    methods = [method_1, method_2, method_3]
+    method_names = ['test method 1','test method 2','test method 3']
+    plot = plot_mean(x,methods,method_names)
+    plot.show()
+
+    Parameters:
+    ----------------------------
+        x : numpy array
+            For each curve, contains the x-coordinates. Each entry
+            corresponds to one method.
+        methods : list of numpy arrays
+            A list of numpy arrays of methods. Each method contains a numpy array
+            of several run of that corresponding method.
+        method_names: List of Strings
+            A list of names for the methods
+
+    Returns
+    -------
+    plt : object
+        Plot Object
+    """
+    curves = []
+    for index,method in enumerate(methods):
+        mean = []
+        for j in range(0,len(x[index])):
+            valueArray = np.array([el[j] for el in method])
+            meanValue = np.mean(valueArray)
+            mean.append(meanValue)
+        curves.append(np.array(mean))
+    for index, curve in enumerate(curves):
+        plt.plot(x[index], curve, label=method_names[index]) if len(method_names)!=0 else plt.plot(x[index],curve)
+        plt.legend()
+    return plt

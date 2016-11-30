@@ -1,79 +1,106 @@
-
+import abc
 import numpy as np
 
 
 class BaseModel(object):
-    """
-     Abstract base class for all models
-    """
+    __metaclass__ = abc.ABCMeta
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
+        """
+        Abstract base class for all models
+        """
         self.X = None
-        self.Y = None
+        self.y = None
 
-    def train(self, X, Y):
+    @abc.abstractmethod
+    def train(self, X, y):
         """
         Trains the model on the provided data.
-            
+
         Parameters
         ----------
         X: np.ndarray (N, D)
-            Input datapoints. The dimensionality of X is (N, D),
-            with N as the number of points and D is the number of features.
-        Y: np.ndarray (N, T)
-            The corresponding target values.
-            The dimensionality of Y is (N, T), where N has to 
-            match the number of points of X and T is the number of objectives
+            Input data points. The dimensionality of X is (N, D),
+            with N as the number of points and D is the number of input dimensions.
+        y: np.ndarray (N,)
+            The corresponding target values of the input data points.
         """
-        self.X = X
-        self.Y = Y
+        pass
 
-    def update(self, X, Y):
+    def update(self, X, y):
+        """
+        Update the model with the new additional data. Override this function if your
+        model allows to do something smarter than simple retraining
+
+        Parameters
+        ----------
+        X: np.ndarray (N, D)
+            Input data points. The dimensionality of X is (N, D),
+            with N as the number of points and D is the number of input dimensions.
+        y: np.ndarray (N,)
+            The corresponding target values of the input data points.
+        """
         X = np.append(self.X, X, axis=0)
-        Y = np.append(self.Y, Y, axis=0)
-        self.train(X, Y)
+        y = np.append(self.y, y, axis=0)
+        self.train(X, y)
 
-    def predict(self, X):
+    @abc.abstractmethod
+    def predict(self, X_test):
         """
-        Predicts for a given X matrix the target values
-        
+        Predicts for a given set of test data points the mean and variance of its target values
+
         Parameters
         ----------
-        X: np.ndarray (N, D)
-            Test datapoints. The dimensionality of X is (N, D),
-            with N as the number of points and D is the number of features.
-            
+        X_test: np.ndarray (N, D)
+            N Test data points with input dimensions D
+
         Returns
         ----------
-            The mean and variance of the test datapoint.
+        mean: ndarray (N,)
+            Predictive mean of the test data points
+        var: ndarray (N,)
+            Predictive variance of the test data points
         """
-        raise NotImplementedError()
+        pass
 
-    def predict_variance(self, X1, X2):
-        raise NotImplementedError()
+    def _check_shapes_train(func):
+        def func_wrapper(self, X, y, *args, **kwargs):
+            assert X.shape[0] == y.shape[0]
+            assert len(X.shape) == 2
+            assert len(y.shape) == 1
+            return func(self, X, y, *args, **kwargs)
+        return func_wrapper
 
-    def predictive_gradients(self, X=None):
-        """
-        Calculates the predictive gradients (gradient of the prediction)
-        
-        Parameters
-        ----------
-        
-        X: np.ndarray (N, D)
-            The points to predict the gradient for
-        Returns
-        ----------
-            The gradients at X
-        """
-        raise NotImplementedError()
+    def _check_shapes_predict(func):
+        def func_wrapper(self, X, *args, **kwargs):
+            assert len(X.shape) == 2
+            return func(self, X, *args, **kwargs)
+
+        return func_wrapper
 
     def get_json_data(self):
         """
         Json getter function'
 
-        :return: Dict object
+        Returns
+        ----------
+            dictionary
         """
-        jsonData = dict()
-        jsonData = {'X': self.X if self.X is None else self.X.tolist(), 'Y':self.Y if self.Y is None else self.Y.tolist(), 'hyperparameters':" " }
-        return jsonData
+        json_data = {'X': self.X if self.X is None else self.X.tolist(),
+                     'y': self.y if self.y is None else self.y.tolist(),
+                     'hyperparameters': ""}
+        return json_data
 
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+        best_idx = np.argmin(self.y)
+        return self.X[best_idx], self.y[best_idx]

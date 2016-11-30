@@ -1,8 +1,3 @@
-'''
-Created on Aug 21, 2015
-
-@author: Aaron Klein
-'''
 
 import os
 import csv
@@ -58,7 +53,7 @@ class BaseSolver(object):
             if exception.errno != errno.EEXIST:
                 raise
         self.output_file = open(os.path.join(self.save_dir, 'results.csv'), 'w')
-        self.output_file_json = open(os.path.join(self.save_dir,'results.json'),'w')
+        self.output_file_json = open(os.path.join(self.save_dir, 'results.json'), 'w')
         self.csv_writer = None
         self.json_writer = None
 
@@ -70,7 +65,7 @@ class BaseSolver(object):
             logger.info("No model trained yet!")
         return self.model
 
-    def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
+    def run(self, num_iterations=10, X=None, y=None):
         """
         The main optimization loop
 
@@ -80,7 +75,7 @@ class BaseSolver(object):
             The number of iterations
         X: np.ndarray(N,D)
             Initial points that are already evaluated
-        Y: np.ndarray(N,1)
+        y: np.ndarray(N,)
             Function values of the already evaluated points
 
         Returns
@@ -92,17 +87,15 @@ class BaseSolver(object):
         """
         pass
 
-    def choose_next(self, X=None, Y=None):
+    def choose_next(self, X=None, y=None):
         """
         Suggests a new point to evaluate.
 
         Parameters
         ----------
-        num_iterations: int
-            The number of iterations
         X: np.ndarray(N,D)
             Initial points that are already evaluated
-        Y: np.ndarray(N,1)
+        y: np.ndarray(N,)
             Function values of the already evaluated points
 
         Returns
@@ -112,39 +105,6 @@ class BaseSolver(object):
         """
         pass
 
-    def save_iteration(self, it, **kwargs):
-        """
-        Saves the meta information of an iteration.
-        """
-        if self.csv_writer is None:
-            self.fieldnames = ['iteration', 'config', 'fval',
-                               'incumbent', 'incumbent_val',
-                               'time_func_eval', 'time_overhead', 'runtime']
-
-            for key in kwargs:
-                self.fieldnames.append(key)
-            self.csv_writer = csv.DictWriter(self.output_file,
-                                             fieldnames=self.fieldnames)
-            self.csv_writer.writeheader()
-
-        output = dict()
-        output["iteration"] = it
-        output['config'] = self.X[it]
-        output['fval'] = self.Y[it]
-        output['incumbent'] = self.incumbent
-        output['incumbent_val'] = self.incumbent_value
-        output['time_func_eval'] = self.time_func_eval[it]
-        output['time_overhead'] = self.time_overhead[it]
-        output['runtime'] = time.time() - self.time_start
-
-        if kwargs is not None:
-            for key, value in kwargs.items():
-                output[key] = str(value)
-
-        self.csv_writer.writerow(output)
-        self.output_file.flush()
-
-
     def get_json_data(self, it):
         """
         Json getter function
@@ -152,10 +112,11 @@ class BaseSolver(object):
         :return: dict() object
         """
 
-        jsonData = dict()
         jsonData = {"optimization_overhead":self.time_overhead[it], "runtime": time.time() - self.time_start,
-                    "incumbent": self.incumbent.tolist(), "incumbent_fval":self.incumbent_value.tolist(),"time_func_eval": self.time_func_eval[it],
-                    "iteration":it}
+                    "incumbent": self.incumbent.tolist(),
+                    "incumbent_fval": self.incumbent_value.tolist(),
+                    "time_func_eval": self.time_func_eval[it],
+                    "iteration": it}
         return jsonData
 
     def save_json(self, it, **kwargs):
@@ -169,10 +130,9 @@ class BaseSolver(object):
 
         data = {'Solver': base_solver_data,
                 'Model': base_model_data,
-                'Task':base_task_data,
-                'Acquisiton':base_acquisition_data
+                'Task': base_task_data,
+                'Acquisiton': base_acquisition_data
                 }
 
-
         json.dump(data, self.output_file_json)
-        self.output_file_json.write('\n')  #Json more readable. Drop it?
+        self.output_file_json.write('\n')  # Json more readable. Drop it?

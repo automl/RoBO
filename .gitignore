@@ -1,12 +1,18 @@
 tmp
 *.png
+
 #vi
 *.sw[nop]
+experiments
+white_box_test
+whitebox_test
 
 #python
 __pycache__/
 *.py[cod]
 *.egg-info
+*.pyc
+*.nfs*
 
 # C extensions
 *.so
@@ -37,3 +43,6 @@ outcma*.dat
 *.snm
 *.gz
 *.toc
+*.orig
+
+/build*
