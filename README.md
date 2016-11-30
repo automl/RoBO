@@ -18,3 +18,11 @@ Documentation
 -------------
 You can find the documentation for RoBO here http://automl.github.io/RoBO/
 
+
+Fabolas
+-------
+
+You can find the documentation for Fabolas also here http://automl.github.io/RoBO/
+
+For an example how to use it in practice look here: <https://github.com/automl/RoBO/blob/master/examples/example_fmin_fabolas.py>
+
