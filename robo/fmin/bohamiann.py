@@ -68,7 +68,7 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
         print("ERROR: %s is not a valid acquisition function!" % acquisition_func)
         return
 
-    max_func = Direct(a, lower, upper)
+    max_func = Direct(a, lower, upper, verbose=False)
 
     bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
                               initial_points=n_init, rng=rng)
