@@ -15,8 +15,9 @@ from robo.fmin import fabolas
 # support vector machine on MNIST with Fabolas.
 # Have a look into the paper " Fast Bayesian Optimization of Machine Learning
 # Hyperparameters on Large Datasets" (http://arxiv.org/abs/1605.07079)
-# to see how it works. Note in order run this example you need scikit-learn
-# you can install by: pip install sklearn
+# to see how it works.
+#
+# NOTE: To run this example you need scikit-learn you can install by: pip install sklearn
 
 
 def load_dataset():
