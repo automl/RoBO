@@ -17,11 +17,10 @@ try:
     from sgmcmc.bnn.lasagne_layers import AppendLayer
 
 except ImportError as e:
-    print(str(e))
-    print("If you want to use Bayesian Neural Networks you have to install the following dependencies:")
-    print("Theano (pip install theano)")
-    print("Lasagne (pip install lasagne)")
-    print("sgmcmc (see https://github.com/stokasto/sgmcmc)")
+    raise ValueError("If you want to use Bayesian Neural Networks you have to install the following dependencies:\n"
+                     "Theano (pip install theano)\n"
+                     "Lasagne (pip install lasagne)\n"
+                     "sgmcmc (see https://github.com/stokasto/sgmcmc)")
 
 
 def get_default_net(n_inputs):
