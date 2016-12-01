@@ -8,13 +8,11 @@ import robo.models.neural_network as robo_net
 import robo.models.bagged_networks as bn
 from robo.initial_design.init_random_uniform import init_random_uniform
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 def f(x):
     return np.sinc(x * 10 - 5).sum(axis=1)[:, None]
-
-logging.basicConfig(level=logging.INFO)
 
 rng = np.random.RandomState(42)
 

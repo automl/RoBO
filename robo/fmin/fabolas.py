@@ -179,7 +179,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True)
+    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=False)
 
     # Initial Design
     logger.info("Initial Design")

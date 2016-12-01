@@ -11,3 +11,4 @@ git+https://github.com/sfalkner/george.git
 git+https://github.com/stokasto/sgmcmc.git
 git+https://bitbucket.org/aadfreiburg/random_forest_run
 git+https://github.com/automl/HPOlib2.git
+git+https://github.com/automl/multibeep.git

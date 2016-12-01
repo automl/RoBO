@@ -8,9 +8,8 @@ try:
     import multibeep as mb
 
 except ImportError as e:
-    print(str(e))
-    print("If you want to use Hyperband you have to install the following dependencies:")
-    print("multibeep (see https://github.com/automl/multibeep)")
+    raise ValueError("If you want to use Hyperband you have to install the following dependencies:\n"
+               "multibeep (see https://github.com/automl/multibeep)")
 
 
 logger = logging.getLogger(__name__)

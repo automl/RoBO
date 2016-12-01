@@ -4,7 +4,11 @@ import numpy as np
 
 from robo.models.base_model import BaseModel
 
-import pyrfr.regression
+try:
+    import pyrfr.regression
+except:
+    raise ValueError("If you want to use Random Forests you have to install the following dependencies:\n"
+                     "Pyrfr (pip install pyrfr)")
 
 
 class RandomForest(BaseModel):

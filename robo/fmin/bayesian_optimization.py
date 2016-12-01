@@ -106,7 +106,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     if maximizer == "cmaes":
         max_func = CMAES(acquisition_func, lower, upper, verbose=False, rng=rng)
     elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper)
+        max_func = Direct(acquisition_func, lower, upper, verbose=False)
     else:
         print("ERROR: %s is not a valid function to maximize the acquisition function!" % maximizer)
         return

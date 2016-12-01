@@ -7,10 +7,9 @@ try:
     import theano
     import theano.tensor as T
 except ImportError as e:
-    print(str(e))
-    print("If you want to use Bayesian Neural Networks you have to install the following dependencies:")
-    print("Theano (pip install theano)")
-    print("Lasagne (pip install lasagne)")
+    raise ValueError("If you want to use Neural Networks you have to install the following dependencies:\n"
+                     "Theano (pip install theano)\n"
+                     "Lasagne (pip install lasagne)")
 
 
 class SGDNet(object):
