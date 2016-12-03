@@ -7,6 +7,7 @@ from copy import deepcopy
 from robo.util import normalization
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.models.gaussian_process import GaussianProcess
+from robo.util.incumbent_estimation import projected_incumbent_estimation
 
 
 class FabolasGPMCMC(GaussianProcessMCMC):
@@ -132,6 +133,7 @@ class FabolasGP(GaussianProcess):
         return X_norm
 
     def train(self, X, y, do_optimize=True):
+        self.original_X = X
         X_norm = self.normalize(X)
         return super(FabolasGP, self).train(X_norm, y, do_optimize)
 
@@ -148,3 +150,28 @@ class FabolasGP(GaussianProcess):
     def sample_functions(self, X_test, n_funcs=1):
         X_norm = self.normalize(X_test)
         return super(FabolasGP, self).sample_functions(X_norm, n_funcs)
+
+    def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
+
+        projection = np.ones([self.original_X.shape[0], 1]) * 1
+
+        X_projected = np.concatenate((self.original_X[:, :-1], projection), axis=1)
+        X_norm = self.normalize(X_projected)
+
+        m, _ = self.predict(X_norm)
+
+        best = np.argmin(m)
+        incumbent = X_projected[best]
+        incumbent_value = m[best]
+
+        return incumbent, incumbent_value
