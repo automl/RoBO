@@ -26,7 +26,7 @@ def retransform(s_transform, s_min, s_max):
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
-            n_init=40, num_iterations=100, subsets=[1024, 256, 128, 64],
+            n_init=40, num_iterations=100, subsets=[256, 128, 64],
             burnin=100, chain_length=200, n_hypers=20, rng=None):
     """
     Fast Bayesian Optimization of Machine Learning Hyperparameters
@@ -51,8 +51,8 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         Number of hyperparameter samples for the GP
     subsets: list
         The ratio of the subsets size of the initial design.
-        For example if subsets=[1024, 256, 128, 64] then the first random point from the
-        initial design is evaluated on s_max/1024 of the data, the second point on
+        For example if subsets=[256, 128, 64] then the first random point from the
+        initial design is evaluated on s_max/256 of the data, the second point on
         s_max/256 of the data and so on.
     num_iterations: int
         Number of iterations

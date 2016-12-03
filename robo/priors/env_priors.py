@@ -45,11 +45,11 @@ class EnvPrior(BasePrior):
         lp += self.tophat.lnprob(theta[1:self.n_ls + 1])
 
         # Prior for the Bayesian regression kernel
-        pos = (self.n_ls + 1)
-        end = (self.n_ls + self.n_lr + 1)
+        #pos = (self.n_ls + 1)
+        #end = (self.n_ls + self.n_lr + 1)
 
-        for t in theta[pos:end]:
-            lp += self.bayes_lin_prior.lnprob(t)
+        #for t in theta[pos:end]:
+        #    lp += self.bayes_lin_prior.lnprob(t)
 
         # Noise
         lp += self.horseshoe.lnprob(theta[-1])
