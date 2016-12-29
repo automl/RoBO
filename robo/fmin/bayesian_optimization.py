@@ -19,16 +19,17 @@ logger = logging.getLogger(__name__)
 
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
-                          maximizer="direct", acquisition_func="log_ei", model="gp_mcmc",
-                          n_init=3, rng=None):
+                          maximizer="direct", acquisition_func="log_ei",
+                          model="gp_mcmc", n_init=3, rng=None):
     """
-    General interface for Bayesian optimization for global black box optimization problems.
+    General interface for Bayesian optimization for global black box
+    optimization problems.
 
     Parameters
     ----------
     objective_function: function
-        The objective function that is minimized. This function gets a numpy array (D,) as input and returns
-        the function value (scalar)
+        The objective function that is minimized. This function gets a numpy
+        array (D,) as input and returns the function value (scalar)
     lower: np.ndarray (D,)
         The lower bound of the search space
     upper: np.ndarray (D,)
@@ -36,13 +37,15 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     num_iterations: int
         The number of iterations (initial design + BO)
     maximizer: {"direct", "cmaes"}
-        Defines how the acquisition function is maximized. NOTE: "cmaes" only works in D > 1 dimensions
+        Defines how the acquisition function is maximized. NOTE: "cmaes" only
+        works in D > 1 dimensions
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
     model: {"gp", "gp_mcmc"}
         The model for the objective function.
     n_init: int
-        Number of points for the initial design. Make sure that it is <= num_iterations.
+        Number of points for the initial design. Make sure that it
+        is <= num_iterations.
     rng: numpy.random.RandomState
         Random number generator
 
@@ -83,8 +86,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                                  normalize_output=True,
                                  rng=rng, lower=lower, upper=upper)
     else:
-        print("ERROR: %s is not a valid model!" % model)
-        return
+        raise ValueError("'{}' is not a valid model".format(model))
 
     if acquisition_func == "ei":
         a = EI(gp)
@@ -95,8 +97,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     elif acquisition_func == "lcb":
         a = LCB(gp)
     else:
-        print("ERROR: %s is not a valid acquisition function!" % acquisition_func)
-        return
+        raise ValueError("'{}' is not a valid acquisition function"
+                         .format(acquisition_func))
 
     if model == "gp":
         acquisition_func = a
@@ -104,14 +106,16 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         acquisition_func = MarginalizationGPMCMC(a)
 
     if maximizer == "cmaes":
-        max_func = CMAES(acquisition_func, lower, upper, verbose=False, rng=rng)
+        max_func = CMAES(acquisition_func, lower, upper, verbose=False,
+                         rng=rng)
     elif maximizer == "direct":
         max_func = Direct(acquisition_func, lower, upper, verbose=False)
     else:
-        print("ERROR: %s is not a valid function to maximize the acquisition function!" % maximizer)
-        return
+        raise ValueError("'{}' is not a valid function to maximize the "
+                         "acquisition function".format(maximizer))
 
-    bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func,
+    bo = BayesianOptimization(objective_function, lower, upper,
+                              acquisition_func, gp, max_func,
                               initial_points=n_init, rng=rng)
 
     x_best, f_min = bo.run(num_iterations)
