@@ -15,12 +15,8 @@ try:
     from sgmcmc.utils import floatX
     from sgmcmc.bnn.priors import WeightPrior, LogVariancePrior
     from sgmcmc.bnn.lasagne_layers import AppendLayer
-
 except ImportError as e:
-    raise ValueError("If you want to use Bayesian Neural Networks you have to install the following dependencies:\n"
-                     "Theano (pip install theano)\n"
-                     "Lasagne (pip install lasagne)\n"
-                     "sgmcmc (see https://github.com/stokasto/sgmcmc)")
+    _has_dependencies = False
 
 
 def get_default_net(n_inputs):
@@ -117,6 +113,13 @@ class BayesianNeuralNetwork(BaseModel):
             function that returns a network specification.
 
         """
+
+        if not _has_dependencies:
+            raise ValueError("If you want to use Bayesian Neural Networks you "
+                             "have to install the following dependencies:\n"
+                             "Theano (pip install theano)\n"
+                             "Lasagne (pip install lasagne)\n"
+                             "sgmcmc (see https://github.com/stokasto/sgmcmc)")
 
         if rng is None:
             self.rng = np.random.RandomState(np.random.randint(100000))
