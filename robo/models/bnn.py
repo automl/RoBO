@@ -5,7 +5,8 @@ import numpy as np
 from collections import deque
 
 from robo.models.base_model import BaseModel
-from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
+from robo.util.normalization import (zero_mean_unit_var_normalization,
+                                     zero_mean_unit_var_unnormalization)
 
 try:
     import theano
@@ -17,6 +18,8 @@ try:
     from sgmcmc.bnn.lasagne_layers import AppendLayer
 except ImportError as e:
     _has_dependencies = False
+else:
+    _has_dependencies = True
 
 
 def get_default_net(n_inputs):
