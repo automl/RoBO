@@ -50,7 +50,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     -------
         dict with all results
     """
-    assert upper.shape[0] == lower.shape[0]
+    assert upper.shape[0] == lower.shape[0], "Dimension miss match"
+    assert np.all(lower < upper), "Lower bound >= upper bound"
     assert n_init <= num_iterations, "Number of initial design point has to be <= than the number of iterations"
 
     if rng is None:
@@ -123,4 +124,6 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     results["incumbent_values"] = [val for val in bo.incumbents_values]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
+    results["X"] = bo.X
+    results["y"] = bo.y
     return results

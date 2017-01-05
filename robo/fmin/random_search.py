@@ -94,5 +94,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
+    results["X"] = X
+    results["y"] = y
     return results
 

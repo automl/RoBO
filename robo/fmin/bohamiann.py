@@ -82,4 +82,6 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
     results["incumbent_values"] = [val for val in bo.incumbents_values]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
+    results["X"] = bo.X
+    results["y"] = bo.y
     return results
