@@ -104,8 +104,8 @@ class GaussianProcessMCMC(BaseModel):
             self.y = y
 
         # Use the mean of the data as mean for the GP
-        mean = np.mean(self.y, axis=0)
-        self.gp = george.GP(self.kernel, mean=mean)
+        self.mean = np.mean(self.y, axis=0)
+        self.gp = george.GP(self.kernel, mean=self.mean)
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
@@ -225,16 +225,16 @@ class GaussianProcessMCMC(BaseModel):
         """
         if not self.is_trained:
             raise Exception('Model has to be trained first!')
+        #
+        # if self.normalize_input:
+        #     X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+        # else:
+        #     X_test_norm = X_test
 
-        if self.normalize_input:
-            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
-        else:
-            X_test_norm = X_test
-
-        mu = np.zeros([len(self.models), X_test_norm.shape[0]])
-        var = np.zeros([len(self.models), X_test_norm.shape[0]])
+        mu = np.zeros([len(self.models), X_test.shape[0]])
+        var = np.zeros([len(self.models), X_test.shape[0]])
         for i, model in enumerate(self.models):
-            mu[i], var[i] = model.predict(X_test_norm)
+            mu[i], var[i] = model.predict(X_test)
 
         # See the Algorithm Runtime Prediction paper by Hutter et al.
         # for the derivation of the total variance
@@ -242,8 +242,9 @@ class GaussianProcessMCMC(BaseModel):
         #v = np.mean(mu ** 2 + var) - m ** 2
         v = var.mean(axis=0)
 
-        if self.normalize_output:
-            m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
+        # if self.normalize_output:
+        #     m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
+        #     v *= self.y_std ** 2
 
         # Clip negative variances and set them to the smallest
         # positive float value
