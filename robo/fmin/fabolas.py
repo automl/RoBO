@@ -16,18 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 def transform(s, s_min, s_max):
-    s_transform = (np.log(s) - np.log(s_min)) / (np.log(s_max) - np.log(s_min))
+    s_transform = (np.log2(s) - np.log2(s_min)) / (np.log2(s_max) - np.log2(s_min))
     return s_transform
 
 
 def retransform(s_transform, s_min, s_max):
-    s = np.rint(np.exp(s_transform * (np.log(s_max) - np.log(s_min)) + np.log(s_min)))
+    s = np.rint(2**(s_transform * (np.log2(s_max) - np.log2(s_min)) + np.log2(s_min)))
     return s
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
             n_init=40, num_iterations=100, subsets=[256, 128, 64],
-            burnin=100, chain_length=200, n_hypers=20, rng=None):
+            burnin=100, chain_length=100, n_hypers=12, rng=None):
     """
     Fast Bayesian Optimization of Machine Learning Hyperparameters
     on Large Datasets
@@ -179,7 +179,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=False)
+    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
 
     # Initial Design
     logger.info("Initial Design")
