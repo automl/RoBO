@@ -95,6 +95,8 @@ class GaussianProcess(BaseModel):
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
             self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+            if self.y_std == 0:
+                raise ValueError("Cannot normalize output. All targets have the same value")
         else:
             self.y = y
 
