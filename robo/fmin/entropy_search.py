@@ -70,7 +70,7 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
 
     if model == "gp":
         gp = GaussianProcess(kernel, prior=prior, rng=rng,
-                             normalize_output=True, normalize_input=True,
+                             normalize_output=False, normalize_input=True,
                              lower=lower, upper=upper)
     elif model == "gp_mcmc":
         gp = GaussianProcessMCMC(kernel, prior=prior,
@@ -78,7 +78,7 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
                                  chain_length=200,
                                  burnin_steps=100,
                                  normalize_input=True,
-                                 normalize_output=True,
+                                 normalize_output=False,
                                  rng=rng, lower=lower, upper=upper)
     else:
         print("ERROR: %s is not a valid model!" % model)
@@ -94,7 +94,7 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
     if maximizer == "cmaes":
         max_func = CMAES(acquisition_func, lower, upper, verbose=False, rng=rng)
     elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper, verbose=True)
+        max_func = Direct(acquisition_func, lower, upper, verbose=False)
     else:
         print("ERROR: %s is not a valid function to maximize the acquisition function!" % maximizer)
         return
