@@ -7,7 +7,6 @@ from copy import deepcopy
 from robo.util import normalization
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.models.gaussian_process import GaussianProcess
-from robo.util.incumbent_estimation import projected_incumbent_estimation
 
 
 class FabolasGPMCMC(GaussianProcessMCMC):
@@ -21,6 +20,7 @@ class FabolasGPMCMC(GaussianProcessMCMC):
                  noise=-8):
 
         self.basis_func = basis_func
+        self.hypers = None
         super(FabolasGPMCMC, self).__init__(kernel, prior,
                                             n_hypers, chain_length,
                                             burnin_steps,
@@ -28,14 +28,6 @@ class FabolasGPMCMC(GaussianProcessMCMC):
                                             normalize_input=False,
                                             rng=rng, lower=lower,
                                             upper=upper, noise=noise)
-
-#    def predict(self, X_test, **kwargs):
-#
-#        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
-#        s_ = self.basis_func(X_test[:, -1])[:, None]
-#        X_test_norm = np.concatenate((X_test_norm, s_), axis=1)
-#
-#        return super(FabolasGPMCMC, self).predict(X_test_norm, **kwargs)
 
     def train(self, X, y, do_optimize=True, **kwargs):
         X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
@@ -85,9 +77,10 @@ class FabolasGPMCMC(GaussianProcessMCMC):
             self.hypers = sampler.chain[:, -1]
 
         else:
-            self.hypers = self.gp.kernel[:].tolist()
-            self.hypers.append(self.noise)
-            self.hypers = [self.hypers]
+            if self.hypers is None:
+                self.hypers = self.gp.kernel[:].tolist()
+                self.hypers.append(self.noise)
+                self.hypers = [self.hypers]
 
         self.models = []
         for sample in self.hypers:
@@ -136,12 +129,6 @@ class FabolasGP(GaussianProcess):
         self.original_X = X
         X_norm = self.normalize(X)
         return super(FabolasGP, self).train(X_norm, y, do_optimize)
-
-    def predict_variance(self, x1, X2):
-        X_norm_1 = self.normalize(x1)
-        X_norm_2 = self.normalize(X2)
-
-        return super(FabolasGP, self).predict_variance(X_norm_1, X_norm_2)
 
     def predict(self, X_test, full_cov=False, **kwargs):
         X_norm = self.normalize(X_test)
