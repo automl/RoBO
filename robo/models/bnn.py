@@ -146,7 +146,7 @@ class BayesianNeuralNetwork(BaseModel):
 
         self.samples = deque(maxlen=n_nets)
 
-        self.variance_prior = LogVariancePrior(1e-6, prior_out_std_prec=0.01)
+        self.variance_prior = LogVariancePrior(1e-6, 0.01)
         self.weight_prior = WeightPrior(alpha=1., beta=1.)
 
         self.Xt = T.matrix()
