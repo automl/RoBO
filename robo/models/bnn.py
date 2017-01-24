@@ -264,7 +264,7 @@ class BayesianNeuralNetwork(BaseModel):
         # scale the priors by the dataset size for the same reason
         # prior for the variance
         tn_examples = T.cast(n_examples, theano.config.floatX)
-        log_like += variance_prior.log_like(f_log_var, n_examples)
+        log_like += variance_prior.log_like(f_log_var) / tn_examples
         # prior for the weights
         params = lasagne.layers.get_all_params(f_net, trainable=True)
         log_like += weight_prior.log_like(params) / tn_examples
