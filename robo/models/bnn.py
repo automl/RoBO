@@ -314,8 +314,11 @@ class BayesianNeuralNetwork(BaseModel):
 
         f_out = np.asarray(f_out)
         theta_noise = np.asarray(theta_noise)
-        
+
         if return_individual_predictions:
+            if self.normalize_output:
+                f_out = zero_mean_unit_var_unnormalization(f_out, self.y_mean, self.y_std)
+                theta_noise *= self.y_std**2
             return f_out, theta_noise
 
         m = np.mean(f_out, axis=0)
