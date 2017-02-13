@@ -9,6 +9,7 @@ from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.maximizers.direct import Direct
+from robo.maximizers.cmaes import CMAES
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
 
@@ -234,6 +235,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)
         new_x = maximizer.maximize()
+
         s = retransform(new_x[-1], s_min, s_max)  # Map s from log space to original linear space
 
         time_overhead.append(time.time() - start_time)
