@@ -182,7 +182,7 @@ def mtbo(objective_function, lower, upper,
 
         # Estimate incumbent as the best observed value so far
         best_idx = np.argmin(y)
-        incumbents.append(np.append(X[best_idx]))
+        incumbents.append(X[best_idx][:-1])
 
         time_overhead.append(time.time() - start_time_overhead)
         runtime.append(time.time() - time_start)
