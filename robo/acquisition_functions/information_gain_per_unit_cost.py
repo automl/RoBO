@@ -126,15 +126,20 @@ class InformationGainPerUnitCost(InformationGain):
 
         self.sampling_acquisition.update(self.model)
 
-        restarts = np.random.uniform(low=lower,
-                                     high=upper,
-                                     size=(self.Nb, D))
-
-        sampler = emcee.EnsembleSampler(self.Nb, D,
+        for i in range(5):
+            restarts = np.random.uniform(low=lower,
+                                         high=upper,
+                                         size=(self.Nb, D))
+            sampler = emcee.EnsembleSampler(self.Nb, D,
                                         self.sampling_acquisition_wrapper)
 
-        self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
-
+            self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 50)
+            if not np.any(np.isinf(self.lmb)):
+                break
+            else:
+                print("Infinity")
+        if np.any(np.isinf(self.lmb)):
+            raise ValueError("Could not sample valid representer points! LogEI is -infinity")
         if len(self.zb.shape) == 1:
             self.zb = self.zb[:, None]
         if len(self.lmb.shape) == 1:
