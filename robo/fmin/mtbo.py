@@ -97,7 +97,7 @@ def mtbo(objective_function, lower, upper,
     kernel *= task_kernel
 
     # Take 3 times more samples than we have hyperparameters
-    if n_hypers < 2*n_dims:
+    if n_hypers < 2*len(kernel):
         n_hypers = 3 * len(kernel)
         if n_hypers % 2 == 1:
             n_hypers += 1
@@ -108,13 +108,13 @@ def mtbo(objective_function, lower, upper,
                       rng=rng)
 
     model_objective = MTBOGPMCMC(kernel,
-                                          prior=prior,
-                                          burnin_steps=burnin,
-                                          chain_length=chain_length,
-                                          n_hypers=n_hypers,
-                                          lower=lower,
-                                          upper=upper,
-                                          rng=rng)
+                                 prior=prior,
+                                 burnin_steps=burnin,
+                                 chain_length=chain_length,
+                                 n_hypers=n_hypers,
+                                 lower=lower,
+                                 upper=upper,
+                                 rng=rng)
 
     # Define model for the cost function
     cost_cov_amp = 1
@@ -135,13 +135,13 @@ def mtbo(objective_function, lower, upper,
                            rng=rng)
 
     model_cost = MTBOGPMCMC(cost_kernel,
-                                     prior=cost_prior,
-                                     burnin_steps=burnin,
-                                     chain_length=chain_length,
-                                     n_hypers=n_hypers,
-                                     lower=lower,
-                                     upper=upper,
-                                     rng=rng)
+                            prior=cost_prior,
+                            burnin_steps=burnin,
+                            chain_length=chain_length,
+                            n_hypers=n_hypers,
+                            lower=lower,
+                            upper=upper,
+                            rng=rng)
 
     # Extend input space by task variable
     extend_lower = np.append(lower, 0)
@@ -242,8 +242,8 @@ def mtbo(objective_function, lower, upper,
     logger.info("Final incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
     results = dict()
-    results["x_opt"] = incumbent[:-1]
-    results["trajectory"] = [inc for inc in incumbents]
+    results["x_opt"] = incumbent[:-1].tolist()
+    results["incumbents"] = [inc.tolist() for inc in incumbents]
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
