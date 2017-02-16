@@ -61,6 +61,7 @@ class BayesianNeuralNetwork(BaseModel):
                  n_nets=100, l_rate=1e-3,
                  mdecay=5e-2, n_iters=5 * 10**4,
                  bsize=20, burn_in=1000,
+                 sample_steps=100,
                  precondition=True, normalize_output=True,
                  normalize_input=True, rng=None, get_net=get_default_net):
         """
@@ -144,6 +145,7 @@ class BayesianNeuralNetwork(BaseModel):
         self.normalize_input = normalize_input
         self.get_net = get_net
 
+        self.sample_steps = sample_steps
         self.samples = deque(maxlen=n_nets)
 
         self.variance_prior = LogVariancePrior(1e-6, 0.01)
@@ -243,7 +245,7 @@ class BayesianNeuralNetwork(BaseModel):
                                                                       total_nll,
                                                                       total_err,
                                                                       len(self.samples), t))
-            if i % 100 == 0 and i >= self.burn_in:
+            if i % self.sample_steps == 0 and i >= self.burn_in:
                 self.samples.append(lasagne.layers.get_all_param_values(self.net))
 
             i += 1
