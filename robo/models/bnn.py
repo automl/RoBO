@@ -236,18 +236,22 @@ class BayesianNeuralNetwork(BaseModel):
             else:
                 _, nll_value = self.sampler.step(xmb, ymb)
 
-            if i % 1000 == 0:
+            if i % 512 == 0 and i <= self.burn_in:
                 total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.y).reshape(-1, 1))
                 t = time.time() - start_time
+                logging.info("Iter {:8d} : NLL = {:11.4e} MSE = {:.4e} "
+                             "Time = {:5.2f}".format(i, float(total_nll),
+                             float(total_err), t))
 
-                logging.info("Iter {} : NLL = {} MSE = {} "
-                             "Collected samples= {} Time = {}".format(i,
-                                                                      total_nll,
-                                                                      total_err,
-                                                                      len(self.samples), t))
             if i % self.sample_steps == 0 and i >= self.burn_in:
+                total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.y).reshape(-1, 1))
+                t = time.time() - start_time
                 self.samples.append(lasagne.layers.get_all_param_values(self.net))
-
+                logging.info("Iter {:8d} : NLL = {:11.4e} MSE = {:.4e} "
+                             "Samples= {} Time = {:5.2f}".format(i,
+                                                                      float(total_nll),
+                                                                      float(total_err),
+                                                                      len(self.samples), t))
             i += 1
         self.is_trained = True
 
