@@ -1,6 +1,7 @@
 import george
 import unittest
 import numpy as np
+import scipy.linalg as spla
 
 from robo.models.gaussian_process import GaussianProcess
 from robo.priors.default_priors import TophatPrior
@@ -12,11 +13,13 @@ class TestGaussianProcess(unittest.TestCase):
         self.X = np.random.rand(10, 2)
         self.y = np.sinc(self.X * 10 - 5).sum(axis=1)
 
-        kernel = george.kernels.Matern52Kernel(np.ones(self.X.shape[1]),
+        self.kernel = george.kernels.Matern52Kernel(np.ones(self.X.shape[1]),
                                                ndim=self.X.shape[1])
 
         prior = TophatPrior(-2, 2)
-        self.model = GaussianProcess(kernel, prior=prior)
+        self.model = GaussianProcess(self.kernel, prior=prior,
+                                     normalize_input=False,
+                                     normalize_output=False)
         self.model.train(self.X, self.y, do_optimize=False)
 
     def test_predict(self):
@@ -36,6 +39,13 @@ class TestGaussianProcess(unittest.TestCase):
         assert len(v.shape) == 2
         assert v.shape[0] == X_test.shape[0]
         assert v.shape[1] == X_test.shape[0]
+
+        K_zz = self.kernel.value(X_test)
+        K_zx = self.kernel.value(X_test, self.X)
+        K_nz = self.kernel.value(self.X) + self.model.noise * np.eye(self.X.shape[0])
+        inv = spla.inv(K_nz)
+        K_zz_x = K_zz - np.dot(K_zx, np.inner(inv, K_zx))
+        assert np.mean((K_zz_x - v)**2) < 10e-5
 
     def test_sample_function(self):
         X_test = np.random.rand(8, 2)
