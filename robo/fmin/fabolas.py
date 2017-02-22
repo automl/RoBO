@@ -9,6 +9,7 @@ from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.maximizers.direct import Direct
+
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
 
@@ -32,6 +33,9 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     Fast Bayesian Optimization of Machine Learning Hyperparameters
     on Large Datasets
 
+    Fast Bayesian Optimization of Machine Learning Hyperparameters on Large Datasets
+    A. Klein and S. Falkner and S. Bartels and P. Hennig and F. Hutter
+    http://arxiv.org/abs/1605.07079
 
     Parameters
     ----------
@@ -65,7 +69,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
     Returns
     -------
-        dict with all results
+        dict
     """
 
     assert n_init <= num_iterations, "Number of initial design point has to be <= than the number of iterations"
@@ -234,6 +238,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)
         new_x = maximizer.maximize()
+
         s = retransform(new_x[-1], s_min, s_max)  # Map s from log space to original linear space
 
         time_overhead.append(time.time() - start_time)
@@ -259,7 +264,6 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     model_objective.train(X, y, do_optimize=True)
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
                                                                 proj_value=1)
-    incumbents.append(incumbent[:-1])
     logger.info("Final incumbent %s with estimated performance %f",
                 str(incumbent), incumbent_value)
 

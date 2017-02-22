@@ -78,7 +78,7 @@ class LogEI(BaseAcquisitionFunction):
         #    par_s = self.par * sigma
 
             # Degenerate case 1: first term vanishes
-            if np.any(abs(f_min - mu)) == 0:
+            if np.any(abs(f_min - mu) == 0):
                 if sigma > 0:
                     log_ei[i] = np.log(sigma) + norm.logpdf(z[i])
                 else:
@@ -86,7 +86,7 @@ class LogEI(BaseAcquisitionFunction):
             # Degenerate case 2: second term vanishes and first term
             # has a special form.
             elif sigma == 0:
-                if mu < np.any(f_min):
+                if np.any(mu < f_min):
                     log_ei[i] = np.log(f_min - mu)
                 else:
                     log_ei[i] = -np.Infinity

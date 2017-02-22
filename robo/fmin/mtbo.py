@@ -2,9 +2,8 @@ import time
 import george
 import logging
 import numpy as np
-from functools import partial
 
-from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
+from robo.models.mtbo_gp import MTBOGPMCMC
 from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
@@ -31,7 +30,7 @@ def transformation(X, acq, lower, upper):
 
 def mtbo(objective_function, lower, upper,
          n_tasks=2, n_init=2, num_iterations=30,
-         burnin=100, chain_length=200, rng=None):
+         burnin=100, chain_length=200, n_hypers=20, rng=None):
     """
     Interface to MTBO[1] which uses an auxiliary cheaper task to speed up the optimization
     of a more expensive but similar task.
@@ -98,24 +97,24 @@ def mtbo(objective_function, lower, upper,
     kernel *= task_kernel
 
     # Take 3 times more samples than we have hyperparameters
-    n_hypers = 3 * len(kernel)
-    if n_hypers % 2 == 1:
-        n_hypers += 1
+    if n_hypers < 2*len(kernel):
+        n_hypers = 3 * len(kernel)
+        if n_hypers % 2 == 1:
+            n_hypers += 1
 
     prior = MTBOPrior(len(kernel) + 1,
                       n_ls=n_dims,
                       n_kt=len(task_kernel),
                       rng=rng)
 
-    model_objective = GaussianProcessMCMC(kernel,
-                                          prior=prior,
-                                          burnin_steps=burnin,
-                                          chain_length=chain_length,
-                                          n_hypers=n_hypers,
-                                          normalize_input=False,
-                                          lower=lower,
-                                          upper=upper,
-                                          rng=rng)
+    model_objective = MTBOGPMCMC(kernel,
+                                 prior=prior,
+                                 burnin_steps=burnin,
+                                 chain_length=chain_length,
+                                 n_hypers=n_hypers,
+                                 lower=lower,
+                                 upper=upper,
+                                 rng=rng)
 
     # Define model for the cost function
     cost_cov_amp = 1
@@ -135,15 +134,14 @@ def mtbo(objective_function, lower, upper,
                            n_kt=len(task_kernel),
                            rng=rng)
 
-    model_cost = GaussianProcessMCMC(cost_kernel,
-                                     prior=cost_prior,
-                                     burnin_steps=burnin,
-                                     chain_length=chain_length,
-                                     n_hypers=n_hypers,
-                                     normalize_input=False,
-                                     lower=lower,
-                                     upper=upper,
-                                     rng=rng)
+    model_cost = MTBOGPMCMC(cost_kernel,
+                            prior=cost_prior,
+                            burnin_steps=burnin,
+                            chain_length=chain_length,
+                            n_hypers=n_hypers,
+                            lower=lower,
+                            upper=upper,
+                            rng=rng)
 
     # Extend input space by task variable
     extend_lower = np.append(lower, 0)
@@ -159,13 +157,11 @@ def mtbo(objective_function, lower, upper,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-
-    wrapper_func = partial(transformation, acq=acquisition_func, lower=lower, upper=upper)
-    maximizer = Direct(wrapper_func, extend_lower, extend_upper, verbose=True)
+    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
 
     # Initial Design
-    for _ in range(n_init):
-        logger.info("Initial design")
+    logger.info("Initial Design")
+    for i in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration and evaluate it just on the auxiliary task
         task = 0
@@ -181,12 +177,12 @@ def mtbo(objective_function, lower, upper,
         # Bookkeeping
         config = np.append(x, task)
         X.append(config)
-        y.append(func_val)
-        c.append(cost)
+        y.append(np.log(func_val))  # Model the target function on a logarithmic scale
+        c.append(np.log(cost))  # Model the cost on a logarithmic scale
 
         # Estimate incumbent as the best observed value so far
         best_idx = np.argmin(y)
-        incumbents.append(np.append(X[best_idx], n_tasks-1))  # Incumbent is always on the task of interest
+        incumbents.append(X[best_idx][:-1])
 
         time_overhead.append(time.time() - start_time_overhead)
         runtime.append(time.time() - time_start)
@@ -201,16 +197,15 @@ def mtbo(objective_function, lower, upper,
         start_time = time.time()
 
         # Train models
-        model_objective.train(transform(X, lower, upper), y, do_optimize=True)
-        model_cost.train(transform(X, lower, upper), c, do_optimize=True)
+        model_objective.train(X, y, do_optimize=True)
+        model_cost.train(X, c, do_optimize=True)
 
         # Estimate incumbent by projecting all observed points to the task of interest and
         # pick the point with the lowest mean prediction
         incumbent, incumbent_value = projected_incumbent_estimation(model_objective,
-                                                                    transform(X, lower, upper)[:, :-1],
+                                                                    X[:, :-1],
                                                                     proj_value=n_tasks-1)
-        incumbent[:-1] = normalization.zero_one_unnormalization(incumbent[:-1], lower, upper)
-        incumbents.append(incumbent)
+        incumbents.append(incumbent[:-1])
         logger.info("Current incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
         # Maximize acquisition function
@@ -233,23 +228,21 @@ def mtbo(objective_function, lower, upper,
 
         # Add new observation to the data
         X = np.concatenate((X, new_x[None, :]), axis=0)
-        y = np.concatenate((y, np.array([new_y])), axis=0)
-        c = np.concatenate((c, np.array([new_c])), axis=0)
+        y = np.concatenate((y, np.log(np.array([new_y]))), axis=0)  # Model the target function on a logarithmic scale
+        c = np.concatenate((c, np.log(np.array([new_c]))), axis=0)  # Model the cost function on a logarithmic scale
 
         runtime.append(time.time() - time_start)
 
     # Estimate the final incumbent
-    model_objective.train(transform(X, lower, upper), y)
+    model_objective.train(X, y)
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective,
-                                                                transform(X, lower, upper)[:, :-1],
+                                                                X[:, :-1],
                                                                 proj_value=n_tasks - 1)
-    incumbent[:-1] = normalization.zero_one_unnormalization(incumbent[:-1], lower, upper)
-    incumbents.append(incumbent)
     logger.info("Final incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
     results = dict()
-    results["x_opt"] = incumbent[:-1]
-    results["trajectory"] = [inc for inc in incumbents]
+    results["x_opt"] = incumbent[:-1].tolist()
+    results["incumbents"] = [inc.tolist() for inc in incumbents]
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
