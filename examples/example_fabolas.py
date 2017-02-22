@@ -83,7 +83,6 @@ def load_dataset():
 # and s which is the ratio of the training data that is used to
 # evaluate this configuration
 def objective_function(x, s):
-    return np.random.rand(), np.random.rand()
     # Start the clock to determine the cost of this function evaluation
     start_time = time.time()
 
