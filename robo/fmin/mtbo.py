@@ -238,7 +238,6 @@ def mtbo(objective_function, lower, upper,
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective,
                                                                 X[:, :-1],
                                                                 proj_value=n_tasks - 1)
-    incumbents.append(incumbent[:-1])
     logger.info("Final incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
     results = dict()
