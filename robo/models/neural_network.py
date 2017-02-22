@@ -147,12 +147,12 @@ class SGDNet(object):
         self.initialize_net()
 
         if self.normalize_input:
-            X, self.x_mean, self.x_std = self.normalize_inputs(X)
+            self.X, self.x_mean, self.x_std = self.normalize_inputs(X)
         else:
             self.x_mean, self.x_std = None, None
 
         if self.normalize_output:
-            Y, self.y_mean, self.y_std = self.normalize_targets(Y)
+            self.Y, self.y_mean, self.y_std = self.normalize_targets(Y)
             
         else:
             self.Y, self.y_mean, self.y_std = Y, None, None
@@ -169,7 +169,7 @@ class SGDNet(object):
             train_err = 0
             train_batches = 0
             start_time = time.time()
-            for batch in self.iterate_minibatches(X, Y, batch_size, shuffle=self.shuffle_batches):
+            for batch in self.iterate_minibatches(self.X, self.Y, batch_size, shuffle=self.shuffle_batches):
                 inputs, targets = batch
                 train_err += self.train_fn(inputs, targets)
                 train_batches += 1
