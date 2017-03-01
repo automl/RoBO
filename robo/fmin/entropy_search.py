@@ -1,6 +1,8 @@
+import os
 import logging
 import george
 import numpy as np
+import time
 
 from robo.priors.default_priors import DefaultPrior
 from robo.models.gaussian_process import GaussianProcess
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def entropy_search(objective_function, lower, upper, num_iterations=30,
                           maximizer="direct", model="gp_mcmc",
-                          n_init=3, rng=None):
+                          n_init=3, output_path=None, rng=None):
     """
     Entropy search for global black box optimization problems.
 
@@ -40,6 +42,9 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
         The model for the objective function.
     n_init: int
         Number of points for the initial design. Make sure that it is <= num_iterations.
+    output_path: string
+        Specifies the path where the intermediate output after each iteration will be saved.
+        If None no output will be saved to disk.
     rng: numpy.random.RandomState
         Random number generator
 
@@ -100,7 +105,7 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
         return
 
     bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func,
-                              initial_points=n_init, rng=rng)
+                              initial_points=n_init, rng=rng, output_path=output_path)
 
     x_best, f_min = bo.run(num_iterations)
 

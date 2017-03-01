@@ -1,4 +1,6 @@
+import os
 import time
+import json
 import george
 import logging
 import numpy as np
@@ -28,9 +30,8 @@ def transformation(X, acq, lower, upper):
     return a
 
 
-def mtbo(objective_function, lower, upper,
-         n_tasks=2, n_init=2, num_iterations=30,
-         burnin=100, chain_length=200, n_hypers=20, rng=None):
+def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=30,
+         burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
     """
     Interface to MTBO[1] which uses an auxiliary cheaper task to speed up the optimization
     of a more expensive but similar task.
@@ -57,6 +58,9 @@ def mtbo(objective_function, lower, upper,
         The length of the MCMC chain for each walker.
     burnin : int
         The number of burnin steps before the actual MCMC sampling starts.
+    output_path: string
+        Specifies the path where the intermediate output after each iteration will be saved.
+        If None no output will be saved to disk.
     rng: numpy.random.RandomState
         Random number generator
 
@@ -161,7 +165,7 @@ def mtbo(objective_function, lower, upper,
 
     # Initial Design
     logger.info("Initial Design")
-    for i in range(n_init):
+    for it in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration and evaluate it just on the auxiliary task
         task = 0
@@ -186,6 +190,16 @@ def mtbo(objective_function, lower, upper,
 
         time_overhead.append(time.time() - start_time_overhead)
         runtime.append(time.time() - time_start)
+
+        if output_path is not None:
+            data = dict()
+            data["optimization_overhead"] = time_overhead[it]
+            data["runtime"] = runtime[it]
+            data["incumbent"] = incumbents[it]
+            data["time_func_eval"] = time_func_eval[it]
+            data["iteration"] = it
+
+            json.dump(data, open(os.path.join(output_path, "mtbo_iter_%d.json" % it), "w"))
 
     X = np.array(X)
     y = np.array(y)
@@ -232,6 +246,16 @@ def mtbo(objective_function, lower, upper,
         c = np.concatenate((c, np.log(np.array([new_c]))), axis=0)  # Model the cost function on a logarithmic scale
 
         runtime.append(time.time() - time_start)
+
+        if output_path is not None:
+            data = dict()
+            data["optimization_overhead"] = time_overhead[it]
+            data["runtime"] = runtime[it]
+            data["incumbent"] = incumbents[it]
+            data["time_func_eval"] = time_func_eval[it]
+            data["iteration"] = it
+
+            json.dump(data, open(os.path.join(output_path, "mtbo_iter_%d.json" % it), "w"))
 
     # Estimate the final incumbent
     model_objective.train(X, y)
