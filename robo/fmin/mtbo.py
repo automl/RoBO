@@ -271,4 +271,8 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
 
+    results["X"] = X
+    results["y"] = y
+    results["c"] = c
+
     return results

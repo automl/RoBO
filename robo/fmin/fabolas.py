@@ -298,5 +298,10 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
+
+    results["X"] = X
+    results["y"] = y
+    results["c"] = c
+
     return results
 
