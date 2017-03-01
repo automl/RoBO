@@ -195,7 +195,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
             data = dict()
             data["optimization_overhead"] = time_overhead[it]
             data["runtime"] = runtime[it]
-            data["incumbent"] = incumbents[it]
+            data["incumbent"] = incumbents[it].tolist()
             data["time_func_eval"] = time_func_eval[it]
             data["iteration"] = it
 
@@ -251,7 +251,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
             data = dict()
             data["optimization_overhead"] = time_overhead[it]
             data["runtime"] = runtime[it]
-            data["incumbent"] = incumbents[it]
+            data["incumbent"] = incumbents[it].tolist()
             data["time_func_eval"] = time_func_eval[it]
             data["iteration"] = it
 

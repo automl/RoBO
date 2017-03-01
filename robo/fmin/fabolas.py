@@ -116,7 +116,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     kernel *= env_kernel
 
     # Take 3 times more samples than we have hyperparameters
-    if n_hypers < 2*n_dims:
+    if n_hypers < 2*len(kernel):
         n_hypers = 3 * len(kernel)
         if n_hypers % 2 == 1:
             n_hypers += 1
@@ -223,7 +223,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
             data = dict()
             data["optimization_overhead"] = time_overhead[it]
             data["runtime"] = runtime[it]
-            data["incumbent"] = incumbents[it]
+            data["incumbent"] = incumbents[it].tolist()
             data["time_func_eval"] = time_func_eval[it]
             data["iteration"] = it
 
@@ -279,7 +279,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
             data = dict()
             data["optimization_overhead"] = time_overhead[it]
             data["runtime"] = runtime[it]
-            data["incumbent"] = incumbents[it]
+            data["incumbent"] = incumbents[it].tolist()
             data["time_func_eval"] = time_func_eval[it]
             data["iteration"] = it
 
