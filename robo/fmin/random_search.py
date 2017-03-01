@@ -74,7 +74,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
 
         logger.info("Configuration achieved a performance of %f ", new_y)
 
-        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
+        logger.info("Evaluation of this configuration took %f seconds", time_func_evals[-1])
 
         # Update the data
         X.append(new_x)
