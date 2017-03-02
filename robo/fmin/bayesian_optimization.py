@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                           maximizer="direct", acquisition_func="log_ei", model_type="gp_mcmc",
-                          n_init=3, rng=None):
+                          n_init=3, rng=None, output_path=None):
     """
     General interface for Bayesian optimization for global black box
     optimization problems.
@@ -46,6 +46,9 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     n_init: int
         Number of points for the initial design. Make sure that it
         is <= num_iterations.
+    output_path: string
+        Specifies the path where the intermediate output after each iteration will be saved.
+        If None no output will be saved to disk.
     rng: numpy.random.RandomState
         Random number generator
 
@@ -92,7 +95,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         model = RandomForest(types=np.zeros([n_dims]), rng=rng)
 
     else:
-        raise ValueError("'{}' is not a valid model".format(model))
+        raise ValueError("'{}' is not a valid model".format(model_type))
 
     if acquisition_func == "ei":
         a = EI(model)
@@ -122,7 +125,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
 
     bo = BayesianOptimization(objective_function, lower, upper,
                               acquisition_func, model, max_func,
-                              initial_points=n_init, rng=rng)
+                              initial_points=n_init, rng=rng,
+                              output_path=output_path)
 
     x_best, f_min = bo.run(num_iterations)
 

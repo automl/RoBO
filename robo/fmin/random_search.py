@@ -1,4 +1,6 @@
+import os
 import time
+import json
 import logging
 import numpy as np
 
@@ -6,7 +8,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def random_search(objective_function, lower, upper, num_iterations=30, rng=None):
+def random_search(objective_function, lower, upper, num_iterations=30, output_path=None, rng=None):
     """
     Random Search [1] that simply evaluates random points. We do not have
     any priors thus we sample points uniformly at random.
@@ -25,6 +27,9 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
         Upper bound of the input space
     num_iterations: int
         Number of iterations
+    output_path: string
+        Specifies the path where the intermediate output after each iteration will be saved.
+        If None no output will be saved to disk.
     rng: numpy.random.RandomState
         Random number generator
     Returns
@@ -34,9 +39,9 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
 
     time_start = time.time()
     if rng is None:
-        rng = np.random.RandomState(np.random.randint(0, 10000))
+        rng = np.random.RandomState()
 
-    time_func_eval = []
+    time_func_evals = []
     time_overhead = []
     incumbents = []
     incumbents_values = []
@@ -65,11 +70,11 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
         logger.info("Evaluate candidate %s", str(new_x))
         start_time = time.time()
         new_y = objective_function(new_x)
-        time_func_eval.append(time.time() - start_time)
+        time_func_evals.append(time.time() - start_time)
 
         logger.info("Configuration achieved a performance of %f ", new_y)
 
-        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
+        logger.info("Evaluation of this configuration took %f seconds", time_func_evals[-1])
 
         # Update the data
         X.append(new_x)
@@ -87,13 +92,24 @@ def random_search(objective_function, lower, upper, num_iterations=30, rng=None)
 
         runtime.append(time.time() - time_start)
 
+        if output_path is not None:
+            data = dict()
+            data["optimization_overhead"] = time_overhead[it]
+            data["runtime"] = runtime[it]
+            data["incumbent"] = incumbents[it]
+            data["incumbents_value"] = incumbents_values[it]
+            data["time_func_eval"] = time_func_evals[it]
+            data["iteration"] = it
+
+            json.dump(data, open(os.path.join(output_path, "robo_iter_%d.json" % it), "w"))
+
     results = dict()
     results["x_opt"] = incumbent.tolist()
     results["f_opt"] = incumbent_value
     results["incumbents"] = [inc.tolist() for inc in incumbents]
     results["runtime"] = runtime
     results["overhead"] = time_overhead
-    results["time_func_eval"] = time_func_eval
+    results["time_func_eval"] = time_func_evals
     results["X"] = np.array(X)
     results["y"] = np.array(y)
     return results

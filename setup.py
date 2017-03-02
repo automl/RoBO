@@ -8,6 +8,7 @@ requires = [
     'george',
     'emcee',
     'cma',
+    'json',
     'scipy >= 0.12',
     'numpy >= 1.7'
     ]
