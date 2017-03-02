@@ -28,7 +28,6 @@ class TestFminInterface(unittest.TestCase):
                    num_iterations=3)
 
         assert len(res["x_opt"]) == self.lower.shape[0]
-        assert res["x_opt"].shape[0] == self.lower.shape[0]
         assert np.all(res["x_opt"] >= self.lower)
         assert np.all(res["x_opt"] <= self.upper)
 
