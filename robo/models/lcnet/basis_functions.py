@@ -1,45 +1,30 @@
 import numpy as np
 
 
-def vapor_pressure(x, a, b, c):
-    a_ = -(a + 1) / 2
-    b_ = -(b + 1) / 2
-    c_ = -(c + 1) / 2
+def vapor_pressure(t, a, b, c):
 
-    b_ /= 10.
-    c_ /= 10.
+    a_ = a
+    b_ = b / 10.
+    c_ = c / 10.
 
-    return np.exp(a_ + b_ / (x + 1e-15) + c_ * np.log(x + 1e-15)) - np.exp(a_ + b_)
+    return np.exp(-a_ - b_ / t - c_ * np.log(t)) - np.exp(-a_ - b_)
 
 
-def hill_3(x, a, b, c):
-    a_ = (a + 1) / 2
-    b_ = (b + 1) / 2
-    c_ = (c + 1) / 2
-
-    b_ *= 0.1
-
-    return a_ * (1. / ((c_ / x) ** b_ + 1.) - 1. / (c_ ** b_ + 1.))
+def pow_func(t, a, b):
+    return a * (t ** b - 1)
 
 
-def pow_func(x, a, b):
+def log_power(t, a, b, c):
 
-    a_ = (a + 1) / 2
-    b_ = (b + 1) / 2
-    return a_ * (x ** b_ - 1)
+    b_ = b / 10
 
-
-def log_power(x, a, b, c):
-    a_ = (a + 1) / 2
-    b_ = (b + 1) / 2
-    c_ = (c + 1) / 2
-
-    c_ *= 0.1
-    return 2 * a_ * (1 / (1. + np.exp(-c_ * b_)) - 1 / (1. + (x / np.exp(b_)) ** c_))
+    return 2 * a * (1 / (1 + np.exp(-b_ * c)) - 1 / (1 + np.exp(c * np.log(t) - b_)))
 
 
-def exponential(x, a, b):
+def exponential(t, a, b):
+    b_ = 10 * b
+    return a * (np.exp(-b_) - np.exp(-b_ * t))
 
-    a_ = (a + 1) / 2
-    b_ = (b + 1) / 2
-    return b_ * (-np.exp(-a_ * x) + np.exp(-a_))
+
+def hill_3(t, a, b, c):
+    return a * (1 / (c ** b * t ** (-b) + 1) - a / (c ** b + 1))

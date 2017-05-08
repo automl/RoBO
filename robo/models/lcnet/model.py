@@ -10,7 +10,7 @@ from copy import deepcopy
 from robo.models.bnn import BayesianNeuralNetwork
 
 
-from lc_prediction.lc_layers import BasisFunctionLayer
+from robo.models.lcnet.lc_layers import BasisFunctionLayer
 
 
 def get_lc_net(n_inputs):
@@ -45,7 +45,7 @@ def get_lc_net(n_inputs):
         num_units=13,
         W=lasagne.init.HeNormal(),
         b=lasagne.init.Constant(val=0.0),
-        nonlinearity=lasagne.nonlinearities.tanh)
+        nonlinearity=lasagne.nonlinearities.sigmoid)
 
     bf_layer = BasisFunctionLayer((only_t, theta_layer))
 
@@ -89,6 +89,58 @@ class LCNet(BayesianNeuralNetwork):
                  precondition=True, sample_steps=100,
                  rng=None, get_net=get_lc_net):
 
+        """
+        Bayesian Neural Networks with specialized basis function layer to predict learning curves of iterative
+        machine learning methods [1]. It uses Bayesian methods to estimate the posterior distribution of a the weights to
+        allow to predict uncertainties.
+
+        This module uses stochastic gradient MCMC methods to sample from the posterior distribution together See [1]
+        for more details.
+
+        [1] A. Klein, S. Falkner, J. T. Springenberg, F. Hutter
+            Learning Curve Prediction with Bayesian Neural Networks
+            In International Conference on Learning Representations (ICLR) 2017 Conference Track
+
+        [2] J. T. Springenberg, A. Klein, S. Falkner, F. Hutter
+            Bayesian Optimization with Robust Bayesian Neural Networks.
+            In Advances in Neural Information Processing Systems 29 (2016).
+
+        Parameters
+        ----------
+        sampling_method : str
+            Determines the MCMC strategy:
+            "sghmc" = Stochastic Gradient Hamiltonian Monte Carlo
+            "sgld" = Stochastic Gradient Langevin Dynamics
+
+        n_nets : int
+            The number of samples (weights) that are drawn from the posterior
+
+        l_rate : float
+            The step size parameter for SGHMC
+
+        mdecay : float
+            Decaying term for the momentum in SGHMC
+
+        n_iters : int
+            Number of MCMC sampling steps without burn in
+
+        bsize : int
+            Batch size to form a mini batch
+
+        burn_in : int
+            Number of burn-in steps before the actual MCMC sampling begins
+
+        precondition : bool
+            Turns on / off preconditioning. See [1] for more details
+
+        rng : np.random.RandomState()
+            Random number generator
+
+        get_net : func
+            function that returns a network specification.
+
+        """
+
         super(LCNet, self).__init__(sampling_method=sampling_method,
                                     n_nets=n_nets, l_rate=l_rate,
                                     mdecay=mdecay, n_iters=n_iters,
@@ -100,14 +152,56 @@ class LCNet(BayesianNeuralNetwork):
                                     normalize_output=False)
 
     def train(self, X, y):
+        """
+        Trains the neural networks on X, y. Make sure that the last column of X consists of the t indices which should
+        be in (0, 1].
+
+        Parameters
+        ----------
+        X: np.ndarray (N, D)
+            Input data points. The dimensionality of X is (N, D),
+            with N as the number of points and D is the number of features.
+        y: np.ndarray (N,)
+            The corresponding target values.
+        """
+
+        # Normalize configurations, keep t indices
         X_, self.x_mean, self.x_std = self.normalize_inputs(X)
-        super(LCNet, self).train(X_, y)
+        # Shuffle data to prevent that single learning curve fill a whole batch
+        idx = np.random.permutation(X_.shape[0])
+        super(LCNet, self).train(X_[idx], y[idx])
 
     def sample_functions(self, X_test, n_funcs=1):
+        """
+        Samples F function values from the current posterior at the N
+        specified test points.
+
+        Parameters
+        ----------
+        X_test: np.ndarray (N, D)
+            Input test points
+        n_funcs: int
+            Number of function values that are drawn at each test point.
+
+        Returns
+        ----------
+        function_samples: np.array(F, N)
+            The F function values drawn at the N test points.
+        """
         X_test_norm, _, _ = self.normalize_inputs(X_test, self.x_mean, self.x_std)
         return super(LCNet, self).sample_functions(X_test, n_funcs)
 
     def get_incumbent(self):
+        """
+        Returns the best observed point and its function value
+
+        Returns
+        ----------
+        incumbent: ndarray (D,)
+            current incumbent
+        incumbent_value: ndarray (N,)
+            the observed value of the incumbent
+        """
         inc, inc_value = super(LCNet, self).get_incumbent()
         if self.normalize_input:
             inc = self.unnormalize_inputs(inc, self.x_mean, self.x_std)
@@ -146,6 +240,10 @@ class LCNet(BayesianNeuralNetwork):
         ----------
         X_test: np.ndarray (N, D)
             Input test points
+
+        return_individual_predictions: bool
+            If true, the individual prediction (f, sigma_noise) of each model is return instead of the empirical mean
+            and variance.
 
         Returns
         ----------
