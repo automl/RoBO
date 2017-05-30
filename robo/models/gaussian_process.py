@@ -237,13 +237,6 @@ class GaussianProcess(BaseModel):
         if not self.is_trained:
             raise Exception('Model has to be trained first!')
 
-        # if self.normalize_input:
-        #     x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
-        #     X2_norm, _, _ = normalization.zero_one_normalization(X2, self.lower, self.upper)
-        # else:
-        #     x1_norm = x1
-        #     X2_norm = X2
-
         x_ = np.concatenate((x1, X2))
         _, var = self.predict(x_, full_cov=True)
 

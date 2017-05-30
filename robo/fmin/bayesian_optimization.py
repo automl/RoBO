@@ -71,7 +71,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                                                ndim=n_dims)
     kernel = cov_amp * exp_kernel
 
-    prior = DefaultPrior(len(kernel) + 1)
+    prior = DefaultPrior(len(kernel) + 1, rng=rng)
 
     n_hypers = 3 * len(kernel)
     if n_hypers % 2 == 1:
