@@ -22,27 +22,27 @@ rng = np.random.RandomState(seed)
 if dataset == "mnist":
     f = SvmOnMnist(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas/results/svm_%s/ei_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas_journal/results/svm_%s/ei_%d" % (dataset, run_id)
 elif dataset == "vehicle":
     f = SvmOnVehicle(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas/results/svm_%s/ei_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas_journal/results/svm_%s/ei_%d" % (dataset, run_id)
 elif dataset == "covertype":
     f = SvmOnCovertype(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas/results/svm_%s/ei_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas_journal/results/svm_%s/ei_%d" % (dataset, run_id)
 elif dataset == "cifar10":
     f = ConvolutionalNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas/results/cnn_%s/ei_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas_journal/results/cnn_%s/ei_%d" % (dataset, run_id)
 elif dataset == "svhn":
     f = ConvolutionalNeuralNetworkOnSVHN(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas/results/cnn_%s/ei_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas_journal/results/cnn_%s/ei_%d" % (dataset, run_id)
 elif dataset == "res_net":
     f = ResidualNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 10
-    output_path = "./experiments/fabolas/results/res_%s/ei_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas_journal/results/res_%s/ei_%d" % (dataset, run_id)
 
 os.makedirs(output_path, exist_ok=True)
 

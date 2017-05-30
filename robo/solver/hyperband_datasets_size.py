@@ -126,7 +126,7 @@ class HyperBand_DataSubsets(BaseSolver):
 
             # set up the arms with random configurations
             configurations = [self.choose_next() for i in range(n)]
-            arms = [hyperband_arm( self.task, c,
+            arms = [hyperband_arm(self.task, c,
                                    subset_fractions[(-s-1):]) for c in configurations]
 
             # set up the bandit and the policy and play
