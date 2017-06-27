@@ -30,7 +30,7 @@ class EI(BaseAcquisitionFunction):
 
         par: float
             Controls the balance between exploration
-            and exploitation of the acquisition_functions function. Default is 0.01
+            and exploitation of the acquisition_functions function. Default is 0.0
         """
 
         super(EI, self).__init__(model)
