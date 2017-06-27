@@ -30,7 +30,7 @@ class hyperband_arm(mb.arms.python):
         if self.i == len(self.subset_fractions):
             raise "Ooops, that shouldn't happen. Trying to pull this arm too many times."
         res = self.task.objective_function(self.configuration,
-                                            dataset_fraction=self.subset_fractions[self.i])
+                                           dataset_fraction=self.subset_fractions[self.i])
         self.i += 1
         self.HB_obj.time_func_eval_SH[-1] += res['cost']
 
@@ -150,17 +150,15 @@ class HyperBand_DataSubsets(BaseSolver):
             [bandit.add_arm(a) for a in arms]
 
             policy = mb.policies.successive_halving(
-                bandit, 1, eta, factor_pulls = 1)
+                bandit, 1, eta, factor_pulls=1)
 
             policy.play_n_rounds(s+1)
 
-          
             # add all full evaluations to X and Y
             for i in range(len(arms)):
                 if arms[bandit[i].identifier].i == bandit[0].num_pulls:
                     self.X.append(arms[bandit[i].identifier].configuration)
                     self.Y.append(bandit[i].estimated_mean)
-
 
             if it == 0:
                 self.incumbents.pop(0)
@@ -168,8 +166,6 @@ class HyperBand_DataSubsets(BaseSolver):
                 self.time_func_eval_SH.pop(0)
                 self.time_func_eval_incumbent.pop(0)
                 self.runtime.pop(0)
-
-
 
             if self.output_path is not None:
                 self.save_output(it)
@@ -198,6 +194,6 @@ class HyperBand_DataSubsets(BaseSolver):
         # Note that the ConfigSpace automatically converts to the [0, 1]^D space
         data["incumbent"] = self.incumbents[it].get_array().tolist()
         data["incumbents_value"] = self.incumbent_values[it]
-        data["time_func_eval"] = self.time_func_eval[it]
+        data["time_func_eval"] = self.time_func_eval_incumbent[it]
         data["iteration"] = it
         json.dump(data, open(os.path.join(self.output_path, "hyperband_iter_%d.json" % it), "w"))
