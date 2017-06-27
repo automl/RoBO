@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 from robo.fmin import entropy_search
 
-from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype
+from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult,SvmOnHiggs
 from hpolib.benchmarks.ml.residual_networks import ResidualNeuralNetworkOnCIFAR10
 from hpolib.benchmarks.ml.conv_net import ConvolutionalNeuralNetworkOnCIFAR10, ConvolutionalNeuralNetworkOnSVHN
 
@@ -22,27 +22,35 @@ rng = np.random.RandomState(seed)
 if dataset == "mnist":
     f = SvmOnMnist(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas_journal/results/svm_%s/entropy_search_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
 elif dataset == "vehicle":
     f = SvmOnVehicle(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas_journal/results/svm_%s/entropy_search_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
 elif dataset == "covertype":
     f = SvmOnCovertype(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas_journal/results/svm_%s/entropy_search_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
+elif dataset == "adult":
+    f = SvmOnAdult(rng=rng)
+    num_iterations = 15
+    output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
+elif dataset == "higgs":
+    f = SvmOnHiggs(rng=rng)
+    num_iterations = 15
+    output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
 elif dataset == "cifar10":
     f = ConvolutionalNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas_journal/results/cnn_%s/entropy_search_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/cnn_%s/entropy_search_%d" % (dataset, run_id)
 elif dataset == "svhn":
     f = ConvolutionalNeuralNetworkOnSVHN(rng=rng)
     num_iterations = 15
-    output_path = "./experiments/fabolas_journal/results/cnn_%s/entropy_search_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/cnn_%s/entropy_search_%d" % (dataset, run_id)
 elif dataset == "res_net":
     f = ResidualNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 10
-    output_path = "./experiments/fabolas_journal/results/res_%s/entropy_search_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/res_%s/entropy_search_%d" % (dataset, run_id)
 
 os.makedirs(output_path, exist_ok=True)
 
