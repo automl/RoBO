@@ -29,7 +29,7 @@ def retransform(s_transform, s_min, s_max):
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
-            n_init=40, num_iterations=100, subsets=[256, 128, 64],
+            n_init=40, num_iterations=100, subsets=[256, 128, 64], inc_estimation="mean",
             burnin=100, chain_length=100, n_hypers=12, output_path=None, rng=None):
     """
     Fast Bayesian Optimization of Machine Learning Hyperparameters
@@ -192,10 +192,12 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
     # Initial Design
     logger.info("Initial Design")
+
     for it in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration
-        s = int(s_max / float(subsets[it % len(subsets)]))
+        #s = int(s_max / float(subsets[it % len(subsets)]))
+        s = int(s_max / float(subsets[it]))
 
         x = init_random_uniform(lower, upper, 1, rng)[0]
         logger.info("Evaluate %s on subset size %d", str(x), s)
@@ -242,10 +244,17 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         model_objective.train(X, y, do_optimize=True)
         model_cost.train(X, c, do_optimize=True)
 
-        # Estimate incumbent by projecting all observed points to the task of interest and
-        # pick the point with the lowest mean prediction
-        incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
-                                                                    proj_value=1)
+        if inc_estimation == "last_seen":
+            # Estimate incumbent as the best observed value so far
+            best_idx = np.argmin(y)
+            incumbent = X[best_idx][:-1]
+            incumbent = np.append(incumbent, 1)
+            incumbent_value = y[best_idx]
+        else:
+            # Estimate incumbent by projecting all observed points to the task of interest and
+            # pick the point with the lowest mean prediction
+            incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
+                                                                        proj_value=1)
         incumbents.append(incumbent[:-1])
         logger.info("Current incumbent %s with estimated performance %f",
                     str(incumbent), np.exp(incumbent_value))

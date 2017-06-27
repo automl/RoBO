@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 from robo.solver.hyperband_datasets_size import HyperBand_DataSubsets
 
-from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype
+from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs
 from hpolib.benchmarks.ml.residual_networks import ResidualNeuralNetworkOnCIFAR10
 from hpolib.benchmarks.ml.conv_net import ConvolutionalNeuralNetworkOnCIFAR10, ConvolutionalNeuralNetworkOnSVHN
 
@@ -27,6 +27,12 @@ elif dataset == "vehicle":
     output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
 elif dataset == "covertype":
     f = SvmOnCovertype(rng=rng)
+    output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
+elif dataset == "higgs":
+    f = SvmOnHiggs(rng=rng)
+    output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
+elif dataset == "adult":
+    f = SvmOnAdult(rng=rng)
     output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
 elif dataset == "cifar10":
     f = ConvolutionalNeuralNetworkOnCIFAR10(rng=rng)

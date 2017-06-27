@@ -85,7 +85,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
         incumbent = X[best_idx]
         incumbent_value = y[best_idx]
 
-        incumbents.append(incumbent)
+        incumbents.append(incumbent.tolist())
         incumbents_values.append(incumbent_value)
 
         logger.info("New incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
@@ -106,7 +106,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
     results = dict()
     results["x_opt"] = incumbent.tolist()
     results["f_opt"] = incumbent_value
-    results["incumbents"] = [inc.tolist() for inc in incumbents]
+    results["incumbents"] = incumbents
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_evals
