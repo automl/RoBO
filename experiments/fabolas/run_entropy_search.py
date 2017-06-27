@@ -50,7 +50,7 @@ elif dataset == "svhn":
 elif dataset == "res_net":
     f = ResidualNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 10
-    output_path = "./experiments/fabolas/results/res_%s/entropy_search_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/%s/entropy_search_%d" % (dataset, run_id)
 
 os.makedirs(output_path, exist_ok=True)
 

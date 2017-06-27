@@ -97,7 +97,7 @@ elif dataset == "svhn":
 elif dataset == "res_net":
     f = ResidualNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 50
-    output_path = "./experiments/fabolas/results/res_%s/fabolas_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/%s/fabolas_%d" % (dataset, run_id)
     s_max = f.X_train.shape[0]
     s_min = 128  # Batch size
 
