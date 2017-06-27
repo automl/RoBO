@@ -241,8 +241,8 @@ class GaussianProcessMCMC(BaseModel):
         # See the Algorithm Runtime Prediction paper by Hutter et al.
         # for the derivation of the total variance
         m = mu.mean(axis=0)
-        #v = np.mean(mu ** 2 + var) - m ** 2
-        v = var.mean(axis=0)
+        v = np.mean(mu ** 2 + var) - m ** 2
+        #v = var.mean(axis=0)
 
         # if self.normalize_output:
         #     m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
