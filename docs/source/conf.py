@@ -22,7 +22,7 @@ import sphinx_bootstrap_theme
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.append('/home/numair/Music/RoBO') IGNORE IT FOR NOW.
 
-# sys.path.append('/path to RoBo')
+sys.path.append('/home/numair/Videos/RoBO/')
 
 # -- General configuration ------------------------------------------------
 
