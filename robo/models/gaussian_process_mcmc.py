@@ -234,8 +234,7 @@ class GaussianProcessMCMC(BaseModel):
             mu[i], var[i] = model.predict(X_test)
 
         m = mu.mean(axis=0)
-        v = np.mean(mu ** 2 + var) - m ** 2
-        #v = var.mean(axis=0)
+        v = np.var(mu, axis=0) + np.mean(var, axis=0)
 
         # Clip negative variances and set them to the smallest
         # positive float value
