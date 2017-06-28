@@ -28,11 +28,11 @@ Additionally RoBO has some optional dependencies that are only needed for specif
 Manual Installation
 -------------------
 
-RoBO uses the Gaussian processes library `george <https://github.com/dfm/george>`_ . In order to use this library make sure the libeigen is installed:
+RoBO uses the Gaussian processes library `george <https://github.com/dfm/george>`_  and the random forests library `pyrfr <https://github.com/automl/random_forest_run>`_. In order to use this library make sure the libeigen and swig are installed:
 
 .. code:: bash
 
-     sudo apt-get install libeigen3-dev
+     sudo apt-get install libeigen3-dev swig
 
 then change into the new directory:
 
