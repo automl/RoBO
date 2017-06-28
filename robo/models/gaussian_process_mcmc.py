@@ -234,6 +234,9 @@ class GaussianProcessMCMC(BaseModel):
             mu[i], var[i] = model.predict(X_test)
 
         m = mu.mean(axis=0)
+
+        # See the Algorithm Runtime Prediction paper by Hutter et al.
+        # for the derivation of the total variance
         v = np.var(mu, axis=0) + np.mean(var, axis=0)
 
         # Clip negative variances and set them to the smallest
