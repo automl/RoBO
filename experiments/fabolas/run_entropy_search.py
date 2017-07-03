@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 from robo.fmin import entropy_search
 
-from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult,SvmOnHiggs
+from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs, SvmOnLetter
 from hpolib.benchmarks.ml.residual_networks import ResidualNeuralNetworkOnCIFAR10
 from hpolib.benchmarks.ml.conv_net import ConvolutionalNeuralNetworkOnCIFAR10, ConvolutionalNeuralNetworkOnSVHN
 
@@ -37,6 +37,10 @@ elif dataset == "adult":
     output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
 elif dataset == "higgs":
     f = SvmOnHiggs(rng=rng)
+    num_iterations = 15
+    output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
+elif dataset == "letter":
+    f = SvmOnLetter(rng=rng)
     num_iterations = 15
     output_path = "./experiments/fabolas/results/svm_%s/entropy_search_%d" % (dataset, run_id)
 elif dataset == "cifar10":

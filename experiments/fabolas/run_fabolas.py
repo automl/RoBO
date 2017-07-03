@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 from robo.fmin import fabolas
 
-from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs
+from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs, SvmOnLetter
 from hpolib.benchmarks.ml.residual_networks import ResidualNeuralNetworkOnCIFAR10
 from hpolib.benchmarks.ml.conv_net import ConvolutionalNeuralNetworkOnCIFAR10, ConvolutionalNeuralNetworkOnSVHN
 
@@ -54,6 +54,17 @@ elif dataset == "higgs":
 
 elif dataset == "adult":
     f = SvmOnAdult(rng=rng)
+    num_iterations = 80
+    output_path = "./experiments/fabolas/results/svm_%s/fabolas_%d" % (dataset, run_id)
+    s_max = f.train.shape[0]
+    s_min = 100
+    subsets = [128] * 8
+    subsets.extend([64] * 4)
+    subsets.extend([32] * 2)
+    subsets.extend([4] * 1)
+
+elif dataset == "letter":
+    f = SvmOnLetter(rng=rng)
     num_iterations = 80
     output_path = "./experiments/fabolas/results/svm_%s/fabolas_%d" % (dataset, run_id)
     s_max = f.train.shape[0]

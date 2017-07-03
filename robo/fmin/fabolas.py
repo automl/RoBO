@@ -196,7 +196,6 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     for it in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration
-        #s = int(s_max / float(subsets[it % len(subsets)]))
         s = int(s_max / float(subsets[it]))
 
         x = init_random_uniform(lower, upper, 1, rng)[0]

@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 from robo.solver.hyperband_datasets_size import HyperBand_DataSubsets
 
-from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs
+from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs, SvmOnLetter
 from hpolib.benchmarks.ml.residual_networks import ResidualNeuralNetworkOnCIFAR10
 from hpolib.benchmarks.ml.conv_net import ConvolutionalNeuralNetworkOnCIFAR10, ConvolutionalNeuralNetworkOnSVHN
 
@@ -33,6 +33,9 @@ elif dataset == "higgs":
     output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
 elif dataset == "adult":
     f = SvmOnAdult(rng=rng)
+    output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
+elif dataset == "letter":
+    f = SvmOnLetter(rng=rng)
     output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
 elif dataset == "cifar10":
     f = ConvolutionalNeuralNetworkOnCIFAR10(rng=rng)
@@ -64,7 +67,7 @@ for c in opt.incumbents:
 
     results["test_error"] = test_error
     results["runtime"] = opt.runtime
-    results["time_func_eval"] = opt.time_func_eval
+    results["time_func_eval"] = opt.time_func_eval_incumbent
     results["run_id"] = run_id
 
     with open(os.path.join(output_path, 'results_%d.json' % run_id), 'w') as fh:
