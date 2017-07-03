@@ -1,4 +1,6 @@
+import os
 import time
+import json
 import logging
 import numpy as np
 
@@ -15,8 +17,7 @@ class BayesianOptimization(BaseSolver):
                  acquisition_func, model, maximize_func,
                  initial_design=init_random_uniform,
                  initial_points=3,
-                 save_output=False,
-                 num_save=1,
+                 output_path=None,
                  train_interval=1,
                  n_restarts=1,
                  rng=None):
@@ -25,7 +26,7 @@ class BayesianOptimization(BaseSolver):
         an acquisition function and a model to optimize a given objective_func.
         This module keeps track of additional information such as runtime,
         optimization overhead, evaluated points and saves the output
-        in a csv file.
+        in a json file.
 
         Parameters
         ----------
@@ -35,7 +36,10 @@ class BayesianOptimization(BaseSolver):
             Model (i.e. GaussianProcess, RandomForest) that models our current
             believe of the objective function.
         objective_func:
-
+            Function handle for the objective function
+        output_path: string
+            Specifies the path where the intermediate output after each iteration will be saved.
+            If None no output will be saved to disk.
         initial_design: function
             Function that returns some points which will be evaluated before
             the Bayesian optimization loop is started. This allows to
@@ -43,8 +47,6 @@ class BayesianOptimization(BaseSolver):
         initial_points: int
             Defines the number of initial points that are evaluated before the
             actual Bayesian optimization.
-        num_save: int
-            Defines after how many iteration the output is saved.
         train_interval: int
             Specifies after how many iterations the model is retrained.
         n_restarts: int
@@ -71,8 +73,7 @@ class BayesianOptimization(BaseSolver):
         self.train_interval = train_interval
         self.lower = lower
         self.upper = upper
-        self.save_output = save_output
-        self.num_save = num_save
+        self.output_path = output_path
         self.time_start = None
 
         self.incumbents = []
@@ -142,8 +143,8 @@ class BayesianOptimization(BaseSolver):
 
                 self.runtime.append(time.time() - self.start_time)
 
-                if self.save_output and i % self.num_save == 0:
-                    self.save_json(i)
+                if self.output_path is not None:
+                    self.save_output(i)
 
             self.X = np.array(X)
             self.y = np.array(y)
@@ -193,9 +194,8 @@ class BayesianOptimization(BaseSolver):
 
             self.runtime.append(time.time() - self.start_time)
 
-            if self.save_output and it % self.num_save == 0:
-                hypers = self.model.hypers
-                self.save_json(it)
+            if self.output_path is not None:
+                self.save_output(it)
 
         logger.info("Return %s as incumbent with error %f ",
                     self.incumbents[-1], self.incumbents_values[-1])
@@ -248,16 +248,15 @@ class BayesianOptimization(BaseSolver):
 
         return x
 
-    def get_json_data(self, it):
-        """
-        Overrides method in BaseSolver.
-        """
-        json_data = {
-                    "optimization_overhead": None if self.time_overhead is None else self.time_overhead[it],
-                    "runtime": None if self.time_start is None else time.time() - self.time_start,
-                    "incumbents": None if self.incumbents is None else self.incumbents,
-                    "incumbents_values": None if self.incumbents_values is None else self.incumbents_values,
-                    "time_func_eval": self.time_func_evals[it],
-                    "iteration": it
-                    }
-        return json_data
+    def save_output(self, it):
+
+        data = dict()
+        data["optimization_overhead"] = self.time_overhead[it]
+        data["runtime"] = self.runtime[it]
+        data["incumbent"] = self.incumbents[it]
+        data["incumbents_value"] = self.incumbents_values[it]
+        data["time_func_eval"] = self.time_func_evals[it]
+        data["iteration"] = it
+
+        json.dump(data, open(os.path.join(self.output_path, "robo_iter_%d.json" % it), "w"))
+

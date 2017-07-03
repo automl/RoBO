@@ -62,7 +62,6 @@ class GaussianProcess(BaseModel):
         self.X = None
         self.y = None
         self.hypers = []
-        self.mean = 0
         self.is_trained = False
         self.lower = lower
         self.upper = upper
@@ -96,11 +95,14 @@ class GaussianProcess(BaseModel):
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
             self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+            if self.y_std == 0:
+                raise ValueError("Cannot normalize output. All targets have the same value")
         else:
             self.y = y
 
         # Use the empirical mean of the data as mean for the GP
         self.mean = np.mean(self.y, axis=0)
+
         self.gp = george.GP(self.kernel, mean=self.mean)
 
         if do_optimize:
@@ -145,7 +147,11 @@ class GaussianProcess(BaseModel):
         self.gp.kernel[:] = theta[:-1]
         noise = np.exp(theta[-1])  # sigma^2
 
-        self.gp.compute(self.X, yerr=np.sqrt(noise))
+        try:
+            self.gp.compute(self.X, yerr=np.sqrt(noise))
+        except np.linalg.LinAlgError:
+            return 1e25
+
         ll = self.gp.lnlikelihood(self.y, quiet=True)
 
         # Add prior
@@ -200,8 +206,13 @@ class GaussianProcess(BaseModel):
                                                  fprime=self.grad_nll,
                                                  bounds=bounds)
         else:
-            results = optimize.minimize(self.nll, p0)
-            theta = results.x
+            try:
+                results = optimize.minimize(self.nll, p0)
+                theta = results.x
+            except ValueError:
+                logging.error("Could not find a valid hyperparameter configuration! Use initial configuration")
+                theta = p0
+
         return theta
 
     def predict_variance(self, x1, X2):
@@ -226,14 +237,14 @@ class GaussianProcess(BaseModel):
         if not self.is_trained:
             raise Exception('Model has to be trained first!')
 
-        if self.normalize_input:
-            x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
-            X2_norm, _, _ = normalization.zero_one_normalization(X2, self.lower, self.upper)
-        else:
-            x1_norm = x1
-            X2_norm = X2
+        # if self.normalize_input:
+        #     x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
+        #     X2_norm, _, _ = normalization.zero_one_normalization(X2, self.lower, self.upper)
+        # else:
+        #     x1_norm = x1
+        #     X2_norm = X2
 
-        x_ = np.concatenate((x1_norm, X2_norm))
+        x_ = np.concatenate((x1, X2))
         _, var = self.predict(x_, full_cov=True)
 
         var = var[-1, :-1, np.newaxis]
@@ -274,7 +285,7 @@ class GaussianProcess(BaseModel):
 
         if self.normalize_output:
             mu = normalization.zero_mean_unit_var_unnormalization(mu, self.y_mean, self.y_std)
-
+            var *= self.y_std ** 2
         if not full_cov:
             var = np.diag(var)
 

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def bohamiann(objective_function, lower, upper, num_iterations=30,
-              acquisition_func="log_ei", n_init=3, rng=None):
+              acquisition_func="log_ei", n_init=3, output_path=None, rng=None):
     """
     General interface for Bayesian optimization for global black box optimization problems.
 
@@ -33,6 +33,9 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
         The acquisition function
     n_init: int
         Number of points for the initial design. Make sure that it is <= num_iterations.
+    output_path: string
+        Specifies the path where the intermediate output after each iteration will be saved.
+        If None no output will be saved to disk.
     rng: numpy.random.RandomState
         Random number generator
 
@@ -68,10 +71,10 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
         print("ERROR: %s is not a valid acquisition function!" % acquisition_func)
         return
 
-    max_func = Direct(a, lower, upper)
+    max_func = Direct(a, lower, upper, verbose=False)
 
     bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
-                              initial_points=n_init, rng=rng)
+                              initial_points=n_init, output_path=output_path, rng=rng)
 
     x_best, f_min = bo.run(num_iterations)
 
@@ -82,4 +85,6 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
     results["incumbent_values"] = [val for val in bo.incumbents_values]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
+    results["X"] = bo.X
+    results["y"] = bo.y
     return results

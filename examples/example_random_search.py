@@ -15,6 +15,6 @@ lower = np.array([0])
 upper = np.array([6])
 
 # Start Bayesian optimization to optimize the objective function
-results = random_search(objective_function, lower, upper)
+results = random_search(objective_function, lower, upper, num_iterations=20)
 print(results["x_opt"])
 print(results["f_opt"])

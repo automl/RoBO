@@ -1,4 +1,6 @@
+import os
 import time
+import json
 import george
 import logging
 import numpy as np
@@ -9,6 +11,7 @@ from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.maximizers.direct import Direct
+
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
 
@@ -16,22 +19,25 @@ logger = logging.getLogger(__name__)
 
 
 def transform(s, s_min, s_max):
-    s_transform = (np.log(s) - np.log(s_min)) / (np.log(s_max) - np.log(s_min))
+    s_transform = (np.log2(s) - np.log2(s_min)) / (np.log2(s_max) - np.log2(s_min))
     return s_transform
 
 
 def retransform(s_transform, s_min, s_max):
-    s = np.rint(np.exp(s_transform * (np.log(s_max) - np.log(s_min)) + np.log(s_min)))
+    s = np.rint(2**(s_transform * (np.log2(s_max) - np.log2(s_min)) + np.log2(s_min)))
     return s
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
-            n_init=40, num_iterations=100, subsets=[1024, 256, 128, 64],
-            burnin=100, chain_length=200, n_hypers=20, rng=None):
+            n_init=40, num_iterations=100, subsets=[256, 128, 64],
+            burnin=100, chain_length=100, n_hypers=12, output_path=None, rng=None):
     """
     Fast Bayesian Optimization of Machine Learning Hyperparameters
     on Large Datasets
 
+    Fast Bayesian Optimization of Machine Learning Hyperparameters on Large Datasets
+    A. Klein and S. Falkner and S. Bartels and P. Hennig and F. Hutter
+    http://arxiv.org/abs/1605.07079
 
     Parameters
     ----------
@@ -51,8 +57,8 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         Number of hyperparameter samples for the GP
     subsets: list
         The ratio of the subsets size of the initial design.
-        For example if subsets=[1024, 256, 128, 64] then the first random point from the
-        initial design is evaluated on s_max/1024 of the data, the second point on
+        For example if subsets=[256, 128, 64] then the first random point from the
+        initial design is evaluated on s_max/256 of the data, the second point on
         s_max/256 of the data and so on.
     num_iterations: int
         Number of iterations
@@ -60,12 +66,15 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         The length of the MCMC chain for each walker.
     burnin : int
         The number of burnin steps before the actual MCMC sampling starts.
+    output_path: string
+        Specifies the path where the intermediate output after each iteration will be saved.
+        If None no output will be saved to disk.
     rng: numpy.random.RandomState
         Random number generator
 
     Returns
     -------
-        dict with all results
+        dict
     """
 
     assert n_init <= num_iterations, "Number of initial design point has to be <= than the number of iterations"
@@ -107,7 +116,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     kernel *= env_kernel
 
     # Take 3 times more samples than we have hyperparameters
-    if n_hypers < 2*n_dims:
+    if n_hypers < 2*len(kernel):
         n_hypers = 3 * len(kernel)
         if n_hypers % 2 == 1:
             n_hypers += 1
@@ -179,14 +188,14 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True)
+    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
 
     # Initial Design
     logger.info("Initial Design")
-    for i in range(n_init):
+    for it in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration
-        s = int(s_max / float(subsets[i % len(subsets)]))
+        s = int(s_max / float(subsets[it % len(subsets)]))
 
         x = init_random_uniform(lower, upper, 1, rng)[0]
         logger.info("Evaluate %s on subset size %d", str(x), s)
@@ -209,6 +218,16 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
         time_overhead.append(time.time() - start_time_overhead)
         runtime.append(time.time() - time_start)
+
+        if output_path is not None:
+            data = dict()
+            data["optimization_overhead"] = time_overhead[it]
+            data["runtime"] = runtime[it]
+            data["incumbent"] = incumbents[it].tolist()
+            data["time_func_eval"] = time_func_eval[it]
+            data["iteration"] = it
+
+            json.dump(data, open(os.path.join(output_path, "fabolas_iter_%d.json" % it), "w"))
 
     X = np.array(X)
     y = np.array(y)
@@ -234,6 +253,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)
         new_x = maximizer.maximize()
+
         s = retransform(new_x[-1], s_min, s_max)  # Map s from log space to original linear space
 
         time_overhead.append(time.time() - start_time)
@@ -255,11 +275,20 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
         runtime.append(time.time() - time_start)
 
+        if output_path is not None:
+            data = dict()
+            data["optimization_overhead"] = time_overhead[it]
+            data["runtime"] = runtime[it]
+            data["incumbent"] = incumbents[it].tolist()
+            data["time_func_eval"] = time_func_eval[it]
+            data["iteration"] = it
+
+            json.dump(data, open(os.path.join(output_path, "fabolas_iter_%d.json" % it), "w"))
+
     # Estimate the final incumbent
     model_objective.train(X, y, do_optimize=True)
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
                                                                 proj_value=1)
-    incumbents.append(incumbent[:-1])
     logger.info("Final incumbent %s with estimated performance %f",
                 str(incumbent), incumbent_value)
 
@@ -269,5 +298,10 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
+
+    results["X"] = X
+    results["y"] = y
+    results["c"] = c
+
     return results
 

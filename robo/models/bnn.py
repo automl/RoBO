@@ -5,7 +5,8 @@ import numpy as np
 from collections import deque
 
 from robo.models.base_model import BaseModel
-from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
+from robo.util.normalization import (zero_mean_unit_var_normalization,
+                                     zero_mean_unit_var_unnormalization)
 
 try:
     import theano
@@ -15,13 +16,10 @@ try:
     from sgmcmc.utils import floatX
     from sgmcmc.bnn.priors import WeightPrior, LogVariancePrior
     from sgmcmc.bnn.lasagne_layers import AppendLayer
-
 except ImportError as e:
-    print(str(e))
-    print("If you want to use Bayesian Neural Networks you have to install the following dependencies:")
-    print("Theano (pip install theano)")
-    print("Lasagne (pip install lasagne)")
-    print("sgmcmc (see https://github.com/stokasto/sgmcmc)")
+    _has_dependencies = False
+else:
+    _has_dependencies = True
 
 
 def get_default_net(n_inputs):
@@ -63,6 +61,7 @@ class BayesianNeuralNetwork(BaseModel):
                  n_nets=100, l_rate=1e-3,
                  mdecay=5e-2, n_iters=5 * 10**4,
                  bsize=20, burn_in=1000,
+                 sample_steps=100,
                  precondition=True, normalize_output=True,
                  normalize_input=True, rng=None, get_net=get_default_net):
         """
@@ -119,6 +118,13 @@ class BayesianNeuralNetwork(BaseModel):
 
         """
 
+        if not _has_dependencies:
+            raise ValueError("If you want to use Bayesian Neural Networks you "
+                             "have to install the following dependencies:\n"
+                             "Theano (pip install theano)\n"
+                             "Lasagne (pip install lasagne)\n"
+                             "sgmcmc (see https://github.com/stokasto/sgmcmc)")
+
         if rng is None:
             self.rng = np.random.RandomState(np.random.randint(100000))
         else:
@@ -139,9 +145,10 @@ class BayesianNeuralNetwork(BaseModel):
         self.normalize_input = normalize_input
         self.get_net = get_net
 
+        self.sample_steps = sample_steps
         self.samples = deque(maxlen=n_nets)
 
-        self.variance_prior = LogVariancePrior(1e-6, prior_out_std_prec=0.01)
+        self.variance_prior = LogVariancePrior(1e-6, 0.01)
         self.weight_prior = WeightPrior(alpha=1., beta=1.)
 
         self.Xt = T.matrix()
@@ -229,18 +236,22 @@ class BayesianNeuralNetwork(BaseModel):
             else:
                 _, nll_value = self.sampler.step(xmb, ymb)
 
-            if i % 1000 == 0:
+            if i % 512 == 0 and i <= self.burn_in:
                 total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.y).reshape(-1, 1))
                 t = time.time() - start_time
+                logging.info("Iter {:8d} : NLL = {:11.4e} MSE = {:.4e} "
+                             "Time = {:5.2f}".format(i, float(total_nll),
+                             float(total_err), t))
 
-                logging.info("Iter {} : NLL = {} MSE = {} "
-                             "Collected samples= {} Time = {}".format(i,
-                                                                      total_nll,
-                                                                      total_err,
-                                                                      len(self.samples), t))
-            if i % 100 == 0 and i >= self.burn_in:
+            if i % self.sample_steps == 0 and i >= self.burn_in:
+                total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.y).reshape(-1, 1))
+                t = time.time() - start_time
                 self.samples.append(lasagne.layers.get_all_param_values(self.net))
-
+                logging.info("Iter {:8d} : NLL = {:11.4e} MSE = {:.4e} "
+                             "Samples= {} Time = {:5.2f}".format(i,
+                                                                      float(total_nll),
+                                                                      float(total_err),
+                                                                      len(self.samples), t))
             i += 1
         self.is_trained = True
 
@@ -259,7 +270,7 @@ class BayesianNeuralNetwork(BaseModel):
         # scale the priors by the dataset size for the same reason
         # prior for the variance
         tn_examples = T.cast(n_examples, theano.config.floatX)
-        log_like += variance_prior.log_like(f_log_var, n_examples)
+        log_like += variance_prior.log_like(f_log_var) / tn_examples
         # prior for the weights
         params = lasagne.layers.get_all_params(f_net, trainable=True)
         log_like += weight_prior.log_like(params) / tn_examples
@@ -309,8 +320,11 @@ class BayesianNeuralNetwork(BaseModel):
 
         f_out = np.asarray(f_out)
         theta_noise = np.asarray(theta_noise)
-        
+
         if return_individual_predictions:
+            if self.normalize_output:
+                f_out = zero_mean_unit_var_unnormalization(f_out, self.y_mean, self.y_std)
+                theta_noise *= self.y_std**2
             return f_out, theta_noise
 
         m = np.mean(f_out, axis=0)

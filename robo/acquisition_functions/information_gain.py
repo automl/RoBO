@@ -131,13 +131,20 @@ class InformationGain(BaseAcquisitionFunction):
 
     def sample_representer_points(self):
         self.sampling_acquisition.update(self.model)
-        restarts = np.zeros((self.Nb, self.D))
-        restarts[0:self.Nb, ] = self.lower + (self.upper - self.lower) \
-                                               * self.rng.uniform(size=(self.Nb, self.D))
-        sampler = emcee.EnsembleSampler(
-            self.Nb, self.D, self.sampling_acquisition_wrapper)
-        # zb are the representer points and lmb are their log EI values
-        self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 20)
+
+        for i in range(5):
+            restarts = np.zeros((self.Nb, self.D))
+            restarts[0:self.Nb, ] = self.lower + (self.upper - self.lower) \
+                                                 * self.rng.uniform(size=(self.Nb, self.D))
+            sampler = emcee.EnsembleSampler(
+                self.Nb, self.D, self.sampling_acquisition_wrapper)
+            # zb are the representer points and lmb are their log EI values
+            self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 50)
+            if not np.any(np.isinf(self.lmb)):
+                break
+            else:
+                print("Infinity")
+
         if len(self.zb.shape) == 1:
             self.zb = self.zb[:, None]
         if len(self.lmb.shape) == 1:
@@ -200,8 +207,8 @@ class InformationGain(BaseAcquisitionFunction):
         if not (np.all(np.isfinite(self.lmb))):
             logger.debug(self.zb[np.where(np.isinf(self.lmb))],
                         self.lmb[np.where(np.isinf(self.lmb))])
-            raise Exception(
-                "lmb should not be infinite.")
+
+            raise ValueError("lmb should not be infinite.")
 
         D = x.shape[1]
         # If x is a vector, convert it to a matrix (some functions are

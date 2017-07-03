@@ -1,4 +1,6 @@
+import os
 import time
+import json
 import logging
 from robo.solver.base_solver import BaseSolver
 
@@ -8,9 +10,8 @@ try:
     import multibeep as mb
 
 except ImportError as e:
-    print(str(e))
-    print("If you want to use Hyperband you have to install the following dependencies:")
-    print("multibeep (see https://github.com/automl/multibeep)")
+    raise ValueError("If you want to use Hyperband you have to install the following dependencies:\n"
+                     "multibeep (see https://github.com/automl/multibeep)")
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class HyperBand_DataSubsets(BaseSolver):
 
 
     """
-    def __init__ (self, task, eta, min_subset_fraction, save_dir=None, num_save=1, rng=None):
+    def __init__(self, task, eta, min_subset_fraction, output_path=None, rng=None):
         """
         Parameters
         ----------
@@ -59,20 +60,16 @@ class HyperBand_DataSubsets(BaseSolver):
             geometrically distributed $\sim \eta^k$ for
             $k\in [0, 1, ... , num_subsets - 1]$ where
             $\eta^{num_subsets - 1} \geq min_subset_fraction$
-        num_save: int
-            Defines after how many iteration the output is saved.
-            The execution of a Successive Halving run is considered
-            a iteration
-        save_dir: String
-            Output path
+        output_path: string
+            Specifies the path where the intermediate output after each iteration will be saved.
+            If None no output will be saved to disk.
         rng: numpy.random.RandomState
         """
 
         self.task = task
         self.eta = eta
         self.min_subset_fraction = min_subset_fraction
-        self.save_dir = save_dir
-        self.num_save = num_save
+        self.output_path = output_path
 
         if rng is None:
             self.rng = np.random.RandomState(np.random.randint(0, 10000))
@@ -80,7 +77,7 @@ class HyperBand_DataSubsets(BaseSolver):
             self.rng = rng
         #TODO: set seed of the configuration space
 
-        task.configuration_space.seed( self.rng.randint(np.iinfo(np.int16).max))
+        task.configuration_space.seed(self.rng.randint(np.iinfo(np.int16).max))
 
         self.X = []
         self.Y = []
@@ -89,7 +86,7 @@ class HyperBand_DataSubsets(BaseSolver):
         self.incumbents = []
         self.incumbent_values = []
         self.time_func_eval = []
-        self.time_overhead = []
+        self.runtime = []
         self.time_start = None
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
@@ -120,8 +117,6 @@ class HyperBand_DataSubsets(BaseSolver):
 
         for it in range(num_iterations):
             logger.info("Start iteration %d ... ", it)
-
-            start_time = time.time()
 
             # compute the the value of s for this iteration
             s = num_subsets - 1 - (it % num_subsets)
@@ -157,11 +152,15 @@ class HyperBand_DataSubsets(BaseSolver):
             self.incumbents.append(self.incumbent)
             self.incumbent_values.append(self.incumbent_value)
             self.time_func_eval.append(sum([sum(a.costs) for a in arms]))
+            self.runtime.append(time.time() - self.time_start)
 
             for i in range(len(arms)):
                 if len(arms[bandit[i].identifier].costs) == bandit[0].num_pulls:
                     self.X.append(arms[bandit[i].identifier].configuration)
                     self.Y.append(bandit[i].estimated_mean)
+
+            if self.output_path is not None:
+                self.save_output(it)
 
     def choose_next(self, X=None, Y=None):
         """
@@ -169,8 +168,6 @@ class HyperBand_DataSubsets(BaseSolver):
 
         Parameters
         ----------
-        num_iterations: int
-            The number of iterations
         X: np.ndarray(N,D)
             Initial points that are already evaluated
         Y: np.ndarray(N,1)
@@ -182,3 +179,14 @@ class HyperBand_DataSubsets(BaseSolver):
             Suggested point
         """
         return self.task.configuration_space.sample_configuration()
+
+    def save_output(self, it):
+        data = dict()
+        data["runtime"] = self.runtime[it]
+        # Note that the ConfigSpace automatically converts to the [0, 1]^D space
+        data["incumbent"] = self.incumbents[it].get_array().tolist()
+        data["incumbents_value"] = self.incumbent_values[it]
+        data["time_func_eval"] = self.time_func_eval[it]
+        data["iteration"] = it
+
+        json.dump(data, open(os.path.join(self.output_path, "hyperband_iter_%d.json" % it), "w"))

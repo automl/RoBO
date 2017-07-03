@@ -100,12 +100,14 @@ class GaussianProcessMCMC(BaseModel):
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
             self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+            if self.y_std == 0:
+                raise ValueError("Cannot normalize output. All targets have the same value")
         else:
             self.y = y
 
         # Use the mean of the data as mean for the GP
-        mean = np.mean(self.y, axis=0)
-        self.gp = george.GP(self.kernel, mean=mean)
+        self.mean = np.mean(self.y, axis=0)
+        self.gp = george.GP(self.kernel, mean=self.mean)
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
@@ -225,16 +227,16 @@ class GaussianProcessMCMC(BaseModel):
         """
         if not self.is_trained:
             raise Exception('Model has to be trained first!')
+        #
+        # if self.normalize_input:
+        #     X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+        # else:
+        #     X_test_norm = X_test
 
-        if self.normalize_input:
-            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
-        else:
-            X_test_norm = X_test
-
-        mu = np.zeros([len(self.models), X_test_norm.shape[0]])
-        var = np.zeros([len(self.models), X_test_norm.shape[0]])
+        mu = np.zeros([len(self.models), X_test.shape[0]])
+        var = np.zeros([len(self.models), X_test.shape[0]])
         for i, model in enumerate(self.models):
-            mu[i], var[i] = model.predict(X_test_norm)
+            mu[i], var[i] = model.predict(X_test)
 
         # See the Algorithm Runtime Prediction paper by Hutter et al.
         # for the derivation of the total variance
@@ -242,8 +244,9 @@ class GaussianProcessMCMC(BaseModel):
         #v = np.mean(mu ** 2 + var) - m ** 2
         v = var.mean(axis=0)
 
-        if self.normalize_output:
-            m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
+        # if self.normalize_output:
+        #     m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
+        #     v *= self.y_std ** 2
 
         # Clip negative variances and set them to the smallest
         # positive float value
@@ -274,25 +277,3 @@ class GaussianProcessMCMC(BaseModel):
             inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
 
         return inc, inc_value
-
-
-class MTBOGP(GaussianProcessMCMC):
-
-    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
-                 normalize_input=True,
-                 rng=None, lower=None, upper=None, noise=-8):
-
-        super(MTBOGP, self).__init__(kernel, prior, n_hypers, chain_length, burnin_steps,
-                 normalize_output=False, normalize_input=normalize_input,
-                 rng=rng, lower=lower, upper=upper, noise=noise)
-
-    def predict(self, X_test, **kwargs):
-        X_test_norm, _, _ = normalization.zero_one_normalization(X_test[:, :-1], self.lower, self.upper)
-        X_test_norm = np.concatenate((X_test_norm, X_test[:, None, -1]), axis=1)
-        return super(MTBOGP, self).predict(X_test_norm, **kwargs)
-
-    def train(self, X, y, do_optimize=True, **kwargs):
-
-        X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
-        X_norm = np.concatenate((X_norm, X[:, None, -1]), axis=1)
-        return super(MTBOGP, self).train(X_norm, y, do_optimize, **kwargs)
