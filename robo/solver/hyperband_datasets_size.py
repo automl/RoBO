@@ -138,12 +138,12 @@ class HyperBand_DataSubsets(BaseSolver):
             s = num_subsets - 1 - (it % num_subsets)
 
             # the number of initial configurations
-            n = int(np.floor((num_subsets)/(s+1)) * eta**s)
+            n = int(np.floor(num_subsets/(s+1)) * eta**s)
 
             # set up the arms with random configurations
             configurations = [self.choose_next() for i in range(n)]
-            arms = [hyperband_arm( self.task, c,
-                                   subset_fractions[(-s-1):], self) for c in configurations]
+            arms = [hyperband_arm(self.task, c,
+                                  subset_fractions[(-s-1):], self) for c in configurations]
 
             # set up the bandit and the policy and play
             bandit = mb.bandits.last_n_pulls(n=1)
@@ -190,10 +190,10 @@ class HyperBand_DataSubsets(BaseSolver):
 
     def save_output(self, it):
         data = dict()
-        data["runtime"] = self.runtime[it]
+        data["runtime"] = self.runtime[-1]
         # Note that the ConfigSpace automatically converts to the [0, 1]^D space
-        data["incumbent"] = self.incumbents[it].get_array().tolist()
-        data["incumbents_value"] = self.incumbent_values[it]
-        data["time_func_eval"] = self.time_func_eval_incumbent[it]
+        data["incumbent"] = self.incumbents[-1].get_array().tolist()
+        data["incumbents_value"] = self.incumbent_values[-1]
+        data["time_func_eval"] = self.time_func_eval_incumbent[-1]
         data["iteration"] = it
         json.dump(data, open(os.path.join(self.output_path, "hyperband_iter_%d.json" % it), "w"))
