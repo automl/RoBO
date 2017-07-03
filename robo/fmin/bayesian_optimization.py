@@ -7,6 +7,7 @@ from robo.models.gaussian_process import GaussianProcess
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.maximizers.direct import Direct
 from robo.maximizers.cmaes import CMAES
+from robo.maximizers.random_sampling import RandomSampling
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.pi import PI
@@ -35,7 +36,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The upper bound of the search space
     num_iterations: int
         The number of iterations (initial design + BO)
-    maximizer: {"direct", "cmaes"}
+    maximizer: {"direct", "cmaes", "random"}
         Defines how the acquisition function is maximized. NOTE: "cmaes" only works in D > 1 dimensions
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
@@ -107,6 +108,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         max_func = CMAES(acquisition_func, lower, upper, verbose=False, rng=rng)
     elif maximizer == "direct":
         max_func = Direct(acquisition_func, lower, upper)
+    elif maximizer == "random":
+        max_func = RandomSampling(acquisition_func, lower, upper)
     else:
         print("ERROR: %s is not a valid function to maximize the acquisition function!" % maximizer)
         return

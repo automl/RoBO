@@ -4,6 +4,7 @@ import numpy as np
 
 from robo.maximizers.cmaes import CMAES
 from robo.maximizers.direct import Direct
+from robo.maximizers.random_sampling import RandomSampling
 
 
 def objective_function(x):
@@ -35,6 +36,16 @@ class TestMaximizers2D(unittest.TestCase):
         assert len(x.shape) == 1
         assert np.all(x >= self.lower)
         assert np.all(x <= self.upper)
+
+    def test_random_sampling(self):
+        maximizer = RandomSampling(objective_function, self.lower, self.upper)
+        x = maximizer.maximize()
+
+        assert x.shape[0] == 2
+        assert len(x.shape) == 1
+        assert np.all(x >= self.lower)
+        assert np.all(x <= self.upper)
+
 
 if __name__ == "__main__":
     unittest.main()
