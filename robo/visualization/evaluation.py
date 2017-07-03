@@ -2,9 +2,145 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_over_iterations(x, methods, metric="mean", labels=None, linewidth=3,
+def latex_matrix_string(mean, title,
+                        row_labels, col_labels,
+                        best_bold_row=True, best_bold_column=False):
+    """
+    Latex Matrix String Generator.
+
+    Example
+    -------
+    mean = [[1, 6, 5, 7], [12, 4, 6, 13], [9, 8, 7, 10]]
+    print(latex_matrix_string(mean, "Testing Testing", [
+                     "row1", "row2", "row3"], [
+                     "col1", "col2", "col3", "col4"]))
+
+    Parameters
+    ----------
+    mean : array of float array
+            An array of float arrays containing mean values
+    title : string
+            Title string of the table
+    row_labels : string array
+            Array of strings for row names
+    col_labels : string arrays
+            Array of strings for column names
+    best_bold_row : boolean
+            If set to true, the minimum mean entry in each row will
+            be set to bold.
+    best_bold_column :
+            If set to true, the minimum mean entry in each column will
+            be set to bold.
+    """
+    matrix_string = '''\hline
+'''
+    for i, row in enumerate(mean):
+        column_string = '''{ |c'''
+        matrix_string = matrix_string + \
+                        "\\textbf{" + row_labels[i] + "}& "  # length of row labels and number of rows must be equal
+        for j, cell in enumerate(row):
+            column_string = column_string + '''|c'''
+            ending_string = ''' & ''' if j < len(row) - 1 else ''' \\\ \hline'''
+            if best_bold_row and cell == min(
+                    row) and best_bold_column == False:
+                matrix_string = matrix_string + \
+                                "$\mathbf{" + str(cell) + "}$" + ending_string
+            elif best_bold_column and cell == min([a[j] for a in mean]) and best_bold_row == False:
+                matrix_string = matrix_string + \
+                                "$\mathbf{" + str(cell) + "}$" + ending_string
+            else:
+                matrix_string = matrix_string + "$" + \
+                                str(cell) + "$" + ending_string
+    column_string = column_string + '''| }'''
+    column_label = ""
+    for column in col_labels:
+        column_label = column_label + "&\\textbf{" + column + "}"
+    latex_string1 = '''\\begin{table}[ht]
+\centering
+\\begin{tabular}
+''' + column_string + '''
+\hline
+''' + column_label + "\\\ [0.1ex]" + '''
+''' + matrix_string + '''\end{tabular}
+\\\[-1.5ex]
+\caption{''' + title + '''}
+\end{table}'''
+    return latex_string1
+
+
+
+def latex_matrix_string_mean_error(mean, error, title,
+                        row_labels, col_labels,
+                        best_bold_row=True, best_bold_column=False):
+    """
+    Latex Matrix String Generator.
+
+    Example
+    -------
+    mean = [[1, 6, 5, 7], [12, 4, 6, 13], [9, 8, 7, 10]]
+    error = [[2, 6, 1, 5], [4, 8, 2, 3], [1, 4, 8, 2]]
+    print(latex_matrix_string(mean, error, "Testing Testing", [
+                     "row1", "row2", "row3"], [
+                     "col1", "col2", "col3", "col4"]))
+
+    Parameters
+    ----------
+    mean : array of float array
+            An array of float arrays containing mean values
+    error : array of float array
+            An array of float array containing error values
+    title : string
+            Title string of the table
+    row_labels : string array
+            Array of strings for row names
+    col_labels : string arrays
+            Array of strings for column names
+    best_bold_row : boolean
+            If set to true, the minimum mean entry in each row will
+            be set to bold.
+    best_bold_column :
+            If set to true, the minimum mean entry in each column will
+            be set to bold.
+    """
+    matrix_string = '''\hline
+'''
+    for i, row in enumerate(mean):
+        column_string = '''{ |c'''
+        matrix_string = matrix_string + \
+                        "\\textbf{" + row_labels[i] + "}& "  # length of row labels and number of rows must be equal
+        for j, cell in enumerate(row):
+            column_string = column_string + '''|c'''
+            ending_string = ''' & ''' if j < len(row) - 1 else ''' \\\ \hline'''
+            if best_bold_row and cell == min(
+                    row) and best_bold_column == False:
+                matrix_string = matrix_string + \
+                                "$\mathbf{" + str(cell) + " \pm " + str(error[i][j]) + "}$" + ending_string
+            elif best_bold_column and cell == min([a[j] for a in mean]) and best_bold_row == False:
+                matrix_string = matrix_string + \
+                                "$\mathbf{" + str(cell) + " \pm " + str(error[i][j]) + "}$" + ending_string
+            else:
+                matrix_string = matrix_string + "$" + \
+                                str(cell) + " \pm " + str(error[i][j]) + "$" + ending_string
+    column_string = column_string + '''| }'''
+    column_label = ""
+    for column in col_labels:
+        column_label = column_label + "&\\textbf{" + column + "}"
+    latex_string1 = '''\\begin{table}[ht]
+\centering
+\\begin{tabular}
+''' + column_string + '''
+\hline
+''' + column_label + "\\\ [0.1ex]" + '''
+''' + matrix_string + '''\end{tabular}
+\\\[-1.5ex]
+\caption{''' + title + '''}
+\end{table}'''
+    return latex_string1
+
+
+def plot_over_iterations(x, methods, metric="mean", labels=None, linewidth=3, fontsize_label=25,
                          x_label="Error", y_label="Number of iterations", log_y=False, log_x=False,
-                         title="", legend_loc=1, percentiles=(5, 95), colors=None):
+                         title="", legend_loc=1, percentiles=(5, 95), colors=None, plot_legend=True):
     """
     Plots performance over iterations of different methods .
 
@@ -38,10 +174,12 @@ def plot_over_iterations(x, methods, metric="mean", labels=None, linewidth=3,
     if labels is None:
         labels = ["Method-%d" % i for i in range(len(methods))]
 
-    styles = ["o", "D", "s", ">", "<", "^", "v", "*", "*", "."]
+    styles = ["o", "D", "s", ">", "<", "^", "v", "*", "*", ".", ",", "1", "2", "3", "4"]
 
     if colors is None:
-        colors = ["blue", "green", "purple", "darkorange", "red", "palevioletred", "lightseagreen", "brown", "black"]
+        colors = ["blue", "green", "purple", "darkorange", "red",
+                  "palevioletred", "lightseagreen", "brown", "black",
+                  "firebrick", "cyan", "gold", "slategray"]
 
     for index, method in enumerate(methods):
         style = styles[index % len(styles)]
@@ -61,20 +199,23 @@ def plot_over_iterations(x, methods, metric="mean", labels=None, linewidth=3,
         else:
             raise ValueError("Metric does not exist!")
 
-        plt.legend(loc=legend_loc)
-        plt.xlabel(x_label)
-        plt.ylabel(y_label)
+        if plot_legend:
+            plt.legend(loc=legend_loc, fancybox=True, framealpha=1, frameon=True, fontsize=fontsize_label)
+
+        plt.xlabel(x_label, fontsize=fontsize_label)
+        plt.ylabel(y_label, fontsize=fontsize_label)
+        plt.grid(True, which='both', ls="-")
         if log_y:
             plt.yscale("log")
         if log_x:
             plt.xscale("log")
-        plt.grid(True)
-        plt.title(title)
+
+        plt.title(title, fontsize=fontsize_label)
     return plt
 
 
-def plot_over_time(times, methods, metric="mean", labels=None, linewidth=3,
-                         x_label="Error", y_label="Time", log_y=False, log_x=False,
+def plot_over_time(times, methods, metric="mean", labels=None, linewidth=3, fontsize_label=20,
+                         x_label="Error", y_label="Time", log_y=False, log_x=False, plot_legend=True,
                          title="", legend_loc=1, percentiles=(5, 95), colors=None, std_scale=1):
     """
     Plots performance over iterations
@@ -138,13 +279,14 @@ def plot_over_time(times, methods, metric="mean", labels=None, linewidth=3,
         else:
             raise ValueError("Metric does not exist!")
 
-        plt.legend(loc=legend_loc)
-        plt.xlabel(x_label)
-        plt.ylabel(y_label)
+        if plot_legend:
+            plt.legend(loc=legend_loc, fancybox=True, framealpha=1, frameon=True, fontsize=fontsize_label)
+        plt.xlabel(x_label, fontsize=fontsize_label)
+        plt.ylabel(y_label, fontsize=fontsize_label)
         if log_y:
             plt.yscale("log")
         if log_x:
             plt.xscale("log")
-        plt.grid(True)
+        plt.grid(True, which='both', ls="-", alpha=1)
         plt.title(title)
     return plt
