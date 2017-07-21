@@ -5,23 +5,20 @@ python:
 os:
   - linux
 before_install:
+  - sudo add-apt-repository ppa:teward/swig3.0 -y
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
   - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
   - sudo apt-get install libeigen3-dev
-  - sudo apt-get install swig
-  - gcc --version
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update
   - sudo apt-get install libboost-all-dev
   - sudo apt-get install gcc-4.9 g++-4.9
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.9
-  - gcc --version
-  - sudo apt-get install -qq python-numpy python-scipy
+  # Installing swig
+  # ---------------
+  - sudo apt-get install -y swig3.0
+  - sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
 install:
   - pip install --upgrade pip
-  - pip install cython
-  - pip install theano
-  - pip install lasagne
   - travis_wait pip install -r all_requirements.txt
   - python setup.py install
   - pip install coveralls
