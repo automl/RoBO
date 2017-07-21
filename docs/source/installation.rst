@@ -22,7 +22,7 @@ Additionally RoBO has some optional dependencies that are only needed for specif
 * `sgmcmc <https://github.com/stokasto/sgmcmc>`_
 * `hpolib2 <https://github.com/automl/HPOlib2>`_
 
-**Note**: RoBO works only with Python3. Python2 is not support anymore.
+**Note**: RoBO works only with Python3. Python2 is not supported anymore.
 
 -------------------
 Manual Installation
