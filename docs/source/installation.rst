@@ -32,7 +32,7 @@ RoBO uses the Gaussian processes library `george <https://github.com/dfm/george>
 
 .. code:: bash
 
-     sudo apt-get install libeigen3-dev swig
+     sudo apt-get install libeigen3-dev swig gfortran
 
 then change into the new directory:
 
