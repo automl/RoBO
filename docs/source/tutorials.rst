@@ -39,7 +39,7 @@ To use RoBO we have to define a function that symbolizes the objective function 
     		y = np.sin(3 * x[0]) * 4 * (x[0] - 1) * (x[0] + 2)
     		return y
 
-Before we run Bayesian optimization we first have to define the lower and upper bound of our input search space. In this case our search space contains only one dimension, but Bayesian optimization is not restricted to that and normally works find up to 10 (continuous) dimensions.
+Before we run Bayesian optimization we first have to define the lower and upper bound of our input search space. In this case our search space contains only one dimension, but Bayesian optimization is not restricted to that and normally works fine up to 10 (continuous) dimensions.
 
     .. code-block:: python
 	
