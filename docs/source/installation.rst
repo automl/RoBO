@@ -34,10 +34,11 @@ RoBO uses the Gaussian processes library `george <https://github.com/dfm/george>
 
      sudo apt-get install libeigen3-dev swig
 
-then change into the new directory:
+Download RoBO and then change into the new directory:
 
 .. code:: bash
 
+	git clone https://github.com/automl/RoBO
 	cd RoBO/
 
 Before you install RoBO you have to install the required dependencies

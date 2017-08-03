@@ -120,8 +120,8 @@
 
 <div class="viewcode-block" id="SciPyOptimizer"><a class="viewcode-back" href="../../../apis.html#robo.maximizers.scipy_optimizer.SciPyOptimizer">[docs]</a><span class="k">class</span> <span class="nc">SciPyOptimizer</span><span class="p">(</span><span class="n">BaseMaximizer</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">X_lower</span><span class="p">,</span>
-                 <span class="n">X_upper</span><span class="p">,</span> <span class="n">n_restarts</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span>
+                 <span class="n">upper</span><span class="p">,</span> <span class="n">n_restarts</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Interface for scipy&#39;s LBFGS implementation.</span>
 
@@ -129,9 +129,9 @@
 <span class="sd">        ----------</span>
 <span class="sd">        objective_function: acquisition function</span>
 <span class="sd">            The acquisition function which will be maximized</span>
-<span class="sd">        X_lower: np.ndarray (D)</span>
+<span class="sd">        lower: np.ndarray (D)</span>
 <span class="sd">            Lower bounds of the input space</span>
-<span class="sd">        X_upper: np.ndarray (D)</span>
+<span class="sd">        upper: np.ndarray (D)</span>
 <span class="sd">            Upper bounds of the input space</span>
 <span class="sd">        n_restarts: int</span>
 <span class="sd">            Determines how often the local search is repeated.</span>
@@ -144,7 +144,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span> <span class="o">=</span> <span class="n">n_restarts</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SciPyOptimizer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span>
-                                             <span class="n">X_lower</span><span class="p">,</span> <span class="n">X_upper</span><span class="p">)</span>
+                                             <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_acquisition_fkt_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">acq_f</span><span class="p">):</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">acq_f</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">]))</span>
@@ -158,35 +158,31 @@
 <span class="sd">        np.ndarray(N,D)</span>
 <span class="sd">            Point with highest acquisition value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
         <span class="n">cand_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">])</span>
 
         <span class="n">f</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_acquisition_fkt_wrapper</span><span class="p">,</span> <span class="n">acq_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_func</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">):</span>
-            <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="p">,</span>
-                                                <span class="bp">self</span><span class="o">.</span><span class="n">X_upper</span><span class="p">,</span>
-                                                <span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
 
-            <span class="n">res</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
-                <span class="n">f</span><span class="p">,</span>
-                <span class="n">start</span><span class="p">,</span>
-                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">,</span>
-                <span class="n">bounds</span><span class="o">=</span><span class="nb">zip</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">X_upper</span><span class="p">),</span>
-                <span class="n">options</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;disp&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">})</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">f</span><span class="p">,</span>
+                                    <span class="n">start</span><span class="p">,</span>
+                                    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">,</span>
+                                    <span class="n">bounds</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">)),</span>
+                                    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;disp&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">})</span>
             <span class="n">cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
             <span class="n">cand_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;fun&quot;</span><span class="p">]</span>
 
         <span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">cand_vals</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cand</span><span class="p">[</span><span class="n">best</span><span class="p">]])</span></div></div>
+        <span class="k">return</span> <span class="n">cand</span><span class="p">[</span><span class="n">best</span><span class="p">]</span></div></div>
 
 
 <span class="k">class</span> <span class="nc">SciPyGlobalOptimizer</span><span class="p">(</span><span class="n">BaseMaximizer</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">X_lower</span><span class="p">,</span> <span class="n">X_upper</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span>
                  <span class="n">n_restarts</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_func_evals</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Interface for scipy&#39;s global optimization method.</span>
@@ -195,9 +191,9 @@
 <span class="sd">        ----------</span>
 <span class="sd">        objective_function: acquisition function</span>
 <span class="sd">            The acquisition function which will be maximized</span>
-<span class="sd">        X_lower: np.ndarray (D)</span>
+<span class="sd">        lower: np.ndarray (D)</span>
 <span class="sd">            Lower bounds of the input space</span>
-<span class="sd">        X_upper: np.ndarray (D)</span>
+<span class="sd">        upper: np.ndarray (D)</span>
 <span class="sd">            Upper bounds of the input space</span>
 <span class="sd">        n_restarts: int</span>
 <span class="sd">            Determines how often the local search is repeated.</span>
@@ -210,10 +206,9 @@
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10000</span><span class="p">))</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">SciPyGlobalOptimizer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span>
-                                                   <span class="n">X_lower</span><span class="p">,</span> <span class="n">X_upper</span><span class="p">)</span>
+                                                   <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_acquisition_fkt_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">acq_f</span><span class="p">):</span>
-        <span class="nb">print</span> <span class="n">x</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">acq_f</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">]))</span>
 
     <span class="k">def</span> <span class="nf">maximize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -225,31 +220,29 @@
 <span class="sd">        np.ndarray(N,D)</span>
 <span class="sd">            Point with highest acquisition value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">cand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
         <span class="n">cand_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">])</span>
 
         <span class="n">f</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_acquisition_fkt_wrapper</span><span class="p">,</span> <span class="n">acq_f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">objective_func</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_restarts</span><span class="p">):</span>
-            <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="p">,</span>
-                                                <span class="bp">self</span><span class="o">.</span><span class="n">X_upper</span><span class="p">,</span>
-                                                <span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
             <span class="n">res</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">basinhopping</span><span class="p">(</span>
                 <span class="n">f</span><span class="p">,</span>
                 <span class="n">start</span><span class="p">,</span>
                 <span class="n">niter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_func_evals</span><span class="p">,</span>
                 <span class="n">minimizer_kwargs</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="nb">zip</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">X_lower</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">X_upper</span><span class="p">),</span>
+                    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">)),</span>
                     <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">},</span>
                 <span class="n">disp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">)</span>
 
             <span class="n">cand</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
             <span class="n">cand_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">fun</span>
         <span class="n">best</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">cand_vals</span><span class="p">)</span>
-        <span class="nb">print</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cand</span><span class="p">[</span><span class="n">best</span><span class="p">]])</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cand</span><span class="p">[</span><span class="n">best</span><span class="p">]])</span>
+
+        <span class="k">return</span> <span class="n">cand</span><span class="p">[</span><span class="n">best</span><span class="p">]</span>
 </pre></div>
 
     </div>

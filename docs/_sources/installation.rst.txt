@@ -22,7 +22,7 @@ Additionally RoBO has some optional dependencies that are only needed for specif
 * `sgmcmc <https://github.com/stokasto/sgmcmc>`_
 * `hpolib2 <https://github.com/automl/HPOlib2>`_
 
-**Note**: RoBO works only with Python3. Python2 is not support anymore.
+**Note**: RoBO works only with Python3. Python2 is not supported anymore.
 
 -------------------
 Manual Installation
@@ -34,10 +34,11 @@ RoBO uses the Gaussian processes library `george <https://github.com/dfm/george>
 
      sudo apt-get install libeigen3-dev swig
 
-then change into the new directory:
+Download RoBO and then change into the new directory:
 
 .. code:: bash
 
+	git clone https://github.com/automl/RoBO
 	cd RoBO/
 
 Before you install RoBO you have to install the required dependencies
