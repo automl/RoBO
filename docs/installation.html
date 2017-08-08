@@ -107,10 +107,9 @@
       <div class="col-md-3">
         <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#dependencies">Dependencies</a><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li><a class="reference internal" href="#manual-installation">Manual Installation</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#testing">Testing</a></li>
 </ul>
 </li>
 </ul>
@@ -143,8 +142,9 @@
 <li><a class="reference external" href="https://github.com/automl/HPOlib2">hpolib2</a></li>
 </ul>
 <p><strong>Note</strong>: RoBO works only with Python3. Python2 is not supported anymore.</p>
+</div>
 <div class="section" id="manual-installation">
-<h3>Manual Installation<a class="headerlink" href="#manual-installation" title="Permalink to this headline">¶</a></h3>
+<h2>Manual Installation<a class="headerlink" href="#manual-installation" title="Permalink to this headline">¶</a></h2>
 <p>RoBO uses the Gaussian processes library <a class="reference external" href="https://github.com/dfm/george">george</a>  and the random forests library <a class="reference external" href="https://github.com/automl/random_forest_run">pyrfr</a>. In order to use this library make sure the libeigen and swig are installed:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">libeigen3</span><span class="o">-</span><span class="n">dev</span> <span class="n">swig</span> <span class="n">gfortran</span>
 </pre></div>
@@ -169,6 +169,13 @@ by:</p>
 <div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>You can run all the tests using <a class="reference external" href="http://nose.readthedocs.io/en/latest/">nose</a>  . Just run the following commands in the RoBO directory:</p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">test</span><span class="o">/</span>
+<span class="n">nosetests</span>
+</pre></div>
 </div>
 </div>
 </div>

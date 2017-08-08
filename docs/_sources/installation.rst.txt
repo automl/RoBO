@@ -29,7 +29,7 @@ Additionally RoBO has some optional dependencies that are only needed for specif
 
 **Note**: RoBO works only with Python3. Python2 is not supported anymore.
 
--------------------
+
 Manual Installation
 -------------------
 
@@ -67,3 +67,14 @@ Finally you can install RoBO by:
 .. code:: bash
 
      python setup.py install
+
+
+Testing
+-------
+
+You can run all the tests using `nose <http://nose.readthedocs.io/en/latest/>`_  . Just run the following commands in the RoBO directory:
+
+.. code:: bash
+
+	cd test/
+	nosetests

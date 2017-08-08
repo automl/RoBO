@@ -5,3 +5,4 @@ scipy>=0.13.3
 cma
 direct
 git+https://github.com/sfalkner/george.git
+nose
