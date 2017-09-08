@@ -18,12 +18,15 @@ logger = logging.getLogger(__name__)
 
 
 def entropy_search(objective_function, lower, upper, num_iterations=30,
-                          maximizer="direct", model="gp_mcmc",
-                          n_init=3, output_path=None, rng=None):
+                   maximizer="direct", model="gp_mcmc",
+                   n_init=3, output_path=None, rng=None):
     """
-    Entropy search for global black box optimization problems.
+    Entropy search for global black box optimization problems. This is a reimplemenation of the entropy search
+    algorithm by Henning and Schuler[1].
 
-    TODO: Add reference here
+    [1] Entropy search for information-efficient global optimization.
+        P. Hennig and C. Schuler.
+        JMLR, (1), 2012.
 
     Parameters
     ----------
