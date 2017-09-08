@@ -123,7 +123,7 @@
       </div>
     <div class="col-md-9 content">
       
-  <div class="section" id="apis">
+  <a href="https://github.com/automl/RoBO"><img style="position: fixed; top: 50px; right: 0; border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a><div class="section" id="apis">
 <h1>APIs<a class="headerlink" href="#apis" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="main-modules">
 <h2>Main Modules:<a class="headerlink" href="#main-modules" title="Permalink to this headline">¶</a></h2>
@@ -222,6 +222,90 @@ function at X is returned</p>
 <p>np.ndarray(1,D)</p>
 <blockquote class="last">
 <div><p>Derivative of Expected Improvement at X (only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.information_gain.InformationGain">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.information_gain.</code><code class="descname">InformationGain</code><span class="sig-paren">(</span><em>model</em>, <em>lower</em>, <em>upper</em>, <em>Nb=50</em>, <em>Np=400</em>, <em>sampling_acquisition=None</em>, <em>sampling_acquisition_kw={‘par’: 0.0}</em>, <em>rng=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain.html#InformationGain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain.InformationGain" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.information_gain.InformationGain.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X_test</em>, <em>derivative=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain.html#InformationGain.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain.InformationGain.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the information gain of X and its derivatives</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X_test: np.ndarray(N, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned
+Not tested!</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,)</p>
+<blockquote>
+<div><p>Relative change of entropy of pmin</p>
+</div></blockquote>
+<p>np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Derivatives with respect to X
+(only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.information_gain_mc.InformationGainMC">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.information_gain_mc.</code><code class="descname">InformationGainMC</code><span class="sig-paren">(</span><em>model</em>, <em>lower</em>, <em>upper</em>, <em>Nb=50</em>, <em>Nf=500</em>, <em>sampling_acquisition=None</em>, <em>sampling_acquisition_kw={‘par’: 0.0}</em>, <em>Np=50</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain_mc.html#InformationGainMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain_mc.InformationGainMC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.information_gain_per_unit_cost.</code><code class="descname">InformationGainPerUnitCost</code><span class="sig-paren">(</span><em>model</em>, <em>cost_model</em>, <em>lower</em>, <em>upper</em>, <em>is_env_variable</em>, <em>n_representer=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain_per_unit_cost.html#InformationGainPerUnitCost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X</em>, <em>derivative=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain_per_unit_cost.html#InformationGainPerUnitCost.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the acquisition_functions value for a single point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : (1, D) numpy array</p>
+<blockquote>
+<div><p>The input point for which the acquisition_functions functions is computed.</p>
+</div></blockquote>
+<p><strong>derivative</strong> : bool, optional</p>
+<blockquote>
+<div><p>If it is equal to True also the derivatives with respect to X is
+computed.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">acquisition_value: numpy array</p>
+<blockquote>
+<div><p>The acquisition_functions value computed for X.</p>
+</div></blockquote>
+<p><strong>grad</strong> : numpy array</p>
+<blockquote class="last">
+<div><p>The computed gradient of the acquisition_functions function at X. Only
+returned if derivative==True</p>
 </div></blockquote>
 </td>
 </tr>
@@ -728,6 +812,29 @@ match the number of points of X and T is the number of objectives</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="robo.maximizers.direct.Direct">
+<em class="property">class </em><code class="descclassname">robo.maximizers.direct.</code><code class="descname">Direct</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>n_func_evals=400</em>, <em>n_iters=200</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/direct.html#Direct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.direct.Direct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.maximizers.direct.Direct.maximize">
+<code class="descname">maximize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/direct.html#Direct.maximize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.direct.Direct.maximize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximizes the given acquisition function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Point with highest acquisition value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="robo.maximizers.grid_search.GridSearch">
 <em class="property">class </em><code class="descclassname">robo.maximizers.grid_search.</code><code class="descname">GridSearch</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>resolution=1000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/grid_search.html#GridSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.grid_search.GridSearch" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
@@ -752,7 +859,7 @@ match the number of points of X and T is the number of objectives</p>
 
 <dl class="class">
 <dt id="robo.maximizers.scipy_optimizer.SciPyOptimizer">
-<em class="property">class </em><code class="descclassname">robo.maximizers.scipy_optimizer.</code><code class="descname">SciPyOptimizer</code><span class="sig-paren">(</span><em>objective_function</em>, <em>X_lower</em>, <em>X_upper</em>, <em>n_restarts=10</em>, <em>verbosity=False</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/scipy_optimizer.html#SciPyOptimizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.scipy_optimizer.SciPyOptimizer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">robo.maximizers.scipy_optimizer.</code><code class="descname">SciPyOptimizer</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>n_restarts=10</em>, <em>verbosity=True</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/scipy_optimizer.html#SciPyOptimizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.scipy_optimizer.SciPyOptimizer" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="robo.maximizers.scipy_optimizer.SciPyOptimizer.maximize">
 <code class="descname">maximize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/scipy_optimizer.html#SciPyOptimizer.maximize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.scipy_optimizer.SciPyOptimizer.maximize" title="Permalink to this definition">¶</a></dt>
