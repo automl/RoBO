@@ -118,7 +118,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         max_func = CMAES(acquisition_func, lower, upper, verbose=False,
                          rng=rng)
     elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper, verbose=False)
+        max_func = Direct(acquisition_func, lower, upper)
     elif maximizer == "random":
         max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
     else:
