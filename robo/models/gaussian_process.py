@@ -1,9 +1,8 @@
 
 import logging
-import george
 import numpy as np
+import gpflow
 
-from scipy import optimize
 
 from robo.util import normalization
 from robo.models.base_model import BaseModel
@@ -19,16 +18,15 @@ class GaussianProcess(BaseModel):
                  normalize_input=True,
                  lower=None, upper=None, rng=None):
         """
-        Interface to the george GP library. The GP hyperparameter are obtained
+        Interface to the GPflow library. The GP hyperparameter are obtained
         by optimizing the marginal log likelihood.
 
         Parameters
         ----------
-        kernel : george kernel object
+        kernel : GPflow kernel object
             Specifies the kernel that is used for all Gaussian Process
         prior : prior object
-            Defines a prior for the hyperparameters of the GP. Make sure that
-            it implements the Prior interface.
+            Defines a prior.
         noise : float
             Noise term that is added to the diagonal of the covariance matrix
             for the Cholesky decomposition.
@@ -69,10 +67,6 @@ class GaussianProcess(BaseModel):
     @BaseModel._check_shapes_train
     def train(self, X, y, do_optimize=True):
         """
-        Computes the Cholesky decomposition of the covariance of X and
-        estimates the GP hyperparameters by optimizing the marginal
-        loglikelihood. The prior mean of the GP is set to the empirical
-        mean of X.
 
         Parameters
         ----------
@@ -100,120 +94,23 @@ class GaussianProcess(BaseModel):
         else:
             self.y = y
 
-        # Use the empirical mean of the data as mean for the GP
-        self.mean = np.mean(self.y, axis=0)
-
-        self.gp = george.GP(self.kernel, mean=self.mean)
+        self.mean = gpflow.mean_functions.Linear(1, 0)
+        self.gp = gpflow.gpr.GPR(self.X, self.y[:, None], kern=self.kernel, mean_function=self.mean)
 
         if do_optimize:
-            self.hypers = self.optimize()
-            self.gp.kernel[:] = self.hypers[:-1]
-            self.noise = np.exp(self.hypers[-1])  # sigma^2
-        else:
-            self.hypers = self.gp.kernel[:]
-            self.hypers = np.append(self.hypers, np.log(self.noise))
-
-        logger.debug("GP Hyperparameters: " + str(self.hypers))
-
-        self.gp.compute(self.X, yerr=np.sqrt(self.noise))
+            self.optimize()
 
         self.is_trained = True
 
     def get_noise(self):
         return self.noise
 
-    def nll(self, theta):
-        """
-        Returns the negative marginal log likelihood (+ the prior) for
-        a hyperparameter configuration theta.
-        (negative because we use scipy minimize for optimization)
-
-        Parameters
-        ----------
-        theta : np.ndarray(H)
-            Hyperparameter vector. Note that all hyperparameter are
-            on a log scale.
-
-        Returns
-        ----------
-        float
-            lnlikelihood + prior
-        """
-        # Specify bounds to keep things sane
-        if np.any((-20 > theta) + (theta > 20)):
-            return 1e25
-
-        # The last entry of theta is always the noise
-        self.gp.kernel[:] = theta[:-1]
-        noise = np.exp(theta[-1])  # sigma^2
-
-        try:
-            self.gp.compute(self.X, yerr=np.sqrt(noise))
-        except np.linalg.LinAlgError:
-            return 1e25
-
-        ll = self.gp.lnlikelihood(self.y, quiet=True)
-
-        # Add prior
-        if self.prior is not None:
-            ll += self.prior.lnprob(theta)
-
-        # We add a minus here because scipy is minimizing
-        return -ll if np.isfinite(ll) else 1e25
-
-    def grad_nll(self, theta):
-
-        self.gp.kernel[:] = theta[:-1]
-        noise = np.exp(theta[-1])
-        
-        self.gp.compute(self.X, yerr=np.sqrt(noise))
-
-        self.gp._compute_alpha(self.y)
-        K_inv = self.gp.solver.apply_inverse(np.eye(self.gp._alpha.size),
-                                             in_place=True)
-
-        # The gradients of the Gram matrix, for the noise this is just 
-        # the identity matrix
-        Kg = self.gp.kernel.gradient(self.gp._x)
-        Kg = np.concatenate((Kg, np.eye(Kg.shape[0])[:, :, None]), axis=2)
-
-        # Calculate the gradient.
-        A = np.outer(self.gp._alpha, self.gp._alpha) - K_inv
-        g = 0.5 * np.einsum('ijk,ij', Kg, A)
-
-        if self.prior is not None:
-            g += self.prior.gradient(theta)
-
-        return -g
-
     def optimize(self):
         """
-        Optimizes the marginal log likelihood and returns the best found
-        hyperparameter configuration theta.
-
-        Returns
-        -------
-        theta : np.ndarray(H)
-            Hyperparameter vector that maximizes the marginal log likelihood
+        Optimizes the marginal log likelihood
         """
-        # Start optimization from the previous hyperparameter configuration
-        p0 = self.gp.kernel.vector
-        p0 = np.append(p0, np.log(self.noise))
+        self.gp.optimize()
 
-        if self.use_gradients:
-            bounds = [(-10, 10)] * (len(self.kernel) + 1)
-            theta, _, _ = optimize.fmin_l_bfgs_b(self.nll, p0,
-                                                 fprime=self.grad_nll,
-                                                 bounds=bounds)
-        else:
-            try:
-                results = optimize.minimize(self.nll, p0)
-                theta = results.x
-            except ValueError:
-                logging.error("Could not find a valid hyperparameter configuration! Use initial configuration")
-                theta = p0
-
-        return theta
 
     def predict_variance(self, x1, X2):
         r"""
@@ -253,7 +150,7 @@ class GaussianProcess(BaseModel):
 
     @BaseModel._check_shapes_predict
     def predict(self, X_test, full_cov=False, **kwargs):
-        r"""
+        """
         Returns the predictive mean and variance of the objective function at
         the given test points.
 
@@ -281,16 +178,18 @@ class GaussianProcess(BaseModel):
         else:
             X_test_norm = X_test
 
-        mu, var = self.gp.predict(self.y, X_test_norm)
+        if not full_cov:
+            mu, var = self.gp.predict_y(X_test_norm)
+        else:
+            mu, var = self.gp.predict_f_full_cov(X_test_norm)
 
         if self.normalize_output:
             mu = normalization.zero_mean_unit_var_unnormalization(mu, self.y_mean, self.y_std)
             var *= self.y_std ** 2
-        if not full_cov:
-            var = np.diag(var)
 
-        # Clip negative variances and set them to the smallest
-        # positive float value
+
+            # Clip negative variances and set them to the smallest
+            # positive float value
         if var.shape[0] == 1:
             var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
         else:
@@ -325,7 +224,7 @@ class GaussianProcess(BaseModel):
         if not self.is_trained:
             raise Exception('Model has to be trained first!')
 
-        funcs = self.gp.sample_conditional(self.y, X_test_norm, n_funcs)
+        funcs = self.gp.predict_f_samples(X_test_norm, n_funcs)
 
         if self.normalize_output:
             funcs = normalization.zero_mean_unit_var_unnormalization(funcs, self.y_mean, self.y_std)
