@@ -139,6 +139,6 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     results["incumbent_values"] = [val for val in bo.incumbents_values]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
-    results["X"] = bo.X
-    results["y"] = bo.y
+    results["X"] = [x.tolist() for x in bo.X]
+    results["y"] = [y for y in bo.y]
     return results
