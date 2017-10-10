@@ -92,7 +92,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
 
     elif model_type == "rf":
         from robo.models.random_forest import RandomForest
-        model = RandomForest(types=np.zeros([n_dims]), rng=rng)
+        model = RandomForest(rng=rng)
 
     else:
         raise ValueError("'{}' is not a valid model".format(model_type))
