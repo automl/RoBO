@@ -1,26 +1,27 @@
-
+import sys
 import numpy as np
 
 from scipy import optimize
+from functools import partial
 
 from robo.maximizers.base_maximizer import BaseMaximizer
-from functools import partial
+from robo.initial_design import init_random_uniform
 
 
 class SciPyOptimizer(BaseMaximizer):
 
-    def __init__(self, objective_function, X_lower,
-                 X_upper, n_restarts=10, verbosity=False, rng=None):
+    def __init__(self, objective_function, lower,
+                 upper, n_restarts=5, verbosity=False, rng=None):
         """
-        Interface for scipy's LBFGS implementation.
+        Interface for scipy's L-BFGS-B implementation.
 
         Parameters
         ----------
         objective_function: acquisition function
             The acquisition function which will be maximized
-        X_lower: np.ndarray (D)
+        lower: np.ndarray (D)
             Lower bounds of the input space
-        X_upper: np.ndarray (D)
+        upper: np.ndarray (D)
             Upper bounds of the input space
         n_restarts: int
             Determines how often the local search is repeated.
@@ -33,10 +34,12 @@ class SciPyOptimizer(BaseMaximizer):
         self.n_restarts = n_restarts
         self.verbosity = verbosity
         super(SciPyOptimizer, self).__init__(objective_function,
-                                             X_lower, X_upper)
+                                             lower, upper)
 
     def _acquisition_fkt_wrapper(self, x, acq_f):
-        return -acq_f(np.array([x]))
+        if np.any(np.isnan(x)):
+            return sys.float_info.max
+        return -acq_f(np.array([np.clip(x, self.lower, self.upper)]))
 
     def maximize(self):
         """
@@ -44,98 +47,23 @@ class SciPyOptimizer(BaseMaximizer):
 
         Returns
         -------
-        np.ndarray(N,D)
+        np.ndarray(D,)
             Point with highest acquisition value.
         """
-        cand = np.zeros([self.n_restarts, self.X_lower.shape[0]])
+        cand = np.zeros([self.n_restarts, self.lower.shape[0]])
         cand_vals = np.zeros([self.n_restarts])
 
         f = partial(self._acquisition_fkt_wrapper, acq_f=self.objective_func)
 
-        for i in range(self.n_restarts):
-            start = np.array([self.rng.uniform(self.X_lower,
-                                                self.X_upper,
-                                                self.X_lower.shape[0])])
+        starts = init_random_uniform(self.lower, self.upper, self.n_restarts)
+        for i, start in enumerate(starts):
 
-            res = optimize.minimize(
-                f,
-                start,
-                method="L-BFGS-B",
-                bounds=zip(
-                    self.X_lower,
-                    self.X_upper),
-                options={
-                    "disp": self.verbosity})
+            res = optimize.minimize(f, start, method='L-BFGS-B',
+                                    bounds=list(zip(self.lower, self.upper)),
+                                    options={"ftol": 1e-20, "gtol": 1e-20, "disp": self.verbosity})
             cand[i] = res["x"]
             cand_vals[i] = res["fun"]
 
-        best = np.argmax(cand_vals)
-        return np.array([cand[best]])
+        best = np.argmin(cand_vals)
 
-
-class SciPyGlobalOptimizer(BaseMaximizer):
-
-    def __init__(self, objective_function, X_lower, X_upper,
-                 n_restarts=10, verbosity=False, n_func_evals=200, rng=None):
-        """
-        Interface for scipy's global optimization method.
-
-        Parameters
-        ----------
-        objective_function: acquisition function
-            The acquisition function which will be maximized
-        X_lower: np.ndarray (D)
-            Lower bounds of the input space
-        X_upper: np.ndarray (D)
-            Upper bounds of the input space
-        n_restarts: int
-            Determines how often the local search is repeated.
-        verbosity: bool
-            Show scipy output.
-        """
-        self.n_restarts = n_restarts
-        self.verbosity = verbosity
-        self.n_func_evals = n_func_evals
-        if rng is None:
-            self.rng = np.random.RandomState(np.random.randint(0, 10000))
-        super(SciPyGlobalOptimizer, self).__init__(objective_function,
-                                                   X_lower, X_upper)
-
-    def _acquisition_fkt_wrapper(self, x, acq_f):
-        print x
-        return -acq_f(np.array([x]))
-
-    def maximize(self):
-        """
-        Maximizes the given acquisition function.
-
-        Returns
-        -------
-        np.ndarray(N,D)
-            Point with highest acquisition value.
-        """
-        cand = np.zeros([self.n_restarts, self.X_lower.shape[0]])
-        cand_vals = np.zeros([self.n_restarts])
-
-        f = partial(self._acquisition_fkt_wrapper, acq_f=self.objective_func)
-
-        for i in range(self.n_restarts):
-            start = np.array([self.rng.uniform(self.X_lower,
-                                                self.X_upper,
-                                                self.X_lower.shape[0])])
-            res = optimize.basinhopping(
-                f,
-                start,
-                niter=self.n_func_evals,
-                minimizer_kwargs={
-                    "bounds": zip(
-                        self.X_lower,
-                        self.X_upper),
-                    "method": "L-BFGS-B"},
-                disp=self.verbosity)
-
-            cand[i] = res.x
-            cand_vals[i] = res.fun
-        best = np.argmax(cand_vals)
-        print np.array([cand[best]])
-        return np.array([cand[best]])
+        return np.clip(cand[best], self.lower, self.upper)
