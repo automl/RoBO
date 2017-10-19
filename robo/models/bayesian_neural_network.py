@@ -296,7 +296,7 @@ class BayesianNeuralNetwork(object):
         self.session = session
 
         self.is_trained = False
-        self.set_up_train = False
+        self.set_up_train = True
 
     def _train_set_up(self, X, y):
 
@@ -354,7 +354,7 @@ class BayesianNeuralNetwork(object):
             self.sampling_method, **self.sampler_kwargs
         )
 
-        self.set_up_train = True
+        self.set_up_train = False
 
     def negative_log_likelihood(self, X, Y):
         """ Compute the negative log likelihood of the
@@ -427,7 +427,7 @@ class BayesianNeuralNetwork(object):
         # remove any leftover samples from previous "train" calls
         self.samples.clear()
 
-        if not self.set_up_train:
+        if self.set_up_train:
             # only set up training graph once
             self._train_set_up(X, y)
 

@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 
-from robo.models.bnn import BayesianNeuralNetwork
+from robo.models.bayesian_neural_network import BayesianNeuralNetwork
+import tensorflow as tf
 
 
 class TestBayesianNeuralNetwork(unittest.TestCase):
@@ -9,24 +10,37 @@ class TestBayesianNeuralNetwork(unittest.TestCase):
     def setUp(self):
         self.X = np.random.rand(10, 2)
         self.y = np.sinc(self.X * 10 - 5).sum(axis=1)
-        self.model = BayesianNeuralNetwork(normalize_output=True, normalize_input=True)
-        self.model.train(self.X, self.y)
+
+        graph = tf.Graph()
+        with graph.as_default():
+            self.session = tf.Session(graph=graph)
+
+            self.model = BayesianNeuralNetwork(
+                session=self.session, dtype=tf.float64,
+                normalize_output=True, normalize_input=True,
+                mdecay=0.05
+            )
+            self.model.train(self.X, self.y)
 
     def test_predict(self):
-        X_test = np.random.rand(10, 2)
+        with self.session.graph.as_default():
+            X_test = np.random.rand(10, 2)
 
-        m, v = self.model.predict(X_test)
+            m, v = self.model.predict(X_test)
 
-        assert len(m.shape) == 1
-        assert m.shape[0] == X_test.shape[0]
-        assert len(v.shape) == 1
-        assert v.shape[0] == X_test.shape[0]
+            assert len(m.shape) == 1
+            assert m.shape[0] == X_test.shape[0]
+            assert len(v.shape) == 1
+            assert v.shape[0] == X_test.shape[0]
 
     def test_get_incumbent(self):
-        inc, inc_val = self.model.get_incumbent()
+        with self.session.graph.as_default():
+            self.model.train(self.X, self.y)
 
-        b = np.argmin(self.y)
-        np.testing.assert_almost_equal(inc, self.X[b], decimal=5)
+            inc, inc_val = self.model.get_incumbent()
+
+            b = np.argmin(self.y)
+            np.testing.assert_almost_equal(inc, self.X[b], decimal=5)
 
 
 if __name__ == "__main__":
