@@ -84,6 +84,7 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
             session=session,
             dtype=tf.float64,
             mdecay=0.05,
+            seed=get_seed(rng)
         )
 
         if acquisition_func == "ei":
