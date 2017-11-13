@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from robo.initial_design.init_random_uniform import init_random_uniform
-from robo.models.dngo import DNGO
+from robo.models.dngo_tensorFlow import DNGO
 from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
 
 
@@ -20,18 +20,30 @@ model = DNGO()
 
 model.train(X, y)
 
-predictions = lasagne.layers.get_output(model.network,
-                                        zero_mean_unit_var_normalization(X, model.X_mean, model.X_std)[0],
-                                        deterministic=True).eval()
+#predictions = lasagne.layers.get_output(model.network,
+#                                        zero_mean_unit_var_normalization(X, model.X_mean, model.X_std)[0],
+#                                        deterministic=True).eval()
+
+# Tensorflow
+predictions = model.sess.run(model.network[0],
+                             feed_dict={model.input_var: zero_mean_unit_var_normalization(X, model.X_mean, model.X_std)[0]})
+
 
 predictions = zero_mean_unit_var_unnormalization(predictions, model.y_mean, model.y_std)
 
 X_test = np.linspace(0, 1, 100)[:, None]
 X_test_norm = zero_mean_unit_var_normalization(X_test, model.X_mean, model.X_std)[0]
 
-# Get features from the net
-layers = lasagne.layers.get_all_layers(model.network)
-basis_funcs = lasagne.layers.get_output(layers[:-1], X_test_norm)[-1].eval()
+# Get features from the net:
+
+#layers = lasagne.layers.get_all_layers(model.network)
+#basis_funcs = lasagne.layers.get_output(layers[:-1], X_test_norm)[-1].eval()
+
+# Tensorflow
+basis_funcs = model.sess.run(model.network[1], feed_dict={model.input_var: X_test_norm})
+
+
+
 
 fvals = f(X_test)[:, 0]
 

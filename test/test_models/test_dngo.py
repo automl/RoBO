@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from robo.models.dngo import DNGO
+from robo.models.dngo_tensorFlow import DNGO
 
 
 class TestDNGO(unittest.TestCase):
