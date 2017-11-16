@@ -1,8 +1,6 @@
-import os
 import logging
 import george
 import numpy as np
-import time
 
 from robo.priors.default_priors import DefaultPrior
 from robo.models.gaussian_process import GaussianProcess
@@ -11,6 +9,7 @@ from robo.maximizers.direct import Direct
 from robo.maximizers.cmaes import CMAES
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.information_gain import InformationGain
+from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 
 
@@ -89,7 +88,7 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
         print("ERROR: %s is not a valid model!" % model)
         return
 
-    a = InformationGain(gp, lower=lower, upper=upper)
+    a = InformationGain(gp, lower=lower, upper=upper, sampling_acquisition=EI)
 
     if model == "gp":
         acquisition_func = a

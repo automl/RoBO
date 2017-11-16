@@ -9,6 +9,7 @@ from robo.models.fabolas_gp import FabolasGPMCMC
 from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
+from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.maximizers.direct import Direct
 
@@ -185,6 +186,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     model_cost,
                                     extend_lower,
                                     extend_upper,
+                                    sampling_acquisition=EI,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
