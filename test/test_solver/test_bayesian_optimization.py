@@ -47,3 +47,7 @@ class TestBayesianOptimization(unittest.TestCase):
         assert x_new.shape[0] == 1
         assert x_new >= 0
         assert x_new <= 1
+
+
+if __name__ == "__main__":
+    unittest.main()

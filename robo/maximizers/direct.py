@@ -9,7 +9,7 @@ from robo.maximizers.base_maximizer import BaseMaximizer
 class Direct(BaseMaximizer):
 
     def __init__(self, objective_function, lower, upper,
-                 n_func_evals=400, n_iters=200, verbose=False):
+                 n_func_evals=400, n_iters=200, verbose=True):
         """
         Interface for the DIRECT algorithm by D. R. Jones, C. D. Perttunen
         and B. E. Stuckmann
