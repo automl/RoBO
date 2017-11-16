@@ -81,13 +81,13 @@ def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="ra
         return
 
     if maximizer == "cmaes":
-        max_func = CMAES(acquisition_func, lower, upper, verbose=True, rng=rng)
+        max_func = CMAES(a, lower, upper, verbose=True, rng=rng)
     elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper, verbose=True)
+        max_func = Direct(a, lower, upper, verbose=True)
     elif maximizer == "random":
-        max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
+        max_func = RandomSampling(a, lower, upper, rng=rng)
     elif maximizer == "scipy":
-        max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
+        max_func = SciPyOptimizer(a, lower, upper, rng=rng)
 
     bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
                               initial_points=n_init, output_path=output_path, rng=rng)
