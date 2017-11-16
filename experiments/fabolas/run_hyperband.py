@@ -57,10 +57,7 @@ print(B)
 
 opt = HyperBand_DataSubsetsOriginalIncumbent(f, eta, eta**(-(B-1)), output_path=output_path, rng=rng)
 
-if dataset == "res_net":
-    opt.run(2)
-else:
-    opt.run(int(20 / B * 1.5))
+opt.run(int(20 / B * 1.5))
 
 test_error = []
 for c in opt.incumbents:
