@@ -11,7 +11,7 @@ from robo.initial_design import init_random_uniform
 class SciPyOptimizer(BaseMaximizer):
 
     def __init__(self, objective_function, lower,
-                 upper, n_restarts=5, verbosity=False, rng=None):
+                 upper, n_restarts=10, verbosity=False, rng=None):
         """
         Interface for scipy's L-BFGS-B implementation.
 
@@ -37,9 +37,16 @@ class SciPyOptimizer(BaseMaximizer):
                                              lower, upper)
 
     def _acquisition_fkt_wrapper(self, x, acq_f):
+
         if np.any(np.isnan(x)):
             return sys.float_info.max
-        return -acq_f(np.array([np.clip(x, self.lower, self.upper)]))
+
+        a = -acq_f(np.array([np.clip(x, self.lower, self.upper)]))[0]
+
+        if np.any(np.isinf(a)):
+            return sys.float_info.max
+        else:
+            return a
 
     def maximize(self):
         """
@@ -50,19 +57,25 @@ class SciPyOptimizer(BaseMaximizer):
         np.ndarray(D,)
             Point with highest acquisition value.
         """
-        cand = np.zeros([self.n_restarts, self.lower.shape[0]])
-        cand_vals = np.zeros([self.n_restarts])
+        cand = []
+        cand_vals = []
 
         f = partial(self._acquisition_fkt_wrapper, acq_f=self.objective_func)
 
-        starts = init_random_uniform(self.lower, self.upper, self.n_restarts)
-        for i, start in enumerate(starts):
+        starts = init_random_uniform(self.lower, self.upper, int(self.n_restarts * 0.5))
+        rand_incs = np.array([np.random.normal(loc=self.objective_func.model.get_incumbent()[0],
+                                               scale=np.ones([self.lower.shape[0]]) * 0.5)
+                              for _ in range(int(self.n_restarts * 0.5))])
+        starts = np.append(starts, rand_incs, axis=0)
 
-            res = optimize.minimize(f, start, method='L-BFGS-B',
-                                    bounds=list(zip(self.lower, self.upper)),
-                                    options={"ftol": 1e-20, "gtol": 1e-20, "disp": self.verbosity})
-            cand[i] = res["x"]
-            cand_vals[i] = res["fun"]
+        for start in starts:
+
+           res = optimize.minimize(f, start, method='L-BFGS-B',
+                                   bounds=list(zip(self.lower, self.upper)),
+                                   options={"disp": self.verbosity})
+
+           cand.append(res["x"])
+           cand_vals.append(res["fun"])
 
         best = np.argmin(cand_vals)
 

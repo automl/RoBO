@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
-                          maximizer="scipy", acquisition_func="log_ei", model_type="gp_mcmc",
+                          maximizer="random", acquisition_func="log_ei", model_type="gp_mcmc",
                           n_init=3, rng=None, output_path=None):
     """
     General interface for Bayesian optimization for global black box
@@ -89,7 +89,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                                     chain_length=200,
                                     burnin_steps=100,
                                     normalize_input=True,
-                                    normalize_output=False,
+                                    normalize_output=True,
                                     rng=rng, lower=lower, upper=upper)
 
     elif model_type == "rf":
@@ -116,13 +116,13 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         acquisition_func = a
 
     if maximizer == "cmaes":
-        max_func = CMAES(acquisition_func, lower, upper, verbose=False, rng=rng)
+        max_func = CMAES(acquisition_func, lower, upper, verbose=True, rng=rng)
     elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper, verbose=False)
+        max_func = Direct(acquisition_func, lower, upper, verbose=True)
     elif maximizer == "random":
         max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
     elif maximizer == "scipy":
-        max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng, n_restarts=5)
+        max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
 
     else:
         raise ValueError("'{}' is not a valid function to maximize the "
