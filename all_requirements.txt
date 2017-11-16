@@ -10,5 +10,6 @@ lasagne
 git+https://github.com/sfalkner/george.git
 git+https://github.com/stokasto/sgmcmc.git
 git+https://github.com/automl/random_forest_run.git
+-e git://github.com/MFreidank/pysgmcmc#egg=pysgmcmc
 git+https://github.com/automl/HPOlib2.git
 nose

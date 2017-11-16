@@ -1,13 +1,21 @@
 import logging
 import numpy as np
+import tensorflow as tf
 
-from robo.models.bnn import BayesianNeuralNetwork
+from robo.models.bayesian_neural_network import (
+    BayesianNeuralNetwork, get_default_net
+)
+
 from robo.maximizers.direct import Direct
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.pi import PI
 from robo.acquisition_functions.log_ei import LogEI
 from robo.acquisition_functions.lcb import LCB
+
+from pysgmcmc.sampling import Sampler
+from pysgmcmc.stepsize_schedules import ConstantStepsizeSchedule
+from pysgmcmc.data_batches import generate_batches
 
 
 logger = logging.getLogger(__name__)
@@ -52,37 +60,52 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
     assert upper.shape[0] == lower.shape[0]
     assert n_init <= num_iterations, "Number of initial design point has to be <= than the number of iterations"
 
-    if rng is None:
-        rng = np.random.RandomState(np.random.randint(0, 10000))
+    def get_seed(random_state):
+        if random_state is None:
+            return None
 
-    model = BayesianNeuralNetwork(sampling_method="sghmc",
-                                  l_rate=np.sqrt(1e-4),
-                                  mdecay=0.05,
-                                  burn_in=3000,
-                                  n_iters=50000,
-                                  precondition=True,
-                                  normalize_input=True,
-                                  normalize_output=True)
+        state = random_state.get_state()
+        _, values, *_ = state
+        seed, *_ = values
+        return seed
 
-    if acquisition_func == "ei":
-        a = EI(model)
-    elif acquisition_func == "log_ei":
-        a = LogEI(model)
-    elif acquisition_func == "pi":
-        a = PI(model)
-    elif acquisition_func == "lcb":
-        a = LCB(model)
+    with tf.Session() as session:
 
-    else:
-        print("ERROR: %s is not a valid acquisition function!" % acquisition_func)
-        return
+        model = BayesianNeuralNetwork(
+            sampling_method=Sampler.SGHMC,
+            get_net=get_default_net,
+            batch_generator=generate_batches,
+            batch_size=20,
+            stepsize_schedule=ConstantStepsizeSchedule(np.sqrt(1e-4)),
+            burn_in_steps=3000,
+            n_iters=50000,
+            normalize_input=True,
+            normalize_output=True,
+            session=session,
+            dtype=tf.float64,
+            mdecay=0.05,
+            seed=get_seed(rng)
+        )
 
-    max_func = Direct(a, lower, upper)
+        if acquisition_func == "ei":
+            a = EI(model)
+        elif acquisition_func == "log_ei":
+            a = LogEI(model)
+        elif acquisition_func == "pi":
+            a = PI(model)
+        elif acquisition_func == "lcb":
+            a = LCB(model)
 
-    bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
-                              initial_points=n_init, output_path=output_path, rng=rng)
+        else:
+            print("ERROR: %s is not a valid acquisition function!" % acquisition_func)
+            return
 
-    x_best, f_min = bo.run(num_iterations)
+        max_func = Direct(a, lower, upper)
+
+        bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
+                                  initial_points=n_init, output_path=output_path, rng=rng)
+
+        x_best, f_min = bo.run(num_iterations)
 
     results = dict()
     results["x_opt"] = x_best
