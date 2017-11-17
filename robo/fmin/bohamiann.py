@@ -19,11 +19,13 @@ logger = logging.getLogger(__name__)
 def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="random",
               acquisition_func="log_ei", n_init=3, output_path=None, rng=None):
     """
-    Interface for Bayesian optimization with Bayesian neural networks, as described in:
+    Bohamiann uses Bayesian neural networks to model the objective function [1] inside Bayesian optimization.
+    Bayesian neural networks usually scale better with the number of function evaluations and the number of dimensions
+    than Gaussian processes.
 
-    J. T. Springenberg, A. Klein, S. Falkner, F. Hutter
-    Bayesian Optimization with Robust Bayesian Neural Networks.
-    In Advances in Neural Information Processing Systems 29 (2016).
+    [1] Bayesian optimization with robust Bayesian neural networks
+        J. T. Springenberg and A. Klein and S. Falkner and F. Hutter
+        Advances in Neural Information Processing Systems 29
 
     Parameters
     ----------

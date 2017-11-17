@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>APIs &#8212; Robo API 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="example.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          RoBO</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="index.html">Start</a></li>
+                <li><a href="installation.html">Installation</a></li>
+                <li><a href="tutorials.html">Tutorial</a></li>
+                <li><a href="#">APIs</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">APIs</a><ul>
+<li><a class="reference internal" href="#main-modules">Main Modules:</a><ul>
+<li><a class="reference internal" href="#acquisition">Acquisition:</a></li>
+<li><a class="reference internal" href="#models">Models:</a></li>
+<li><a class="reference internal" href="#maximizers">Maximizers:</a></li>
+<li><a class="reference internal" href="#priors">Priors:</a></li>
+<li><a class="reference internal" href="#solver">Solver:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <a href="https://github.com/automl/RoBO"><img style="position: fixed; top: 50px; right: 0; border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a><div class="section" id="apis">
+<h1>APIs<a class="headerlink" href="#apis" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="main-modules">
+<h2>Main Modules:<a class="headerlink" href="#main-modules" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="acquisition">
+<h3>Acquisition:<a class="headerlink" href="#acquisition" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.base_acquisition.</code><code class="descname">BaseAcquisitionFunction</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/base_acquisition.html#BaseAcquisitionFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>x</em>, <em>derivative=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/base_acquisition.html#BaseAcquisitionFunction.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the acquisition_functions value for a given point X. This function has
+to be overwritten in a derived class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x: np.ndarray(D,), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote class="last">
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction.get_json_data">
+<code class="descname">get_json_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/base_acquisition.html#BaseAcquisitionFunction.get_json_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction.get_json_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Json getter function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dict() object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/base_acquisition.html#BaseAcquisitionFunction.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.base_acquisition.BaseAcquisitionFunction.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method will be called if the model is updated. E.g.
+Entropy search uses it to update it’s approximation of P(x=x_min)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>model</strong> : Model object</p>
+<blockquote class="last">
+<div><p>Models the objective function.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.ei.EI">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.ei.</code><code class="descname">EI</code><span class="sig-paren">(</span><em>model</em>, <em>par=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/ei.html#EI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.ei.EI" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.ei.EI.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X</em>, <em>derivative=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/ei.html#EI.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.ei.EI.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the EI value and its derivatives.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray(1, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate. The dimensionality of X is (N, D), with N as
+the number of points to evaluate at and D is the number of
+dimensions of one X.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,1)</p>
+<blockquote>
+<div><p>Expected Improvement of X</p>
+</div></blockquote>
+<p>np.ndarray(1,D)</p>
+<blockquote class="last">
+<div><p>Derivative of Expected Improvement at X (only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.information_gain.InformationGain">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.information_gain.</code><code class="descname">InformationGain</code><span class="sig-paren">(</span><em>model</em>, <em>lower</em>, <em>upper</em>, <em>Nb=50</em>, <em>Np=400</em>, <em>sampling_acquisition=None</em>, <em>sampling_acquisition_kw={‘par’: 0.0}</em>, <em>rng=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain.html#InformationGain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain.InformationGain" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.information_gain.InformationGain.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X_test</em>, <em>derivative=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain.html#InformationGain.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain.InformationGain.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the information gain of X and its derivatives</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X_test: np.ndarray(N, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned
+Not tested!</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,)</p>
+<blockquote>
+<div><p>Relative change of entropy of pmin</p>
+</div></blockquote>
+<p>np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Derivatives with respect to X
+(only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.information_gain_mc.InformationGainMC">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.information_gain_mc.</code><code class="descname">InformationGainMC</code><span class="sig-paren">(</span><em>model</em>, <em>lower</em>, <em>upper</em>, <em>Nb=50</em>, <em>Nf=500</em>, <em>sampling_acquisition=None</em>, <em>sampling_acquisition_kw={‘par’: 0.0}</em>, <em>Np=50</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain_mc.html#InformationGainMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain_mc.InformationGainMC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.information_gain_per_unit_cost.</code><code class="descname">InformationGainPerUnitCost</code><span class="sig-paren">(</span><em>model</em>, <em>cost_model</em>, <em>lower</em>, <em>upper</em>, <em>is_env_variable</em>, <em>n_representer=50</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain_per_unit_cost.html#InformationGainPerUnitCost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X</em>, <em>derivative=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/information_gain_per_unit_cost.html#InformationGainPerUnitCost.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the acquisition_functions value for a single point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X</strong> : (1, D) numpy array</p>
+<blockquote>
+<div><p>The input point for which the acquisition_functions functions is computed.</p>
+</div></blockquote>
+<p><strong>derivative</strong> : bool, optional</p>
+<blockquote>
+<div><p>If it is equal to True also the derivatives with respect to X is
+computed.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">acquisition_value: numpy array</p>
+<blockquote>
+<div><p>The acquisition_functions value computed for X.</p>
+</div></blockquote>
+<p><strong>grad</strong> : numpy array</p>
+<blockquote class="last">
+<div><p>The computed gradient of the acquisition_functions function at X. Only
+returned if derivative==True</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.integrated_acquisition.IntegratedAcquisition">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.integrated_acquisition.</code><code class="descname">IntegratedAcquisition</code><span class="sig-paren">(</span><em>model</em>, <em>acquisition_func</em>, <em>X_lower</em>, <em>X_upper</em>, <em>cost_model=None</em>, <em>is_dngo=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/integrated_acquisition.html#IntegratedAcquisition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.integrated_acquisition.IntegratedAcquisition" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.integrated_acquisition.IntegratedAcquisition.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X</em>, <em>derivative=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/integrated_acquisition.html#IntegratedAcquisition.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.integrated_acquisition.IntegratedAcquisition.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrates the acquisition_functions function over the GP’s hyperparameters by
+averaging the acquisition_functions value for X of each hyperparameter sample.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray(1, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate. The dimensionality of X is (N, D), with N as
+the number of points to evaluate at and D is the number of
+dimensions of one X.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,1)</p>
+<blockquote>
+<div><p>Integrated acquisition_functions value of X</p>
+</div></blockquote>
+<p>np.ndarray(1,D)</p>
+<blockquote class="last">
+<div><p>Derivative of the acquisition_functions value at X (only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.acquisition_functions.integrated_acquisition.IntegratedAcquisition.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>model</em>, <em>cost_model=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/integrated_acquisition.html#IntegratedAcquisition.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.integrated_acquisition.IntegratedAcquisition.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates each acquisition_functions function object if the models
+have changed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>model: Model object</strong></p>
+<blockquote>
+<div><p>The model of the objective function, it has to be an instance of
+GaussianProcessMCMC or GPyModelMCMC.</p>
+</div></blockquote>
+<p><strong>cost_model: Model object</strong></p>
+<blockquote class="last">
+<div><p>If the acquisition_functions function also takes the cost into account, we
+have to specify here the model for the cost function. cost_model
+has to be an instance of GaussianProcessMCMC or GPyModelMCMC.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.lcb.LCB">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.lcb.</code><code class="descname">LCB</code><span class="sig-paren">(</span><em>model</em>, <em>par=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/lcb.html#LCB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.lcb.LCB" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.lcb.LCB.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X</em>, <em>derivative=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/lcb.html#LCB.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.lcb.LCB.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the LCB acquisition_functions value and its derivatives.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray(N, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate. The dimensionality of X is (N, D), with N as
+the number of points to evaluate at and D is the number of
+dimensions of one X.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,)</p>
+<blockquote>
+<div><p>LCB value of X</p>
+</div></blockquote>
+<p>np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Derivative of LCB at X (only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.log_ei.LogEI">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.log_ei.</code><code class="descname">LogEI</code><span class="sig-paren">(</span><em>model</em>, <em>par=0.0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/log_ei.html#LogEI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.log_ei.LogEI" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.log_ei.LogEI.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X</em>, <em>derivative=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/log_ei.html#LogEI.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.log_ei.LogEI.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Log EI value and its derivatives.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray(1, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate. The dimensionality of X is (N, D), with N as
+the number of points to evaluate at and D is the number of
+dimensions of one X.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned
+Not implemented yet!</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,1)</p>
+<blockquote>
+<div><p>Log Expected Improvement of X</p>
+</div></blockquote>
+<p>np.ndarray(1,D)</p>
+<blockquote class="last">
+<div><p>Derivative of Log Expected Improvement at X
+(only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.marginalization.MarginalizationGPMCMC">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.marginalization.</code><code class="descname">MarginalizationGPMCMC</code><span class="sig-paren">(</span><em>acquisition_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/marginalization.html#MarginalizationGPMCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.marginalization.MarginalizationGPMCMC" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.marginalization.MarginalizationGPMCMC.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X_test</em>, <em>derivative=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/marginalization.html#MarginalizationGPMCMC.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.marginalization.MarginalizationGPMCMC.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integrates the acquisition_functions function over the GP’s hyperparameters by
+averaging the acquisition_functions value for X of each hyperparameter sample.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X_test: np.ndarray(N, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate. The dimensionality of X is (N, D), with N as
+the number of points to evaluate at and D is the number of
+dimensions of one X.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,1)</p>
+<blockquote>
+<div><p>Integrated acquisition_functions value of X</p>
+</div></blockquote>
+<p>np.ndarray(1,D)</p>
+<blockquote class="last">
+<div><p>Derivative of the acquisition_functions value at X (only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.acquisition_functions.marginalization.MarginalizationGPMCMC.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>model</em>, <em>cost_model=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/marginalization.html#MarginalizationGPMCMC.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.marginalization.MarginalizationGPMCMC.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates each acquisition_functions function object if the models
+have changed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>model: Model object</strong></p>
+<blockquote>
+<div><p>The model of the objective function, it has to be an instance of
+GaussianProcessMCMC.</p>
+</div></blockquote>
+<p><strong>cost_model: Model object</strong></p>
+<blockquote class="last">
+<div><p>If the acquisition_functions function also takes the cost into account, we
+have to specify here the model for the cost function. cost_model
+has to be an instance of GaussianProcessMCMC.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.acquisition_functions.pi.PI">
+<em class="property">class </em><code class="descclassname">robo.acquisition_functions.pi.</code><code class="descname">PI</code><span class="sig-paren">(</span><em>model</em>, <em>par=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/pi.html#PI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.pi.PI" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.acquisition_functions.pi.PI.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>X_test</em>, <em>derivative=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/acquisition_functions/pi.html#PI.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.acquisition_functions.pi.PI.compute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the PI value and its derivatives.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X_test: np.ndarray(1, D), The input point where the acquisition_functions function</strong></p>
+<blockquote>
+<div><p>should be evaluate. The dimensionality of X is (N, D), with N as
+the number of points to evaluate at and D is the number of
+dimensions of one X.</p>
+</div></blockquote>
+<p><strong>derivative: Boolean</strong></p>
+<blockquote>
+<div><p>If is set to true also the derivative of the acquisition_functions
+function at X is returned</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,1)</p>
+<blockquote>
+<div><p>Probability of Improvement of X_test</p>
+</div></blockquote>
+<p>np.ndarray(1,D)</p>
+<blockquote class="last">
+<div><p>Derivative of Probability of Improvement at X_test
+(only if derivative=True)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="models">
+<h3>Models:<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="robo.models.base_model.BaseModel">
+<em class="property">class </em><code class="descclassname">robo.models.base_model.</code><code class="descname">BaseModel</code><a class="reference internal" href="_modules/robo/models/base_model.html#BaseModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.base_model.BaseModel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.models.base_model.BaseModel.get_incumbent">
+<code class="descname">get_incumbent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/base_model.html#BaseModel.get_incumbent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.base_model.BaseModel.get_incumbent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the best observed point and its function value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">incumbent: ndarray (D,)</p>
+<blockquote>
+<div><p>current incumbent</p>
+</div></blockquote>
+<p>incumbent_value: ndarray (N,)</p>
+<blockquote class="last">
+<div><p>the observed value of the incumbent</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.models.base_model.BaseModel.get_json_data">
+<code class="descname">get_json_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/base_model.html#BaseModel.get_json_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.base_model.BaseModel.get_json_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Json getter function’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.models.base_model.BaseModel.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X_test</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/base_model.html#BaseModel.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.base_model.BaseModel.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts for a given set of test data points the mean and variance of its target values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X_test: np.ndarray (N, D)</strong></p>
+<blockquote>
+<div><p>N Test data points with input dimensions D</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">mean: ndarray (N,)</p>
+<blockquote>
+<div><p>Predictive mean of the test data points</p>
+</div></blockquote>
+<p>var: ndarray (N,)</p>
+<blockquote class="last">
+<div><p>Predictive variance of the test data points</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.models.base_model.BaseModel.train">
+<code class="descname">train</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/base_model.html#BaseModel.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.base_model.BaseModel.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains the model on the provided data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray (N, D)</strong></p>
+<blockquote>
+<div><p>Input data points. The dimensionality of X is (N, D),
+with N as the number of points and D is the number of input dimensions.</p>
+</div></blockquote>
+<p><strong>y: np.ndarray (N,)</strong></p>
+<blockquote class="last">
+<div><p>The corresponding target values of the input data points.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.models.base_model.BaseModel.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/base_model.html#BaseModel.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.base_model.BaseModel.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the model with the new additional data. Override this function if your
+model allows to do something smarter than simple retraining</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray (N, D)</strong></p>
+<blockquote>
+<div><p>Input data points. The dimensionality of X is (N, D),
+with N as the number of points and D is the number of input dimensions.</p>
+</div></blockquote>
+<p><strong>y: np.ndarray (N,)</strong></p>
+<blockquote class="last">
+<div><p>The corresponding target values of the input data points.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.models.bagged_networks.BaggedNets">
+<em class="property">class </em><code class="descclassname">robo.models.bagged_networks.</code><code class="descname">BaggedNets</code><span class="sig-paren">(</span><em>base_model_class</em>, <em>num_models=16</em>, <em>bootstrap_size=None</em>, <em>bootstrap_with_replacement=True</em>, <em>**init_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/bagged_networks.html#BaggedNets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.bagged_networks.BaggedNets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for all models</p>
+<dl class="method">
+<dt id="robo.models.bagged_networks.BaggedNets.get_json_data">
+<code class="descname">get_json_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/bagged_networks.html#BaggedNets.get_json_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.bagged_networks.BaggedNets.get_json_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Json getter function’</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dict object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.models.bagged_networks.BaggedNets.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/bagged_networks.html#BaggedNets.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.bagged_networks.BaggedNets.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predicts for a given X matrix the target values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray (N, D)</strong></p>
+<blockquote>
+<div><p>Test datapoints. The dimensionality of X is (N, D),
+with N as the number of points and D is the number of features.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The mean and variance of the test datapoint.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.models.bagged_networks.BaggedNets.predictive_gradients">
+<code class="descname">predictive_gradients</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/bagged_networks.html#BaggedNets.predictive_gradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.bagged_networks.BaggedNets.predictive_gradients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the predictive gradients (gradient of the prediction)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray (N, D)</strong></p>
+<blockquote>
+<div><p>The points to predict the gradient for</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>———-</strong></p>
+<blockquote class="last">
+<div><p>The gradients at X</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.models.bagged_networks.BaggedNets.train">
+<code class="descname">train</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/models/bagged_networks.html#BaggedNets.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.models.bagged_networks.BaggedNets.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trains the model on the provided data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray (N, D)</strong></p>
+<blockquote>
+<div><p>Input datapoints. The dimensionality of X is (N, D),
+with N as the number of points and D is the number of features.</p>
+</div></blockquote>
+<p><strong>Y: np.ndarray (N, T)</strong></p>
+<blockquote>
+<div><p>The corresponding target values.
+The dimensionality of Y is (N, T), where N has to 
+match the number of points of X and T is the number of objectives</p>
+</div></blockquote>
+<p><strong>**kwargs:</strong></p>
+<blockquote class="last">
+<div><p>all other arguments will be passed to the training method of the base model</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="maximizers">
+<h3>Maximizers:<a class="headerlink" href="#maximizers" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="robo.maximizers.cmaes.CMAES">
+<em class="property">class </em><code class="descclassname">robo.maximizers.cmaes.</code><code class="descname">CMAES</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>verbose=True</em>, <em>restarts=0</em>, <em>n_func_evals=1000</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/cmaes.html#CMAES"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.cmaes.CMAES" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.maximizers.cmaes.CMAES.maximize">
+<code class="descname">maximize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/cmaes.html#CMAES.maximize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.cmaes.CMAES.maximize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximizes the given acquisition function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Point with the highest acquisition value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.maximizers.direct.Direct">
+<em class="property">class </em><code class="descclassname">robo.maximizers.direct.</code><code class="descname">Direct</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>n_func_evals=400</em>, <em>n_iters=200</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/direct.html#Direct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.direct.Direct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.maximizers.direct.Direct.maximize">
+<code class="descname">maximize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/direct.html#Direct.maximize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.direct.Direct.maximize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximizes the given acquisition function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Point with highest acquisition value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.maximizers.grid_search.GridSearch">
+<em class="property">class </em><code class="descclassname">robo.maximizers.grid_search.</code><code class="descname">GridSearch</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>resolution=1000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/grid_search.html#GridSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.grid_search.GridSearch" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.maximizers.grid_search.GridSearch.maximize">
+<code class="descname">maximize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/grid_search.html#GridSearch.maximize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.grid_search.GridSearch.maximize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximizes the given acquisition function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Point with highest acquisition value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.maximizers.scipy_optimizer.SciPyOptimizer">
+<em class="property">class </em><code class="descclassname">robo.maximizers.scipy_optimizer.</code><code class="descname">SciPyOptimizer</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>n_restarts=10</em>, <em>verbosity=True</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/scipy_optimizer.html#SciPyOptimizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.scipy_optimizer.SciPyOptimizer" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.maximizers.scipy_optimizer.SciPyOptimizer.maximize">
+<code class="descname">maximize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/scipy_optimizer.html#SciPyOptimizer.maximize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.scipy_optimizer.SciPyOptimizer.maximize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximizes the given acquisition function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(N,D)</p>
+<blockquote class="last">
+<div><p>Point with highest acquisition value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.maximizers.base_maximizer.BaseMaximizer">
+<em class="property">class </em><code class="descclassname">robo.maximizers.base_maximizer.</code><code class="descname">BaseMaximizer</code><span class="sig-paren">(</span><em>objective_function</em>, <em>lower</em>, <em>upper</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/maximizers/base_maximizer.html#BaseMaximizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.maximizers.base_maximizer.BaseMaximizer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="priors">
+<h3>Priors:<a class="headerlink" href="#priors" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="robo.priors.base_prior.BasePrior">
+<em class="property">class </em><code class="descclassname">robo.priors.base_prior.</code><code class="descname">BasePrior</code><span class="sig-paren">(</span><em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#BasePrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.BasePrior" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.priors.base_prior.BasePrior.gradient">
+<code class="descname">gradient</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#BasePrior.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.BasePrior.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the prior with
+respect to theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>Hyperparameter configuration in log space</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ol class="first last upperalpha" start="4">
+<li><p class="first">np.array</p>
+<p>The gradient of the prior at theta.</p>
+</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.BasePrior.lnprob">
+<code class="descname">lnprob</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#BasePrior.lnprob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.BasePrior.lnprob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the log probability of theta. Note: theta should
+be on a log scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>A hyperparameter configuration in log space.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The log probability of theta</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.BasePrior.sample_from_prior">
+<code class="descname">sample_from_prior</code><span class="sig-paren">(</span><em>n_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#BasePrior.sample_from_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.BasePrior.sample_from_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns N samples from the prior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_samples</strong> : int</p>
+<blockquote>
+<div><p>The number of samples that will be drawn.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(N, D) np.array</p>
+<blockquote class="last">
+<div><p>The samples from the prior.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.base_prior.TophatPrior">
+<em class="property">class </em><code class="descclassname">robo.priors.base_prior.</code><code class="descname">TophatPrior</code><span class="sig-paren">(</span><em>l_bound</em>, <em>u_bound</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#TophatPrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.TophatPrior" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.priors.base_prior.TophatPrior.gradient">
+<code class="descname">gradient</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#TophatPrior.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.TophatPrior.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the prior with
+respect to theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>Hyperparameter configuration in log space</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ol class="first last upperalpha" start="4">
+<li><p class="first">np.array</p>
+<p>The gradient of the prior at theta.</p>
+</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.TophatPrior.lnprob">
+<code class="descname">lnprob</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#TophatPrior.lnprob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.TophatPrior.lnprob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the log probability of theta. Note: theta should
+be on a log scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>A hyperparameter configuration in log space.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The log probability of theta</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.TophatPrior.sample_from_prior">
+<code class="descname">sample_from_prior</code><span class="sig-paren">(</span><em>n_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#TophatPrior.sample_from_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.TophatPrior.sample_from_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns N samples from the prior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_samples</strong> : int</p>
+<blockquote>
+<div><p>The number of samples that will be drawn.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(N, D) np.array</p>
+<blockquote class="last">
+<div><p>The samples from the prior.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.base_prior.HorseshoePrior">
+<em class="property">class </em><code class="descclassname">robo.priors.base_prior.</code><code class="descname">HorseshoePrior</code><span class="sig-paren">(</span><em>scale=0.1</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#HorseshoePrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.HorseshoePrior" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.priors.base_prior.HorseshoePrior.gradient">
+<code class="descname">gradient</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#HorseshoePrior.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.HorseshoePrior.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the prior with
+respect to theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>Hyperparameter configuration in log space</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ol class="first last upperalpha" start="4">
+<li><p class="first">np.array</p>
+<p>The gradient of the prior at theta.</p>
+</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.HorseshoePrior.lnprob">
+<code class="descname">lnprob</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#HorseshoePrior.lnprob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.HorseshoePrior.lnprob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the log probability of theta. Note: theta should
+be on a log scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>A hyperparameter configuration in log space.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The log probability of theta</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.HorseshoePrior.sample_from_prior">
+<code class="descname">sample_from_prior</code><span class="sig-paren">(</span><em>n_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#HorseshoePrior.sample_from_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.HorseshoePrior.sample_from_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns N samples from the prior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_samples</strong> : int</p>
+<blockquote>
+<div><p>The number of samples that will be drawn.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(N, D) np.array</p>
+<blockquote class="last">
+<div><p>The samples from the prior.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.base_prior.LognormalPrior">
+<em class="property">class </em><code class="descclassname">robo.priors.base_prior.</code><code class="descname">LognormalPrior</code><span class="sig-paren">(</span><em>sigma</em>, <em>mean=0</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#LognormalPrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.LognormalPrior" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.priors.base_prior.LognormalPrior.gradient">
+<code class="descname">gradient</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#LognormalPrior.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.LognormalPrior.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the prior with
+respect to theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>Hyperparameter configuration in log space</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ol class="first last upperalpha" start="4">
+<li><p class="first">np.array</p>
+<p>The gradient of the prior at theta.</p>
+</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.LognormalPrior.lnprob">
+<code class="descname">lnprob</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#LognormalPrior.lnprob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.LognormalPrior.lnprob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the log probability of theta. Note: theta should
+be on a log scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>A hyperparameter configuration in log space.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The log probability of theta</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.LognormalPrior.sample_from_prior">
+<code class="descname">sample_from_prior</code><span class="sig-paren">(</span><em>n_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#LognormalPrior.sample_from_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.LognormalPrior.sample_from_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns N samples from the prior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_samples</strong> : int</p>
+<blockquote>
+<div><p>The number of samples that will be drawn.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(N, D) np.array</p>
+<blockquote class="last">
+<div><p>The samples from the prior.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.base_prior.NormalPrior">
+<em class="property">class </em><code class="descclassname">robo.priors.base_prior.</code><code class="descname">NormalPrior</code><span class="sig-paren">(</span><em>sigma</em>, <em>mean=0</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#NormalPrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.NormalPrior" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.priors.base_prior.NormalPrior.gradient">
+<code class="descname">gradient</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#NormalPrior.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.NormalPrior.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the prior with
+respect to theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>Hyperparameter configuration in log space</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ol class="first last upperalpha" start="4">
+<li><p class="first">np.array</p>
+<p>The gradient of the prior at theta.</p>
+</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.NormalPrior.lnprob">
+<code class="descname">lnprob</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#NormalPrior.lnprob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.NormalPrior.lnprob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the pdf of theta. Note: theta should
+be on a log scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>A hyperparameter configuration in log space.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The log probability of theta</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.base_prior.NormalPrior.sample_from_prior">
+<code class="descname">sample_from_prior</code><span class="sig-paren">(</span><em>n_samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/base_prior.html#NormalPrior.sample_from_prior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.base_prior.NormalPrior.sample_from_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns N samples from the prior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_samples</strong> : int</p>
+<blockquote>
+<div><p>The number of samples that will be drawn.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(N, D) np.array</p>
+<blockquote class="last">
+<div><p>The samples from the prior.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.bayesian_linear_regression_prior.BayesianLinearRegressionPrior">
+<em class="property">class </em><code class="descclassname">robo.priors.bayesian_linear_regression_prior.</code><code class="descname">BayesianLinearRegressionPrior</code><span class="sig-paren">(</span><em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/bayesian_linear_regression_prior.html#BayesianLinearRegressionPrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.bayesian_linear_regression_prior.BayesianLinearRegressionPrior" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.priors.bayesian_linear_regression_prior.BayesianLinearRegressionPrior.gradient">
+<code class="descname">gradient</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/bayesian_linear_regression_prior.html#BayesianLinearRegressionPrior.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.bayesian_linear_regression_prior.BayesianLinearRegressionPrior.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the prior with
+respect to theta.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>Hyperparameter configuration in log space</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ol class="first last upperalpha" start="4">
+<li><p class="first">np.array</p>
+<p>The gradient of the prior at theta.</p>
+</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.priors.bayesian_linear_regression_prior.BayesianLinearRegressionPrior.lnprob">
+<code class="descname">lnprob</code><span class="sig-paren">(</span><em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/bayesian_linear_regression_prior.html#BayesianLinearRegressionPrior.lnprob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.bayesian_linear_regression_prior.BayesianLinearRegressionPrior.lnprob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the log probability of theta. Note: theta should
+be on a log scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>theta</strong> : (D,) numpy array</p>
+<blockquote>
+<div><p>A hyperparameter configuration in log space.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The log probability of theta</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.default_priors.DefaultPrior">
+<em class="property">class </em><code class="descclassname">robo.priors.default_priors.</code><code class="descname">DefaultPrior</code><span class="sig-paren">(</span><em>n_dims</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/default_priors.html#DefaultPrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.default_priors.DefaultPrior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.env_priors.EnvPrior">
+<em class="property">class </em><code class="descclassname">robo.priors.env_priors.</code><code class="descname">EnvPrior</code><span class="sig-paren">(</span><em>n_dims</em>, <em>n_ls</em>, <em>n_lr</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/env_priors.html#EnvPrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.env_priors.EnvPrior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.env_priors.EnvNoisePrior">
+<em class="property">class </em><code class="descclassname">robo.priors.env_priors.</code><code class="descname">EnvNoisePrior</code><span class="sig-paren">(</span><em>n_dims</em>, <em>n_ls</em>, <em>n_lr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/env_priors.html#EnvNoisePrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.env_priors.EnvNoisePrior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="robo.priors.env_priors.MTBOPrior">
+<em class="property">class </em><code class="descclassname">robo.priors.env_priors.</code><code class="descname">MTBOPrior</code><span class="sig-paren">(</span><em>n_dims</em>, <em>n_ls</em>, <em>n_kt</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/priors/env_priors.html#MTBOPrior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.priors.env_priors.MTBOPrior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="solver">
+<h3>Solver:<a class="headerlink" href="#solver" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="robo.solver.base_solver.BaseSolver">
+<em class="property">class </em><code class="descclassname">robo.solver.base_solver.</code><code class="descname">BaseSolver</code><span class="sig-paren">(</span><em>acquisition_func=None</em>, <em>model=None</em>, <em>maximize_func=None</em>, <em>task=None</em>, <em>save_dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/base_solver.html#BaseSolver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.base_solver.BaseSolver" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.solver.base_solver.BaseSolver.choose_next">
+<code class="descname">choose_next</code><span class="sig-paren">(</span><em>X=None</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/base_solver.html#BaseSolver.choose_next"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.base_solver.BaseSolver.choose_next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Suggests a new point to evaluate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray(N,D)</strong></p>
+<blockquote>
+<div><p>Initial points that are already evaluated</p>
+</div></blockquote>
+<p><strong>y: np.ndarray(N,)</strong></p>
+<blockquote>
+<div><p>Function values of the already evaluated points</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,D)</p>
+<blockquote class="last">
+<div><p>Suggested point</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.solver.base_solver.BaseSolver.create_save_dir">
+<code class="descname">create_save_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/base_solver.html#BaseSolver.create_save_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.base_solver.BaseSolver.create_save_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the save directory to store the runs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.solver.base_solver.BaseSolver.get_json_data">
+<code class="descname">get_json_data</code><span class="sig-paren">(</span><em>it</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/base_solver.html#BaseSolver.get_json_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.base_solver.BaseSolver.get_json_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Json getter function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dict() object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.solver.base_solver.BaseSolver.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>num_iterations=10</em>, <em>X=None</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/base_solver.html#BaseSolver.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.base_solver.BaseSolver.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main optimization loop</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_iterations: int</strong></p>
+<blockquote>
+<div><p>The number of iterations</p>
+</div></blockquote>
+<p><strong>X: np.ndarray(N,D)</strong></p>
+<blockquote>
+<div><p>Initial points that are already evaluated</p>
+</div></blockquote>
+<p><strong>y: np.ndarray(N,)</strong></p>
+<blockquote>
+<div><p>Function values of the already evaluated points</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,D)</p>
+<blockquote>
+<div><p>Incumbent</p>
+</div></blockquote>
+<p>np.ndarray(1,1)</p>
+<blockquote class="last">
+<div><p>(Estimated) function value of the incumbent</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.solver.base_solver.BaseSolver.save_json">
+<code class="descname">save_json</code><span class="sig-paren">(</span><em>it</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/base_solver.html#BaseSolver.save_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.base_solver.BaseSolver.save_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves meta information of an iteration in a Json file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="robo.solver.bayesian_optimization.BayesianOptimization">
+<em class="property">class </em><code class="descclassname">robo.solver.bayesian_optimization.</code><code class="descname">BayesianOptimization</code><span class="sig-paren">(</span><em>objective_func</em>, <em>lower</em>, <em>upper</em>, <em>acquisition_func</em>, <em>model</em>, <em>maximize_func</em>, <em>initial_design=&lt;function init_random_uniform&gt;</em>, <em>initial_points=3</em>, <em>output_path=None</em>, <em>train_interval=1</em>, <em>n_restarts=1</em>, <em>rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/bayesian_optimization.html#BayesianOptimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.bayesian_optimization.BayesianOptimization" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="robo.solver.bayesian_optimization.BayesianOptimization.choose_next">
+<code class="descname">choose_next</code><span class="sig-paren">(</span><em>X=None</em>, <em>y=None</em>, <em>do_optimize=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/bayesian_optimization.html#BayesianOptimization.choose_next"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.bayesian_optimization.BayesianOptimization.choose_next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Suggests a new point to evaluate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>X: np.ndarray(N,D)</strong></p>
+<blockquote>
+<div><p>Initial points that are already evaluated</p>
+</div></blockquote>
+<p><strong>y: np.ndarray(N,1)</strong></p>
+<blockquote>
+<div><p>Function values of the already evaluated points</p>
+</div></blockquote>
+<p><strong>do_optimize: bool</strong></p>
+<blockquote>
+<div><p>If true the hyperparameters of the model are
+optimized before the acquisition function is
+maximized.</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>——-</strong></p>
+<p><strong>np.ndarray(1,D)</strong></p>
+<blockquote class="last">
+<div><p>Suggested point</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="robo.solver.bayesian_optimization.BayesianOptimization.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>num_iterations=10</em>, <em>X=None</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/robo/solver/bayesian_optimization.html#BayesianOptimization.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#robo.solver.bayesian_optimization.BayesianOptimization.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main Bayesian optimization loop</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_iterations: int</strong></p>
+<blockquote>
+<div><p>The number of iterations</p>
+</div></blockquote>
+<p><strong>X: np.ndarray(N,D)</strong></p>
+<blockquote>
+<div><p>Initial points that are already evaluated</p>
+</div></blockquote>
+<p><strong>y: np.ndarray(N,1)</strong></p>
+<blockquote>
+<div><p>Function values of the already evaluated points</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np.ndarray(1,D)</p>
+<blockquote>
+<div><p>Incumbent</p>
+</div></blockquote>
+<p>np.ndarray(1,1)</p>
+<blockquote class="last">
+<div><p>(Estimated) function value of the incumbent</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/apis.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, AAD Group.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
