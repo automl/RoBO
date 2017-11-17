@@ -20,6 +20,9 @@ before_install:
 install:
   - pip install --upgrade pip
   - pip install cython
+  - pip install numpy==1.12.1
+  - pip install https://github.com/Theano/Theano/archive/master.zip
+  - pip install https://github.com/Lasagne/Lasagne/archive/master.zip
   - travis_wait pip install -r all_requirements.txt
   - pip install --upgrade https://github.com/Lasagne/Lasagne/archive/master.zip
   - python setup.py install
