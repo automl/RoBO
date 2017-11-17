@@ -20,9 +20,8 @@ before_install:
 install:
   - pip install --upgrade pip
   - pip install cython
-  - pip install https://github.com/Theano/Theano/archive/master.zip
-  - pip install https://github.com/Lasagne/Lasagne/archive/master.zip
   - travis_wait pip install -r all_requirements.txt
+  - pip install --upgrade https://github.com/Lasagne/Lasagne/archive/master.zip
   - python setup.py install
   - pip install coveralls
 script: coverage run --source=robo -m unittest discover test -v
