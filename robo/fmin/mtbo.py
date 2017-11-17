@@ -162,7 +162,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
+    maximizer = Direct(acquisition_func, extend_lower, extend_upper, n_func_evals=200)
 
     # Initial Design
     logger.info("Initial Design")

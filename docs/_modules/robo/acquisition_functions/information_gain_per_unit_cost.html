@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>robo.acquisition_functions.information_gain_per_unit_cost &#8212; Robo API 1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html">
+          RoBO</a>
+        <span class="navbar-text navbar-version pull-left"><b>0.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="../../../index.html">Start</a></li>
+                <li><a href="../../../installation.html">Installation</a></li>
+                <li><a href="../../../tutorials.html">Tutorial</a></li>
+                <li><a href="../../../apis.html">APIs</a></li>
+                <li><a href="../../../contact.html">Contact</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../apis.html">APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <h1>Source code for robo.acquisition_functions.information_gain_per_unit_cost</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">emcee</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">robo.acquisition_functions.information_gain</span> <span class="k">import</span> <span class="n">InformationGain</span>
+
+
+<div class="viewcode-block" id="InformationGainPerUnitCost"><a class="viewcode-back" href="../../../apis.html#robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost">[docs]</a><span class="k">class</span> <span class="nc">InformationGainPerUnitCost</span><span class="p">(</span><span class="n">InformationGain</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cost_model</span><span class="p">,</span>
+                 <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span>
+                 <span class="n">is_env_variable</span><span class="p">,</span>
+                 <span class="n">n_representer</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Information gain per unit cost as described in Swersky et al. [1] which</span>
+<span class="sd">        computes the information gain of a configuration divided by it&#39;s cost.</span>
+<span class="sd">        </span>
+<span class="sd">        This implementation slightly differs from the implementation of</span>
+<span class="sd">        Swersky et al. as it additionally adds the optimization overhead to</span>
+<span class="sd">        the cost. You can simply set the optimization overhead to 0 to obtain</span>
+<span class="sd">        the original formulation.</span>
+<span class="sd">        </span>
+<span class="sd">        [1] Swersky, K., Snoek, J., and Adams, R.</span>
+<span class="sd">            Multi-task Bayesian optimization.</span>
+<span class="sd">            In Proc. of NIPS 13, 2013.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : Model object</span>
+<span class="sd">            Models the objective function. The model has to be a</span>
+<span class="sd">            Gaussian process.</span>
+<span class="sd">        cost_model : model</span>
+<span class="sd">            Models the cost function. The model has to be a Gaussian Process.</span>
+<span class="sd">        lower : (D) numpy array</span>
+<span class="sd">            Specified the lower bound of the input space. Each entry</span>
+<span class="sd">            corresponds to one dimension.</span>
+<span class="sd">        upper : (D) numpy array</span>
+<span class="sd">            Specified the upper bound of the input space. Each entry</span>
+<span class="sd">            corresponds to one dimension.</span>
+<span class="sd">        is_env_variable : (D) numpy array</span>
+<span class="sd">            Specifies which input dimension is an environmental variable. If</span>
+<span class="sd">            the i-th input is an environmental variable than the i-th entry has</span>
+<span class="sd">            to be 1 and 0 otherwise.</span>
+<span class="sd">        n_representer : int, optional</span>
+<span class="sd">            The number of representer points to discretize the input space and</span>
+<span class="sd">            to compute pmin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_model</span> <span class="o">=</span> <span class="n">cost_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_dims</span> <span class="o">=</span> <span class="n">lower</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">=</span> <span class="n">is_env_variable</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">InformationGainPerUnitCost</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                                                         <span class="n">lower</span><span class="p">,</span>
+                                                         <span class="n">upper</span><span class="p">,</span>
+                                                         <span class="n">Nb</span><span class="o">=</span><span class="n">n_representer</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">cost_model</span><span class="p">,</span> <span class="n">overhead</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_model</span> <span class="o">=</span> <span class="n">cost_model</span>
+        <span class="k">if</span> <span class="n">overhead</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overhead</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overhead</span> <span class="o">=</span> <span class="n">overhead</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InformationGainPerUnitCost</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InformationGainPerUnitCost.compute"><a class="viewcode-back" href="../../../apis.html#robo.acquisition_functions.information_gain_per_unit_cost.InformationGainPerUnitCost.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">derivative</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the acquisition_functions value for a single point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : (1, D) numpy array</span>
+<span class="sd">            The input point for which the acquisition_functions functions is computed.</span>
+<span class="sd">        derivative : bool, optional</span>
+<span class="sd">            If it is equal to True also the derivatives with respect to X is</span>
+<span class="sd">            computed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        acquisition_value: numpy array</span>
+<span class="sd">            The acquisition_functions value computed for X.</span>
+<span class="sd">        grad : numpy array</span>
+<span class="sd">            The computed gradient of the acquisition_functions function at X. Only</span>
+<span class="sd">            returned if derivative==True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># Predict the log costs for this configuration</span>
+        <span class="n">log_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">derivative</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="s2">&quot;Not implemented&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dh</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">InformationGainPerUnitCost</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">X</span><span class="p">,</span>
+                                                                 <span class="n">derivative</span><span class="o">=</span><span class="n">derivative</span><span class="p">)</span>
+            <span class="c1"># We model the log cost, but we compute</span>
+            <span class="c1"># the information gain per unit cost</span>
+
+            <span class="c1"># Add the cost it took to pick the last configuration</span>
+            <span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_cost</span><span class="p">)</span>
+
+            <span class="n">acquisition_value</span> <span class="o">=</span> <span class="n">dh</span> <span class="o">/</span> <span class="p">(</span><span class="n">cost</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">overhead</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">acquisition_value</span></div>
+
+    <span class="k">def</span> <span class="nf">sampling_acquisition_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+
+        <span class="c1"># Check if sample point is inside the configuration space</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">lower</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="c1"># Project point to subspace</span>
+        <span class="n">proj_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_acquisition</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">proj_x</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">sample_representer_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Sample representer points only in the</span>
+        <span class="c1"># configuration space by setting all environmental</span>
+        <span class="c1"># variables to 1</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_acquisition</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="n">restarts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">lower</span><span class="p">,</span>
+                                         <span class="n">high</span><span class="o">=</span><span class="n">upper</span><span class="p">,</span>
+                                         <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Nb</span><span class="p">,</span> <span class="n">D</span><span class="p">))</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Nb</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_acquisition_wrapper</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">zb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lmb</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">restarts</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmb</span><span class="p">)):</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Infinity&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmb</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not sample valid representer points! LogEI is -infinity&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zb</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zb</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lmb</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lmb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lmb</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="c1"># Project representer points to subspace</span>
+        <span class="n">proj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">zb</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">proj</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">is_env</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">zb</span><span class="p">,</span> <span class="n">proj</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+</pre></div>
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, AAD Group.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
