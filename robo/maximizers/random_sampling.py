@@ -1,10 +1,12 @@
+import numpy as np
+
 from robo.maximizers.base_maximizer import BaseMaximizer
 from robo.initial_design import init_random_uniform
 
 
 class RandomSampling(BaseMaximizer):
 
-    def __init__(self, objective_function, lower, upper, n_samples=1000, rng=None):
+    def __init__(self, objective_function, lower, upper, n_samples=500, rng=None):
         """
         Samples candidates uniformly at random and returns the point with the highest objective value.
 
@@ -32,10 +34,17 @@ class RandomSampling(BaseMaximizer):
             Point with highest acquisition value.
         """
 
-        X = init_random_uniform(self.lower,
-                                self.upper,
-                                self.n_samples)
+        # Sample random points uniformly over the whole space
+        rand = init_random_uniform(self.lower, self.upper,
+                                   int(self.n_samples * .7))
 
+        # Put a Gaussian on the incumbent and sample from that
+        loc = self.objective_func.model.get_incumbent()[0],
+        scale = np.ones([self.lower.shape[0]]) * 0.1
+        rand_incs = np.array([np.clip(np.random.normal(loc, scale), self.lower, self.upper)[0]
+                              for _ in range(int(self.n_samples * 0.3))])
+
+        X = np.concatenate((rand, rand_incs), axis=0)
         y = self.objective_func(X)
 
         x_star = X[y.argmax()]

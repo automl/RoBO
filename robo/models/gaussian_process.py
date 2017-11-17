@@ -115,7 +115,11 @@ class GaussianProcess(BaseModel):
 
         logger.debug("GP Hyperparameters: " + str(self.hypers))
 
-        self.gp.compute(self.X, yerr=np.sqrt(self.noise))
+        try:
+            self.gp.compute(self.X, yerr=np.sqrt(self.noise))
+        except np.linalg.LinAlgError:
+            self.noise *= 10
+            self.gp.compute(self.X, yerr=np.sqrt(self.noise))
 
         self.is_trained = True
 
@@ -201,13 +205,12 @@ class GaussianProcess(BaseModel):
         p0 = np.append(p0, np.log(self.noise))
 
         if self.use_gradients:
-            bounds = [(-10, 10)] * (len(self.kernel) + 1)
-            theta, _, _ = optimize.fmin_l_bfgs_b(self.nll, p0,
-                                                 fprime=self.grad_nll,
-                                                 bounds=bounds)
+            theta, _, _ = optimize.minimize(self.nll, p0,
+                                            method="BFGS",
+                                            jac=self.grad_nll)
         else:
             try:
-                results = optimize.minimize(self.nll, p0)
+                results = optimize.minimize(self.nll, p0, method='L-BFGS-B')
                 theta = results.x
             except ValueError:
                 logging.error("Could not find a valid hyperparameter configuration! Use initial configuration")
@@ -236,13 +239,6 @@ class GaussianProcess(BaseModel):
 
         if not self.is_trained:
             raise Exception('Model has to be trained first!')
-
-        # if self.normalize_input:
-        #     x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
-        #     X2_norm, _, _ = normalization.zero_one_normalization(X2, self.lower, self.upper)
-        # else:
-        #     x1_norm = x1
-        #     X2_norm = X2
 
         x_ = np.concatenate((x1, X2))
         _, var = self.predict(x_, full_cov=True)

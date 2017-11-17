@@ -5,8 +5,10 @@ import numpy as np
 from robo.priors.default_priors import DefaultPrior
 from robo.models.gaussian_process import GaussianProcess
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
+from robo.models.random_forest import RandomForest
 from robo.maximizers.direct import Direct
 from robo.maximizers.cmaes import CMAES
+from robo.maximizers.scipy_optimizer import SciPyOptimizer
 from robo.maximizers.random_sampling import RandomSampling
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
@@ -20,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
-                          maximizer="direct", acquisition_func="log_ei", model_type="gp_mcmc",
+                          maximizer="random", acquisition_func="log_ei", model_type="gp_mcmc",
                           n_init=3, rng=None, output_path=None):
     """
     General interface for Bayesian optimization for global black box
@@ -37,8 +39,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The upper bound of the search space
     num_iterations: int
         The number of iterations (initial design + BO)
-    maximizer: {"direct", "cmaes", "random"}
-        Defines how the acquisition function is maximized. NOTE: "cmaes" only works in D > 1 dimensions
+    maximizer: {"direct", "cmaes", "random", "scipy"}
+        The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
     model_type: {"gp", "gp_mcmc", "rf"}
@@ -87,12 +89,11 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                                     chain_length=200,
                                     burnin_steps=100,
                                     normalize_input=True,
-                                    normalize_output=False,
+                                    normalize_output=True,
                                     rng=rng, lower=lower, upper=upper)
 
     elif model_type == "rf":
-        from robo.models.random_forest import RandomForest
-        model = RandomForest(types=np.zeros([n_dims]), rng=rng)
+        model = RandomForest(rng=rng)
 
     else:
         raise ValueError("'{}' is not a valid model".format(model_type))
@@ -118,9 +119,12 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         max_func = CMAES(acquisition_func, lower, upper, verbose=False,
                          rng=rng)
     elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper)
+        max_func = Direct(acquisition_func, lower, upper, verbose=True)
     elif maximizer == "random":
         max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
+    elif maximizer == "scipy":
+        max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
+
     else:
         raise ValueError("'{}' is not a valid function to maximize the "
                          "acquisition function".format(maximizer))
@@ -139,6 +143,6 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     results["incumbent_values"] = [val for val in bo.incumbents_values]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
-    results["X"] = bo.X
-    results["y"] = bo.y
+    results["X"] = [x.tolist() for x in bo.X]
+    results["y"] = [y for y in bo.y]
     return results

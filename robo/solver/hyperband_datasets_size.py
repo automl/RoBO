@@ -18,22 +18,35 @@ logger = logging.getLogger(__name__)
 
 
 class hyperband_arm(mb.arms.python):
-    def __init__(self, task, configuration, subset_fractions):
+    def __init__(self, task, configuration, subset_fractions, HB_obj):
         self.task = task
         self.configuration = configuration
         self.subset_fractions = subset_fractions
-        self.costs = []
+        self.HB_obj = HB_obj
         self.i = 0
         super().__init__(self, b"Hyperband arm wrapper")
 
     def pull(self):
         if self.i == len(self.subset_fractions):
             raise "Ooops, that shouldn't happen. Trying to pull this arm too many times."
-        onyx = self.task.objective_function(self.configuration,
-                                            dataset_fraction=self.subset_fractions[self.i])
+        res = self.task.objective_function(self.configuration,
+                                           dataset_fraction=self.subset_fractions[self.i])
         self.i += 1
-        self.costs.append(onyx['cost'])
-        return -onyx['function_value']
+        self.HB_obj.time_func_eval_SH[-1] += res['cost']
+
+        if res['function_value'] < self.HB_obj.incumbent_values[-1]:
+            # append incumbent
+            self.HB_obj.incumbents.append(self.configuration)
+            self.HB_obj.incumbent_values.append(res['function_value'])
+
+            # compute the total cost for pure function evaluations
+            total_cost = sum(self.HB_obj.time_func_eval_SH)
+            self.HB_obj.time_func_eval_incumbent.append(total_cost)
+
+            # add runtime info as well
+            self.HB_obj.runtime.append(time.time() - self.HB_obj.time_start)
+
+        return -res['function_value']
     # rest of the methods don't have to be specified here
 
 
@@ -81,12 +94,12 @@ class HyperBand_DataSubsets(BaseSolver):
 
         self.X = []
         self.Y = []
-        self.incumbent = None
-        self.incumbent_value = float('inf')
-        self.incumbents = []
-        self.incumbent_values = []
-        self.time_func_eval = []
-        self.runtime = []
+
+        self.incumbents = [None]
+        self.incumbent_values = [np.inf]
+        self.time_func_eval_SH = [0]
+        self.time_func_eval_incumbent = [0]
+        self.runtime = [None]
         self.time_start = None
 
     def run(self, num_iterations=10, X=None, Y=None, overwrite=False):
@@ -116,48 +129,43 @@ class HyperBand_DataSubsets(BaseSolver):
         subset_fractions = np.power(eta, -np.linspace(num_subsets-1, 0, num_subsets))
 
         for it in range(num_iterations):
+
+            self.time_func_eval_SH.append(0)
+
             logger.info("Start iteration %d ... ", it)
 
             # compute the the value of s for this iteration
             s = num_subsets - 1 - (it % num_subsets)
 
             # the number of initial configurations
-            n = int(np.floor((num_subsets)/(s+1)) * eta**s)
+            n = int(np.floor(num_subsets/(s+1)) * eta**s)
 
             # set up the arms with random configurations
             configurations = [self.choose_next() for i in range(n)]
-            arms = [hyperband_arm( self.task, c,
-                                   subset_fractions[(-s-1):]) for c in configurations]
+            arms = [hyperband_arm(self.task, c,
+                                  subset_fractions[(-s-1):], self) for c in configurations]
 
             # set up the bandit and the policy and play
             bandit = mb.bandits.last_n_pulls(n=1)
             [bandit.add_arm(a) for a in arms]
 
             policy = mb.policies.successive_halving(
-                bandit, 1, eta, factor_pulls = 1)
+                bandit, 1, eta, factor_pulls=1)
 
             policy.play_n_rounds(s+1)
 
-            # the best configuration is the first arm
-            best_config_index = bandit[0].identifier
-
-            c = configurations[best_config_index]
-            v = - bandit[0].estimated_mean
-
-            if v < self.incumbent_value:
-                self.incumbent = c
-                self.incumbent_value = v
-
-            # book keeping
-            self.incumbents.append(self.incumbent)
-            self.incumbent_values.append(self.incumbent_value)
-            self.time_func_eval.append(sum([sum(a.costs) for a in arms]))
-            self.runtime.append(time.time() - self.time_start)
-
+            # add all full evaluations to X and Y
             for i in range(len(arms)):
-                if len(arms[bandit[i].identifier].costs) == bandit[0].num_pulls:
+                if arms[bandit[i].identifier].i == bandit[0].num_pulls:
                     self.X.append(arms[bandit[i].identifier].configuration)
                     self.Y.append(bandit[i].estimated_mean)
+
+            if it == 0:
+                self.incumbents.pop(0)
+                self.incumbent_values.pop(0)
+                self.time_func_eval_SH.pop(0)
+                self.time_func_eval_incumbent.pop(0)
+                self.runtime.pop(0)
 
             if self.output_path is not None:
                 self.save_output(it)
@@ -182,11 +190,10 @@ class HyperBand_DataSubsets(BaseSolver):
 
     def save_output(self, it):
         data = dict()
-        data["runtime"] = self.runtime[it]
+        data["runtime"] = self.runtime[-1]
         # Note that the ConfigSpace automatically converts to the [0, 1]^D space
-        data["incumbent"] = self.incumbents[it].get_array().tolist()
-        data["incumbents_value"] = self.incumbent_values[it]
-        data["time_func_eval"] = self.time_func_eval[it]
+        data["incumbent"] = self.incumbents[-1].get_array().tolist()
+        data["incumbents_value"] = self.incumbent_values[-1]
+        data["time_func_eval"] = self.time_func_eval_incumbent[-1]
         data["iteration"] = it
-
         json.dump(data, open(os.path.join(self.output_path, "hyperband_iter_%d.json" % it), "w"))

@@ -39,7 +39,7 @@ for i in user_provided_depend:
         sys.argv.remove(i)
 
 setup(name='RoBO',
-      version='0.2.1',
+      version='0.2.2',
       description='Framework for Bayesian optimization',
       author='Aaron Klein',
       author_email='kleinaa@cs.uni-freiburg.de',

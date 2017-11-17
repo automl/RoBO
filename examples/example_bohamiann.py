@@ -1,8 +1,6 @@
 import logging
 import numpy as np
 
-from hpolib.benchmarks.synthetic_functions import Branin
-
 from robo.fmin import bohamiann
 
 logging.basicConfig(level=logging.INFO)

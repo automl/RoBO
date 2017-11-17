@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 from robo.fmin import bayesian_optimization
 
-from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype
+from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs, SvmOnLetter
 from hpolib.benchmarks.ml.residual_networks import ResidualNeuralNetworkOnCIFAR10
 from hpolib.benchmarks.ml.conv_net import ConvolutionalNeuralNetworkOnCIFAR10, ConvolutionalNeuralNetworkOnSVHN
 
@@ -31,6 +31,18 @@ elif dataset == "covertype":
     f = SvmOnCovertype(rng=rng)
     num_iterations = 15
     output_path = "./experiments/fabolas/results/svm_%s/ei_%d" % (dataset, run_id)
+elif dataset == "adult":
+    f = SvmOnAdult(rng=rng)
+    num_iterations = 15
+    output_path = "./experiments/fabolas/results/svm_%s/ei_%d" % (dataset, run_id)
+elif dataset == "higgs":
+    f = SvmOnHiggs(rng=rng)
+    num_iterations = 15
+    output_path = "./experiments/fabolas/results/svm_%s/ei_%d" % (dataset, run_id)
+elif dataset == "letter":
+    f = SvmOnLetter(rng=rng)
+    num_iterations = 15
+    output_path = "./experiments/fabolas/results/svm_%s/ei_%d" % (dataset, run_id)
 elif dataset == "cifar10":
     f = ConvolutionalNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 15
@@ -42,7 +54,7 @@ elif dataset == "svhn":
 elif dataset == "res_net":
     f = ResidualNeuralNetworkOnCIFAR10(rng=rng)
     num_iterations = 10
-    output_path = "./experiments/fabolas/results/res_%s/ei_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/%s/ei_%d" % (dataset, run_id)
 
 os.makedirs(output_path, exist_ok=True)
 
