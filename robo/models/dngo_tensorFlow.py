@@ -143,8 +143,8 @@ class DNGO(BaseModel):
         self.n_units_3 = n_units_3
         self.adapt_epoch = adapt_epoch
 
-        self.target_var = tf.placeholder(tf.float32)
-        self.input_var = tf.placeholder(tf.float32)
+        self.target_var = tf.placeholder(tf.float64)
+        self.input_var = tf.placeholder(tf.float64)
         self.models = []
         self.sess = tf.Session()
 
@@ -193,14 +193,20 @@ class DNGO(BaseModel):
 
         self.network = self._build_net(self.input_var)
         # Get Prediction
-        prediction = tf.nn.softmax(self.network[0])
+        prediction = self.network[0]
 
         # Define loss function for training
-        loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=self.target_var))
+        loss = tf.reduce_mean(tf.squared_difference(prediction,self.target_var))
 
-        self.learning_rate = self.init_learning_rate
+        #self.learning_rate = self.init_learning_rate
+        global_step = tf.Variable(0, trainable=False)
+        self.learning_rate = tf.train.exponential_decay(self.init_learning_rate, # init learning rate
+                                                        global_step, # global step
+                                                        self.adapt_epoch, # decay step
+                                                        0.1, # decay rate
+                                                        staircase=True)
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        train_op = optimizer.minimize(loss=loss)
+        train_op = optimizer.minimize(loss=loss, global_step=global_step)
 
         # Start training
         lc = np.zeros([self.num_epochs])
@@ -229,11 +235,6 @@ class DNGO(BaseModel):
             logging.debug("Epoch time {:.3f}s, total time {:.3f}s".format(epoch_time, total_time))
             #logging.debug("Training loss:\t\t{:.5g}".format(train_err / train_batches))
 
-            # Adapt the learning rate
-            # ?!?! ASK AARON ABOUT THIS ?!?!
-            # if epoch % self.adapt_epoch == 0:
-            #     self.learning_rate.set_value(
-            #                 np.float32(self.init_learning_rate * 0.1))
 
         # Design matrix
         self.Theta = self.sess.run(self.network[1], feed_dict={self.input_var: self.X})
