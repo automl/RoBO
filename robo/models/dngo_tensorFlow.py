@@ -12,45 +12,10 @@ from robo.priors.bayesian_linear_regression_prior import BayesianLinearRegressio
 from robo.models.bayesian_linear_regression import BayesianLinearRegression
 from robo.util.normalization import zero_mean_unit_var_normalization, zero_mean_unit_var_unnormalization
 
-
 logger = logging.getLogger(__name__)
 
 
-
-# def sharedX(X, dtype=theano.config.floatX, name=None):
-#     return theano.shared(np.asarray(X, dtype=dtype), name=name)
-
-
-# def smorms3(cost, params, lrate=1e-3, eps=1e-16, gather=False):
-#     updates = []
-#     optim_params = []
-#     grads = T.grad(cost, params)
-#
-#     for p, grad in zip(params, grads):
-#         mem = sharedX(p.get_value() * 0. + 1.)
-#         g = sharedX(p.get_value() * 0.)
-#         g2 = sharedX(p.get_value() * 0.)
-#         if gather:
-#             optim_params.append(mem)
-#             optim_params.append(g)
-#             optim_params.append(g2)
-#
-#         r_t = 1. / (mem + 1)
-#         g_t = (1 - r_t) * g + r_t * grad
-#         g2_t = (1 - r_t) * g2 + r_t * grad**2
-#         p_t = p - grad * T.minimum(lrate, g_t * g_t / (g2_t + eps)) / \
-#               (T.sqrt(g2_t + eps) + eps)
-#         mem_t = 1 + mem * (1 - g_t * g_t / (g2_t + eps))
-#
-#         updates.append((g, g_t))
-#         updates.append((g2, g2_t))
-#         updates.append((p, p_t))
-#         updates.append((mem, mem_t))
-#     return updates
-
-
 class DNGO(BaseModel):
-
     def __init__(self, batch_size=10, num_epochs=20000,
                  learning_rate=0.01, momentum=0.9,
                  adapt_epoch=5000, n_units_1=50, n_units_2=50, n_units_3=50,
@@ -189,21 +154,20 @@ class DNGO(BaseModel):
 
         # Create the neural network
         n_datapoints, n_inputs = X.shape
-        self.input_var = tf.placeholder(tf.float64, shape = (None, n_inputs))
+        self.input_var = tf.placeholder(tf.float64, shape=(None, n_inputs))
 
         self.network = self._build_net(self.input_var)
         # Get Prediction
         prediction = self.network[0]
 
         # Define loss function for training
-        loss = tf.reduce_mean(tf.squared_difference(prediction,self.target_var))
+        loss = tf.reduce_mean(tf.squared_difference(prediction, self.target_var))
 
-        #self.learning_rate = self.init_learning_rate
         global_step = tf.Variable(0, trainable=False)
-        self.learning_rate = tf.train.exponential_decay(self.init_learning_rate, # init learning rate
-                                                        global_step, # global step
-                                                        self.adapt_epoch, # decay step
-                                                        0.1, # decay rate
+        self.learning_rate = tf.train.exponential_decay(self.init_learning_rate,
+                                                        global_step,
+                                                        self.adapt_epoch,
+                                                        0.1,
                                                         staircase=True)
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         train_op = optimizer.minimize(loss=loss, global_step=global_step)
@@ -223,8 +187,9 @@ class DNGO(BaseModel):
             for batch in self.iterate_minibatches(self.X, self.y,
                                                   batch_size, shuffle=True):
                 inputs, targets = batch
-                self.sess.run(train_op, feed_dict={self.input_var: inputs, self.target_var: targets})
-                # train_err += self.train_fn(inputs, targets)
+                _, t = self.sess.run([train_op, loss], feed_dict={self.input_var: inputs, self.target_var: targets})
+                train_err += t
+
                 train_batches += 1
 
             lc[epoch] = train_err / train_batches
@@ -233,8 +198,7 @@ class DNGO(BaseModel):
             epoch_time = curtime - epoch_start_time
             total_time = curtime - start_time
             logging.debug("Epoch time {:.3f}s, total time {:.3f}s".format(epoch_time, total_time))
-            #logging.debug("Training loss:\t\t{:.5g}".format(train_err / train_batches))
-
+            logging.debug("Training loss:\t\t{:.5g}".format(train_err / train_batches))
 
         # Design matrix
         self.Theta = self.sess.run(self.network[1], feed_dict={self.input_var: self.X})
@@ -260,7 +224,7 @@ class DNGO(BaseModel):
                                                   self.chain_length,
                                                   rstate0=self.rng)
 
-                # Save the current position, it will be the startpoint in
+                # Save the current position, it will be the start point in
                 # the next iteration
                 self.p0 = pos
 
@@ -271,13 +235,11 @@ class DNGO(BaseModel):
                 res = optimize.fmin(self.nll, np.random.rand(2))
                 self.hypers = [[np.exp(res[0]), np.exp(res[1])]]
         else:
-
             self.hypers = [[self.alpha, self.beta]]
 
         logging.info("Hypers: %s" % self.hypers)
         self.models = []
         for sample in self.hypers:
-
             # Instantiate a model for each hyperparameter configuration
             model = BayesianLinearRegression(alpha=sample[0],
                                              beta=sample[1],
@@ -345,8 +307,8 @@ class DNGO(BaseModel):
         return nll
 
     def iterate_minibatches(self, inputs, targets, batchsize, shuffle=False):
-        assert inputs.shape[0] == targets.shape[0],\
-               "The number of training points is not the same"
+        assert inputs.shape[0] == targets.shape[0], \
+            "The number of training points is not the same"
         if shuffle:
             indices = np.arange(inputs.shape[0])
             self.rng.shuffle(indices)
@@ -407,51 +369,47 @@ class DNGO(BaseModel):
             v[np.where((v < np.finfo(v.dtype).eps) & (v > -np.finfo(v.dtype).eps))] = 0
 
         if self.normalize_output:
-                m = zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
-                v *= self.y_std ** 2
+            m = zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
+            v *= self.y_std ** 2
 
         return m, v
 
-    def _build_net(self, input_var, seed=None, dtype = tf.float64):
+    def _build_net(self, input_var, seed=None, dtype=tf.float64):
 
-        #First Dense Layer
         network = tf.layers.dense(
             input_var,
-            units = 50,
+            units=50,
             kernel_initializer=HeNormal(factor=1.0, dtype=dtype, seed=seed),
             bias_initializer=tf.zeros_initializer(dtype=dtype),
             activation=tf.tanh
         )
 
-        #Second Dense Layer
         network = tf.layers.dense(
             network,
-            units = 50,
+            units=50,
             kernel_initializer=HeNormal(factor=1.0, dtype=dtype, seed=seed),
             bias_initializer=tf.zeros_initializer(dtype=dtype),
             activation=tf.tanh
         )
 
-        #Third Dense Layer
         network = tf.layers.dense(
             network,
-            units = 50,
+            units=50,
             kernel_initializer=HeNormal(factor=1.0, dtype=dtype, seed=seed),
             bias_initializer=tf.zeros_initializer(dtype=dtype),
             activation=tf.tanh
         )
 
-        thirdLayer = network
+        third_layer = network
 
-        #Output Layer
         network = tf.layers.dense(
             network,
-            units = 1,
+            units=1,
             kernel_initializer=HeNormal(factor=1.0, dtype=dtype, seed=seed),
             bias_initializer=tf.zeros_initializer(dtype=dtype),
-            activation= None # Linear
+            activation=None  # Linear
         )
-        return network, thirdLayer
+        return network, third_layer
 
     def get_incumbent(self):
         """

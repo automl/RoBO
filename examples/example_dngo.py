@@ -1,4 +1,3 @@
-import lasagne
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,13 +19,9 @@ model = DNGO()
 
 model.train(X, y)
 
-#predictions = lasagne.layers.get_output(model.network,
-#                                        zero_mean_unit_var_normalization(X, model.X_mean, model.X_std)[0],
-#                                        deterministic=True).eval()
-
-# Tensorflow
+X_norm = zero_mean_unit_var_normalization(X,model.X_mean, model.X_std)[0]
 predictions = model.sess.run(model.network[0],
-                             feed_dict={model.input_var: zero_mean_unit_var_normalization(X, model.X_mean, model.X_std)[0]})
+                             feed_dict={model.input_var: X_norm})
 
 
 predictions = zero_mean_unit_var_unnormalization(predictions, model.y_mean, model.y_std)
@@ -34,16 +29,7 @@ predictions = zero_mean_unit_var_unnormalization(predictions, model.y_mean, mode
 X_test = np.linspace(0, 1, 100)[:, None]
 X_test_norm = zero_mean_unit_var_normalization(X_test, model.X_mean, model.X_std)[0]
 
-# Get features from the net:
-
-#layers = lasagne.layers.get_all_layers(model.network)
-#basis_funcs = lasagne.layers.get_output(layers[:-1], X_test_norm)[-1].eval()
-
-# Tensorflow
 basis_funcs = model.sess.run(model.network[1], feed_dict={model.input_var: X_test_norm})
-
-
-
 
 fvals = f(X_test)[:, 0]
 
