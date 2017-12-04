@@ -114,12 +114,12 @@ class GaussianProcessMCMC(BaseModel):
             sampler = emcee.EnsembleSampler(self.n_hypers,
                                             len(self.kernel.pars) + 1,
                                             self.loglikelihood)
-
+            sampler.random_state = self.rng.get_state()
             # Do a burn-in in the first iteration
             if not self.burned:
                 # Initialize the walkers by sampling from the prior
                 if self.prior is None:
-                    self.p0 = np.random.rand(self.n_hypers, len(self.kernel.pars) + 1)
+                    self.p0 = self.rng.rand(self.n_hypers, len(self.kernel.pars) + 1)
                 else:
                     self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
@@ -227,26 +227,17 @@ class GaussianProcessMCMC(BaseModel):
         """
         if not self.is_trained:
             raise Exception('Model has to be trained first!')
-        #
-        # if self.normalize_input:
-        #     X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
-        # else:
-        #     X_test_norm = X_test
 
         mu = np.zeros([len(self.models), X_test.shape[0]])
         var = np.zeros([len(self.models), X_test.shape[0]])
         for i, model in enumerate(self.models):
             mu[i], var[i] = model.predict(X_test)
 
+        m = mu.mean(axis=0)
+
         # See the Algorithm Runtime Prediction paper by Hutter et al.
         # for the derivation of the total variance
-        m = mu.mean(axis=0)
-        #v = np.mean(mu ** 2 + var) - m ** 2
-        v = var.mean(axis=0)
-
-        # if self.normalize_output:
-        #     m = normalization.zero_mean_unit_var_unnormalization(m, self.y_mean, self.y_std)
-        #     v *= self.y_std ** 2
+        v = np.var(mu, axis=0) + np.mean(var, axis=0)
 
         # Clip negative variances and set them to the smallest
         # positive float value

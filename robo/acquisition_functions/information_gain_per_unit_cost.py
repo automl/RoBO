@@ -9,6 +9,7 @@ class InformationGainPerUnitCost(InformationGain):
     def __init__(self, model, cost_model,
                  lower, upper,
                  is_env_variable,
+                 sampling_acquisition=None,
                  n_representer=50):
         """
         Information gain per unit cost as described in Swersky et al. [1] which
@@ -52,6 +53,7 @@ class InformationGainPerUnitCost(InformationGain):
         super(InformationGainPerUnitCost, self).__init__(model,
                                                          lower,
                                                          upper,
+                                                         sampling_acquisition=sampling_acquisition,
                                                          Nb=n_representer)
 
     def update(self, model, cost_model, overhead=None):

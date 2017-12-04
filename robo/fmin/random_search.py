@@ -77,7 +77,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
         logger.info("Evaluation of this configuration took %f seconds", time_func_evals[-1])
 
         # Update the data
-        X.append(new_x)
+        X.append(new_x.tolist())
         y.append(new_y)
 
         # The incumbent is just the best observation we have seen so far
@@ -104,13 +104,14 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
             json.dump(data, open(os.path.join(output_path, "robo_iter_%d.json" % it), "w"))
 
     results = dict()
-    results["x_opt"] = incumbent.tolist()
+    results["x_opt"] = incumbent
     results["f_opt"] = incumbent_value
-    results["incumbents"] = [inc.tolist() for inc in incumbents]
+    results["incumbents"] = incumbents
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_evals
-    results["X"] = np.array(X)
-    results["y"] = np.array(y)
+    results["X"] = X
+    results["y"] = y
+
     return results
 

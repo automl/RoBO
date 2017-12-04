@@ -7,6 +7,9 @@ from robo.models.bayesian_neural_network import (
 )
 
 from robo.maximizers.direct import Direct
+from robo.maximizers.cmaes import CMAES
+from robo.maximizers.scipy_optimizer import SciPyOptimizer
+from robo.maximizers.random_sampling import RandomSampling
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.pi import PI
@@ -21,7 +24,7 @@ from pysgmcmc.data_batches import generate_batches
 logger = logging.getLogger(__name__)
 
 
-def bohamiann(objective_function, lower, upper, num_iterations=30,
+def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="random",
               acquisition_func="log_ei", n_init=3, output_path=None, rng=None):
     """
     Bohamiann uses Bayesian neural networks to model the objective function [1] inside Bayesian optimization.
@@ -45,6 +48,8 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
         The number of iterations (initial design + BO)
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
+    maximizer: {"direct", "cmaes", "random", "scipy"}
+        The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
     n_init: int
         Number of points for the initial design. Make sure that it is <= num_iterations.
     output_path: string
@@ -87,25 +92,19 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
             seed=get_seed(rng)
         )
 
-        if acquisition_func == "ei":
-            a = EI(model)
-        elif acquisition_func == "log_ei":
-            a = LogEI(model)
-        elif acquisition_func == "pi":
-            a = PI(model)
-        elif acquisition_func == "lcb":
-            a = LCB(model)
+    if maximizer == "cmaes":
+        max_func = CMAES(a, lower, upper, verbose=True, rng=rng)
+    elif maximizer == "direct":
+        max_func = Direct(a, lower, upper, verbose=True)
+    elif maximizer == "random":
+        max_func = RandomSampling(a, lower, upper, rng=rng)
+    elif maximizer == "scipy":
+        max_func = SciPyOptimizer(a, lower, upper, rng=rng)
 
-        else:
-            print("ERROR: %s is not a valid acquisition function!" % acquisition_func)
-            return
+    bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
+                              initial_points=n_init, output_path=output_path, rng=rng)
 
-        max_func = Direct(a, lower, upper)
-
-        bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
-                                  initial_points=n_init, output_path=output_path, rng=rng)
-
-        x_best, f_min = bo.run(num_iterations)
+    x_best, f_min = bo.run(num_iterations)
 
     results = dict()
     results["x_opt"] = x_best
@@ -114,6 +113,6 @@ def bohamiann(objective_function, lower, upper, num_iterations=30,
     results["incumbent_values"] = [val for val in bo.incumbents_values]
     results["runtime"] = bo.runtime
     results["overhead"] = bo.time_overhead
-    results["X"] = bo.X
-    results["y"] = bo.y
+    results["X"] = [x.tolist() for x in bo.X]
+    results["y"] = [y for y in bo.y]
     return results

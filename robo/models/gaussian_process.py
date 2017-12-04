@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import gpflow
 
+from scipy import optimize
 
 from robo.util import normalization
 from robo.models.base_model import BaseModel
@@ -67,6 +68,10 @@ class GaussianProcess(BaseModel):
     @BaseModel._check_shapes_train
     def train(self, X, y, do_optimize=True):
         """
+        Computes the Cholesky decomposition of the covariance of X and
+        estimates the GP hyperparameters by optimizing the marginal
+        loglikelihood. The prior mean of the GP is set to the empirical
+        mean of X.
 
         Parameters
         ----------
@@ -110,7 +115,6 @@ class GaussianProcess(BaseModel):
         Optimizes the marginal log likelihood
         """
         self.gp.optimize()
-
 
     def predict_variance(self, x1, X2):
         r"""
@@ -178,18 +182,16 @@ class GaussianProcess(BaseModel):
         else:
             X_test_norm = X_test
 
-        if not full_cov:
-            mu, var = self.gp.predict_y(X_test_norm)
-        else:
-            mu, var = self.gp.predict_f_full_cov(X_test_norm)
+        mu, var = self.gp.predict(self.y, X_test_norm)
 
         if self.normalize_output:
             mu = normalization.zero_mean_unit_var_unnormalization(mu, self.y_mean, self.y_std)
             var *= self.y_std ** 2
+        if not full_cov:
+            var = np.diag(var)
 
-
-            # Clip negative variances and set them to the smallest
-            # positive float value
+        # Clip negative variances and set them to the smallest
+        # positive float value
         if var.shape[0] == 1:
             var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
         else:

@@ -6,9 +6,9 @@ import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 
-from robo.solver.hyperband_datasets_size import HyperBand_DataSubsets
+from robo.solver.hyperband_datasets_size_original_incumbent import HyperBand_DataSubsetsOriginalIncumbent
 
-from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype
+from hpolib.benchmarks.ml.svm_benchmark import SvmOnMnist, SvmOnVehicle, SvmOnCovertype, SvmOnAdult, SvmOnHiggs, SvmOnLetter
 from hpolib.benchmarks.ml.residual_networks import ResidualNeuralNetworkOnCIFAR10
 from hpolib.benchmarks.ml.conv_net import ConvolutionalNeuralNetworkOnCIFAR10, ConvolutionalNeuralNetworkOnSVHN
 
@@ -28,6 +28,15 @@ elif dataset == "vehicle":
 elif dataset == "covertype":
     f = SvmOnCovertype(rng=rng)
     output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
+elif dataset == "higgs":
+    f = SvmOnHiggs(rng=rng)
+    output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
+elif dataset == "adult":
+    f = SvmOnAdult(rng=rng)
+    output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
+elif dataset == "letter":
+    f = SvmOnLetter(rng=rng)
+    output_path = "./experiments/fabolas/results/svm_%s/hyperband_%d" % (dataset, run_id)
 elif dataset == "cifar10":
     f = ConvolutionalNeuralNetworkOnCIFAR10(rng=rng)
     output_path = "./experiments/fabolas/results/cnn_%s/hyperband_%d" % (dataset, run_id)
@@ -36,7 +45,7 @@ elif dataset == "svhn":
     output_path = "./experiments/fabolas/results/cnn_%s/hyperband_%d" % (dataset, run_id)
 elif dataset == "res_net":
     f = ResidualNeuralNetworkOnCIFAR10(rng=rng)
-    output_path = "./experiments/fabolas/results/res_%s/hyperband_%d" % (dataset, run_id)
+    output_path = "./experiments/fabolas/results/%s/hyperband_%d" % (dataset, run_id)
 
 
 os.makedirs(output_path, exist_ok=True)
@@ -46,7 +55,7 @@ B = -int(np.log(f.s_min)/np.log(3))
 
 print(B)
 
-opt = HyperBand_DataSubsets(f, eta, eta**(-(B-1)), output_path=output_path, rng=rng)
+opt = HyperBand_DataSubsetsOriginalIncumbent(f, eta, eta**(-(B-1)), output_path=output_path, rng=rng)
 
 opt.run(int(20 / B * 1.5))
 
@@ -58,7 +67,7 @@ for c in opt.incumbents:
 
     results["test_error"] = test_error
     results["runtime"] = opt.runtime
-    results["time_func_eval"] = opt.time_func_eval
+    results["time_func_eval"] = opt.time_func_eval_incumbent
     results["run_id"] = run_id
 
     with open(os.path.join(output_path, 'results_%d.json' % run_id), 'w') as fh:
