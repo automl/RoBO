@@ -1,20 +1,18 @@
-
 import logging
 import numpy as np
 import gpflow
-
-from scipy import optimize
+import tensorflow as tf
 
 from robo.util import normalization
 from robo.models.base_model import BaseModel
+from robo.kernels import LearningCurveKernel
 
 logger = logging.getLogger(__name__)
 
 
 class GaussianProcess(BaseModel):
 
-    def __init__(self, kernel, prior=None,
-                 noise=1e-3, use_gradients=False,
+    def __init__(self, noise=1e-3, use_gradients=False,
                  normalize_output=False,
                  normalize_input=True,
                  lower=None, upper=None, rng=None):
@@ -51,9 +49,11 @@ class GaussianProcess(BaseModel):
         else:
             self.rng = rng
 
-        self.kernel = kernel
+        # Generate TF graph
+        self.graph = tf.Graph()
+
         self.gp = None
-        self.prior = prior
+        # self.prior = prior
         self.noise = noise
         self.use_gradients = use_gradients
         self.normalize_output = normalize_output
@@ -99,22 +99,34 @@ class GaussianProcess(BaseModel):
         else:
             self.y = y
 
-        self.mean = gpflow.mean_functions.Linear(1, 0)
-        self.gp = gpflow.gpr.GPR(self.X, self.y[:, None], kern=self.kernel, mean_function=self.mean)
+        # self.mean = gpflow.mean_functions.Linear(1, 0)
 
-        if do_optimize:
-            self.optimize()
+        with tf.Session(graph=self.graph) as sess:
 
-        self.is_trained = True
+            kernel = self.get_kernel()
+            self.gp = gpflow.models.GPR(self.X, self.y[:, None], kern=kernel)
+            self.gp.likelihood.variance = self.noise
+
+            # self.gp.compile(session=sess)
+
+            if do_optimize:
+                self.optimize(sess)
+
+            self.is_trained = True
+
+    def get_kernel(self):
+        return gpflow.kernels.Matern52(input_dim=self.X.shape[1], ARD=True)
 
     def get_noise(self):
         return self.noise
 
-    def optimize(self):
+    def optimize(self, session=None):
         """
         Optimizes the marginal log likelihood
         """
-        self.gp.optimize()
+        gpflow.train.AdamOptimizer(learning_rate=1e-1).minimize(self.gp, session=session)
+        # gpflow.train.ScipyOptimizer().minimize(self.gp, disp=True)
+        # gpflow.train.GradientDescentOptimizer(learning_rate=1e-2).minimize(self.gp, initialize=False)
 
     def predict_variance(self, x1, X2):
         r"""
@@ -136,7 +148,7 @@ class GaussianProcess(BaseModel):
         """
 
         if not self.is_trained:
-            raise Exception('Model has to be trained first!')
+            raise Exception('Model is not trained!')
 
         # if self.normalize_input:
         #     x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
@@ -146,7 +158,7 @@ class GaussianProcess(BaseModel):
         #     X2_norm = X2
 
         x_ = np.concatenate((x1, X2))
-        _, var = self.predict(x_, full_cov=True)
+        _, var = self.predict_y(x_, full_cov=True)
 
         var = var[-1, :-1, np.newaxis]
 
@@ -182,13 +194,16 @@ class GaussianProcess(BaseModel):
         else:
             X_test_norm = X_test
 
-        mu, var = self.gp.predict(self.y, X_test_norm)
+        with tf.Session(graph=self.graph):
+            mu, var = self.gp.predict_y(X_test_norm)
 
         if self.normalize_output:
             mu = normalization.zero_mean_unit_var_unnormalization(mu, self.y_mean, self.y_std)
             var *= self.y_std ** 2
-        if not full_cov:
-            var = np.diag(var)
+
+        if full_cov:
+            # TODO: Return full cov matrix here
+            raise NotImplementedError
 
         # Clip negative variances and set them to the smallest
         # positive float value
@@ -198,7 +213,7 @@ class GaussianProcess(BaseModel):
             var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
             var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
 
-        return mu, var
+        return mu[:, 0], var[:, 0]
 
     def sample_functions(self, X_test, n_funcs=1):
         """
@@ -255,3 +270,14 @@ class GaussianProcess(BaseModel):
             inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
 
         return inc, inc_value
+
+
+class LCGaussianProcess(GaussianProcess):
+
+    def get_kernel(self):
+        k1 = LearningCurveKernel()
+        k1.alpha = .6
+        k1.beta = .3
+        k2 = gpflow.kernels.White(input_dim=1, active_dims=[0], variance=1e-6)
+        kernel = k1 + k2
+        return kernel
