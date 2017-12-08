@@ -19,10 +19,10 @@ def joint_min(mu, var, with_derivatives=False, **kwargs):
 
     Parameters
     ----------
-    M: np.ndarray(N,)
+    mu: np.ndarray(N,)
         Mean value of each of the N points.
 
-    V: np.ndarray(N, N)
+    var: np.ndarray(N, N)
         Covariance matrix for all points
 
     with_derivatives: bool

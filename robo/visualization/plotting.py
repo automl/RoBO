@@ -268,7 +268,7 @@ def plot_optimization_trajectories(times, methods, metric="mean", labels=None, l
     if labels is None:
         labels = ["Method-%d" % i for i in range(len(methods))]
 
-    styles = ["o", "D", "s", ">", "<", "^", "v", "*", "*", "."]
+    styles = ["o", "D", "s", ">", "<", "^", "v", "*", "."]
 
     if colors is None:
         colors = ["blue", "green", "purple", "darkorange",
