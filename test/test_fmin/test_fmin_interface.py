@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from robo.fmin import random_search, bayesian_optimization, bohamiann
+from robo.fmin import random_search, bayesian_optimization, bohamiann, entropy_search
 
 
 def objective(x):
@@ -10,7 +10,6 @@ def objective(x):
 
 
 class TestFminInterface(unittest.TestCase):
-
     def setUp(self):
         self.lower = np.zeros([1])
         self.upper = np.ones([1])
@@ -19,6 +18,15 @@ class TestFminInterface(unittest.TestCase):
         res = random_search(objective_function=objective,
                             lower=self.lower, upper=self.upper,
                             num_iterations=3)
+        assert len(res["x_opt"]) == 1
+        assert np.array(res["x_opt"]) >= 0
+        assert np.array(res["x_opt"]) <= 1
+
+    def test_entropy_search(self):
+        res = entropy_search(objective_function=objective,
+                             lower=self.lower, upper=self.upper,
+                             n_init=2,
+                             num_iterations=3)
         assert len(res["x_opt"]) == 1
         assert np.array(res["x_opt"]) >= 0
         assert np.array(res["x_opt"]) <= 1
@@ -42,6 +50,7 @@ class TestFminInterface(unittest.TestCase):
         assert len(res["x_opt"]) == 1
         assert np.array(res["x_opt"]) >= 0
         assert np.array(res["x_opt"]) <= 1
+
 
 if __name__ == "__main__":
     unittest.main()
