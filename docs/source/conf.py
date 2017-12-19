@@ -41,8 +41,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode', 
-    'sphinx.ext.autosummary',
-    'numpydoc'
+    'sphinx.ext.autosummary'
 ]
 # Configure the extensions
 numpydoc_show_class_members = False
