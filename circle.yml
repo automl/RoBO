@@ -4,7 +4,7 @@ machine:
     # project and documentation.
     USERNAME: "numairmansur"
 
-    # The repository where the documentation will be hosted
+    # The repository where the documentation will be hosted+
     DOC_REPO: "RoBO"
 
     # The base URL for the Github page where the documentation will be hosted
@@ -18,20 +18,11 @@ dependencies:
   # Various dependencies
   pre:
     - sudo apt-get update
-    - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran
-    - sudo apt-get install libeigen3-dev
-    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-    - sudo apt-get update
-    - pip install --upgrade numpy
-    - sudo apt-get install gcc-4.9 g++-4.9
-    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.9
-    #- sudo apt-get install -qq python-numpy python-scipy
-    - sudo apt-get install python-sphinx
+    - sudo apt-get install python-dev
+    - pip install Sphinx
+    - pip install sphinx_bootstrap_theme
   override:
-    - pip install --upgrade pip
-    - pip install direct
-    - pip install gpy
-    - python setup.py install
+    - echo "Sphinx installed"
 
 test:
 
@@ -40,7 +31,11 @@ test:
 
 deployment:
   production:
-    branch: refactor
+    branch: master
     commands:
       - echo "run SPHINX build"
-      - bash ci_scripts/sphinx_buil.sh
+      - sphinx-build -b html docs/source/ doc
+      - git status
+      - git add --all
+      - git commit -am "Git push detected. Documentation on github pages automatically updated. [skip ci]"
+      - git push
