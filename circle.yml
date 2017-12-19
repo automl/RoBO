@@ -34,7 +34,7 @@ deployment:
     branch: master
     commands:
       - echo "run SPHINX build"
-      - sphinx-build -b html docs/source/ doc
+      - sphinx-build -b html docs/source/ docs
       - git status
       - git add --all
       - git commit -am "Git push detected. Documentation on github pages automatically updated. [skip ci]"
