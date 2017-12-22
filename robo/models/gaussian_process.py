@@ -49,9 +49,7 @@ class GaussianProcess(BaseModel):
         else:
             self.rng = rng
 
-        # Generate TF graph
-        self.graph = tf.Graph()
-
+        self.graph = None
         self.gp = None
         # self.prior = prior
         self.noise = noise
@@ -100,7 +98,7 @@ class GaussianProcess(BaseModel):
             self.y = y
 
         # self.mean = gpflow.mean_functions.Linear(1, 0)
-
+        self.graph = tf.Graph()
         with tf.Session(graph=self.graph) as sess:
 
             kernel = self.get_kernel()
