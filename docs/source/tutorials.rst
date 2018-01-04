@@ -64,7 +64,7 @@ At the end we get a dictionary back with contains the following entries:
 * “incumbents”: the incumbent (best found value) after each iteration
 * “incumbent_value”: the function values of the incumbents
 * “runtime”: the runtime in seconds after each iteration
-* “runtime”: the optimization overhead (i.e. time data we do not spend to evaluate the function) of each iteration
+* “overhead”: the optimization overhead (i.e. time data we do not spend to evaluate the function) of each iteration
 * “X”: all data points that have been evaluated
 * “y”: the corresponding function evaluations
 
