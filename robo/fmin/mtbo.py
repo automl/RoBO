@@ -10,6 +10,7 @@ from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
+from robo.acquisition_functions.ei import EI
 from robo.maximizers.direct import Direct
 from robo.util import normalization
 from robo.util.incumbent_estimation import projected_incumbent_estimation
@@ -31,8 +32,7 @@ def transformation(X, acq, lower, upper):
 
 
 def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=30,
-         burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None,
-         inc_estimation="last_seen"):
+         burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
     """
     Interface to MTBO[1] which uses an auxiliary cheaper task to speed up the optimization
     of a more expensive but similar task.
@@ -159,6 +159,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
                                     model_cost,
                                     extend_lower,
                                     extend_upper,
+                                    sampling_acquisition=EI,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
@@ -215,17 +216,11 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
         model_objective.train(X, y, do_optimize=True)
         model_cost.train(X, c, do_optimize=True)
 
-        if inc_estimation == "last_seen":
-            # Estimate incumbent as the best observed value so far
-            best_idx = np.argmin(y)
-            incumbent = X[best_idx][:-1]
-            incumbent = np.append(incumbent, 1)
-            incumbent_value = y[best_idx]
-        else:
-            # Estimate incumbent by projecting all observed points to the task of interest and
-            # pick the point with the lowest mean prediction
-            incumbent, incumbent_value = projected_incumbent_estimation(model_objective, X[:, :-1],
-                                                                        proj_value=1)
+        # Estimate incumbent as the best observed value so far
+        best_idx = np.argmin(y)
+        incumbent = X[best_idx][:-1]
+        incumbent = np.append(incumbent, 1)
+        incumbent_value = y[best_idx]
 
         incumbents.append(incumbent[:-1])
         logger.info("Current incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
