@@ -161,6 +161,9 @@ class BayesianNeuralNetwork(BaseModel):
         self.y_mean = None
         self.y_std = None
 
+        self.learning_curve_nll = None
+        self.learning_curve_err = None
+
     @BaseModel._check_shapes_train
     def train(self, X, y, *args, **kwargs):
         """
@@ -178,6 +181,9 @@ class BayesianNeuralNetwork(BaseModel):
 
         # Clear old samples
         start_time = time.time()
+
+        self.learning_curve_nll = []
+        self.learning_curve_err = []
 
         self.net = self.get_net(n_inputs=X.shape[1])
 
@@ -236,7 +242,7 @@ class BayesianNeuralNetwork(BaseModel):
             else:
                 _, nll_value = self.sampler.step(xmb, ymb)
 
-            if i % 512 == 0 and i <= self.burn_in:
+            if i % 200 == 0 and i <= self.burn_in:
                 total_err, total_nll = self.compute_err(floatX(self.X), floatX(self.y).reshape(-1, 1))
                 t = time.time() - start_time
                 logging.info("Iter {:8d} : NLL = {:11.4e} MSE = {:.4e} "
@@ -253,6 +259,15 @@ class BayesianNeuralNetwork(BaseModel):
                                                                       float(total_err),
                                                                       len(self.samples), t))
             i += 1
+
+            if i > self.burn_in and "valid" in kwargs and "valid_targets" in kwargs\
+                    and i % kwargs["valid_after_n_steps"] == 0:
+
+                valid_err, valid_nll = self.compute_err(floatX(kwargs["valid"]),
+                                                        floatX(kwargs["valid_targets"].reshape(-1, 1)))
+                self.learning_curve_nll.append(float(valid_nll))
+                self.learning_curve_err.append(float(valid_err))
+
         self.is_trained = True
 
     def negativ_log_likelihood(self, f_net, X, y, n_examples, weight_prior, variance_prior):
