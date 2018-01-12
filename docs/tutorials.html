@@ -109,6 +109,7 @@
 <li><a class="reference internal" href="#fabolas">Fabolas</a></li>
 <li><a class="reference internal" href="#robo-on-hpolib2-benchmarks">RoBO on HPOLIB2 benchmarks</a></li>
 <li><a class="reference internal" href="#fitting-a-bayesian-neural-network">Fitting a Bayesian neural network</a></li>
+<li><a class="reference internal" href="#fanova">FANOVA</a></li>
 </ul>
 </li>
 </ul>
@@ -345,6 +346,62 @@ pip install theano
 </div>
 </div></blockquote>
 </div>
+<div class="section" id="fanova">
+<h2>FANOVA<a class="headerlink" href="#fanova" title="Permalink to this headline">¶</a></h2>
+<p>In the following tutorial, we will show how to use RoBO with FANOVA (Functional Analysis of Variance). FANOVA is a framework used for quantifying the performance of functions. More information of FANOVA can be found <a class="reference external" href="https://automl.github.io/fanova/">here</a> .</p>
+<p>For this example, let’s use Brannin as our objective function and random search as our optimization method. First we have to import all the necessary packages that we will need.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fanova</span> <span class="kn">import</span> <span class="n">fANOVA</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">random_search</span>
+<span class="kn">from</span> <span class="nn">hpolib.benchmarks.synthetic_functions</span> <span class="kn">import</span> <span class="n">Branin</span>
+<span class="kn">import</span> <span class="nn">fanova.visualizer</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we declare the objective function and get the bounds of the configuration space.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">objective_function</span> <span class="o">=</span> <span class="n">Branin</span><span class="p">()</span>
+<span class="n">info</span> <span class="o">=</span> <span class="n">objective_function</span><span class="o">.</span><span class="n">get_meta_information</span><span class="p">()</span>
+<span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">])</span>
+<span class="n">config_space</span> <span class="o">=</span> <span class="n">objective_function</span><span class="o">.</span><span class="n">get_configuration_space</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we apply random search</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">random_search</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>After getting the results, we create a FANOVA object and pass the results to it.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]])</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]])</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">fANOVA</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>To compute now the marginal of the first parameter, we can wrtie:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">quantify_importance</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="p">)))</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>To visualize the single and pairwise marginals, we have to create a visualizer object first containing the fanova object, configspace and directory.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">vis</span> <span class="o">=</span> <span class="n">fanova</span><span class="o">.</span><span class="n">visualizer</span><span class="o">.</span><span class="n">Visualizer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">config_space</span><span class="p">,</span> <span class="s2">&quot;./plots/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>We can then plot single marginals by</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">vis</span><span class="o">.</span><span class="n">plot_marginal</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Which should look like:</p>
+</div>
 </div>
 
 
@@ -367,7 +424,7 @@ pip install theano
     </p>
     <p>
         &copy; Copyright 2017, AAD Group.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
     </p>
   </div>
 </footer>
