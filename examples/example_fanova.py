@@ -1,4 +1,5 @@
 
+import os
 from fanova import fANOVA
 import numpy as np
 from robo.fmin import random_search
@@ -22,5 +23,6 @@ f = fANOVA(X,Y)
 print(f.quantify_importance((0, )))
 
 # Visualization
+os.makedirs("./plots", exist_ok=True)
 vis = fanova.visualizer.Visualizer(f, config_space, "./plots/")
 vis.plot_marginal(1)
