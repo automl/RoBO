@@ -254,14 +254,63 @@ After training we can use our model to predict the mean and variance for arbitra
 	mean_pred, var_pred = model.predict(x)
 
 
+FANOVA
+------
 
+In the following tutorial, we will show how to use RoBO with FANOVA (Functional Analysis of Variance). FANOVA is a framework used for quantifying the performance of functions. More information of FANOVA can be found `here <https://automl.github.io/fanova/>`_ .
 
+For this example, let's use Brannin as our objective function and random search as our optimization method. First we have to import all the necessary packages that we will need.
 
+    .. code-block:: python
+    
+	from fanova import fANOVA
+	import numpy as np
+	from robo.fmin import random_search
+	from hpolib.benchmarks.synthetic_functions import Branin
+	import fanova.visualizer
 
+Now we declare the objective function and get the bounds of the configuration space.
 
+    .. code-block:: python
 
+	objective_function = Branin()
+	info = objective_function.get_meta_information()
+	bounds = np.array(info['bounds'])
+	config_space = objective_function.get_configuration_space()
+	
+Now we apply random search
 
+    .. code-block:: python
 
+	results = random_search(objective_function, bounds[:, 0], bounds[:, 1], num_iterations=50)
+
+After getting the results, we create a FANOVA object and pass the results to it.
+
+    .. code-block:: python
+
+	X = np.array([i for i in results['X']])
+	Y = np.array([i for i in results['y']])
+	f = fANOVA(X,Y)
+	
+To compute now the marginal of the first parameter, we can wrtie:
+
+    .. code-block:: python
+
+	print(f.quantify_importance((0, )))
+	
+To visualize the single and pairwise marginals, we have to create a visualizer object first containing the fanova object, configspace and directory.
+
+    .. code-block:: python
+
+	vis = fanova.visualizer.Visualizer(f, config_space, "./plots/")
+
+We can then plot single marginals by
+
+    .. code-block:: python
+
+	vis.plot_marginal(1)
+
+Which should look like:
 
 
 
