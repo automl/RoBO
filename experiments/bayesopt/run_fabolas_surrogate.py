@@ -27,7 +27,7 @@ output_path = "./experiments/RoBO/surrogates"
 
 rng = np.random.RandomState(run_id)
 
-num_iterations = 150
+num_iterations = 100
 s_max = 50000
 s_min = 100
 subsets = [128] * 8
@@ -48,8 +48,7 @@ lower = bounds[:, 0]
 upper = bounds[:, 1]
 results = fabolas(objective_function=objective, lower=lower, upper=upper,
                   s_min=s_min, s_max=s_max, n_init=len(subsets), num_iterations=num_iterations,
-                  n_hypers=30, subsets=subsets, inc_estimation="mean",
-                  rng=rng)
+                  n_hypers=30, subsets=subsets, rng=rng)
 
 results["run_id"] = run_id
 results['X'] = results['X'].tolist()
@@ -80,3 +79,4 @@ os.makedirs(p, exist_ok=True)
 
 fh = open(os.path.join(p, '%s_run_%d.json' % (benchmark, run_id)), 'w')
 json.dump(results, fh)
+fh.close()

@@ -8,27 +8,32 @@ logging.basicConfig(level=logging.INFO)
 
 from robo.solver.hyperband_datasets_size import HyperBand_DataSubsets
 from hpolib.benchmarks.ml.surrogate_svm import SurrogateSVM
-
+from hpolib.benchmarks.ml.surrogate_cnn import SurrogateCNN
+from hpolib.benchmarks.ml.surrogate_fcnet import SurrogateFCNet
 
 run_id = int(sys.argv[1])
-seed = int(sys.argv[2])
+benchmark = sys.argv[2]
 
-rng = np.random.RandomState(seed)
+rng = np.random.RandomState(run_id)
 dataset = "surrogate"
 
-f = SurrogateSVM(path="/mhome/kleinaa/experiments/fabolas/dataset/svm_on_mnist_grid", rng=rng)
-output_path = "/mhome/kleinaa/experiments/fabolas_journal/results/svm_%s/hyperband_last_seen_incumbent_%d" % (dataset, run_id)
+if benchmark == "svm_mnist":
+    f = SurrogateSVM(path="/ihome/kleinaa/devel/git/HPOlib/surrogates/")
+elif benchmark == "cnn_cifar10":
+    f = SurrogateCNN(path="/ihome/kleinaa/devel/git/HPOlib/surrogates/")
+elif benchmark == "fcnet_mnist":
+    f = SurrogateFCNet(path="/ihome/kleinaa/devel/git/HPOlib/surrogates/")
 
-os.makedirs(output_path, exist_ok=True)
+output_path = "./experiments/RoBO/surrogates"
 
 eta = 3.
 B = -int(np.log(f.s_min)/np.log(3))
 
-print(B)
-
-opt = HyperBand_DataSubsets(f, eta, eta**(-(B-1)), output_path=output_path, rng=rng)
+opt = HyperBand_DataSubsets(f, eta, eta**(-(B-1)), rng=rng)
 
 opt.run(int(20 / B * 1.5))
+
+results = dict()
 
 test_error = []
 runtime = []
@@ -36,15 +41,16 @@ cum_cost = 0
 for i, c in enumerate(opt.incumbents):
     test_error.append(f.objective_function_test(c)["function_value"])
 
-    results = dict()
-
-    results["test_error"] = test_error
-
     cum_cost += opt.time_func_eval_incumbent[i]
     runtime.append(opt.runtime[i] + cum_cost)
-    results["runtime"] = runtime
 
-    results["run_id"] = run_id
+results["runtime"] = runtime
+results["test_error"] = test_error
+results["run_id"] = run_id
 
-    with open(os.path.join(output_path, 'results_%d.json' % run_id), 'w') as fh:
-        json.dump(results, fh)
+p = os.path.join(output_path, benchmark, "hyperband")
+os.makedirs(p, exist_ok=True)
+
+fh = open(os.path.join(p, '%s_run_%d.json' % (benchmark, run_id)), 'w')
+json.dump(results, fh)
+fh.close()
