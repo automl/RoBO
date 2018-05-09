@@ -2,20 +2,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Tutorials &#8212; Robo API 1 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -33,8 +25,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body>
+  </head><body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -122,7 +113,7 @@
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <p>The following tutorials will help you to get familiar with RoBO.
 You can find the code for all the tutorials and additional examples
-in the <code class="docutils literal"><span class="pre">examples</span></code> folder.</p>
+in the <code class="docutils literal notranslate"><span class="pre">examples</span></code> folder.</p>
 <ol class="arabic simple">
 <li>Blackbox function optimization with RoBO</li>
 <li>Bohamiann</li>
@@ -136,7 +127,7 @@ in the <code class="docutils literal"><span class="pre">examples</span></code> f
 <p>This tutorial will show you how to use standard Bayesian optimization with Gaussian processes and different acquisition functions to find the global minimizer of your (python) function. Note that RoBO so far only support continuous input space and it is not able to handle multi-objective functions.</p>
 <p>The first thing we have to do is to import numpy (for the objective function) and the bayesian_optimization interface</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">bayesian_optimization</span>
 </pre></div>
@@ -144,7 +135,7 @@ in the <code class="docutils literal"><span class="pre">examples</span></code> f
 </div></blockquote>
 <p>To use RoBO we have to define a function that symbolizes the objective function we want to minimize. Interface of objective function is fairly simple, it gets an d-dimensional vector x and returns the corresponding scalar function value.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">objective_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">objective_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">y</span>
 </pre></div>
@@ -152,14 +143,14 @@ in the <code class="docutils literal"><span class="pre">examples</span></code> f
 </div></blockquote>
 <p>Before we run Bayesian optimization we first have to define the lower and upper bound of our input search space. In this case our search space contains only one dimension, but Bayesian optimization is not restricted to that and normally works fine up to 10 (continuous) dimensions.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
 <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">6</span><span class="p">])</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>Now we have everything we need and can now run Bayesian optimization for 50 iterations:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">bayesian_optimization</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">bayesian_optimization</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -176,21 +167,21 @@ in the <code class="docutils literal"><span class="pre">examples</span></code> f
 </ul>
 <p>By default RoBO uses Gaussian processes (with MCMC sampling to obtain the GP’s hyperparameters) and logarithmic expected improvement as acquisition function. If you would like to use a different acquisition function such as for instance the lower confidence bound you can simple :</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">bayesian_optimization</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">acquisition_func</span><span class="o">=</span><span class="s1">&#39;lcb&#39;</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">bayesian_optimization</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">acquisition_func</span><span class="o">=</span><span class="s1">&#39;lcb&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>See the API documentation for different possible choices of acquisition functions.</p>
 <p>If you want to have a deeper look what RoBO is doing under the hood you can activate RoBO’s logging mechanism by adding the following two lines on top of your python script:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>Besides standard Bayesian optimization, RoBO also contains an interface for plain random search and entropy search by Hennig et. al. Both methods follow the exact same interface.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">entropy_search</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">entropy_search</span>
 <span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">random_search</span>
 
 <span class="n">results</span> <span class="o">=</span> <span class="n">entropy_search</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
@@ -204,7 +195,7 @@ in the <code class="docutils literal"><span class="pre">examples</span></code> f
 <p>RoBO offers an simple interface for Bayesian Optimization with Hamiltonian Monte Carlo Artificial Neural Networks (BOHAMIANN) which was introduced by Sprigenberg et al.</p>
 <p>If you want to use Bohamiann make sure that you have Lasagne and Theano installed:</p>
 <blockquote>
-<div><div class="highlight-bash"><div class="highlight"><pre><span></span>pip install Lasagne
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install Lasagne
 pip install theano
 </pre></div>
 </div>
@@ -212,7 +203,7 @@ pip install theano
 <p>and that the <a class="reference external" href="https://github.com/stokasto/sgmcmc">sgmcmc package</a> is in your PYTHONPATH:</p>
 <p>The interface to Bohamiann is exactly the same as for the GP based Bayesian optimization interface:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">bohamiann</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">bohamiann</span>
 
 <span class="n">results</span> <span class="o">=</span> <span class="n">bohamiann</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 </pre></div>
@@ -227,7 +218,7 @@ pip install theano
 <p>By additionally modelling the cost of training single configurations, Fabolas uses the information gain per unit cost to pick and evaluate configurations on small subset of the training data that give the most information about the global minimum on the full dataset.</p>
 <p>Now the objective function gets besides a configuration also the training dataset size as an additional input. After training the configuration on a subset of the training data it returns the validation error on the full validation data set as well as the time it took to train this configuration.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">fabolas</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">fabolas</span>
 
 <span class="k">def</span> <span class="nf">objective_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
     <span class="c1"># Train your algorithm here with x on the dataset subset with length s</span>
@@ -238,7 +229,7 @@ pip install theano
 </div></blockquote>
 <p>Additionally you have to define the bounds of the input space for the configurations and the minimum and maximum data set size.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">])</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">])</span>
 <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
 <span class="n">s_min</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="n">s_max</span> <span class="o">=</span> <span class="mi">50000</span>
@@ -247,7 +238,7 @@ pip install theano
 </div></blockquote>
 <p>Then you can call Fabolas by:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">fabolas</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">fabolas</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span>
                   <span class="n">lower</span><span class="o">=</span><span class="n">lower</span><span class="p">,</span>
                   <span class="n">upper</span><span class="o">=</span><span class="n">upper</span><span class="p">,</span>
                   <span class="n">s_min</span><span class="o">=</span><span class="n">s_min</span><span class="p">,</span>
@@ -264,7 +255,7 @@ pip install theano
 <p><a class="reference external" href="https://github.com/automl/HPOlib2">HPOlib2</a> contains a set of benchmarks with an unified interface for hyperparameter optimization of machine learning algorithms. In the following example we want to assume the often used synthetic function branin. Make sure that you installed HPOlib2.</p>
 <p>First we load the benchmark and get the bound of the configuration space</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hpolib.benchmarks.synthetic_functions</span> <span class="kn">import</span> <span class="n">Branin</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hpolib.benchmarks.synthetic_functions</span> <span class="kn">import</span> <span class="n">Branin</span>
 <span class="n">f</span> <span class="o">=</span> <span class="n">Branin</span><span class="p">()</span>
 <span class="n">info</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_meta_information</span><span class="p">()</span>
 <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">])</span>
@@ -273,13 +264,13 @@ pip install theano
 </div></blockquote>
 <p>Than we can simply run RoBO by:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">bayesian_optimization</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">bayesian_optimization</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>HPOlib2 allows to evaluate single configurations only subsets of the data which allows us to use Fabolas or MTBO. If want to use Fabolas to optimize let’s say a support vector machine on MNIST we first have to wrap the HPOlib2 benchmarks class in order to pass the correct ration of the dataset size:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hpolib.benchmarks.ml.svm_benchmark</span> <span class="kn">import</span> <span class="n">SvmOnMnist</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hpolib.benchmarks.ml.svm_benchmark</span> <span class="kn">import</span> <span class="n">SvmOnMnist</span>
 
 <span class="n">f</span> <span class="o">=</span> <span class="n">SvmOnMnist</span><span class="p">()</span>
 
@@ -293,7 +284,7 @@ pip install theano
 </div></blockquote>
 <p>Than we can run Fabolas simply by:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">info</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_meta_information</span><span class="p">()</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">info</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_meta_information</span><span class="p">()</span>
 <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">])</span>
 <span class="n">lower</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
 <span class="n">upper</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
@@ -309,7 +300,7 @@ pip install theano
 <p>The following tutorial we will see how we can train a Bayesian neural networks with stochastic MCMC sampling on our dataset. Note all models in RoBO implement the same interface and you can easily replace the Bayesian neural network by another model (Gaussian processes, Random Forest, …).</p>
 <p>Assume we collect some data point of a sinc function:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">robo.models.bnn</span> <span class="kn">import</span> <span class="n">BayesianNeuralNetwork</span>
@@ -326,7 +317,7 @@ pip install theano
 </div></blockquote>
 <p>We can now create and train a neural network by:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">BayesianNeuralNetwork</span><span class="p">(</span><span class="n">sampling_method</span><span class="o">=</span><span class="s2">&quot;sghmc&quot;</span><span class="p">,</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">BayesianNeuralNetwork</span><span class="p">(</span><span class="n">sampling_method</span><span class="o">=</span><span class="s2">&quot;sghmc&quot;</span><span class="p">,</span>
                               <span class="n">l_rate</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">),</span>
                               <span class="n">mdecay</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
                               <span class="n">burn_in</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span>
@@ -340,7 +331,7 @@ pip install theano
 </div></blockquote>
 <p>After training we can use our model to predict the mean and variance for arbitrary test points:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)[:,</span> <span class="bp">None</span><span class="p">]</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)[:,</span> <span class="bp">None</span><span class="p">]</span>
 <span class="n">mean_pred</span><span class="p">,</span> <span class="n">var_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -351,7 +342,7 @@ pip install theano
 <p>In the following tutorial, we will show how to use RoBO with FANOVA (Functional Analysis of Variance). FANOVA is a framework used for quantifying the performance of functions. More information of FANOVA can be found <a class="reference external" href="https://automl.github.io/fanova/">here</a> .</p>
 <p>For this example, let’s use Brannin as our objective function and random search as our optimization method. First we have to import all the necessary packages that we will need.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fanova</span> <span class="kn">import</span> <span class="n">fANOVA</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fanova</span> <span class="kn">import</span> <span class="n">fANOVA</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">robo.fmin</span> <span class="kn">import</span> <span class="n">random_search</span>
 <span class="kn">from</span> <span class="nn">hpolib.benchmarks.synthetic_functions</span> <span class="kn">import</span> <span class="n">Branin</span>
@@ -361,7 +352,7 @@ pip install theano
 </div></blockquote>
 <p>Now we declare the objective function and get the bounds of the configuration space.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">objective_function</span> <span class="o">=</span> <span class="n">Branin</span><span class="p">()</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">objective_function</span> <span class="o">=</span> <span class="n">Branin</span><span class="p">()</span>
 <span class="n">info</span> <span class="o">=</span> <span class="n">objective_function</span><span class="o">.</span><span class="n">get_meta_information</span><span class="p">()</span>
 <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">])</span>
 <span class="n">config_space</span> <span class="o">=</span> <span class="n">objective_function</span><span class="o">.</span><span class="n">get_configuration_space</span><span class="p">()</span>
@@ -370,13 +361,13 @@ pip install theano
 </div></blockquote>
 <p>Now we apply random search</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">random_search</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">random_search</span><span class="p">(</span><span class="n">objective_function</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">num_iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>After getting the results, we create a FANOVA object and pass the results to it.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]])</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]])</span>
 <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]])</span>
 <span class="n">f</span> <span class="o">=</span> <span class="n">fANOVA</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
 </pre></div>
@@ -384,19 +375,19 @@ pip install theano
 </div></blockquote>
 <p>To compute now the marginal of the first parameter, we can wrtie:</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">quantify_importance</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="p">)))</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">quantify_importance</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="p">)))</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>To visualize the single and pairwise marginals, we have to create a visualizer object first containing the fanova object, configspace and directory.</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">vis</span> <span class="o">=</span> <span class="n">fanova</span><span class="o">.</span><span class="n">visualizer</span><span class="o">.</span><span class="n">Visualizer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">config_space</span><span class="p">,</span> <span class="s2">&quot;./plots/&quot;</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">vis</span> <span class="o">=</span> <span class="n">fanova</span><span class="o">.</span><span class="n">visualizer</span><span class="o">.</span><span class="n">Visualizer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">config_space</span><span class="p">,</span> <span class="s2">&quot;./plots/&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>We can then plot single marginals by</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">vis</span><span class="o">.</span><span class="n">plot_marginal</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">vis</span><span class="o">.</span><span class="n">plot_marginal</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -424,7 +415,7 @@ pip install theano
     </p>
     <p>
         &copy; Copyright 2017, AAD Group.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.4.<br/>
     </p>
   </div>
 </footer>
