@@ -8,7 +8,7 @@ direct
 theano==0.9.0
 pyrfr
 git+https://github.com/Lasagne/Lasagne.git
-git+https://github.com/sfalkner/george.git
+git+https://github.com/automl/george.git
 git+https://github.com/stokasto/sgmcmc.git
 git+https://github.com/automl/HPOlib2.git
 nose
