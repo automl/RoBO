@@ -23,3 +23,7 @@ try:
     from .entropy_search import entropy_search
 except ImportError:
     pass
+try:
+    from .warmstart_mtbo import warmstart_mtbo
+except ImportError:
+    pass
