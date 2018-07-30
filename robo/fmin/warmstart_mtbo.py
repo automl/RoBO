@@ -35,8 +35,9 @@ def transformation(X, acq, lower, upper):
 def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_tasks=2, n_init=2, num_iterations=30,
          burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
     """
-    Interface to MTBO[1] which uses an auxiliary cheaper task to speed up the optimization
-    of a more expensive but similar task.
+    Interface to MTBO[1] which uses an auxiliary cheaper task to warm start the optimization on new but similar task.
+    Note here we only warmstart the optimization process, in case you want to speed up Bayesian optimization by
+    evaluating on auxiliary task during the optimization check out mtbo() or fabolas().
 
     [1] Multi-Task Bayesian Optimization
         K. Swersky and J. Snoek and R. Adams
