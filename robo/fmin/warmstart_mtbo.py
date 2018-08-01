@@ -72,7 +72,6 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         dict with all results
     """
 
-    assert n_init <= num_iterations, "Number of initial design point has to be <= than the number of iterations"
     assert lower.shape[0] == upper.shape[0], "Dimension miss match between upper and lower bound"
 
     time_start = time.time()
