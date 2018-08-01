@@ -134,12 +134,12 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         return a
 
     if maximizer == "cmaes":
-        max_func = CMAES(acquisition_func, lower, upper, verbose=False,
+        max_func = CMAES(wrapper, lower, upper, verbose=False,
                          rng=rng)
     elif maximizer == "random":
-        max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
+        max_func = RandomSampling(wrapper, lower, upper, rng=rng)
     elif maximizer == "scipy":
-        max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
+        max_func = SciPyOptimizer(wrapper, lower, upper, rng=rng)
 
     X = np.array(X)
     y = np.array(y)
