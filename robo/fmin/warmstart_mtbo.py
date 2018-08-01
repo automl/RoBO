@@ -32,7 +32,7 @@ def transformation(X, acq, lower, upper):
     return a
 
 
-def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_tasks=2, n_init=2, num_iterations=30,
+def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_tasks=2, num_iterations=30,
          burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
     """
     Interface to MTBO[1] which uses an auxiliary cheaper task to warm start the optimization on new but similar task.
@@ -58,8 +58,6 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         corresponding target values
     n_tasks: int
         Number of task
-    n_init: int
-        Number of initial design points
     num_iterations: int
         Number of iterations
     chain_length : int
@@ -140,7 +138,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
     X = np.array(X)
     y = np.array(y)
 
-    for it in range(n_init, num_iterations):
+    for it in range(num_iterations):
         logger.info("Start iteration %d ... ", it)
 
         start_time = time.time()
