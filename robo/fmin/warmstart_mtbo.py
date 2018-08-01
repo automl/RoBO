@@ -9,9 +9,7 @@ from copy import deepcopy
 from robo.models.mtbo_gp import MTBOGPMCMC
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.log_ei import LogEI
-from robo.maximizers.cmaes import CMAES
-from robo.maximizers.scipy_optimizer import SciPyOptimizer
-from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.direct import Direct
 from robo.util import normalization
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
@@ -32,7 +30,7 @@ def transformation(X, acq, lower, upper):
 
 
 def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_tasks=2, num_iterations=30,
-                   maximizer="random", burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
+         burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
     """
     Interface to MTBO[1] which uses an auxiliary cheaper task to warm start the optimization on new but similar task.
     Note here we only warmstart the optimization process, in case you want to speed up Bayesian optimization by
@@ -55,8 +53,6 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         (default=0). We assume the main task to have the task id = 1
     observed_y: np.array(N,)
         corresponding target values
-    maximizer: {"cmaes", "random", "scipy"}
-        The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
     n_tasks: int
         Number of task
     num_iterations: int
@@ -133,13 +129,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         a = acquisition_func(x_)
         return a
 
-    if maximizer == "cmaes":
-        max_func = CMAES(wrapper, lower, upper, verbose=False,
-                         rng=rng)
-    elif maximizer == "random":
-        max_func = RandomSampling(wrapper, lower, upper, rng=rng)
-    elif maximizer == "scipy":
-        max_func = SciPyOptimizer(wrapper, lower, upper, rng=rng)
+    maximizer = Direct(wrapper, lower, upper, n_func_evals=200)
 
     X = np.array(X)
     y = np.array(y)
@@ -164,7 +154,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         # Maximize acquisition function
         acquisition_func.update(model_objective)
 
-        new_x = max_func.maximize()
+        new_x = maximizer.maximize()
         new_x = np.append(new_x, np.array([1]))
         # new_x[-1] = np.rint(new_x[-1])  # Map float value to discrete task variable
 
