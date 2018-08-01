@@ -7,12 +7,9 @@ import numpy as np
 from copy import deepcopy
 
 from robo.models.mtbo_gp import MTBOGPMCMC
-from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import MTBOPrior
-from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
-from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.acquisition_functions.log_ei import LogEI
-from robo.maximizers.direct import Direct
+from robo.maximizers.cmaes import CMAES
 from robo.util import normalization
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
@@ -133,7 +130,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         a = acquisition_func(x_)
         return a
 
-    maximizer = Direct(wrapper, lower, upper, n_func_evals=200)
+    maximizer = CMAES(wrapper, lower, upper, n_func_evals=200)
 
     X = np.array(X)
     y = np.array(y)
