@@ -197,7 +197,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
-
+    results["incumbent_values"] = incumbent_values
     results["X"] = X
     results["y"] = y
 
