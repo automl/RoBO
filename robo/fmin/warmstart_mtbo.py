@@ -86,6 +86,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
     time_func_eval = []
     time_overhead = []
     incumbents = []
+    incumbent_values = []
     runtime = []
 
     X = deepcopy(observed_X)
@@ -136,6 +137,8 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
     X = np.array(X)
     y = np.array(y)
 
+    init_points = y.shape[0]
+
     for it in range(num_iterations):
         logger.info("Start iteration %d ... ", it)
 
@@ -145,12 +148,12 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         model_objective.train(X, y, do_optimize=True)
 
         # Estimate incumbent as the best observed value so far
-        best_idx = np.argmin(y)
+        best_idx = np.argmin(y[init_points:]) + init_points
         incumbent = X[best_idx][:-1]
-        incumbent = np.append(incumbent, target_task_id)
         incumbent_value = y[best_idx]
 
-        incumbents.append(incumbent[:-1])
+        incumbents.append(incumbent)
+        incumbent_values.append(incumbent_value)
         logger.info("Current incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
         # Maximize acquisition function
@@ -190,13 +193,15 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
 
     # Estimate the final incumbent
     model_objective.train(X, y)
-    incumbent, incumbent_value = projected_incumbent_estimation(model_objective,
-                                                                X[:, :-1],
-                                                                proj_value=target_task_id)
+
+    best_idx = np.argmin(y[init_points:]) + init_points
+    incumbent = X[best_idx][:-1]
+    incumbent_value = y[best_idx]
+
     logger.info("Final incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
     results = dict()
-    results["x_opt"] = incumbent[:-1].tolist()
+    results["x_opt"] = incumbent.tolist()
     results["incumbents"] = [inc.tolist() for inc in incumbents]
     results["runtime"] = runtime
     results["overhead"] = time_overhead
