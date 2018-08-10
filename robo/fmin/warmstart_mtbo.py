@@ -30,7 +30,7 @@ def transformation(X, acq, lower, upper):
 
 
 def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_tasks=2, num_iterations=30,
-         burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
+         target_task_id=1, burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
     """
     Interface to MTBO[1] which uses an auxiliary cheaper task to warm start the optimization on new but similar task.
     Note here we only warmstart the optimization process, in case you want to speed up Bayesian optimization by
@@ -55,6 +55,8 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         corresponding target values
     n_tasks: int
         Number of task
+    target_task_id: int
+        the id of the target task
     num_iterations: int
         Number of iterations
     chain_length : int
@@ -123,9 +125,9 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
 
     acquisition_func = LogEI(model_objective)
 
-    # Optimize acquisition function only on the main task: task_id = 1
+    # Optimize acquisition function only on the main task
     def wrapper(x):
-        x_ = np.append(x, np.ones([x.shape[0], 1]), axis=1)
+        x_ = np.append(x, np.ones([x.shape[0], 1]) * target_task_id, axis=1)
         a = acquisition_func(x_)
         return a
 
@@ -145,7 +147,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         # Estimate incumbent as the best observed value so far
         best_idx = np.argmin(y)
         incumbent = X[best_idx][:-1]
-        incumbent = np.append(incumbent, 1)
+        incumbent = np.append(incumbent, target_task_id)
         incumbent_value = y[best_idx]
 
         incumbents.append(incumbent[:-1])
@@ -155,7 +157,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         acquisition_func.update(model_objective)
 
         new_x = maximizer.maximize()
-        new_x = np.append(new_x, np.array([1]))
+        new_x = np.append(new_x, np.array([target_task_id]))
         # new_x[-1] = np.rint(new_x[-1])  # Map float value to discrete task variable
 
         time_overhead.append(time.time() - start_time)
@@ -164,7 +166,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         # Evaluate the chosen configuration
         logger.info("Evaluate candidate %s", str(new_x))
         start_time = time.time()
-        new_y = objective_function(new_x[:-1], new_x[-1])
+        new_y = objective_function(new_x[:-1], int(new_x[-1]))
         time_func_eval.append(time.time() - start_time)
 
         logger.info("Configuration achieved a performance of %f", new_y)
@@ -190,7 +192,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
     model_objective.train(X, y)
     incumbent, incumbent_value = projected_incumbent_estimation(model_objective,
                                                                 X[:, :-1],
-                                                                proj_value=n_tasks - 1)
+                                                                proj_value=target_task_id)
     logger.info("Final incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
     results = dict()
