@@ -11,7 +11,6 @@ from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.log_ei import LogEI
 from robo.maximizers.direct import Direct
 from robo.util import normalization
-from robo.util.incumbent_estimation import projected_incumbent_estimation
 
 
 logger = logging.getLogger(__name__)
@@ -147,21 +146,11 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         # Train models
         model_objective.train(X, y, do_optimize=True)
 
-        # Estimate incumbent as the best observed value so far
-        best_idx = np.argmin(y[init_points:]) + init_points
-        incumbent = X[best_idx][:-1]
-        incumbent_value = y[best_idx]
-
-        incumbents.append(incumbent)
-        incumbent_values.append(incumbent_value)
-        logger.info("Current incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
-
         # Maximize acquisition function
         acquisition_func.update(model_objective)
 
         new_x = maximizer.maximize()
         new_x = np.append(new_x, np.array([target_task_id]))
-        # new_x[-1] = np.rint(new_x[-1])  # Map float value to discrete task variable
 
         time_overhead.append(time.time() - start_time)
         logger.info("Optimization overhead was %f seconds", time_overhead[-1])
@@ -179,6 +168,15 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         X = np.concatenate((X, new_x[None, :]), axis=0)
         y = np.concatenate((y, np.array([new_y])), axis=0)  # Model the target function on a logarithmic scale
 
+        # Estimate incumbent as the best observed value so far
+        best_idx = np.argmin(y[init_points:]) + init_points
+        incumbent = X[best_idx][:-1]
+        incumbent_value = y[best_idx]
+
+        incumbents.append(incumbent)
+        incumbent_values.append(incumbent_value)
+        logger.info("Current incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
+
         runtime.append(time.time() - time_start)
 
         if output_path is not None:
@@ -190,13 +188,6 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
             data["iteration"] = it
 
             json.dump(data, open(os.path.join(output_path, "mtbo_iter_%d.json" % it), "w"))
-
-    # Estimate the final incumbent
-    model_objective.train(X, y)
-
-    best_idx = np.argmin(y[init_points:]) + init_points
-    incumbent = X[best_idx][:-1]
-    incumbent_value = y[best_idx]
 
     logger.info("Final incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
 
