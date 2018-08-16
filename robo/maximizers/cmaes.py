@@ -71,7 +71,7 @@ class CMAES(BaseMaximizer):
 
         def obj_func(x):
             a = self.objective_func(x[None, :])
-            return a[0]
+            return -a[0]
 
         res = cma.fmin(obj_func, x0=start_point[0], sigma0=0.6,
                        restarts=self.restarts,
