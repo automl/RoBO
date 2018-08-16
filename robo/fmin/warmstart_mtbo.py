@@ -8,7 +8,8 @@ from copy import deepcopy
 
 from robo.models.mtbo_gp import MTBOGPMCMC
 from robo.priors.env_priors import MTBOPrior
-from robo.acquisition_functions.log_ei import LogEI
+# from robo.acquisition_functions.log_ei import LogEI
+from robo.acquisition_functions.lcb import LCB
 from robo.maximizers.direct import Direct
 from robo.util import normalization
 
@@ -123,7 +124,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
                                  upper=upper,
                                  rng=rng)
 
-    acquisition_func = LogEI(model_objective)
+    acquisition_func = LCB(model_objective)
 
     # Optimize acquisition function only on the main task
     def wrapper(x):
