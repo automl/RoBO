@@ -183,7 +183,7 @@ class MTBOPrior(BasePrior):
         # Prior for the noise
         self.horseshoe = HorseshoePrior(scale=0.1, rng=self.rng)
 
-        self.tophat_task = TophatPrior(-10, 2, rng=self.rng)
+        self.tophat_task = TophatPrior(-1, 0, rng=self.rng)
 
     def lnprob(self, theta):
 
@@ -197,7 +197,8 @@ class MTBOPrior(BasePrior):
 
         # Prior for the task kernel
         task_chol = theta[self.n_ls + 1:self.n_ls + 1 + self.n_kt]
-        lp -= np.sum(0.5 * (task_chol / 1) ** 2)
+        # lp -= np.sum(0.5 * (task_chol / 1) ** 2)
+        lp += self.tophat_task.lnprob(task_chol)
 
         # Noise
         lp += self.horseshoe.lnprob(theta[-1])
@@ -218,7 +219,8 @@ class MTBOPrior(BasePrior):
         # Task Kernel
         pos = (self.n_ls + 1)
         end = (self.n_ls + self.n_kt + 1)
-        p0[:, pos:end] = self.rng.randn(n_samples, end - pos)
+        # p0[:, pos:end] = self.rng.randn(n_samples, end - pos)
+        p0[:, pos:end] = np.array([self.tophat_task.sample_from_prior(n_samples) for i in range(0, end - pos)]).T
 
         # Noise
         p0[:, -1] = self.horseshoe.sample_from_prior(n_samples)[:, 0]
