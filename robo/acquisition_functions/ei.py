@@ -36,7 +36,7 @@ class EI(BaseAcquisitionFunction):
         super(EI, self).__init__(model)
         self.par = par
 
-    def compute(self, X, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, eta=None, **kwargs):
         """
         Computes the EI value and its derivatives.
 
@@ -51,6 +51,9 @@ class EI(BaseAcquisitionFunction):
             If is set to true also the derivative of the acquisition_functions
             function at X is returned
 
+        eta: float
+            The baseline performance y_star to compute the improvement
+
         Returns
         -------
         np.ndarray(1,1)
@@ -61,8 +64,8 @@ class EI(BaseAcquisitionFunction):
 
         m, v = self.model.predict(X)
 
-        # Use the best seen observation as incumbent
-        _, eta = self.model.get_incumbent()
+        if eta is None:
+            _, eta = self.model.get_incumbent()
 
         s = np.sqrt(v)
 

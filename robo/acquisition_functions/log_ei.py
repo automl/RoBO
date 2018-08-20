@@ -32,7 +32,7 @@ class LogEI(BaseAcquisitionFunction):
 
         self.par = par
 
-    def compute(self, X, derivative=False, **kwargs):
+    def compute(self, X, derivative=False, eta=None, **kwargs):
         """
         Computes the Log EI value and its derivatives.
 
@@ -47,6 +47,9 @@ class LogEI(BaseAcquisitionFunction):
             If is set to true also the derivative of the acquisition_functions
             function at X is returned
             Not implemented yet!
+
+        eta: float
+            The baseline performance y_star to compute the improvement
 
         Returns
         -------
@@ -63,7 +66,8 @@ class LogEI(BaseAcquisitionFunction):
 
         m, v = self.model.predict(X)
 
-        _, eta = self.model.get_incumbent()
+        if eta is None:
+            _, eta = self.model.get_incumbent()
 
         f_min = eta - self.par
 
