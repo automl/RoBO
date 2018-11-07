@@ -308,10 +308,9 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
-
-    results["X"] = X
-    results["y"] = y
-    results["c"] = c
+    results["X"] = [x.tolist() for x in X]
+    results["y"] = [yi.tolist() for yi in y]
+    results["c"] = [ci.tolist() for ci in c]
 
     return results
 
