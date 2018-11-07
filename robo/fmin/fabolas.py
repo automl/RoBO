@@ -26,7 +26,7 @@ def transform(s, s_min, s_max):
 
 def retransform(s_transform, s_min, s_max):
     s = np.rint(2**(s_transform * (np.log2(s_max) - np.log2(s_min)) + np.log2(s_min)))
-    return s
+    return int(s)
 
 
 def fabolas(objective_function, lower, upper, s_min, s_max,
@@ -198,7 +198,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     for it in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration
-        s = int(s_max / float(subsets[it]))
+        s = int(s_max / float(subsets[it % len(subsets)]))
 
         x = init_random_uniform(lower, upper, 1, rng)[0]
         logger.info("Evaluate %s on subset size %d", str(x), s)
