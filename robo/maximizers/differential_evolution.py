@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import scipy as sp
 
@@ -25,7 +26,11 @@ class DifferentialEvolution(BaseMaximizer):
 
     def _acquisition_fkt_wrapper(self, acq_f):
         def _l(x):
-            return -acq_f(np.array([np.clip(x, self.lower, self.upper)]))
+            a = -acq_f(np.array([np.clip(x, self.lower, self.upper)]))
+            if np.any(np.isinf(a)):
+                return sys.float_info.max
+            return a
+
         return _l
 
     def maximize(self):
