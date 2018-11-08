@@ -9,7 +9,7 @@ from copy import deepcopy
 from robo.models.mtbo_gp import MTBOGPMCMC
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.log_ei import LogEI
-from robo.maximizers.direct import Direct
+from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.util import normalization
 
 
@@ -136,7 +136,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
         a = acquisition_func(x_, eta=eta)
         return a
 
-    maximizer = Direct(wrapper, lower, upper, n_func_evals=200)
+    maximizer = DifferentialEvolution(wrapper, lower, upper)
 
     X = np.array(X)
     y = np.array(y)

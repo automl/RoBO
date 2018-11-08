@@ -11,7 +11,7 @@ from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
-from robo.maximizers.direct import Direct
+from robo.maximizers.differential_evolution import DifferentialEvolution
 
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
@@ -72,7 +72,10 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         If None no output will be saved to disk.
     rng: numpy.random.RandomState
         Random number generator
-
+    inc_estimation: string
+        Specifies how the incumbent is estimated:
+            "last_seen" : determined the incumbent as the configuration that achieved the highest observed value
+            "mean" :  determined the incumbent as the configuration that achieved the highest predicted mean value
     Returns
     -------
         dict
@@ -190,7 +193,8 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
+    # maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
+    maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
 
     # Initial Design
     logger.info("Initial Design")

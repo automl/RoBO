@@ -11,7 +11,7 @@ from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.acquisition_functions.ei import EI
-from robo.maximizers.direct import Direct
+from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.util import normalization
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
@@ -163,7 +163,8 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, n_func_evals=200)
+    # maximizer = Direct(acquisition_func, extend_lower, extend_upper, n_func_evals=200)
+    maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
 
     # Initial Design
     logger.info("Initial Design")

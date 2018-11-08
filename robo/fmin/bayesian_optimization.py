@@ -10,6 +10,7 @@ from robo.maximizers.direct import Direct
 from robo.maximizers.cmaes import CMAES
 from robo.maximizers.scipy_optimizer import SciPyOptimizer
 from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.pi import PI
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
-                          maximizer="random", acquisition_func="log_ei", model_type="gp_mcmc",
+                          maximizer="differential_evolution", acquisition_func="log_ei", model_type="gp_mcmc",
                           n_init=3, rng=None, output_path=None):
     """
     General interface for Bayesian optimization for global black box
@@ -39,7 +40,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The upper bound of the search space
     num_iterations: int
         The number of iterations (initial design + BO)
-    maximizer: {"direct", "cmaes", "random", "scipy"}
+    maximizer: {"direct", "cmaes", "random", "scipy", "differential_evolution"}
         The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
@@ -124,6 +125,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
     elif maximizer == "scipy":
         max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
+    elif maximizer == "differential_evolution":
+        max_func = DifferentialEvolution(acquisition_func, lower, upper, rng=rng)
 
     else:
         raise ValueError("'{}' is not a valid function to maximize the "

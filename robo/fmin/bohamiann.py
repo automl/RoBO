@@ -6,6 +6,7 @@ from robo.maximizers.direct import Direct
 from robo.maximizers.cmaes import CMAES
 from robo.maximizers.scipy_optimizer import SciPyOptimizer
 from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.pi import PI
@@ -16,7 +17,7 @@ from robo.acquisition_functions.lcb import LCB
 logger = logging.getLogger(__name__)
 
 
-def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="random",
+def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="differential_evolution",
               acquisition_func="log_ei", n_init=3, output_path=None, rng=None):
     """
     Bohamiann uses Bayesian neural networks to model the objective function [1] inside Bayesian optimization.
@@ -40,7 +41,7 @@ def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="ra
         The number of iterations (initial design + BO)
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
-    maximizer: {"direct", "cmaes", "random", "scipy"}
+    maximizer: {"direct", "cmaes", "random", "scipy", "differential_evolution"}
         The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
     n_init: int
         Number of points for the initial design. Make sure that it is <= num_iterations.
@@ -90,6 +91,8 @@ def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="ra
         max_func = RandomSampling(a, lower, upper, rng=rng)
     elif maximizer == "scipy":
         max_func = SciPyOptimizer(a, lower, upper, rng=rng)
+    elif maximizer == "differential_evolution":
+        max_func = DifferentialEvolution(acquisition_func, lower, upper, rng=rng)
 
     bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
                               initial_points=n_init, output_path=output_path, rng=rng)
