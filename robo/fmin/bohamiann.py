@@ -1,18 +1,18 @@
 import logging
+
 import numpy as np
 
 from robo.models.bnn import BayesianNeuralNetwork
-from robo.maximizers.direct import Direct
-from robo.maximizers.cmaes import CMAES
-from robo.maximizers.scipy_optimizer import SciPyOptimizer
-from robo.maximizers.random_sampling import RandomSampling
-from robo.maximizers.differential_evolution import DifferentialEvolution
-from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
-from robo.acquisition_functions.pi import PI
-from robo.acquisition_functions.log_ei import LogEI
 from robo.acquisition_functions.lcb import LCB
-
+from robo.acquisition_functions.log_ei import LogEI
+from robo.acquisition_functions.pi import PI
+from robo.maximizers.cmaes import CMAES
+from robo.maximizers.differential_evolution import DifferentialEvolution
+from robo.maximizers.direct import Direct
+from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.scipy_optimizer import SciPyOptimizer
+from robo.solver.bayesian_optimization import BayesianOptimization
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="di
     elif maximizer == "scipy":
         max_func = SciPyOptimizer(a, lower, upper, rng=rng)
     elif maximizer == "differential_evolution":
-        max_func = DifferentialEvolution(acquisition_func, lower, upper, rng=rng)
+        max_func = DifferentialEvolution(a, lower, upper, rng=rng)
 
     bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
                               initial_points=n_init, output_path=output_path, rng=rng)
