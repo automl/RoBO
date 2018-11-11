@@ -1,18 +1,20 @@
 import logging
-
 import numpy as np
 
-from robo.models.bnn import BayesianNeuralNetwork
-from robo.acquisition_functions.ei import EI
-from robo.acquisition_functions.lcb import LCB
-from robo.acquisition_functions.log_ei import LogEI
-from robo.acquisition_functions.pi import PI
-from robo.maximizers.cmaes import CMAES
-from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.maximizers.direct import Direct
-from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.cmaes import CMAES
 from robo.maximizers.scipy_optimizer import SciPyOptimizer
+from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.solver.bayesian_optimization import BayesianOptimization
+from robo.acquisition_functions.ei import EI
+from robo.acquisition_functions.pi import PI
+from robo.acquisition_functions.log_ei import LogEI
+from robo.acquisition_functions.lcb import LCB
+from robo.initial_design.init_latin_hypercube_sampling import init_latin_hypercube_sampling
+
+from pybnn.bohamiann import Bohamiann as BNNModel
+
 
 logger = logging.getLogger(__name__)
 
@@ -61,14 +63,7 @@ def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="di
     if rng is None:
         rng = np.random.RandomState(np.random.randint(0, 10000))
 
-    model = BayesianNeuralNetwork(sampling_method="sghmc",
-                                  l_rate=np.sqrt(1e-4),
-                                  mdecay=0.05,
-                                  burn_in=3000,
-                                  n_iters=50000,
-                                  precondition=True,
-                                  normalize_input=True,
-                                  normalize_output=True)
+    model = BNNModel()
 
     if acquisition_func == "ei":
         a = EI(model)
@@ -95,6 +90,7 @@ def bohamiann(objective_function, lower, upper, num_iterations=30, maximizer="di
         max_func = DifferentialEvolution(a, lower, upper, rng=rng)
 
     bo = BayesianOptimization(objective_function, lower, upper, a, model, max_func,
+                              initial_design=init_latin_hypercube_sampling,
                               initial_points=n_init, output_path=output_path, rng=rng)
 
     x_best, f_min = bo.run(num_iterations)
