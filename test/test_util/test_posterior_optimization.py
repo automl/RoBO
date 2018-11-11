@@ -19,17 +19,13 @@ class TestPosteriorOptimization(unittest.TestCase):
         self.opt = np.array([0.5, 0.5])
 
     def test_posterior_mean_optimization(self):
-        x = posterior_mean_optimization(self.model, self.lower, self.upper, method="cma", n_restarts=1)
-        np.testing.assert_almost_equal(x, self.opt, decimal=5)
 
         x = posterior_mean_optimization(self.model, self.lower, self.upper, method="scipy", with_gradients=False)
         np.testing.assert_almost_equal(x, self.opt, decimal=5)
 
     def test_posterior_mean_plus_std_optimization(self):
-        x = posterior_mean_plus_std_optimization(self.model, self.lower, self.upper, method="cma", n_restarts=1)
-        np.testing.assert_almost_equal(x, self.opt, decimal=5)
 
-        x = posterior_mean_optimization(self.model, self.lower, self.upper, method="scipy", with_gradients=False)
+        x = posterior_mean_plus_std_optimization(self.model, self.lower, self.upper, method="scipy", with_gradients=False)
         np.testing.assert_almost_equal(x, self.opt, decimal=5)
 
 

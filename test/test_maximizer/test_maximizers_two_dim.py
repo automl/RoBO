@@ -2,7 +2,6 @@
 import unittest
 import numpy as np
 
-from robo.maximizers.cmaes import CMAES
 from robo.maximizers.direct import Direct
 from robo.maximizers.random_sampling import RandomSampling
 from robo.maximizers.differential_evolution import DifferentialEvolution
@@ -34,15 +33,6 @@ class TestMaximizers2D(unittest.TestCase):
 
     def test_direct(self):
         maximizer = Direct(self.objective_function, self.lower, self.upper)
-        x = maximizer.maximize()
-
-        assert x.shape[0] == 2
-        assert len(x.shape) == 1
-        assert np.all(x >= self.lower)
-        assert np.all(x <= self.upper)
-
-    def test_cmaes(self):
-        maximizer = CMAES(self.objective_function, self.lower, self.upper)
         x = maximizer.maximize()
 
         assert x.shape[0] == 2

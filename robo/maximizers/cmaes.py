@@ -1,10 +1,12 @@
-
 import sys
-import os
 import logging
-import cma
-
-import numpy as np
+try:
+    import cma
+except ImportError:
+    raise ImportError("""
+        In order to use this module, CMA need to be installed. Try running
+        pip install cma
+    """)
 
 from robo.maximizers.base_maximizer import BaseMaximizer
 from robo.initial_design.init_random_uniform import init_random_uniform
