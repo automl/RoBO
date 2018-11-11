@@ -47,14 +47,6 @@ class CMAES(BaseMaximizer):
         self.verbose = verbose
         self.n_func_evals = n_func_evals
 
-    # def _cma_fkt_wrapper(self, acq_f):
-    #     def _l(x, *args, **kwargs):
-    #         x = np.array([x])
-    #         return -acq_f(x, *args, **kwargs)[0]
-    #     res = _l
-    #     print res
-    #     return res
-
     def maximize(self):
         """
         Maximizes the given acquisition function.
