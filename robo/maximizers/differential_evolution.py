@@ -48,4 +48,4 @@ class DifferentialEvolution(BaseMaximizer):
         res = sp.optimize.differential_evolution(self._acquisition_fkt_wrapper(self.objective_func),
                                                  bounds, maxiter=self.n_iters)
 
-        return res["x"]
+        return np.clip(res["x"], self.lower, self.upper)
