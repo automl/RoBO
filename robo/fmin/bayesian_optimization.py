@@ -2,6 +2,8 @@ import logging
 import george
 import numpy as np
 
+from pybnn.bohamiann import Bohamiann as BNNModel
+
 from robo.priors.default_priors import DefaultPrior
 from robo.models.gaussian_process import GaussianProcess
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
@@ -18,6 +20,7 @@ from robo.acquisition_functions.log_ei import LogEI
 from robo.acquisition_functions.lcb import LCB
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.initial_design import init_latin_hypercube_sampling
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +47,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
-    model_type: {"gp", "gp_mcmc", "rf"}
+    model_type: {"gp", "gp_mcmc", "rf", "bohamiann"}
         The model for the objective function.
     n_init: int
         Number of points for the initial design. Make sure that it
@@ -95,6 +98,9 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
 
     elif model_type == "rf":
         model = RandomForest(rng=rng)
+
+    elif model_type == "bohamiann":
+        model = BNNModel()
 
     else:
         raise ValueError("'{}' is not a valid model".format(model_type))

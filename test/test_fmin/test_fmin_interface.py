@@ -31,7 +31,7 @@ class TestFminInterface(unittest.TestCase):
         assert np.array(res["x_opt"]) >= 0
         assert np.array(res["x_opt"]) <= 1
 
-    def test_bayesian_optimization(self):
+    def test_bayesian_optimization_gp_mcmc(self):
         res = bayesian_optimization(objective_function=objective,
                                     lower=self.lower,
                                     upper=self.upper,
@@ -42,15 +42,37 @@ class TestFminInterface(unittest.TestCase):
         assert np.array(res["x_opt"]) <= 1
 
     def test_bohamiann(self):
-        res = bohamiann(objective_function=objective,
-                        lower=self.lower,
-                        upper=self.upper,
-                        n_init=2,
-                        num_iterations=3)
+        res = bayesian_optimization(objective_function=objective,
+                                    lower=self.lower,
+                                    upper=self.upper,
+                                    n_init=2,
+                                    num_iterations=3,
+                                    model_type="bohamiann")
         assert len(res["x_opt"]) == 1
         assert np.array(res["x_opt"]) >= 0
         assert np.array(res["x_opt"]) <= 1
 
+    def test_gp(self):
+        res = bayesian_optimization(objective_function=objective,
+                                    lower=self.lower,
+                                    upper=self.upper,
+                                    n_init=2,
+                                    num_iterations=3,
+                                    model_type="gp")
+        assert len(res["x_opt"]) == 1
+        assert np.array(res["x_opt"]) >= 0
+        assert np.array(res["x_opt"]) <= 1
+
+    def test_rf(self):
+        res = bayesian_optimization(objective_function=objective,
+                                    lower=self.lower,
+                                    upper=self.upper,
+                                    n_init=2,
+                                    num_iterations=3,
+                                    model_type="rf")
+        assert len(res["x_opt"]) == 1
+        assert np.array(res["x_opt"]) >= 0
+        assert np.array(res["x_opt"]) <= 1
 
 if __name__ == "__main__":
     unittest.main()
