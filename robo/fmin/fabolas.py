@@ -6,13 +6,12 @@ import logging
 import numpy as np
 
 from robo.models.fabolas_gp import FabolasGPMCMC
-from robo.initial_design import init_random_uniform
 from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.maximizers.differential_evolution import DifferentialEvolution
-
+from robo.initial_design import init_latin_hypercube_sampling
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
 
@@ -204,7 +203,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         # Draw random configuration
         s = int(s_max / float(subsets[it % len(subsets)]))
 
-        x = init_random_uniform(lower, upper, 1, rng)[0]
+        x = init_latin_hypercube_sampling(lower, upper, 1, rng)[0]
         logger.info("Evaluate %s on subset size %d", str(x), s)
         st = time.time()
         func_val, cost = objective_function(x, s)

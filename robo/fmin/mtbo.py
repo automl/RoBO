@@ -6,7 +6,7 @@ import logging
 import numpy as np
 
 from robo.models.mtbo_gp import MTBOGPMCMC
-from robo.initial_design import init_random_uniform
+from robo.initial_design import init_latin_hypercube_sampling
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
@@ -172,7 +172,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
         start_time_overhead = time.time()
         # Draw random configuration and evaluate it just on the auxiliary task
         task = 0
-        x = init_random_uniform(lower, upper, 1, rng)[0]
+        x = init_latin_hypercube_sampling(lower, upper, 1, rng)[0]
         logger.info("Evaluate candidate %s", str(x))
         st = time.time()
         func_val, cost = objective_function(x, task)

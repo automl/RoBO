@@ -12,7 +12,7 @@ from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.information_gain import InformationGain
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
-
+from robo.initial_design import init_latin_hypercube_sampling
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +110,7 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
         return
 
     bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func,
+                              initial_design=init_latin_hypercube_sampling,
                               initial_points=n_init, rng=rng, output_path=output_path)
 
     x_best, f_min = bo.run(num_iterations)
