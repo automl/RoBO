@@ -17,7 +17,7 @@ from robo.acquisition_functions.pi import PI
 from robo.acquisition_functions.log_ei import LogEI
 from robo.acquisition_functions.lcb import LCB
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
-
+from robo.initial_design import init_latin_hypercube_sampling
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                                     chain_length=200,
                                     burnin_steps=100,
                                     normalize_input=True,
-                                    normalize_output=True,
+                                    normalize_output=False,
                                     rng=rng, lower=lower, upper=upper)
 
     elif model_type == "rf":
@@ -135,6 +135,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     bo = BayesianOptimization(objective_function, lower, upper,
                               acquisition_func, model, max_func,
                               initial_points=n_init, rng=rng,
+                              initial_design=init_latin_hypercube_sampling,
                               output_path=output_path)
 
     x_best, f_min = bo.run(num_iterations)
