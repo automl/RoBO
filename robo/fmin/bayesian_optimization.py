@@ -8,7 +8,6 @@ from robo.priors.default_priors import DefaultPrior
 from robo.models.gaussian_process import GaussianProcess
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.models.random_forest import RandomForest
-from robo.maximizers.direct import Direct
 from robo.maximizers.scipy_optimizer import SciPyOptimizer
 from robo.maximizers.random_sampling import RandomSampling
 from robo.maximizers.differential_evolution import DifferentialEvolution
@@ -42,8 +41,8 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The upper bound of the search space
     num_iterations: int
         The number of iterations (initial design + BO)
-    maximizer: {"direct", "random", "scipy", "differential_evolution"}
-        The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
+    maximizer: {"random", "scipy", "differential_evolution"}
+        The optimizer for the acquisition function.
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
     model_type: {"gp", "gp_mcmc", "rf", "bohamiann"}
@@ -121,15 +120,12 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     else:
         acquisition_func = a
 
-    if maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper, verbose=True)
-    elif maximizer == "random":
+    if maximizer == "random":
         max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
     elif maximizer == "scipy":
         max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
     elif maximizer == "differential_evolution":
         max_func = DifferentialEvolution(acquisition_func, lower, upper, rng=rng)
-
     else:
         raise ValueError("'{}' is not a valid function to maximize the "
                          "acquisition function".format(maximizer))
