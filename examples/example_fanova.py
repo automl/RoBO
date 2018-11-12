@@ -1,11 +1,16 @@
-
+"""
+This example shows how RoBO can be combined with the fANOVA package.
+Before you run it, make sure that you installed the fANOVA package:
+https://github.com/automl/fanova.git
+"""
 import os
-from fanova import fANOVA
-import numpy as np
-from robo.fmin import random_search
-from hpolib.benchmarks.synthetic_functions import Branin
-import fanova.visualizer
 
+import fanova.visualizer
+import numpy as np
+from fanova import fANOVA
+from hpolib.benchmarks.synthetic_functions import Branin
+
+from robo.fmin import random_search
 
 objective_function = Branin()
 info = objective_function.get_meta_information()
@@ -18,9 +23,9 @@ results = random_search(objective_function, bounds[:, 0], bounds[:, 1], num_iter
 # Creating a fANOVA object
 X = np.array([i for i in results['X']])
 Y = np.array([i for i in results['y']])
-f = fANOVA(X,Y)
+f = fANOVA(X, Y)
 
-print(f.quantify_importance((0, )))
+print(f.quantify_importance((0,)))
 
 # Visualization
 os.makedirs("./plots", exist_ok=True)

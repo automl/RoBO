@@ -7,6 +7,5 @@ cma
 direct
 pyrfr
 git+https://github.com/automl/george.git
-git+https://github.com/automl/HPOlib2.git
 https://github.com/automl/pybnn.git
 nose
