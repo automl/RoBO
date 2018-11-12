@@ -8,11 +8,39 @@ Master Branch
 [![Code Health](https://landscape.io/github/automl/RoBO/master/landscape.svg?style=flat)](https://landscape.io/github/automl/RoBO/master)
 
 
-Development Branch
-------------------
-[![Build Status](https://travis-ci.org/automl/RoBO.svg?branch=development)](https://travis-ci.org/automl/RoBO)
-[![Coverage Status](https://coveralls.io/repos/github/automl/RoBO/badge.svg?branch=development)](https://coveralls.io/github/automl/RoBO?branch=development)
-[![Code Health](https://landscape.io/github/automl/RoBO/development/landscape.svg?style=flat)](https://landscape.io/github/automl/RoBO/development)
+Installation
+------------
+
+oBO uses the Gaussian processes library `george <https://github.com/automl/george.git>`_  
+and the random forests library `pyrfr <https://github.com/automl/random_forest_run>`_.
+In order to use these libraries make sure that libeigen and swig are installed:
+
+.. code:: bash
+
+     sudo apt-get install libeigen3-dev swig 
+
+Download RoBO and then change into the new directory:
+
+.. code:: bash
+
+	git clone https://github.com/automl/RoBO
+	cd RoBO/
+
+Install the required dependencies.
+
+.. code:: bash
+
+     for req in $(cat requirements.txt); do pip install $req; done
+
+
+Finally install RoBO by:
+
+.. code:: bash
+
+     python setup.py install
+
+
+
 
 Documentation
 -------------

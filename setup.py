@@ -8,6 +8,7 @@ requires = [
     'emcee',
     'pyrfr',
     'pybnn',
+    'cython',
     'scipy >= 0.12',
     'numpy >= 1.7'
     ]
