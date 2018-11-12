@@ -1,4 +1,3 @@
-import cma
 import numpy as np
 
 from scipy import optimize
@@ -6,7 +5,7 @@ from scipy import optimize
 from robo.initial_design.init_random_uniform import init_random_uniform
 
 
-def posterior_mean_optimization(model, lower, upper, n_restarts=10, method="scipy", with_gradients=False):
+def posterior_mean_optimization(model, lower, upper, n_restarts=10, with_gradients=False):
     """
     Estimates the incumbent by minimize the posterior
     mean of the objective function.
@@ -23,9 +22,6 @@ def posterior_mean_optimization(model, lower, upper, n_restarts=10, method="scip
         corresponds to one dimension.
     n_restarts: int
         Number of independent restarts of the optimization procedure from random starting points
-    method : {'scipy', 'cma'}
-        Specifies which optimization method is used to minimize
-        the posterior mean.
     with_gradients : bool
         Specifies if gradient information are used. Only valid
         if method == 'scipy'.
@@ -48,26 +44,21 @@ def posterior_mean_optimization(model, lower, upper, n_restarts=10, method="scip
     x_opt = np.zeros([len(startpoints), lower.shape[0]])
     fval = np.zeros([len(startpoints)])
     for i, startpoint in enumerate(startpoints):
-        if method == "scipy":
-            if with_gradients:
-                res = optimize.fmin_l_bfgs_b(f, startpoint, df, bounds=list(zip(lower, upper)))
-                x_opt[i] = res[0]
-                fval[i] = res[1]
-            else:
-                res = optimize.minimize(f, startpoint, bounds=list(zip(lower, upper)), method="L-BFGS-B")
-                x_opt[i] = res["x"]
-                fval[i] = res["fun"]
-        elif method == 'cma':
-            res = cma.fmin(f, startpoint, 0.6, options={"bounds": [lower, upper]})
+        if with_gradients:
+            res = optimize.fmin_l_bfgs_b(f, startpoint, df, bounds=list(zip(lower, upper)))
             x_opt[i] = res[0]
             fval[i] = res[1]
+        else:
+            res = optimize.minimize(f, startpoint, bounds=list(zip(lower, upper)), method="L-BFGS-B")
+            x_opt[i] = res["x"]
+            fval[i] = res["fun"]
 
     # Return the point with the lowest function value
     best = np.argmin(fval)
     return x_opt[best]
 
 
-def posterior_mean_plus_std_optimization(model, lower, upper, n_restarts=10, method="scipy", with_gradients=False):
+def posterior_mean_plus_std_optimization(model, lower, upper, n_restarts=10, with_gradients=False):
     """
     Estimates the incumbent by minimize the posterior mean + std of the objective function, i.e. the
     upper bound.
@@ -84,9 +75,6 @@ def posterior_mean_plus_std_optimization(model, lower, upper, n_restarts=10, met
         corresponds to one dimension.
     n_restarts: int
         Number of independent restarts of the optimization procedure from random starting points
-    method : {'scipy', 'cma'}
-        Specifies which optimization method is used to minimize
-        the posterior mean.
     with_gradients : bool
         Specifies if gradient information are used. Only valid
         if method == 'scipy'.
@@ -116,19 +104,14 @@ def posterior_mean_plus_std_optimization(model, lower, upper, n_restarts=10, met
     x_opt = np.zeros([len(startpoints), lower.shape[0]])
     fval = np.zeros([len(startpoints)])
     for i, startpoint in enumerate(startpoints):
-        if method == "scipy":
-            if with_gradients:
-                res = optimize.fmin_l_bfgs_b(f, startpoint, df, bounds=list(zip(lower, upper)))
-                x_opt[i] = res[0]
-                fval[i] = res[1]
-            else:
-                res = optimize.minimize(f, startpoint, bounds=list(zip(lower, upper)), method="L-BFGS-B")
-                x_opt[i] = res["x"]
-                fval[i] = res["fun"]
-        elif method == 'cma':
-            res = cma.fmin(f, startpoint, 0.6, options={"bounds": [lower, upper]})
+        if with_gradients:
+            res = optimize.fmin_l_bfgs_b(f, startpoint, df, bounds=list(zip(lower, upper)))
             x_opt[i] = res[0]
             fval[i] = res[1]
+        else:
+            res = optimize.minimize(f, startpoint, bounds=list(zip(lower, upper)), method="L-BFGS-B")
+            x_opt[i] = res["x"]
+            fval[i] = res["fun"]
 
     # Return the point with the lowest function value
     best = np.argmin(fval)
