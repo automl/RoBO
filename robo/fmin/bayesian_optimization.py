@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
-                          maximizer="differential_evolution", acquisition_func="log_ei", model_type="gp_mcmc",
+                          maximizer="random", acquisition_func="log_ei", model_type="gp_mcmc",
                           n_init=3, rng=None, output_path=None):
     """
     General interface for Bayesian optimization for global black box
