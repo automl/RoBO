@@ -5,3 +5,4 @@ scipy>=0.13.3
 git+https://github.com/automl/george.git
 git+https://github.com/automl/pybnn.git
 nose
+pyrfr
