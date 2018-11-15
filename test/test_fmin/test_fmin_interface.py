@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from robo.fmin import random_search, bayesian_optimization, bohamiann, entropy_search
+from robo.fmin import random_search, bayesian_optimization, entropy_search
 
 
 def objective(x):
