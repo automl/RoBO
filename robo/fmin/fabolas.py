@@ -10,7 +10,7 @@ from robo.priors.env_priors import EnvPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
-from robo.maximizers.differential_evolution import DifferentialEvolution
+from robo.maximizers.random_sampling import RandomSampling
 from robo.initial_design import init_latin_hypercube_sampling
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
@@ -57,9 +57,8 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         Number of hyperparameter samples for the GP
     subsets: list
         The ratio of the subsets size of the initial design.
-        For example if subsets=[256, 128, 64] then the first random point from the
-        initial design is evaluated on s_max/256 of the data, the second point on
-        s_max/256 of the data and so on.
+        For example if subsets=[256, 128, 64] then the each point of the
+        initial design is evaluated on s_max/256, s_max/128 and s_max/64
     num_iterations: int
         Number of iterations
     chain_length : int
@@ -193,47 +192,50 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
     # maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
-    maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
+    # maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
+    maximizer = RandomSampling(acquisition_func, extend_lower, extend_upper)
 
     # Initial Design
     logger.info("Initial Design")
-
+    x_init = init_latin_hypercube_sampling(lower, upper, n_init, rng)
     for it in range(n_init):
-        start_time_overhead = time.time()
-        # Draw random configuration
-        s = int(s_max / float(subsets[it % len(subsets)]))
 
-        x = init_latin_hypercube_sampling(lower, upper, 1, rng)[0]
-        logger.info("Evaluate %s on subset size %d", str(x), s)
-        st = time.time()
-        func_val, cost = objective_function(x, s)
-        time_func_eval.append(time.time() - st)
+        for subset in subsets:
+            start_time_overhead = time.time()
+            # s = int(s_max / float(subsets[it % len(subsets)]))
+            s = int(s_max / float(subset))
 
-        logger.info("Configuration achieved a performance of %f with cost %f", func_val, cost)
-        logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
+            x = x_init[it]
+            logger.info("Evaluate %s on subset size %d", str(x), s)
+            st = time.time()
+            func_val, cost = objective_function(x, s)
+            time_func_eval.append(time.time() - st)
 
-        # Bookkeeping
-        config = np.append(x, transform(s, s_min, s_max))
-        X.append(config)
-        y.append(np.log(func_val))  # Model the target function on a logarithmic scale
-        c.append(np.log(cost))  # Model the cost on a logarithmic scale
+            logger.info("Configuration achieved a performance of %f with cost %f", func_val, cost)
+            logger.info("Evaluation of this configuration took %f seconds", time_func_eval[-1])
 
-        # Estimate incumbent as the best observed value so far
-        best_idx = np.argmin(y)
-        incumbents.append(X[best_idx][:-1])  # Incumbent is always on s=s_max
+            # Bookkeeping
+            config = np.append(x, transform(s, s_min, s_max))
+            X.append(config)
+            y.append(np.log(func_val))  # Model the target function on a logarithmic scale
+            c.append(np.log(cost))  # Model the cost on a logarithmic scale
 
-        time_overhead.append(time.time() - start_time_overhead)
-        runtime.append(time.time() - time_start)
+            # Estimate incumbent as the best observed value so far
+            best_idx = np.argmin(y)
+            incumbents.append(X[best_idx][:-1])  # Incumbent is always on s=s_max
 
-        if output_path is not None:
-            data = dict()
-            data["optimization_overhead"] = time_overhead[it]
-            data["runtime"] = runtime[it]
-            data["incumbent"] = incumbents[it].tolist()
-            data["time_func_eval"] = time_func_eval[it]
-            data["iteration"] = it
+            time_overhead.append(time.time() - start_time_overhead)
+            runtime.append(time.time() - time_start)
 
-            json.dump(data, open(os.path.join(output_path, "fabolas_iter_%d.json" % it), "w"))
+            if output_path is not None:
+                data = dict()
+                data["optimization_overhead"] = time_overhead[it]
+                data["runtime"] = runtime[it]
+                data["incumbent"] = incumbents[it].tolist()
+                data["time_func_eval"] = time_func_eval[it]
+                data["iteration"] = it
+
+                json.dump(data, open(os.path.join(output_path, "fabolas_iter_%d.json" % it), "w"))
 
     X = np.array(X)
     y = np.array(y)
