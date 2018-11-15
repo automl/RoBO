@@ -5,19 +5,20 @@ import numpy as np
 from robo.priors.default_priors import DefaultPrior
 from robo.models.gaussian_process import GaussianProcess
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
-from robo.maximizers.direct import Direct
-from robo.maximizers.cmaes import CMAES
+from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.scipy_optimizer import SciPyOptimizer
+from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.information_gain import InformationGain
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
-
+from robo.initial_design import init_latin_hypercube_sampling
 
 logger = logging.getLogger(__name__)
 
 
 def entropy_search(objective_function, lower, upper, num_iterations=30,
-                   maximizer="direct", model="gp_mcmc",
+                   maximizer="random", model="gp_mcmc",
                    n_init=3, output_path=None, rng=None):
     """
     Entropy search for global black box optimization problems. This is a reimplemenation of the entropy search
@@ -38,8 +39,8 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
         The upper bound of the search space
     num_iterations: int
         The number of iterations (initial design + BO)
-    maximizer: {"direct", "cmaes"}
-        Defines how the acquisition function is maximized. NOTE: "cmaes" only works in D > 1 dimensions
+    maximizer: {"random", "scipy", "differential_evolution"}
+        Defines how the acquisition function is maximized.
     model: {"gp", "gp_mcmc"}
         The model for the objective function.
     n_init: int
@@ -98,15 +99,18 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
     elif model == "gp_mcmc":
         acquisition_func = MarginalizationGPMCMC(a)
 
-    if maximizer == "cmaes":
-        max_func = CMAES(acquisition_func, lower, upper, verbose=False, rng=rng)
-    elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper)
+    if maximizer == "random":
+        max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
+    elif maximizer == "scipy":
+        max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
+    elif maximizer == "differential_evolution":
+        max_func = DifferentialEvolution(acquisition_func, lower, upper, rng=rng)
     else:
         print("ERROR: %s is not a valid function to maximize the acquisition function!" % maximizer)
         return
 
     bo = BayesianOptimization(objective_function, lower, upper, acquisition_func, gp, max_func,
+                              initial_design=init_latin_hypercube_sampling,
                               initial_points=n_init, rng=rng, output_path=output_path)
 
     x_best, f_min = bo.run(num_iterations)

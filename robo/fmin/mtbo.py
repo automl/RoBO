@@ -6,12 +6,12 @@ import logging
 import numpy as np
 
 from robo.models.mtbo_gp import MTBOGPMCMC
-from robo.initial_design import init_random_uniform
+from robo.initial_design import init_latin_hypercube_sampling
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
 from robo.acquisition_functions.ei import EI
-from robo.maximizers.direct import Direct
+from robo.maximizers.random_sampling import RandomSampling
 from robo.util import normalization
 from robo.util.incumbent_estimation import projected_incumbent_estimation
 
@@ -163,15 +163,16 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    maximizer = Direct(acquisition_func, extend_lower, extend_upper, n_func_evals=200)
-
+    # maximizer = Direct(acquisition_func, extend_lower, extend_upper, n_func_evals=200)
+    # maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
+    maximizer = RandomSampling(acquisition_func, extend_lower, extend_upper)
     # Initial Design
     logger.info("Initial Design")
     for it in range(n_init):
         start_time_overhead = time.time()
         # Draw random configuration and evaluate it just on the auxiliary task
         task = 0
-        x = init_random_uniform(lower, upper, 1, rng)[0]
+        x = init_latin_hypercube_sampling(lower, upper, 1, rng)[0]
         logger.info("Evaluate candidate %s", str(x))
         st = time.time()
         func_val, cost = objective_function(x, task)
@@ -223,7 +224,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
         incumbent_value = y[best_idx]
 
         incumbents.append(incumbent[:-1])
-        logger.info("Current incumbent %s with estimated performance %f", str(incumbent), incumbent_value)
+        logger.info("Current incumbent %s with estimated performance %f", str(incumbent), np.exp(incumbent_value))
 
         # Maximize acquisition function
         acquisition_func.update(model_objective, model_cost)

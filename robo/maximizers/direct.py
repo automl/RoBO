@@ -1,6 +1,14 @@
-import sys
 import os
-import DIRECT
+import sys
+
+try:
+    import DIRECT
+except ImportError:
+    raise ImportError("""
+        In order to use this module, DIRECT need to be installed. Try running
+        pip install direct
+    """)
+
 import numpy as np
 
 from robo.maximizers.base_maximizer import BaseMaximizer
@@ -38,6 +46,7 @@ class Direct(BaseMaximizer):
     def _direct_acquisition_fkt_wrapper(self, acq_f):
         def _l(x, user_data):
             return -acq_f(np.array([x])), 0
+
         return _l
 
     def maximize(self):
@@ -52,10 +61,10 @@ class Direct(BaseMaximizer):
         """
         if self.verbose:
             x, _, _ = DIRECT.solve(self._direct_acquisition_fkt_wrapper(self.objective_func),
-                               l=[self.lower],
-                               u=[self.upper],
-                               maxT=self.n_iters,
-                               maxf=self.n_func_evals)
+                                   l=[self.lower],
+                                   u=[self.upper],
+                                   maxT=self.n_iters,
+                                   maxf=self.n_func_evals)
         else:
             fileno = sys.stdout.fileno()
             with os.fdopen(os.dup(fileno), 'wb') as stdout:

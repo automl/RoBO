@@ -1,8 +1,8 @@
-Cython
+Cython==0.27.3
 numpy>=1.7
 emcee>=2.1.0
 scipy>=0.13.3
-cma
-direct
-git+https://github.com/sfalkner/george.git
 nose
+pyrfr
+git+https://github.com/automl/george.git
+git+https://github.com/automl/pybnn.git

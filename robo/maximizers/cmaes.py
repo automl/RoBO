@@ -1,10 +1,12 @@
-
 import sys
-import os
 import logging
-import cma
-
-import numpy as np
+try:
+    import cma
+except ImportError:
+    raise ImportError("""
+        In order to use this module, CMA need to be installed. Try running
+        pip install cma
+    """)
 
 from robo.maximizers.base_maximizer import BaseMaximizer
 from robo.initial_design.init_random_uniform import init_random_uniform
@@ -45,14 +47,6 @@ class CMAES(BaseMaximizer):
         self.verbose = verbose
         self.n_func_evals = n_func_evals
 
-    # def _cma_fkt_wrapper(self, acq_f):
-    #     def _l(x, *args, **kwargs):
-    #         x = np.array([x])
-    #         return -acq_f(x, *args, **kwargs)[0]
-    #     res = _l
-    #     print res
-    #     return res
-
     def maximize(self):
         """
         Maximizes the given acquisition function.
@@ -71,7 +65,7 @@ class CMAES(BaseMaximizer):
 
         def obj_func(x):
             a = self.objective_func(x[None, :])
-            return a[0]
+            return -a[0]
 
         res = cma.fmin(obj_func, x0=start_point[0], sigma0=0.6,
                        restarts=self.restarts,

@@ -2,20 +2,22 @@ import logging
 import george
 import numpy as np
 
+from pybnn.bohamiann import Bohamiann as BNNModel
+
 from robo.priors.default_priors import DefaultPrior
 from robo.models.gaussian_process import GaussianProcess
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.models.random_forest import RandomForest
-from robo.maximizers.direct import Direct
-from robo.maximizers.cmaes import CMAES
 from robo.maximizers.scipy_optimizer import SciPyOptimizer
 from robo.maximizers.random_sampling import RandomSampling
+from robo.maximizers.differential_evolution import DifferentialEvolution
 from robo.solver.bayesian_optimization import BayesianOptimization
 from robo.acquisition_functions.ei import EI
 from robo.acquisition_functions.pi import PI
 from robo.acquisition_functions.log_ei import LogEI
 from robo.acquisition_functions.lcb import LCB
 from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
+from robo.initial_design import init_latin_hypercube_sampling
 
 
 logger = logging.getLogger(__name__)
@@ -39,11 +41,11 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The upper bound of the search space
     num_iterations: int
         The number of iterations (initial design + BO)
-    maximizer: {"direct", "cmaes", "random", "scipy"}
-        The optimizer for the acquisition function. NOTE: "cmaes" only works in D > 1 dimensions
+    maximizer: {"random", "scipy", "differential_evolution"}
+        The optimizer for the acquisition function.
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
-    model_type: {"gp", "gp_mcmc", "rf"}
+    model_type: {"gp", "gp_mcmc", "rf", "bohamiann"}
         The model for the objective function.
     n_init: int
         Number of points for the initial design. Make sure that it
@@ -89,11 +91,14 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                                     chain_length=200,
                                     burnin_steps=100,
                                     normalize_input=True,
-                                    normalize_output=True,
+                                    normalize_output=False,
                                     rng=rng, lower=lower, upper=upper)
 
     elif model_type == "rf":
         model = RandomForest(rng=rng)
+
+    elif model_type == "bohamiann":
+        model = BNNModel()
 
     else:
         raise ValueError("'{}' is not a valid model".format(model_type))
@@ -115,16 +120,12 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     else:
         acquisition_func = a
 
-    if maximizer == "cmaes":
-        max_func = CMAES(acquisition_func, lower, upper, verbose=False,
-                         rng=rng)
-    elif maximizer == "direct":
-        max_func = Direct(acquisition_func, lower, upper, verbose=True)
-    elif maximizer == "random":
+    if maximizer == "random":
         max_func = RandomSampling(acquisition_func, lower, upper, rng=rng)
     elif maximizer == "scipy":
         max_func = SciPyOptimizer(acquisition_func, lower, upper, rng=rng)
-
+    elif maximizer == "differential_evolution":
+        max_func = DifferentialEvolution(acquisition_func, lower, upper, rng=rng)
     else:
         raise ValueError("'{}' is not a valid function to maximize the "
                          "acquisition function".format(maximizer))
@@ -132,6 +133,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
     bo = BayesianOptimization(objective_function, lower, upper,
                               acquisition_func, model, max_func,
                               initial_points=n_init, rng=rng,
+                              initial_design=init_latin_hypercube_sampling,
                               output_path=output_path)
 
     x_best, f_min = bo.run(num_iterations)
