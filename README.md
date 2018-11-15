@@ -11,34 +11,29 @@ Master Branch
 Installation
 ------------
 
-oBO uses the Gaussian processes library `george <https://github.com/automl/george.git>`_  
-and the random forests library `pyrfr <https://github.com/automl/random_forest_run>`_.
-In order to use these libraries make sure that libeigen and swig are installed:
+RoBO uses the Gaussian processes library [george](https://github.com/automl/george.git) and the random forests library [pyrfr](https://github.com/automl/random_forest_run). In order to use these libraries make sure that libeigen and swig are installed:
 
-.. code:: bash
-
-     sudo apt-get install libeigen3-dev swig 
+```
+sudo apt-get install libeigen3-dev swig 
+```
 
 Download RoBO and then change into the new directory:
 
-.. code:: bash
-
-	git clone https://github.com/automl/RoBO
-	cd RoBO/
+```
+git clone https://github.com/automl/RoBO
+cd RoBO/
+```
 
 Install the required dependencies.
-
-.. code:: bash
-
-     for req in $(cat requirements.txt); do pip install $req; done
-
+```
+for req in $(cat requirements.txt); do pip install $req; done
+```
 
 Finally install RoBO by:
 
-.. code:: bash
-
-     python setup.py install
-
+```
+python setup.py install
+```
 
 
 
