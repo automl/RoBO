@@ -13,10 +13,6 @@ before_install:
   - sudo apt-get install -y swig3.0
   - sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
 install:
-  - pip install cython
-  - pip install numpy
-  - pip install torch
-  - pip install torchvision
   - travis_wait pip install -r requirements.txt
   - python setup.py install
   - pip install coveralls
