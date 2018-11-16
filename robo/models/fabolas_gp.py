@@ -47,7 +47,7 @@ class FabolasGPMCMC(GaussianProcessMCMC):
         if do_optimize:
             # We have one walker for each hyperparameter configuration
             sampler = emcee.EnsembleSampler(self.n_hypers,
-                                            len(self.kernel.pars) + 1,
+                                            len(self.kernel) + 1,
                                             self.loglikelihood)
 
             # Do a burn-in in the first iteration
@@ -87,7 +87,7 @@ class FabolasGPMCMC(GaussianProcessMCMC):
 
             # Instantiate a GP for each hyperparameter configuration
             kernel = deepcopy(self.kernel)
-            kernel.pars = np.exp(sample[:-1])
+            kernel.set_parameter_vector(sample[:-1])
             noise = np.exp(sample[-1])
             model = FabolasGP(kernel,
                               basis_function=self.basis_func,

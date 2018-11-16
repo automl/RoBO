@@ -98,7 +98,7 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
     # ARD Kernel for the configuration space
     for d in range(n_dims):
         kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                ndim=n_dims+1, dim=d)
+                                                ndim=n_dims+1, axes=d)
 
     task_kernel = george.kernels.TaskKernel(n_dims+1, n_dims, n_tasks)
     kernel *= task_kernel

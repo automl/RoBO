@@ -105,16 +105,13 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     # ARD Kernel for the configuration space
     for d in range(n_dims):
         kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                ndim=n_dims+1, dim=d)
+                                                ndim=n_dims+1, axes=d)
 
     # Kernel for the environmental variable
     # We use (1-s)**2 as basis function for the Bayesian linear kernel
-    degree = 1
-    env_kernel = george.kernels.BayesianLinearRegressionKernel(n_dims+1,
-                                                               dim=n_dims,
-                                                               degree=degree)
-    env_kernel[:] = np.ones([degree + 1]) * 0.1
-
+    env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0, log_b=0,
+                                                               ndim=n_dims+1,
+                                                               axes=n_dims)
     kernel *= env_kernel
 
     # Take 3 times more samples than we have hyperparameters
@@ -125,7 +122,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
     prior = EnvPrior(len(kernel) + 1,
                      n_ls=n_dims,
-                     n_lr=(degree + 1),
+                     n_lr=2,
                      rng=rng)
 
     quadratic_bf = lambda x: (1 - x) ** 2
@@ -150,19 +147,16 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     # ARD Kernel for the configuration space
     for d in range(n_dims):
         cost_kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                     ndim=n_dims+1, dim=d)
+                                                     ndim=n_dims+1, axes=d)
 
-    cost_degree = 1
-    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(n_dims+1,
-                                                                    dim=n_dims,
-                                                                    degree=cost_degree)
-    cost_env_kernel[:] = np.ones([cost_degree + 1]) * 0.1
-
+    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0, log_b=0,
+                                                                    ndim=n_dims+1,
+                                                                    axes=n_dims)
     cost_kernel *= cost_env_kernel
 
     cost_prior = EnvPrior(len(cost_kernel) + 1,
                           n_ls=n_dims,
-                          n_lr=(cost_degree + 1),
+                          n_lr=2,
                           rng=rng)
 
     model_cost = FabolasGPMCMC(cost_kernel,
@@ -191,10 +185,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    # maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
-    # maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
     maximizer = RandomSampling(acquisition_func, extend_lower, extend_upper)
-
     # Initial Design
     logger.info("Initial Design")
     x_init = init_latin_hypercube_sampling(lower, upper, n_init, rng)
@@ -202,7 +193,6 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
         for subset in subsets:
             start_time_overhead = time.time()
-            # s = int(s_max / float(subsets[it % len(subsets)]))
             s = int(s_max / float(subset))
 
             x = x_init[it]
