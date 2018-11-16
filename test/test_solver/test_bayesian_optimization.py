@@ -18,7 +18,7 @@ class TestBayesianOptimization(unittest.TestCase):
     def setUp(self):
         lower = np.zeros([1])
         upper = np.ones([1])
-        kernel = george.kernels.Matern52Kernel(np.array([1]), dim=1, ndim=1)
+        kernel = george.kernels.Matern52Kernel(np.array([1]), axes=0, ndim=1)
         model = GaussianProcess(kernel)
         lcb = LCB(model)
         maximizer = RandomSampling(lcb, lower, upper)

@@ -156,7 +156,7 @@ class GaussianProcess(BaseModel):
         except np.linalg.LinAlgError:
             return 1e25
 
-        ll = self.gp.lnlikelihood(self.y, quiet=True)
+        ll = self.gp.log_likelihood(self.y, quiet=True)
 
         # Add prior
         if self.prior is not None:
@@ -201,7 +201,7 @@ class GaussianProcess(BaseModel):
             Hyperparameter vector that maximizes the marginal log likelihood
         """
         # Start optimization from the previous hyperparameter configuration
-        p0 = self.gp.kernel.vector
+        p0 = self.gp.kernel.get_parameter_vector()
         p0 = np.append(p0, np.log(self.noise))
 
         if self.use_gradients:

@@ -119,7 +119,7 @@ class GaussianProcessMCMC(BaseModel):
             if not self.burned:
                 # Initialize the walkers by sampling from the prior
                 if self.prior is None:
-                    self.p0 = self.rng.rand(self.n_hypers, len(self.kernel.pars) + 1)
+                    self.p0 = self.rng.rand(self.n_hypers, len(self.kernel) + 1)
                 else:
                     self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
@@ -197,9 +197,9 @@ class GaussianProcessMCMC(BaseModel):
             return -np.inf
 
         if self.prior is not None:
-            return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.y, quiet=True)
+            return self.prior.lnprob(theta) + self.gp.log_likelihood(self.y, quiet=True)
         else:
-            return self.gp.lnlikelihood(self.y, quiet=True)
+            return self.gp.log_likelihood(self.y, quiet=True)
 
     @BaseModel._check_shapes_predict
     def predict(self, X_test, **kwargs):
