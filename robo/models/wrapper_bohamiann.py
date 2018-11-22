@@ -34,7 +34,26 @@ def get_default_network(input_dimensionality: int) -> torch.nn.Module:
 
 class WrapperBohamiann(BaseModel):
 
-    def __init__(self, get_net=get_default_network, lr=1e-5, use_double_precision=False, verbose=True):
+    def __init__(self, get_net=get_default_network, lr=1e-5, use_double_precision=False, verbose=False):
+        """
+        Wrapper around pybnn Bohamiann implementation. It automatically adjusts the length by the MCMC chain,
+        by performing 100 times more burnin steps than we have data points and sampling ~100 networks weights.
+
+        Parameters
+        ----------
+        get_net: func
+            Architecture specification
+
+        lr: float
+           The MCMC step length
+
+        use_double_precision: Boolean
+           Use float32 or float64 precision. Note: Using float64 makes the training slower.
+
+        verbose: Boolean
+           Determines whether to print pybnn output.
+        """
+
         self.lr = lr
         self.verbose = verbose
         self.bnn = Bohamiann(get_network=get_net, use_double_precision=use_double_precision)
