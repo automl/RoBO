@@ -2,9 +2,8 @@ import logging
 import george
 import numpy as np
 
-from pybnn.bohamiann import Bohamiann as BNNModel
-
 from robo.priors.default_priors import DefaultPrior
+from robo.models.wrapper_bohamiann import WrapperBohamiann
 from robo.models.gaussian_process import GaussianProcess
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
 from robo.models.random_forest import RandomForest
@@ -98,7 +97,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         model = RandomForest(rng=rng)
 
     elif model_type == "bohamiann":
-        model = BNNModel()
+        model = WrapperBohamiann()
 
     else:
         raise ValueError("'{}' is not a valid model".format(model_type))
