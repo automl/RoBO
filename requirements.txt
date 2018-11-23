@@ -4,5 +4,6 @@ emcee>=2.1.0
 scipy>=0.13.3
 nose
 pyrfr
-git+https://github.com/automl/george.git
+pyyaml
+git+https://github.com/automl/george.git@development
 git+https://github.com/automl/pybnn.git
