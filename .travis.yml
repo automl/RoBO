@@ -14,6 +14,7 @@ before_install:
   - sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
 install:
   - pip install cython
+  - pip install pyyaml
   - travis_wait pip install -r requirements.txt
   - python setup.py install
   - pip install coveralls
