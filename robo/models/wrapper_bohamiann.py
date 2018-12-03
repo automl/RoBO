@@ -1,6 +1,9 @@
 import numpy as np
 import torch
+from functools import partial
+
 from pybnn.bohamiann import Bohamiann
+from pybnn.multi_task_bohamiann import MultiTaskBohamiann
 
 from robo.models.base_model import BaseModel
 
@@ -64,6 +67,90 @@ class WrapperBohamiann(BaseModel):
         self.bnn.train(X, y, lr=self.lr,
                        num_burn_in_steps=X.shape[0] * 100,
                        num_steps=X.shape[0] * 100 + 10000, verbose=self.verbose)
+
+    def predict(self, X_test):
+        return self.bnn.predict(X_test)
+
+
+def get_multitask_network(input_dimensionality: int, n_tasks: int) -> torch.nn.Module:
+    class AppendLayer(torch.nn.Module):
+        def __init__(self, bias=True, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            if bias:
+                self.bias = torch.nn.Parameter(torch.DoubleTensor(1, 1))
+            else:
+                self.register_parameter('bias', None)
+
+        def forward(self, x):
+            return torch.cat((x, self.bias * torch.ones_like(x)), dim=1)
+
+    def init_weights(module):
+        if type(module) == AppendLayer:
+            torch.nn.init.constant_(module.bias, val=np.log(1e-3))
+        elif type(module) == torch.nn.Linear:
+            torch.nn.init.kaiming_normal_(module.weight, mode="fan_in", nonlinearity="linear")
+            torch.nn.init.constant_(module.bias, val=0.0)
+
+    class Architecture(torch.nn.Module):
+        def __init__(self, n_inputs, n_tasks, emb_dim=5, n_hidden=50):
+            super(Architecture, self).__init__()
+            self.fc1 = torch.nn.Linear(n_inputs - 1 + emb_dim, n_hidden)
+            # self.fc1 = torch.nn.Linear(n_inputs, n_hidden)
+            self.fc2 = torch.nn.Linear(n_hidden, n_hidden)
+            self.fc3 = torch.nn.Linear(n_hidden, 1)
+            self.log_std = AppendLayer()
+            init_weights(self.log_std)
+            self.emb = torch.nn.Embedding(n_tasks, emb_dim)
+            self.n_tasks = n_tasks
+
+        def forward(self, input):
+            x = input[:, :-1]
+            t = input[:, -1:]
+            t_emb = self.emb(t.long()[:, 0])
+            x = torch.cat((x, t_emb), dim=1)
+            # x = input
+            x = torch.tanh(self.fc1(x))
+            x = torch.tanh(self.fc2(x))
+            x = self.fc3(x)
+            return self.log_std(x)
+
+    return Architecture(n_inputs=input_dimensionality, n_tasks=n_tasks)
+
+
+class WrapperBohamiannMultiTask(BaseModel):
+
+    def __init__(self, n_tasks=2, get_net=get_multitask_network, lr=1e-5, use_double_precision=False, verbose=False):
+        """
+        Wrapper around pybnn Bohamiann implementation. It automatically adjusts the length by the MCMC chain,
+        by performing 100 times more burnin steps than we have data points and sampling ~100 networks weights.
+
+        Parameters
+        ----------
+        get_net: func
+            Architecture specification
+
+        lr: float
+           The MCMC step length
+
+        use_double_precision: Boolean
+           Use float32 or float64 precision. Note: Using float64 makes the training slower.
+
+        verbose: Boolean
+           Determines whether to print pybnn output.
+        """
+
+        self.lr = lr
+        self.verbose = verbose
+        net = partial(get_net, n_tasks=2)
+        self.bnn = MultiTaskBohamiann(n_tasks, get_network=net,
+                                      batch_size=10, use_double_precision=use_double_precision)
+
+    def train(self, X, y, **kwargs):
+        self.X = X
+        self.y = y
+        self.bnn.train(X, y, lr=self.lr,
+                       num_burn_in_steps=X.shape[0] * 500,
+                       num_steps=X.shape[0] * 500 + 10000, verbose=self.verbose)
 
     def predict(self, X_test):
         return self.bnn.predict(X_test)
