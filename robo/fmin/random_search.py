@@ -107,6 +107,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
     results["x_opt"] = incumbent
     results["f_opt"] = incumbent_value
     results["incumbents"] = incumbents
+    results["incumbent_values"] = incumbents_values
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_evals
