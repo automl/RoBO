@@ -111,7 +111,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
     # Kernel for the environmental variable
     # We use (1-s)**2 as basis function for the Bayesian linear kernel
-    env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0, log_b=0,
+    env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0.1, log_b=0.1,
                                                                ndim=n_dims + 1,
                                                                axes=n_dims)
     kernel *= env_kernel
@@ -151,7 +151,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         cost_kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
                                                      ndim=n_dims + 1, axes=d)
 
-    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0, log_b=0,
+    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0.1, log_b=0.1,
                                                                     ndim=n_dims + 1,
                                                                     axes=n_dims)
     cost_kernel *= cost_env_kernel
