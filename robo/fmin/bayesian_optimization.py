@@ -22,7 +22,7 @@ from robo.initial_design import init_latin_hypercube_sampling
 logger = logging.getLogger(__name__)
 
 
-def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
+def bayesian_optimization(objective_function, lower, upper, num_iterations=30, X_init=None, Y_init=None,
                           maximizer="random", acquisition_func="log_ei", model_type="gp_mcmc",
                           n_init=3, rng=None, output_path=None):
     """
@@ -40,6 +40,10 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
         The upper bound of the search space
     num_iterations: int
         The number of iterations (initial design + BO)
+    X_init: np.ndarray(N,D)
+            Initial points to warmstart BO
+    Y_init: np.ndarray(N,1)
+            Function values of the already initial points
     maximizer: {"random", "scipy", "differential_evolution"}
         The optimizer for the acquisition function.
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
@@ -135,7 +139,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30,
                               initial_design=init_latin_hypercube_sampling,
                               output_path=output_path)
 
-    x_best, f_min = bo.run(num_iterations)
+    x_best, f_min = bo.run(num_iterations, X=X_init, y=Y_init)
 
     results = dict()
     results["x_opt"] = x_best
