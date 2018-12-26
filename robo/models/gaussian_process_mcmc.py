@@ -112,14 +112,14 @@ class GaussianProcessMCMC(BaseModel):
         if do_optimize:
             # We have one walker for each hyperparameter configuration
             sampler = emcee.EnsembleSampler(self.n_hypers,
-                                            len(self.kernel.pars) + 1,
+                                            len(self.kernel) + 1,
                                             self.loglikelihood)
             sampler.random_state = self.rng.get_state()
             # Do a burn-in in the first iteration
             if not self.burned:
                 # Initialize the walkers by sampling from the prior
                 if self.prior is None:
-                    self.p0 = self.rng.rand(self.n_hypers, len(self.kernel.pars) + 1)
+                    self.p0 = self.rng.rand(self.n_hypers, len(self.kernel) + 1)
                 else:
                     self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
@@ -151,7 +151,7 @@ class GaussianProcessMCMC(BaseModel):
 
             # Instantiate a GP for each hyperparameter configuration
             kernel = deepcopy(self.kernel)
-            kernel.pars = np.exp(sample[:-1])
+            kernel.set_parameter_vector(sample[:-1])
             noise = np.exp(sample[-1])
             model = GaussianProcess(kernel,
                                     normalize_output=self.normalize_output,
@@ -190,17 +190,16 @@ class GaussianProcessMCMC(BaseModel):
         # The last entry is always the noise
         sigma_2 = np.exp(theta[-1])
         # Update the kernel and compute the lnlikelihood.
-        self.gp.kernel.pars = np.exp(theta[:-1])
-        
+        self.gp.kernel.set_parameter_vector(theta[:-1])
         try:
             self.gp.compute(self.X, yerr=np.sqrt(sigma_2))
         except:
             return -np.inf
 
         if self.prior is not None:
-            return self.prior.lnprob(theta) + self.gp.lnlikelihood(self.y, quiet=True)
+            return self.prior.lnprob(theta) + self.gp.log_likelihood(self.y, quiet=True)
         else:
-            return self.gp.lnlikelihood(self.y, quiet=True)
+            return self.gp.log_likelihood(self.y, quiet=True)
 
     @BaseModel._check_shapes_predict
     def predict(self, X_test, **kwargs):

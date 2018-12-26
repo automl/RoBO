@@ -1,19 +1,19 @@
+import json
+import logging
 import os
 import time
-import json
+
 import george
-import logging
 import numpy as np
 
+from robo.acquisition_functions.ei import EI
+from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
+from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
+from robo.initial_design import init_latin_hypercube_sampling
+from robo.maximizers.random_sampling import RandomSampling
 from robo.models.fabolas_gp import FabolasGPMCMC
 from robo.priors.env_priors import EnvPrior
-from robo.acquisition_functions.information_gain_per_unit_cost import InformationGainPerUnitCost
-from robo.acquisition_functions.ei import EI
-from robo.acquisition_functions.marginalization import MarginalizationGPMCMC
-from robo.maximizers.random_sampling import RandomSampling
-from robo.initial_design import init_latin_hypercube_sampling
 from robo.util.incumbent_estimation import projected_incumbent_estimation
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def transform(s, s_min, s_max):
 
 
 def retransform(s_transform, s_min, s_max):
-    s = np.rint(2**(s_transform * (np.log2(s_max) - np.log2(s_min)) + np.log2(s_min)))
+    s = np.rint(2 ** (s_transform * (np.log2(s_max) - np.log2(s_min)) + np.log2(s_min)))
     return int(s)
 
 
@@ -79,7 +79,9 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
         dict
     """
 
-    assert n_init <= num_iterations, "Number of initial design point has to be <= than the number of iterations"
+    assert n_init * len(
+        subsets) <= num_iterations, "Number of initial design point (n_init * len(subsets)) " \
+                                    "has to be <= than the number of iterations"
     assert lower.shape[0] == upper.shape[0], "Dimension miss match between upper and lower bound"
 
     time_start = time.time()
@@ -105,27 +107,24 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     # ARD Kernel for the configuration space
     for d in range(n_dims):
         kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                ndim=n_dims+1, dim=d)
+                                                ndim=n_dims + 1, axes=d)
 
     # Kernel for the environmental variable
     # We use (1-s)**2 as basis function for the Bayesian linear kernel
-    degree = 1
-    env_kernel = george.kernels.BayesianLinearRegressionKernel(n_dims+1,
-                                                               dim=n_dims,
-                                                               degree=degree)
-    env_kernel[:] = np.ones([degree + 1]) * 0.1
-
+    env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0.1, log_b=0.1,
+                                                               ndim=n_dims + 1,
+                                                               axes=n_dims)
     kernel *= env_kernel
 
     # Take 3 times more samples than we have hyperparameters
-    if n_hypers < 2*len(kernel):
+    if n_hypers < 2 * len(kernel):
         n_hypers = 3 * len(kernel)
         if n_hypers % 2 == 1:
             n_hypers += 1
 
     prior = EnvPrior(len(kernel) + 1,
                      n_ls=n_dims,
-                     n_lr=(degree + 1),
+                     n_lr=2,
                      rng=rng)
 
     quadratic_bf = lambda x: (1 - x) ** 2
@@ -150,19 +149,16 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     # ARD Kernel for the configuration space
     for d in range(n_dims):
         cost_kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                     ndim=n_dims+1, dim=d)
+                                                     ndim=n_dims + 1, axes=d)
 
-    cost_degree = 1
-    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(n_dims+1,
-                                                                    dim=n_dims,
-                                                                    degree=cost_degree)
-    cost_env_kernel[:] = np.ones([cost_degree + 1]) * 0.1
-
+    cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(log_a=0.1, log_b=0.1,
+                                                                    ndim=n_dims + 1,
+                                                                    axes=n_dims)
     cost_kernel *= cost_env_kernel
 
     cost_prior = EnvPrior(len(cost_kernel) + 1,
                           n_ls=n_dims,
-                          n_lr=(cost_degree + 1),
+                          n_lr=2,
                           rng=rng)
 
     model_cost = FabolasGPMCMC(cost_kernel,
@@ -191,10 +187,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    # maximizer = Direct(acquisition_func, extend_lower, extend_upper, verbose=True, n_func_evals=200)
-    # maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
     maximizer = RandomSampling(acquisition_func, extend_lower, extend_upper)
-
     # Initial Design
     logger.info("Initial Design")
     x_init = init_latin_hypercube_sampling(lower, upper, n_init, rng)
@@ -202,7 +195,6 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
 
         for subset in subsets:
             start_time_overhead = time.time()
-            # s = int(s_max / float(subsets[it % len(subsets)]))
             s = int(s_max / float(subset))
 
             x = x_init[it]
@@ -241,7 +233,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     y = np.array(y)
     c = np.array(c)
 
-    for it in range(n_init, num_iterations):
+    for it in range(X.shape[0], num_iterations):
         logger.info("Start iteration %d ... ", it)
 
         start_time = time.time()
@@ -314,8 +306,7 @@ def fabolas(objective_function, lower, upper, s_min, s_max,
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_eval
     results["X"] = [x.tolist() for x in X]
-    results["y"] = [yi.tolist() for yi in y]
+    results["y"] = [np.exp(yi).tolist() for yi in y]
     results["c"] = [ci.tolist() for ci in c]
 
     return results
-

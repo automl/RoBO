@@ -8,7 +8,8 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def random_search(objective_function, lower, upper, num_iterations=30, output_path=None, rng=None):
+def random_search(objective_function, lower, upper, X_init=[], Y_init=[],
+                  num_iterations=30, output_path=None, rng=None):
     """
     Random Search [1] that simply evaluates random points. We do not have
     any priors thus we sample points uniformly at random.
@@ -25,6 +26,10 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
         Lower bound of the input space
     upper: np.array(D,)
         Upper bound of the input space
+    X_init: list (N, D)
+            Initial points that have been already evaluated
+    Y_init: list (N,1)
+            Function values of the already initial points
     num_iterations: int
         Number of iterations
     output_path: string
@@ -47,8 +52,8 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
     incumbents_values = []
     runtime = []
 
-    X = []
-    y = []
+    X = X_init
+    y = Y_init
 
     for it in range(num_iterations):
         logger.info("Start iteration %d ... ", it)
@@ -107,6 +112,7 @@ def random_search(objective_function, lower, upper, num_iterations=30, output_pa
     results["x_opt"] = incumbent
     results["f_opt"] = incumbent_value
     results["incumbents"] = incumbents
+    results["incumbent_values"] = incumbents_values
     results["runtime"] = runtime
     results["overhead"] = time_overhead
     results["time_func_eval"] = time_func_evals

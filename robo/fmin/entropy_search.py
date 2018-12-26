@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def entropy_search(objective_function, lower, upper, num_iterations=30,
-                   maximizer="random", model="gp_mcmc",
+                   maximizer="random", model="gp_mcmc", X_init=None, Y_init=None,
                    n_init=3, output_path=None, rng=None):
     """
     Entropy search for global black box optimization problems. This is a reimplemenation of the entropy search
@@ -43,6 +43,10 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
         Defines how the acquisition function is maximized.
     model: {"gp", "gp_mcmc"}
         The model for the objective function.
+    X_init: np.ndarray(N,D)
+            Initial points to warmstart BO
+    Y_init: np.ndarray(N,1)
+            Function values of the already initial points
     n_init: int
         Number of points for the initial design. Make sure that it is <= num_iterations.
     output_path: string
@@ -113,7 +117,7 @@ def entropy_search(objective_function, lower, upper, num_iterations=30,
                               initial_design=init_latin_hypercube_sampling,
                               initial_points=n_init, rng=rng, output_path=output_path)
 
-    x_best, f_min = bo.run(num_iterations)
+    x_best, f_min = bo.run(num_iterations, X=X_init, y=Y_init)
 
     results = dict()
     results["x_opt"] = x_best

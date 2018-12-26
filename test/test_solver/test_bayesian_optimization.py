@@ -4,7 +4,7 @@ import numpy as np
 
 from robo.models.gaussian_process import GaussianProcess
 from robo.acquisition_functions.lcb import LCB
-from robo.maximizers.direct import Direct
+from robo.maximizers.random_sampling import RandomSampling
 from robo.solver.bayesian_optimization import BayesianOptimization
 
 
@@ -18,10 +18,10 @@ class TestBayesianOptimization(unittest.TestCase):
     def setUp(self):
         lower = np.zeros([1])
         upper = np.ones([1])
-        kernel = george.kernels.Matern52Kernel(np.array([1]), dim=1, ndim=1)
+        kernel = george.kernels.Matern52Kernel(np.array([1]), axes=0, ndim=1)
         model = GaussianProcess(kernel)
         lcb = LCB(model)
-        maximizer = Direct(lcb, lower, upper, n_func_evals=10)
+        maximizer = RandomSampling(lcb, lower, upper)
         self.solver = BayesianOptimization(objective_func, lower, upper,
                                            lcb, model, maximizer)
 

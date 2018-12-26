@@ -1,5 +1,6 @@
-import george
 import unittest
+
+import george
 import numpy as np
 import scipy.linalg as spla
 
@@ -14,7 +15,7 @@ class TestGaussianProcess(unittest.TestCase):
         self.y = np.sinc(self.X * 10 - 5).sum(axis=1)
 
         self.kernel = george.kernels.Matern52Kernel(np.ones(self.X.shape[1]),
-                                               ndim=self.X.shape[1])
+                                                    ndim=self.X.shape[1])
 
         prior = TophatPrior(-2, 2)
         self.model = GaussianProcess(self.kernel, prior=prior,
@@ -40,12 +41,12 @@ class TestGaussianProcess(unittest.TestCase):
         assert v.shape[0] == X_test.shape[0]
         assert v.shape[1] == X_test.shape[0]
 
-        K_zz = self.kernel.value(X_test)
-        K_zx = self.kernel.value(X_test, self.X)
-        K_nz = self.kernel.value(self.X) + self.model.noise * np.eye(self.X.shape[0])
+        K_zz = self.kernel.get_value(X_test)
+        K_zx = self.kernel.get_value(X_test, self.X)
+        K_nz = self.kernel.get_value(self.X) + self.model.noise * np.eye(self.X.shape[0])
         inv = spla.inv(K_nz)
         K_zz_x = K_zz - np.dot(K_zx, np.inner(inv, K_zx))
-        assert np.mean((K_zz_x - v)**2) < 10e-5
+        assert np.mean((K_zz_x - v) ** 2) < 10e-5
 
     def test_sample_function(self):
         X_test = np.random.rand(8, 2)
@@ -79,6 +80,7 @@ class TestGaussianProcess(unittest.TestCase):
         b = np.argmin(self.y)
         np.testing.assert_almost_equal(inc, self.X[b], decimal=5)
         assert inc_val == self.y[b]
+
 
 if __name__ == "__main__":
     unittest.main()

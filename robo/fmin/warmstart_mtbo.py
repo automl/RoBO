@@ -6,6 +6,7 @@ import logging
 import numpy as np
 from copy import deepcopy
 
+from robo.models.wrapper_bohamiann import WrapperBohamiannMultiTask
 from robo.models.mtbo_gp import MTBOGPMCMC
 from robo.priors.env_priors import MTBOPrior
 from robo.acquisition_functions.log_ei import LogEI
@@ -29,7 +30,8 @@ def transformation(X, acq, lower, upper):
 
 
 def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_tasks=2, num_iterations=30,
-         target_task_id=1, burnin=100, chain_length=200, n_hypers=20, output_path=None, rng=None):
+                   model_type="gp_mcmc", target_task_id=1, burnin=100, chain_length=200,
+                   n_hypers=20, output_path=None, rng=None):
     """
     Interface to MTBO[1] which uses an auxiliary cheaper task to warm start the optimization on new but similar task.
     Note here we only warmstart the optimization process, in case you want to speed up Bayesian optimization by
@@ -91,37 +93,40 @@ def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_t
     X = deepcopy(observed_X)
     y = deepcopy(observed_y)
 
-    # Define model for the objective function
-    cov_amp = 1  # Covariance amplitude
-    kernel = cov_amp
+    if model_type == "gp_mcmc":
+        # Define model for the objective function
+        cov_amp = 1  # Covariance amplitude
+        kernel = cov_amp
 
-    # ARD Kernel for the configuration space
-    for d in range(n_dims):
-        kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                ndim=n_dims+1, dim=d)
+        # ARD Kernel for the configuration space
+        for d in range(n_dims):
+            kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
+                                                    ndim=n_dims+1, axes=d)
 
-    task_kernel = george.kernels.TaskKernel(n_dims+1, n_dims, n_tasks)
-    kernel *= task_kernel
+        task_kernel = george.kernels.TaskKernel(n_dims+1, n_dims, n_tasks)
+        kernel *= task_kernel
 
-    # Take 3 times more samples than we have hyperparameters
-    if n_hypers < 2*len(kernel):
-        n_hypers = 3 * len(kernel)
-        if n_hypers % 2 == 1:
-            n_hypers += 1
+        # Take 3 times more samples than we have hyperparameters
+        if n_hypers < 2*len(kernel):
+            n_hypers = 3 * len(kernel)
+            if n_hypers % 2 == 1:
+                n_hypers += 1
 
-    prior = MTBOPrior(len(kernel) + 1,
-                      n_ls=n_dims,
-                      n_kt=len(task_kernel),
-                      rng=rng)
+        prior = MTBOPrior(len(kernel) + 1,
+                          n_ls=n_dims,
+                          n_kt=len(task_kernel),
+                          rng=rng)
 
-    model_objective = MTBOGPMCMC(kernel,
-                                 prior=prior,
-                                 burnin_steps=burnin,
-                                 chain_length=chain_length,
-                                 n_hypers=n_hypers,
-                                 lower=lower,
-                                 upper=upper,
-                                 rng=rng)
+        model_objective = MTBOGPMCMC(kernel,
+                                     prior=prior,
+                                     burnin_steps=burnin,
+                                     chain_length=chain_length,
+                                     n_hypers=n_hypers,
+                                     lower=lower,
+                                     upper=upper,
+                                     rng=rng)
+    elif model_type == "bohamiann":
+        model_objective = WrapperBohamiannMultiTask(n_tasks=n_tasks)
 
     acquisition_func = LogEI(model_objective)
 

@@ -96,7 +96,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
     # ARD Kernel for the configuration space
     for d in range(n_dims):
         kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                ndim=n_dims+1, dim=d)
+                                                ndim=n_dims+1, axes=d)
 
     task_kernel = george.kernels.TaskKernel(n_dims+1, n_dims, n_tasks)
     kernel *= task_kernel
@@ -129,7 +129,7 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
     # ARD Kernel for the configuration space
     for d in range(n_dims):
         cost_kernel *= george.kernels.Matern52Kernel(np.ones([1]) * 0.01,
-                                                     ndim=n_dims+1, dim=d)
+                                                     ndim=n_dims+1, axes=d)
 
     cost_task_kernel = george.kernels.TaskKernel(n_dims+1, n_dims, n_tasks)
     cost_kernel *= cost_task_kernel
@@ -163,10 +163,8 @@ def mtbo(objective_function, lower, upper, n_tasks=2, n_init=2, num_iterations=3
                                     is_env_variable=is_env,
                                     n_representer=50)
     acquisition_func = MarginalizationGPMCMC(ig)
-    # maximizer = Direct(acquisition_func, extend_lower, extend_upper, n_func_evals=200)
-    # maximizer = DifferentialEvolution(acquisition_func, extend_lower, extend_upper)
     maximizer = RandomSampling(acquisition_func, extend_lower, extend_upper)
-    # Initial Design
+
     logger.info("Initial Design")
     for it in range(n_init):
         start_time_overhead = time.time()

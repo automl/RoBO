@@ -1,5 +1,6 @@
-import george
 import unittest
+
+import george
 import numpy as np
 
 from robo.models.gaussian_process_mcmc import GaussianProcessMCMC
@@ -15,9 +16,7 @@ class TestGaussianProcessMCMC(unittest.TestCase):
         kernel = george.kernels.Matern52Kernel(np.ones(self.X.shape[1]),
                                                ndim=self.X.shape[1])
 
-        prior = TophatPrior(-2, 2)
         self.model = GaussianProcessMCMC(kernel,
-                                         prior=prior,
                                          n_hypers=6,
                                          burnin_steps=100,
                                          chain_length=200)
@@ -44,6 +43,7 @@ class TestGaussianProcessMCMC(unittest.TestCase):
 
         np.testing.assert_almost_equal(inc, self.X[b], decimal=5)
         assert inc_val == self.y[b]
+
 
 if __name__ == "__main__":
     unittest.main()

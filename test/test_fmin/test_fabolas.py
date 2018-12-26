@@ -28,12 +28,13 @@ class TestFminInterfaceFabolas(unittest.TestCase):
                       subsets=[10, 20],
                       s_min=10,
                       s_max=10000,
-                      n_init=2,
+                      n_init=1,
                       num_iterations=3)
 
         assert len(res["x_opt"]) == self.lower.shape[0]
         assert np.all(np.array(res["x_opt"]) >= self.lower)
         assert np.all(np.array(res["x_opt"]) <= self.upper)
+
 
 if __name__ == "__main__":
     unittest.main()
