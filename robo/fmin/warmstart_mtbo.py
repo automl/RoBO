@@ -30,16 +30,20 @@ def transformation(X, acq, lower, upper):
 
 
 def warmstart_mtbo(objective_function, lower, upper, observed_X, observed_y, n_tasks=2, num_iterations=30,
-                   model_type="gp_mcmc", target_task_id=1, burnin=100, chain_length=200,
+                   model_type="bohamiann", target_task_id=1, burnin=100, chain_length=200,
                    n_hypers=20, output_path=None, rng=None):
     """
-    Interface to MTBO[1] which uses an auxiliary cheaper task to warm start the optimization on new but similar task.
+    Interface to MTBO[1][2] which uses an auxiliary cheaper task to warm start the optimization on new but similar task.
     Note here we only warmstart the optimization process, in case you want to speed up Bayesian optimization by
-    evaluating on auxiliary task during the optimization check out mtbo() or fabolas().
+    evaluating on auxiliary tasks during the optimization check out mtbo() or fabolas().
 
     [1] Multi-Task Bayesian Optimization
         K. Swersky and J. Snoek and R. Adams
         Proceedings of the 27th International Conference on Advances in Neural Information Processing Systems (NIPS'13)
+
+    [2] J. T. Springenberg, A. Klein, S. Falkner, F. Hutter
+        Bayesian Optimization with Robust Bayesian Neural Networks.
+        In Advances in Neural Information Processing Systems 29 (2016).
 
     Parameters
     ----------
