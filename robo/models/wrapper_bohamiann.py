@@ -96,7 +96,7 @@ class WrapperBohamiannMultiTask(BaseModel):
         self.lr = lr
         self.verbose = verbose
         self.bnn = MultiTaskBohamiann(n_tasks,
-                                      batch_size=20, use_double_precision=use_double_precision)
+                                      use_double_precision=use_double_precision)
 
     def train(self, X, y, **kwargs):
         self.X = X
