@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 from robo.fmin import random_search, bayesian_optimization, entropy_search
@@ -52,6 +53,17 @@ class TestFminInterface(unittest.TestCase):
         assert np.array(res["x_opt"]) >= 0
         assert np.array(res["x_opt"]) <= 1
 
+    def test_dngo(self):
+        res = bayesian_optimization(objective_function=objective,
+                                    lower=self.lower,
+                                    upper=self.upper,
+                                    n_init=2,
+                                    num_iterations=3,
+                                    model_type="dngo")
+        assert len(res["x_opt"]) == 1
+        assert np.array(res["x_opt"]) >= 0
+        assert np.array(res["x_opt"]) <= 1
+
     def test_gp(self):
         res = bayesian_optimization(objective_function=objective,
                                     lower=self.lower,
@@ -73,6 +85,7 @@ class TestFminInterface(unittest.TestCase):
         assert len(res["x_opt"]) == 1
         assert np.array(res["x_opt"]) >= 0
         assert np.array(res["x_opt"]) <= 1
+
 
 if __name__ == "__main__":
     unittest.main()

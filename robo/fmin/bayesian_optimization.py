@@ -2,6 +2,8 @@ import logging
 import george
 import numpy as np
 
+from pybnn.dngo import DNGO
+
 from robo.priors.default_priors import DefaultPrior
 from robo.models.wrapper_bohamiann import WrapperBohamiann
 from robo.models.gaussian_process import GaussianProcess
@@ -48,7 +50,7 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30, X
         The optimizer for the acquisition function.
     acquisition_func: {"ei", "log_ei", "lcb", "pi"}
         The acquisition function
-    model_type: {"gp", "gp_mcmc", "rf", "bohamiann"}
+    model_type: {"gp", "gp_mcmc", "rf", "bohamiann", "dngo"}
         The model for the objective function.
     n_init: int
         Number of points for the initial design. Make sure that it
@@ -102,6 +104,9 @@ def bayesian_optimization(objective_function, lower, upper, num_iterations=30, X
 
     elif model_type == "bohamiann":
         model = WrapperBohamiann()
+
+    elif model_type == "dngo":
+        model = DNGO()
 
     else:
         raise ValueError("'{}' is not a valid model".format(model_type))
