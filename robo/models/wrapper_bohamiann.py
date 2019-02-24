@@ -21,7 +21,7 @@ def get_default_network(input_dimensionality: int) -> torch.nn.Module:
 
     def init_weights(module):
         if type(module) == AppendLayer:
-            torch.nn.init.constant_(module.bias, val=np.log(1e-3))
+            torch.nn.init.constant_(module.bias, val=np.log(1e-2))
         elif type(module) == torch.nn.Linear:
             torch.nn.init.kaiming_normal_(module.weight, mode="fan_in", nonlinearity="linear")
             torch.nn.init.constant_(module.bias, val=0.0)
@@ -101,7 +101,7 @@ class WrapperBohamiannMultiTask(BaseModel):
     def train(self, X, y, **kwargs):
         self.X = X
         self.y = y
-        self.bnn.train(X, y, lr=self.lr,
+        self.bnn.train(X, y, lr=self.lr, mdecay=0.01,
                        num_burn_in_steps=X.shape[0] * 500,
                        num_steps=X.shape[0] * 500 + 10000, verbose=self.verbose)
 
