@@ -54,7 +54,7 @@ class RandomForest(BaseModel):
         self.rf.options.do_bootstrapping = do_bootstrapping
         self.rf.options.num_data_points_per_tree = n_points_per_tree
         self.rf.options.compute_oob_error = compute_oob_error
-	self.rf.options.compute_law_of_total_variance = return_total_variance
+        self.rf.options.compute_law_of_total_variance = return_total_variance
 
     def train(self, X, y, **kwargs):
         """
