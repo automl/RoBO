@@ -16,6 +16,8 @@ class RandomForest(BaseModel):
     def __init__(self, num_trees=30,
                  do_bootstrapping=True,
                  n_points_per_tree=0,
+                 compute_oob_error=False,
+                 return_total_variance=True,
                  rng=None):
         """
         Interface for the random_forest_run library to model the
@@ -29,6 +31,11 @@ class RandomForest(BaseModel):
             Turns on / off bootstrapping in the random forest.
         n_points_per_tree: int
             Number of data point per tree. If set to 0 then we will use all data points in each tree
+        compute_oob_error: bool
+            Turns on / off calculation of out-of-bag error. Default: False
+        return_total_variance: bool
+            Return law of total variance (mean of variances + variance of means, if True)
+            or explained variance (variance of means, if False). Default: True
         rng: np.random.RandomState
             Random number generator
         """
@@ -44,9 +51,10 @@ class RandomForest(BaseModel):
 
         self.rf = reg.binary_rss_forest()
         self.rf.options.num_trees = num_trees
-
         self.rf.options.do_bootstrapping = do_bootstrapping
         self.rf.options.num_data_points_per_tree = n_points_per_tree
+        self.rf.options.compute_oob_error = compute_oob_error
+        self.rf.options.compute_law_of_total_variance = return_total_variance
 
     def train(self, X, y, **kwargs):
         """
