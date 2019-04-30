@@ -113,3 +113,12 @@ class RandomForest(BaseModel):
 
     def sample_functions(self, X_test, n_funcs=1):
         pass
+
+    def __getstate__(self):
+        sdict = self.__dict__.copy()
+        del sdict['reg_rng']  # delete not-pickleable objects
+        return sdict
+
+    def __setstate__(self, sdict):
+         self.__dict__.update(sdict)
+         self.reg_rng = reg.default_random_engine(sdict['rng'].randint(1000))
